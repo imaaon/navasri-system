@@ -3485,14 +3485,8 @@ const SUPABASE_KEY = 'sb_publishable_ZHnIfhsxqFwh7DhYlfbisw_5nfR9-i8';
 let supa = null; // จะ init ใน window.onload
 
 // ── Built-in Accounts (ต้องอยู่ก่อน doLogin) ────────────────
-const BUILTIN_ACCOUNTS = {
-  admin:  { password:'admin1234',  displayName:'ผู้ดูแลระบบ',           role:'admin',     position:'ผู้ดูแลระบบ' },
-  head:   { password:'head1234',   displayName:'น.ส.อรนันท์ อุดมภาพ',  role:'manager',   position:'ผู้บริหาร (Executive)' },
-  officer:{ password:'officer1234',displayName:'น.ส.สุธีนุช ธุวะคำ',   role:'officer',   position:'ธุรการ (Officer)' },
-  nurse:  { password:'nurse1234',  displayName:'น.ส.ปิยะวรรณ นาคำนวน', role:'nurse',     position:'พยาบาล' },
-  care:   { password:'care1234',   displayName:'น.ส.อรดี บุตรอำคา',    role:'caregiver', position:'ผู้ดูแล / บริบาล' },
-  store:  { password:'store1234',  displayName:'เจ้าหน้าที่คลังสินค้า', role:'warehouse', position:'คลังสินค้า' },
-};
+// ── BUILTIN_ACCOUNTS ถูกลบออกแล้ว ใช้ app_users ใน Supabase แทน ──
+const BUILTIN_ACCOUNTS = {};
 
 let db = {
   items: [],
@@ -3569,8 +3563,8 @@ async function loadDB() {
     db.users = {};
     (users.data || []).forEach(u => {
       db.users[u.username] = {
-        password: u.password, displayName: u.display_name,
-        role: u.role, position: u.position,
+        password: u.password, displayName: u.display_name || u.name || u.username,
+        role: u.role, position: u.position || '',
         lastLogin: u.last_login, createdAt: u.created_at
       };
     });
@@ -4577,12 +4571,31 @@ async function approveReq(reqId) {
   if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
   req.status = 'approved';
 
-  // Cut stock NOW
+  // Cut stock NOW (FEFO — ตัด Lot ที่ใกล้หมดอายุก่อน)
   const item = db.items.find(i=>i.id==req.itemId);
   if (item) {
+    // 1. หัก items รวม
     const newQty = Math.max(0, item.qty - req.qty);
     await supa.from('items').update({ qty: newQty }).eq('id', item.id);
     item.qty = newQty;
+
+    // 2. หัก item_lots แบบ FEFO (First Expired First Out)
+    let qtyLeft = req.qty;
+    const lots = (db.itemLots || [])
+      .filter(l => l.itemId == item.id && (l.qtyRemaining || 0) > 0)
+      .sort((a, b) => {
+        if (!a.expiryDate) return 1;
+        if (!b.expiryDate) return -1;
+        return new Date(a.expiryDate) - new Date(b.expiryDate);
+      });
+    for (const lot of lots) {
+      if (qtyLeft <= 0) break;
+      const deduct = Math.min(lot.qtyRemaining || 0, qtyLeft);
+      const newLotQty = Math.max(0, (lot.qtyRemaining || 0) - deduct);
+      await supa.from('item_lots').update({ qty_remaining: newLotQty }).eq('id', lot.id);
+      lot.qtyRemaining = newLotQty;
+      qtyLeft -= deduct;
+    }
   }
 
   // Write audit log
@@ -8099,17 +8112,17 @@ function doLogin() {
   const err = document.getElementById('loginError');
   err.style.display = 'none';
 
-  // Check BUILTIN_ACCOUNTS first (always available, no Supabase needed)
-  // then merge db.users for any accounts added via admin panel
-  const accounts = { ...BUILTIN_ACCOUNTS, ...(db.users || {}) };
+  // ใช้ db.users จาก Supabase เท่านั้น (ปลอดภัยกว่า Hardcode)
+  if (!window._dbLoaded) {
+    err.textContent = '⏳ ระบบกำลังโหลดข้อมูล กรุณารอสักครู่แล้วลองใหม่';
+    err.style.display = 'block';
+    return;
+  }
+  const accounts = db.users || {};
   const acct = accounts[u];
 
   if (!acct || acct.password !== p) {
-    if (!window._dbLoaded && !BUILTIN_ACCOUNTS[u]) {
-      err.textContent = '⏳ ระบบกำลังโหลดข้อมูล กรุณารอสักครู่แล้วลองใหม่';
-    } else {
-      err.textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
-    }
+    err.textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
     err.style.display = 'block';
     document.getElementById('loginPass').value = '';
     document.getElementById('loginPass').focus();
