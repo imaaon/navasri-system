@@ -4727,11 +4727,21 @@ async function saveReturnItem() {
   const item = db.items.find(i=>i.id==req.itemId);
   const refNo = 'RET-'+Date.now().toString().slice(-6);
 
-  // Restore stock
+  // Restore stock — ใช้ RPC เพื่อป้องกัน Race Condition (Atomic)
   if (item) {
-    const newQty = item.qty + qty;
-    await supa.from('items').update({ qty: newQty }).eq('id', item.id);
-    item.qty = newQty;
+    const { data: rpcResult, error: rpcErr } = await supa.rpc('return_stock', {
+      p_item_id: item.id,
+      p_qty: qty
+    });
+    if (rpcErr) {
+      console.warn('return_stock RPC error:', rpcErr.message);
+      // Fallback: บวกแบบเดิมถ้า RPC ยังไม่ได้สร้าง
+      const newQty = item.qty + qty;
+      await supa.from('items').update({ qty: newQty }).eq('id', item.id);
+      item.qty = newQty;
+    } else {
+      if (rpcResult?.new_qty !== undefined) item.qty = rpcResult.new_qty;
+    }
   }
 
   // Save return record
