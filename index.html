@@ -3527,7 +3527,7 @@ async function loadDB() {
       supa.from('staff').select('*').order('id'),
       supa.from('requisitions').select('*').order('id', {ascending: false}).limit(500),
       supa.from('purchases').select('*').order('created_at', {ascending: false}).limit(500),
-      supa.from('app_users').select('*'),
+      Promise.resolve({ data: [] }), // app_users ไม่ดึงมาที่ browser (ป้องกัน password leak)
       supa.from('settings').select('*'),
       supa.from('item_lots').select('*').order('expiry_date', {ascending: true}),
       supa.from('rooms').select('*').order('name'),
@@ -8108,47 +8108,70 @@ function buildLineMsg(event, data) {
 
 let currentUser = null; // { username, displayName, role, position }
 
-function doLogin() {
+async function doLogin() {
   const u = document.getElementById('loginUser').value.trim();
   const p = document.getElementById('loginPass').value;
   const err = document.getElementById('loginError');
+  const btn = document.querySelector('#loginScreen button');
   err.style.display = 'none';
 
-  // ใช้ db.users จาก Supabase เท่านั้น (ปลอดภัยกว่า Hardcode)
-  if (!window._dbLoaded) {
-    err.textContent = '⏳ ระบบกำลังโหลดข้อมูล กรุณารอสักครู่แล้วลองใหม่';
+  if (!u || !p) {
+    err.textContent = 'กรุณากรอก username และ password';
     err.style.display = 'block';
     return;
   }
-  const accounts = db.users || {};
-  const acct = accounts[u];
 
-  if (!acct || acct.password !== p) {
-    err.textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
-    err.style.display = 'block';
-    document.getElementById('loginPass').value = '';
-    document.getElementById('loginPass').focus();
-    return;
+  // แสดง loading
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังตรวจสอบ...'; }
+
+  try {
+    // ใช้ Supabase Auth — ยิงไปถาม server โดยตรง (ปลอดภัย 100%)
+    const email = u + '@navasri.local';
+    const { data, error } = await supa.auth.signInWithPassword({ email, password: p });
+
+    if (error) {
+      err.textContent = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+      err.style.display = 'block';
+      document.getElementById('loginPass').value = '';
+      document.getElementById('loginPass').focus();
+      return;
+    }
+
+    // ดึงข้อมูล user profile จาก app_users (เฉพาะ record ของตัวเอง)
+    const { data: profile } = await supa.from('app_users')
+      .select('username, display_name, name, role, position')
+      .eq('username', u)
+      .single();
+
+    const displayName = profile?.display_name || profile?.name || u;
+    const role = profile?.role || 'staff';
+    const position = profile?.position || '';
+
+    currentUser = { username: u, displayName, role, position };
+    try { sessionStorage.setItem('navasri_user', JSON.stringify(currentUser)); } catch(e) {}
+
+    // Update UI
+    const initials = displayName.replace(/^(นาย|นาง|น\.ส\.|ม\.ร\.ว\.|น\.ส|นส)\s*/,'').trim().slice(0,2);
+    document.getElementById('userAvatar').textContent = initials;
+    document.getElementById('userDisplayName').textContent = displayName.replace(/^(น\.ส\.|นาง|นาย)/,'').trim().split(' ')[0] || displayName;
+
+    // โหลดข้อมูลหลัง login สำเร็จเท่านั้น!
+    document.getElementById('loginScreen').style.display = 'none';
+    await loadDB();
+    updateSidebarForRole();
+    recordLastLogin(u);
+    showPage('dashboard');
+
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ'; }
   }
-
-  currentUser = { username: u, displayName: acct.displayName || acct.name || u, role: acct.role, position: acct.position || '' };
-  try { sessionStorage.setItem('navasri_user', JSON.stringify(currentUser)); } catch(e) {}
-
-  // Update UI
-  const displayName = acct.displayName || acct.name || u;
-  const initials = displayName.replace(/^(นาย|นาง|น\.ส\.|ม\.ร\.ว\.|น\.ส|นส)\s*/,'').trim().slice(0,2);
-  document.getElementById('userAvatar').textContent = initials;
-  document.getElementById('userDisplayName').textContent = displayName.replace(/^(น\.ส\.อรนันท์|น\.ส\.ปิยะวรรณ|นาง)/,'').trim().split(' ')[0] || displayName;
-
-  document.getElementById('loginScreen').style.display = 'none';
-  updateSidebarForRole();
-  recordLastLogin(u);
-  showPage('dashboard');
 }
 
-function doLogout() {
+async function doLogout() {
   if (!confirm('ต้องการออกจากระบบหรือไม่?')) return;
+  await supa.auth.signOut();
   currentUser = null;
+  db = { items:[], patients:[], staff:[], requisitions:[], purchases:[], itemLots:[], rooms:[], beds:[], contracts:[], payments:[], approvalLogs:[], returnItems:[], appointments:[], belongings:[], patientConsents:[], invoices:[], expenses:[], users:{}, incidents:[], wounds:[], diets:[], tubeFeeds:[], deposits:[] };
   try { sessionStorage.removeItem('navasri_user'); } catch(e) {}
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginUser').value = '';
@@ -8504,23 +8527,38 @@ function getReqPrintCSS() {
 
 // ===== INIT =====
 window.onload = async function() {
-  // Init Supabase หลัง CDN โหลดเสร็จ
+  // Init Supabase
   supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  await loadDB();
-  // Try restore session
-  try {
-    const saved = sessionStorage.getItem('navasri_user');
-    if (saved) {
-      currentUser = JSON.parse(saved);
-      updateSidebarForRole();
-      const initials = currentUser.displayName.replace(/^(นาย|นาง|น\.ส\.|ม\.ร\.ว\.)\s*/,'').trim().slice(0,2);
-      document.getElementById('userAvatar').textContent = initials;
-      document.getElementById('userDisplayName').textContent = currentUser.displayName.split(' ')[0] || currentUser.displayName;
-      document.getElementById('loginScreen').style.display = 'none';
-      updateSidebarForRole();
-      showPage('dashboard');
+
+  // เช็ก session ที่ค้างอยู่
+  const { data: { session } } = await supa.auth.getSession();
+
+  if (session) {
+    // มี session อยู่แล้ว — restore user แล้วโหลด DB
+    try {
+      const saved = sessionStorage.getItem('navasri_user');
+      if (saved) {
+        currentUser = JSON.parse(saved);
+        const displayName = currentUser.displayName || currentUser.username;
+        const initials = displayName.replace(/^(นาย|นาง|น\.ส\.|ม\.ร\.ว\.)\s*/,'').trim().slice(0,2);
+        document.getElementById('userAvatar').textContent = initials;
+        document.getElementById('userDisplayName').textContent = displayName.split(' ')[0] || displayName;
+        document.getElementById('loginScreen').style.display = 'none';
+        await loadDB();
+        updateSidebarForRole();
+        showPage('dashboard');
+      } else {
+        // มี session แต่ไม่มี profile — ให้ login ใหม่
+        await supa.auth.signOut();
+        document.getElementById('loginScreen').style.display = 'flex';
+      }
+    } catch(e) {
+      document.getElementById('loginScreen').style.display = 'flex';
     }
-  } catch(e) {}
+  } else {
+    // ไม่มี session — แสดงหน้า Login เท่านั้น ห้ามโหลด DB
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
 
   updateLineStatusDot();
 };
