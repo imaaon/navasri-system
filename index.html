@@ -4007,7 +4007,7 @@ function showPage(page) {
     if (nb) nb.classList.add('active');
   }
   currentPage = page;
-  const titles = { dashboard:'Dashboard', stock:'คลังสต็อก', requisition:'เบิกสินค้า', history:'ประวัติการเบิก', report:'รายงาน', patients:'ผู้รับบริการ', rooms:'🛏️ ห้องพักและเตียง', staff:'พนักงาน', items:'รายการสินค้า', settings:'💬 Line & ตั้งค่า', reqform:'ใบเบิกสินค้า', patprofile:'ข้อมูลผู้รับบริการ', staffprofile:'ข้อมูลพนักงาน', accounts:'🔑 จัดการ Account', healthreport:'📋 รายงานสุขภาพ', purchasehistory:'📋 ประวัติการสั่งซื้อ', billing:'💰 ระบบบัญชี', 'billing-settings':'⚙️ ตั้งค่าบัญชี' };
+  const titles = { dashboard:'Dashboard', stock:'คลังสต็อก', requisition:'เบิกสินค้า', history:'ประวัติการเบิก', report:'รายงาน', patients:'ผู้รับบริการ', rooms:'🛏️ ห้องพักและเตียง', staff:'พนักงาน', items:'รายการสินค้า', settings:'💬 Line & ตั้งค่า', reqform:'ใบเบิกสินค้า', patprofile:'ข้อมูลผู้รับบริการ', staffprofile:'ข้อมูลพนักงาน', accounts:'🔑 จัดการ Account', healthreport:'📋 รายงานสุขภาพ', purchasehistory:'📋 ประวัติการสั่งซื้อ', billing:'💰 ระบบบัญชี', 'billing-settings':'⚙️ ตั้งค่าบัญชี', incident:'⚠️ อุบัติเหตุ & แผลกดทับ', dietary:'🍽️ โภชนาการ & สายให้อาหาร', deposits:'🏦 มัดจำ & เงินประกัน' };
   document.getElementById('pageTitle').textContent = titles[page] || page;
   closeSidebar();
   renderPage(page);
@@ -11774,31 +11774,22 @@ function renderDeposits() {
 // ═══════════════════════════════════════════════════════
 
 // Patch renderPage to handle new pages
-const _origRenderPage = renderPage;
-function renderPage(page) {
-  _origRenderPage(page);
-  if (page==='incident') { if(!document.getElementById('incident-filter-month').value) document.getElementById('incident-filter-month').value=new Date().toISOString().slice(0,7); renderIncidentPage(); }
-  else if (page==='dietary') renderDietaryPage();
-  else if (page==='deposits') renderDeposits();
-}
-
-// Patch titles
-const _origShowPage = showPage;
-function showPage(page) {
-  const extraTitles = { incident:'⚠️ อุบัติเหตุ & แผลกดทับ', dietary:'🍽️ โภชนาการ & สายให้อาหาร', deposits:'🏦 มัดจำ & เงินประกัน' };
-  if (extraTitles[page]) {
-    document.querySelectorAll('[id^="page-"]').forEach(p=>p.style.display='none');
-    const el=document.getElementById('page-'+page); if(el) el.style.display='';
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n=>{ if(n.getAttribute('onclick')?.includes(`'${page}'`)) n.classList.add('active'); });
-    currentPage=page;
-    document.getElementById('pageTitle').textContent = extraTitles[page];
-    closeSidebar();
-    renderPage(page);
-  } else {
-    _origShowPage(page);
+// Hook new pages into existing renderPage
+const _renderPageOrig = renderPage;
+renderPage = function(page) {
+  _renderPageOrig(page);
+  if (page==='incident') {
+    const el = document.getElementById('incident-filter-month');
+    if (el && !el.value) el.value = new Date().toISOString().slice(0,7);
+    renderIncidentPage();
+  } else if (page==='dietary') {
+    renderDietaryPage();
+  } else if (page==='deposits') {
+    renderDeposits();
   }
-}
+};
+
+// Add new page titles to existing showPage titles object
 
 // Load new tables from Supabase on init
 const _origLoadData = typeof loadData==='function' ? loadData : null;
