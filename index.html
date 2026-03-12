@@ -4571,30 +4571,32 @@ async function approveReq(reqId) {
   if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
   req.status = 'approved';
 
-  // Cut stock NOW (FEFO — ตัด Lot ที่ใกล้หมดอายุก่อน)
+  // Cut stock — ใช้ RPC เพื่อป้องกัน Race Condition (Atomic)
   const item = db.items.find(i=>i.id==req.itemId);
   if (item) {
-    // 1. หัก items รวม
-    const newQty = Math.max(0, item.qty - req.qty);
-    await supa.from('items').update({ qty: newQty }).eq('id', item.id);
-    item.qty = newQty;
-
-    // 2. หัก item_lots แบบ FEFO (First Expired First Out)
-    let qtyLeft = req.qty;
-    const lots = (db.itemLots || [])
-      .filter(l => l.itemId == item.id && (l.qtyRemaining || 0) > 0)
-      .sort((a, b) => {
-        if (!a.expiryDate) return 1;
-        if (!b.expiryDate) return -1;
-        return new Date(a.expiryDate) - new Date(b.expiryDate);
-      });
-    for (const lot of lots) {
-      if (qtyLeft <= 0) break;
-      const deduct = Math.min(lot.qtyRemaining || 0, qtyLeft);
-      const newLotQty = Math.max(0, (lot.qtyRemaining || 0) - deduct);
-      await supa.from('item_lots').update({ qty_remaining: newLotQty }).eq('id', lot.id);
-      lot.qtyRemaining = newLotQty;
-      qtyLeft -= deduct;
+    const { data: rpcResult, error: rpcErr } = await supa.rpc('deduct_stock', {
+      p_item_id: item.id,
+      p_qty: req.qty
+    });
+    if (rpcErr) {
+      console.warn('deduct_stock RPC error:', rpcErr.message);
+      // Fallback: ตัดแบบเดิมถ้า RPC ยังไม่ได้สร้าง
+      const newQty = Math.max(0, item.qty - req.qty);
+      await supa.from('items').update({ qty: newQty }).eq('id', item.id);
+      item.qty = newQty;
+    } else {
+      // อัปเดต local cache
+      if (rpcResult?.new_qty !== undefined) item.qty = rpcResult.new_qty;
+      // sync lots จาก Supabase
+      const { data: lotsData } = await supa.from('item_lots').select('*').eq('item_id', item.id);
+      if (lotsData) {
+        db.itemLots = db.itemLots.filter(l => l.itemId != item.id);
+        lotsData.forEach(l => db.itemLots.push({
+          id: l.id, itemId: l.item_id, lotNo: l.lot_no,
+          qtyInLot: l.qty_in_lot, qtyRemaining: l.qty_remaining,
+          expiryDate: l.expiry_date, note: l.note
+        }));
+      }
     }
   }
 
