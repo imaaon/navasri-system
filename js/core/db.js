@@ -2,13 +2,7 @@
 
 // ===== DATA STORE =====
 // ── Supabase ─────────────────────────────────────────────────
-const SUPABASE_URL = 'https://umueucsxowjaurlaubwa.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_ZHnIfhsxqFwh7DhYlfbisw_5nfR9-i8';
-let supa = null; // จะ init ใน window.onload
 
-// ── Built-in Accounts (ต้องอยู่ก่อน doLogin) ────────────────
-// ── BUILTIN_ACCOUNTS ถูกลบออกแล้ว ใช้ app_users ใน Supabase แทน ──
-const BUILTIN_ACCOUNTS = {};
 
 let db = {
   items: [],
@@ -45,13 +39,18 @@ let db = {
 async function loadDB() {
   showLoadingOverlay(true);
   try {
-    const [items, patients, staff, reqs, purchases, users, settings, itemLots, rooms, beds, contracts, payments, approvalLogs, returnItems, appointments, belongings, patientConsents, invoices, expenses, roomHistoryRes, invoiceResetLogsRes] = await Promise.all([
+    const [
+      itemsRes, patientsRes, staffRes, reqsRes, purchasesRes,
+      settingsRes, itemLotsRes, roomsRes, bedsRes, contractsRes,
+      paymentsRes, approvalLogsRes, returnItemsRes, appointmentsRes,
+      belongingsRes, consentsRes, invoicesRes, expensesRes,
+      roomHistoryRes, invoiceResetLogsRes
+    ] = await Promise.all([
       supa.from('items').select('*').order('id'),
       supa.from('patients').select('*, medical_logs(*), patient_allergies(*), patient_contacts(*)').order('id'),
       supa.from('staff').select('*').order('id'),
       supa.from('requisitions').select('*').order('id', {ascending: false}).limit(500),
       supa.from('purchases').select('*').order('created_at', {ascending: false}).limit(500),
-      Promise.resolve({ data: [] }), // app_users ไม่ดึงมาที่ browser (ป้องกัน password leak)
       supa.from('settings').select('*'),
       supa.from('item_lots').select('*').order('expiry_date', {ascending: true}),
       supa.from('rooms').select('*').order('name'),
@@ -61,41 +60,33 @@ async function loadDB() {
       supa.from('approval_logs').select('*').order('created_at', {ascending: false}).limit(200),
       supa.from('return_items').select('*').order('created_at', {ascending: false}),
       supa.from('patient_appointments').select('*').order('appt_date', {ascending: true}),
-      supa.from('patient_room_history').select('*').order('transfer_date', {ascending: false}).limit(200),
-      supa.from('invoice_reset_logs').select('*').order('reset_at', {ascending: false}).limit(200),
       supa.from('patient_belongings').select('*').order('created_at', {ascending: false}),
       supa.from('patient_consents').select('*'),
       supa.from('invoices').select('*').order('created_at', {ascending: false}),
       supa.from('expenses').select('*').order('created_at', {ascending: false}),
+      supa.from('patient_room_history').select('*').order('transfer_date', {ascending: false}).limit(200),
+      supa.from('invoice_reset_logs').select('*').order('reset_at', {ascending: false}).limit(200),
     ]);
-    db.items        = (items.data || []).map(mapItem);
-    db.patients     = (patients.data || []).map(mapPatient);
-    db.staff        = (staff.data || []).map(mapStaff);
-    db.requisitions = (reqs.data || []).map(mapReq);
-    db.purchases    = (purchases.data || []).map(mapPurchase);
-    db.itemLots     = (itemLots.data || []).map(mapLot);
-    db.rooms        = (rooms.data || []).map(mapRoom);
-    db.beds         = (beds.data || []).map(mapBed);
-    db.contracts    = (contracts.data || []).map(mapContract);
-    db.payments     = (payments.data || []).map(mapPayment);
-    db.approvalLogs = (approvalLogs.data || []).map(mapApprovalLog);
-    db.returnItems  = (returnItems.data || []).map(mapReturnItem);
-    db.roomHistory       = (roomHistoryRes?.data || []);
-    db.invoiceResetLogs  = (invoiceResetLogsRes?.data || []);
-    db.appointments = (appointments.data || []).map(mapAppointment);
-    db.belongings   = (belongings.data || []).map(mapBelonging);
-    db.patientConsents = (patientConsents.data || []).map(mapConsent);
-    db.invoices     = (invoices.data || []).map(mapInvoice);
-    db.expenses     = (expenses.data || []).map(mapExpense);
-    // users
-    db.users = {};
-    (users.data || []).forEach(u => {
-      db.users[u.username] = {
-        password: u.password, displayName: u.display_name || u.name || u.username,
-        role: u.role, position: u.position || '',
-        lastLogin: u.last_login, createdAt: u.created_at
-      };
-    });
+    db.items           = (itemsRes.data || []).map(mapItem);
+    db.patients        = (patientsRes.data || []).map(mapPatient);
+    db.staff           = (staffRes.data || []).map(mapStaff);
+    db.requisitions    = (reqsRes.data || []).map(mapReq);
+    db.purchases       = (purchasesRes.data || []).map(mapPurchase);
+    db.itemLots        = (itemLotsRes.data || []).map(mapLot);
+    db.rooms           = (roomsRes.data || []).map(mapRoom);
+    db.beds            = (bedsRes.data || []).map(mapBed);
+    db.contracts       = (contractsRes.data || []).map(mapContract);
+    db.payments        = (paymentsRes.data || []).map(mapPayment);
+    db.approvalLogs    = (approvalLogsRes.data || []).map(mapApprovalLog);
+    db.returnItems     = (returnItemsRes.data || []).map(mapReturnItem);
+    db.appointments    = (appointmentsRes.data || []).map(mapAppointment);
+    db.belongings      = (belongingsRes.data || []).map(mapBelonging);
+    db.patientConsents = (consentsRes.data || []).map(mapConsent);
+    db.invoices        = (invoicesRes.data || []).map(mapInvoice);
+    db.expenses        = (expensesRes.data || []).map(mapExpense);
+    db.roomHistory     = (roomHistoryRes?.data || []);
+    db.invoiceResetLogs = (invoiceResetLogsRes?.data || []);
+    db.users = {}; // ไม่ดึง app_users มาที่ browser
     // settings: line + billing (billingSettings only — invoices/expenses now in own tables)
     const ls = (settings.data || []).find(s => s.key === 'lineSettings');
     if (ls) db.lineSettings = { ...db.lineSettings, ...ls.value };

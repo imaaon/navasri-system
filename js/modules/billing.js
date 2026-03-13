@@ -3011,6 +3011,4 @@ async function loadNewTables() {
     db.incidents=[]; db.wounds=[]; db.diets=[]; db.tubeFeeds=[]; db.deposits=[];
   }
 }
-document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(loadNewTables, 2000); });
-
-</script>
+// loadNewTables ถูกเรียกจาก loadDB ใน db.js แล้ว

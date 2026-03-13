@@ -31,11 +31,14 @@ function loadLineSettingsUI() {
 }
 
 function updateLineStatusDot() {
-  const dot = document.getElementById('lineStatusDot');
-  if (!dot) return;
-  const s = db.lineSettings;
-  dot.style.background = s.enabled && s.webhookUrl ? '#06c755' : s.enabled ? '#f59e0b' : '#555';
-  dot.title = s.enabled && s.webhookUrl ? 'Line: เชื่อมต่อแล้ว' : s.enabled ? 'Line: ยังไม่กรอก URL' : 'Line: ปิดอยู่';
+  try {
+    if (typeof db === 'undefined' || !db || !db.lineSettings) return;
+    const dot = document.getElementById('line-status-dot');
+    if (!dot) return;
+    const s = db.lineSettings;
+    dot.textContent = s.enabled && s.webhookUrl ? '🟢' : s.enabled ? '🟡' : '⚪';
+    dot.title = s.enabled && s.webhookUrl ? 'Line: เชื่อมต่อแล้ว' : s.enabled ? 'Line: ยังไม่กรอก URL' : 'Line: ปิดอยู่';
+  } catch(e) { /* ยังไม่พร้อม */ }
 }
 
 function updateLineBanner() {

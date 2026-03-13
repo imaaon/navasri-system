@@ -76,11 +76,15 @@ async function doLogin() {
     document.getElementById('userDisplayName').textContent = displayName.replace(/^(น\.ส\.|นาง|นาย)/,'').trim().split(' ')[0] || displayName;
 
     // โหลดข้อมูลหลัง login สำเร็จเท่านั้น!
-    document.getElementById('loginScreen').style.display = 'none';
-    await loadDB();
-    updateSidebarForRole();
-    recordLastLogin(u);
-    showPage('dashboard');
+    const ls2 = document.getElementById('loginScreen');
+    const as2 = document.getElementById('app-shell');
+    if (ls2) ls2.style.display = 'none';
+    if (as2) as2.style.display = 'flex';
+    resetIdleTimer();
+    if (typeof loadDB === 'function') await loadDB();
+    if (typeof updateSidebarForRole === 'function') updateSidebarForRole();
+    if (typeof recordLastLogin === 'function') recordLastLogin(u);
+    if (typeof showPage === 'function') showPage('dashboard');
 
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ'; }
@@ -91,7 +95,9 @@ async function doLogout() {
   if (!confirm('ต้องการออกจากระบบหรือไม่?')) return;
   await supa.auth.signOut();
   currentUser = null;
-  db = { items:[], patients:[], staff:[], requisitions:[], purchases:[], itemLots:[], rooms:[], beds:[], contracts:[], payments:[], approvalLogs:[], returnItems:[], appointments:[], belongings:[], patientConsents:[], invoices:[], expenses:[], users:{}, incidents:[], wounds:[], diets:[], tubeFeeds:[], deposits:[] };
+  if (typeof db !== 'undefined') {
+    Object.keys(db).forEach(k => { db[k] = Array.isArray(db[k]) ? [] : (typeof db[k] === 'object' ? {} : null); });
+  }
   try { sessionStorage.removeItem('navasri_user'); } catch(e) {}
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginUser').value = '';

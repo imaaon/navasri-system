@@ -130,6 +130,7 @@ async function loadHTMLPartials() {
 window.onload = async function() {
   // 1. โหลด HTML partials ก่อนทุกอย่าง
   await loadHTMLPartials();
+  initModalClickOutside(); // ต้องเรียกหลัง HTML โหลดเสร็จ
 
   // 2. Init Supabase
   supa = initSupabase();
