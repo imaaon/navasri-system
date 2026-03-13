@@ -935,6 +935,7 @@
           <button class="btn btn-ghost" onclick="showPage('patients')" style="padding:6px 12px;">← กลับ</button>
           <h2 style="font-size:18px;font-weight:700;">🛏️ จัดการห้องพักและเตียง</h2>
           <div style="margin-left:auto;display:flex;gap:8px;">
+            <button class="btn btn-ghost" onclick="openRoomHistoryModal()">📋 ประวัติย้ายห้อง</button>
             <button class="btn btn-ghost" onclick="openAddRoomModal()">+ เพิ่มห้อง</button>
             <button class="btn btn-primary" onclick="openAddBedModal()">+ เพิ่มเตียง</button>
           </div>
@@ -2873,6 +2874,7 @@
             <option value="available">ว่าง</option>
             <option value="occupied">มีผู้พัก</option>
             <option value="maintenance">ซ่อมบำรุง</option>
+            <option value="inactive">ปิดใช้งาน</option>
           </select>
         </div>
       </div>
@@ -2884,6 +2886,68 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-add-bed')">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveBed()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal ย้ายห้อง -->
+<div class="modal-overlay" id="modal-transfer-room">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">🔄 ย้ายห้อง / เตียง</div>
+      <button class="modal-close" onclick="closeModal('modal-transfer-room')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="transfer-patient-id">
+      <div class="form-group">
+        <label class="form-label">ผู้รับบริการ</label>
+        <div id="transfer-patient-name" style="font-weight:600;font-size:14px;padding:8px;background:var(--bg2);border-radius:7px;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ห้องปัจจุบัน</label>
+        <div id="transfer-current-room" style="font-size:13px;color:var(--text2);padding:6px 8px;background:var(--bg2);border-radius:7px;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">วันที่ย้าย <span class="required">*</span></label>
+        <input class="form-control" type="date" id="transfer-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ห้องใหม่ <span class="required">*</span></label>
+        <select class="form-control" id="transfer-room-id" onchange="updateTransferBeds()">
+          <option value="">-- เลือกห้อง --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">เตียงใหม่ <span class="required">*</span></label>
+        <select class="form-control" id="transfer-bed-id">
+          <option value="">-- เลือกเตียง --</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="transfer-note" placeholder="เหตุผลการย้าย">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-transfer-room')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveTransferRoom()">🔄 บันทึกการย้าย</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ประวัติย้ายห้อง -->
+<div class="modal-overlay" id="modal-room-history">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-header">
+      <div class="modal-title">📋 ประวัติการย้ายห้อง</div>
+      <button class="modal-close" onclick="closeModal('modal-room-history')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+        <input class="form-control" id="history-search" placeholder="ค้นหาชื่อผู้รับบริการ..." oninput="renderRoomHistory()" style="max-width:300px;">
+      </div>
+      <div id="room-history-list" style="max-height:450px;overflow-y:auto;"></div>
     </div>
   </div>
 </div>
@@ -3501,6 +3565,7 @@ let db = {
   payments: [],    // payments
   approvalLogs: [], // approval_logs
   returnItems: [],  // return_items
+  roomHistory: [], // patient_room_history
   appointments: [], // patient_appointments
   belongings: [],   // patient_belongings
   patientConsents: [], // patient_consents (DNR)
@@ -3521,7 +3586,7 @@ let db = {
 async function loadDB() {
   showLoadingOverlay(true);
   try {
-    const [items, patients, staff, reqs, purchases, users, settings, itemLots, rooms, beds, contracts, payments, approvalLogs, returnItems, appointments, belongings, patientConsents, invoices, expenses] = await Promise.all([
+    const [items, patients, staff, reqs, purchases, users, settings, itemLots, rooms, beds, contracts, payments, approvalLogs, returnItems, appointments, belongings, patientConsents, invoices, expenses, roomHistoryRes] = await Promise.all([
       supa.from('items').select('*').order('id'),
       supa.from('patients').select('*, medical_logs(*), patient_allergies(*), patient_contacts(*)').order('id'),
       supa.from('staff').select('*').order('id'),
@@ -3537,6 +3602,7 @@ async function loadDB() {
       supa.from('approval_logs').select('*').order('created_at', {ascending: false}).limit(200),
       supa.from('return_items').select('*').order('created_at', {ascending: false}),
       supa.from('patient_appointments').select('*').order('appt_date', {ascending: true}),
+      supa.from('patient_room_history').select('*').order('transfer_date', {ascending: false}).limit(200),
       supa.from('patient_belongings').select('*').order('created_at', {ascending: false}),
       supa.from('patient_consents').select('*'),
       supa.from('invoices').select('*').order('created_at', {ascending: false}),
@@ -3554,6 +3620,7 @@ async function loadDB() {
     db.payments     = (payments.data || []).map(mapPayment);
     db.approvalLogs = (approvalLogs.data || []).map(mapApprovalLog);
     db.returnItems  = (returnItems.data || []).map(mapReturnItem);
+    db.roomHistory  = (roomHistoryRes?.data || []);
     db.appointments = (appointments.data || []).map(mapAppointment);
     db.belongings   = (belongings.data || []).map(mapBelonging);
     db.patientConsents = (patientConsents.data || []).map(mapConsent);
@@ -6401,14 +6468,16 @@ function renderRooms() {
   summaryEl.innerHTML = types.map(t => {
     const tRooms = rooms.filter(r => r.roomType === t);
     const tBeds  = beds.filter(b => tRooms.some(r => r.id == b.roomId));
-    const occupied = tBeds.filter(b => b.status === 'occupied').length;
-    const available = tBeds.filter(b => b.status === 'available').length;
+    const activeBeds = tBeds.filter(b => b.status !== 'inactive');
+    const occupied = activeBeds.filter(b => b.status === 'occupied').length;
+    const available = activeBeds.filter(b => b.status === 'available').length;
+    const maintenance = activeBeds.filter(b => b.status === 'maintenance').length;
     const c = typeColors[t] || '#555';
     return `<div style="background:white;border-radius:10px;border:1px solid var(--border);padding:14px 16px;">
       <div style="font-size:11px;font-weight:700;color:${c};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">${t}</div>
       <div style="font-size:22px;font-weight:800;color:${c};">${tRooms.length} <span style="font-size:12px;font-weight:400;color:var(--text3);">ห้อง</span></div>
       <div style="font-size:12px;margin-top:4px;color:var(--text2);">
-        <span style="color:#27ae60;">● ว่าง ${available}</span> · <span style="color:#c0392b;">● มีผู้พัก ${occupied}</span>
+        <span style="color:#27ae60;">● ว่าง ${available}</span> · <span style="color:#c0392b;">● มีผู้พัก ${occupied}</span>${maintenance?' · <span style="color:#e67e22;">● ซ่อม '+maintenance+'</span>':''}
       </div>
     </div>`;
   }).join('');
@@ -6429,15 +6498,17 @@ function renderRooms() {
       ? '<div style="font-size:12px;color:var(--text3);padding:8px 0;">ยังไม่มีเตียง</div>'
       : roomBeds.map(b => {
           const occupant = db.patients.find(p => p.currentBedId == b.id);
-          const statusColor = b.status==='available'?'#27ae60':b.status==='occupied'?'#c0392b':'#e67e22';
-          const statusLabel = b.status==='available'?'ว่าง':b.status==='occupied'?'มีผู้พัก':'ซ่อมบำรุง';
-          return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:${b.status==='available'?'#f9fff9':b.status==='occupied'?'#fff5f5':'#fffbf0'};">
+          if (b.status === 'inactive') return ''; // ซ่อนเตียงที่ปิดใช้งาน
+          const statusColor = b.status==='available'?'#27ae60':b.status==='occupied'?'#c0392b':b.status==='maintenance'?'#e67e22':'#95a5a6';
+          const statusLabel = b.status==='available'?'ว่าง':b.status==='occupied'?'มีผู้พัก':b.status==='maintenance'?'ซ่อมบำรุง':'ปิดใช้งาน';
+          return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:${b.status==='available'?'#f9fff9':b.status==='occupied'?'#fff5f5':b.status==='maintenance'?'#fffbf0':'#f5f5f5'};">
             <span style="font-size:16px;">🛏️</span>
             <div style="flex:1;">
               <div style="font-weight:600;font-size:13px;">เตียง ${b.bedCode}</div>
               ${occupant ? `<div style="font-size:11px;color:#c0392b;font-weight:600;">👤 ${occupant.name}</div>` : ''}
             </div>
             <span style="font-size:11px;font-weight:700;color:${statusColor};">● ${statusLabel}</span>
+            ${occupant ? `<button class="btn btn-ghost btn-sm" onclick="openTransferRoomModal(${occupant.id})" style="padding:3px 7px;font-size:11px;color:#2980b9;">🔄 ย้าย</button>` : ''}
             <button class="btn btn-ghost btn-sm" onclick="editBed(${b.id})" style="padding:3px 7px;font-size:11px;">✏️</button>
             <button class="btn btn-ghost btn-sm" onclick="deleteBed(${b.id})" style="padding:3px 7px;font-size:11px;">🗑️</button>
           </div>`;
@@ -6581,6 +6652,143 @@ async function deleteBed(id) {
   if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
   db.beds = db.beds.filter(b => b.id != id);
   toast('ลบเรียบร้อย'); renderRooms();
+}
+
+
+// ===== ROOM TRANSFER (ย้ายห้อง) =====
+function openTransferRoomModal(patientId) {
+  const p = db.patients.find(x => x.id == patientId);
+  if (!p) return;
+  const bed = db.beds.find(b => b.id == p.currentBedId);
+  const room = db.rooms.find(r => r.id == (bed?.roomId || p.currentRoomId));
+
+  document.getElementById('transfer-patient-id').value = patientId;
+  document.getElementById('transfer-patient-name').textContent = p.name;
+  document.getElementById('transfer-current-room').textContent =
+    room ? `ห้อง ${room.name} · เตียง ${bed?.bedCode || '-'}` : 'ไม่ระบุห้อง';
+  document.getElementById('transfer-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('transfer-note').value = '';
+
+  // โหลดห้องทั้งหมด
+  const roomSel = document.getElementById('transfer-room-id');
+  roomSel.innerHTML = '<option value="">-- เลือกห้อง --</option>' +
+    db.rooms.map(r => `<option value="${r.id}">${r.name} (${r.roomType})</option>`).join('');
+  document.getElementById('transfer-bed-id').innerHTML = '<option value="">-- เลือกเตียงก่อน --</option>';
+
+  openModal('modal-transfer-room');
+}
+
+function updateTransferBeds() {
+  const roomId = document.getElementById('transfer-room-id').value;
+  const patId = document.getElementById('transfer-patient-id').value;
+  const p = db.patients.find(x => x.id == patId);
+  const availBeds = db.beds.filter(b =>
+    b.roomId == roomId &&
+    (b.status === 'available' || b.id == p?.currentBedId)
+  );
+  const bedSel = document.getElementById('transfer-bed-id');
+  bedSel.innerHTML = '<option value="">-- เลือกเตียง --</option>' +
+    availBeds.map(b => `<option value="${b.id}">เตียง ${b.bedCode}</option>`).join('');
+}
+
+async function saveTransferRoom() {
+  const patId   = document.getElementById('transfer-patient-id').value;
+  const newRoomId = document.getElementById('transfer-room-id').value;
+  const newBedId  = document.getElementById('transfer-bed-id').value;
+  const date      = document.getElementById('transfer-date').value;
+  const note      = document.getElementById('transfer-note').value.trim();
+
+  if (!newRoomId || !newBedId || !date) {
+    toast('กรุณากรอกข้อมูลให้ครบ', 'warning'); return;
+  }
+
+  const p = db.patients.find(x => x.id == patId);
+  if (!p) return;
+
+  const oldBed  = db.beds.find(b => b.id == p.currentBedId);
+  const oldRoom = db.rooms.find(r => r.id == (oldBed?.roomId || p.currentRoomId));
+  const newBed  = db.beds.find(b => b.id == newBedId);
+  const newRoom = db.rooms.find(r => r.id == newRoomId);
+
+  // บันทึกประวัติย้ายห้องใน Supabase
+  const histData = {
+    patient_id:   parseInt(patId),
+    patient_name: p.name,
+    from_room_id: oldBed?.roomId || p.currentRoomId || null,
+    from_room:    oldRoom?.name || '-',
+    from_bed_id:  p.currentBedId || null,
+    from_bed:     oldBed?.bedCode || '-',
+    to_room_id:   parseInt(newRoomId),
+    to_room:      newRoom?.name || '-',
+    to_bed_id:    parseInt(newBedId),
+    to_bed:       newBed?.bedCode || '-',
+    transfer_date: date,
+    note:         note,
+    created_by:   currentUser?.displayName || currentUser?.username || ''
+  };
+  const { error: histErr } = await supa.from('patient_room_history').insert(histData);
+  if (histErr) console.warn('room history insert:', histErr.message);
+
+  // อัปเดตสถานะเตียงเดิม → ว่าง
+  if (p.currentBedId && p.currentBedId != newBedId) {
+    await supa.from('beds').update({ status: 'available', patient_id: null }).eq('id', p.currentBedId);
+    const oldBedObj = db.beds.find(b => b.id == p.currentBedId);
+    if (oldBedObj) { oldBedObj.status = 'available'; oldBedObj.patientId = null; }
+  }
+
+  // อัปเดตสถานะเตียงใหม่ → มีผู้พัก
+  await supa.from('beds').update({ status: 'occupied', patient_id: parseInt(patId) }).eq('id', newBedId);
+  if (newBed) { newBed.status = 'occupied'; newBed.patientId = parseInt(patId); }
+
+  // อัปเดตข้อมูลคนไข้
+  await supa.from('patients').update({
+    room_id: parseInt(newRoomId),
+    bed_id:  parseInt(newBedId)
+  }).eq('id', patId);
+  p.currentRoomId = parseInt(newRoomId);
+  p.currentBedId  = parseInt(newBedId);
+
+  // บันทึก local history
+  if (!db.roomHistory) db.roomHistory = [];
+  db.roomHistory.unshift({ ...histData, id: Date.now() });
+
+  toast(`✅ ย้ายห้องเรียบร้อย → ห้อง ${newRoom?.name} เตียง ${newBed?.bedCode}`, 'success');
+  closeModal('modal-transfer-room');
+  renderRooms();
+}
+
+function openRoomHistoryModal() {
+  document.getElementById('history-search').value = '';
+  renderRoomHistory();
+  openModal('modal-room-history');
+}
+
+function renderRoomHistory() {
+  const q = document.getElementById('history-search').value.trim().toLowerCase();
+  const list = (db.roomHistory || []).filter(h =>
+    !q || h.patient_name?.toLowerCase().includes(q)
+  );
+  const el = document.getElementById('room-history-list');
+  if (!list.length) {
+    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text3);">ยังไม่มีประวัติการย้ายห้อง</div>';
+    return;
+  }
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead><tr style="background:var(--bg2);position:sticky;top:0;">
+      <th style="padding:10px 12px;text-align:left;font-weight:600;">วันที่</th>
+      <th style="padding:10px 12px;text-align:left;font-weight:600;">ผู้รับบริการ</th>
+      <th style="padding:10px 12px;text-align:left;font-weight:600;">จากห้อง</th>
+      <th style="padding:10px 12px;text-align:left;font-weight:600;">ไปห้อง</th>
+      <th style="padding:10px 12px;text-align:left;font-weight:600;">หมายเหตุ</th>
+    </tr></thead>
+    <tbody>${list.map(h => `<tr style="border-top:1px solid var(--border);">
+      <td style="padding:9px 12px;">${h.transfer_date||'-'}</td>
+      <td style="padding:9px 12px;font-weight:600;">${h.patient_name||'-'}</td>
+      <td style="padding:9px 12px;color:var(--text2);">ห้อง ${h.from_room||'-'} เตียง ${h.from_bed||'-'}</td>
+      <td style="padding:9px 12px;color:#27ae60;font-weight:600;">ห้อง ${h.to_room||'-'} เตียง ${h.to_bed||'-'}</td>
+      <td style="padding:9px 12px;color:var(--text3);">${h.note||'-'}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
 }
 
 // ===== ALLERGY CRUD =====
