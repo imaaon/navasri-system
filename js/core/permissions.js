@@ -39,3 +39,40 @@ function updateSidebarForRole() {
   const billingSection = document.getElementById('nav-section-billing');
   if (billingSection) billingSection.style.display = allowed.includes('billing') ? '' : 'none';
 }
+
+// ── Permission Helpers ───────────────────────────────────────
+function hasRole(...roles) {
+  return currentUser && roles.includes(currentUser.role);
+}
+
+function canApproveReq() {
+  return hasRole('admin', 'manager', 'officer');
+}
+
+function canManageBilling() {
+  return hasRole('admin', 'manager', 'officer');
+}
+
+function canManagePatients() {
+  return hasRole('admin', 'manager', 'officer', 'nurse');
+}
+
+function canManageInventory() {
+  return hasRole('admin', 'manager', 'officer', 'warehouse');
+}
+
+function canManageStaff() {
+  return hasRole('admin', 'manager', 'officer');
+}
+
+function canViewAccounts() {
+  return hasRole('admin');
+}
+
+function canResetInvoice() {
+  return hasRole('admin', 'manager', 'officer');
+}
+
+function canDischargePatient() {
+  return hasRole('admin', 'manager', 'nurse');
+}

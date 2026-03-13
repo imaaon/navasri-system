@@ -57,17 +57,26 @@ async function doLogin() {
       return;
     }
 
-    // ดึงข้อมูล user profile จาก app_users (เฉพาะ record ของตัวเอง)
-    const { data: profile } = await supa.from('app_users')
-      .select('username, display_name, name, role, position')
+    // ดึง profile จาก app_users — เฉพาะ record ของตัวเอง (RLS บังคับ)
+    const { data: profile, error: profErr } = await supa.from('app_users')
+      .select('username, display_name, name, role, position, auth_id')
       .eq('username', u)
       .single();
 
-    const displayName = profile?.display_name || profile?.name || u;
-    const role = profile?.role || 'staff';
-    const position = profile?.position || '';
+    if (profErr || !profile) {
+      err.textContent = 'ไม่พบข้อมูลผู้ใช้ในระบบ กรุณาติดต่อ Admin';
+      err.style.display = 'block';
+      await supa.auth.signOut();
+      return;
+    }
 
-    currentUser = { username: u, displayName, role, position };
+    // ตรวจสอบ role จาก server (ป้องกัน client-side tampering)
+    const { data: serverRole } = await supa.rpc('get_my_role');
+    const role        = serverRole || profile.role || 'staff';
+    const displayName = profile.display_name || profile.name || u;
+    const position    = profile.position || '';
+
+    currentUser = { username: u, displayName, role, position, authId: data.user?.id };
     try { sessionStorage.setItem('navasri_user', JSON.stringify(currentUser)); } catch(e) {}
 
     // Update UI

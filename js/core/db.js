@@ -86,7 +86,9 @@ async function loadDB() {
     db.expenses        = (expensesRes.data || []).map(mapExpense);
     db.roomHistory     = (roomHistoryRes?.data || []);
     db.invoiceResetLogs = (invoiceResetLogsRes?.data || []);
-    db.users = {}; // ไม่ดึง app_users มาที่ browser
+    // ไม่ดึง app_users/password มาที่ browser เพื่อความปลอดภัย
+    // role ตรวจสอบจาก server ผ่าน get_my_role() RPC เท่านั้น
+    db.users = {};
     // settings: line + billing (billingSettings only — invoices/expenses now in own tables)
     const ls = (settings.data || []).find(s => s.key === 'lineSettings');
     if (ls) db.lineSettings = { ...db.lineSettings, ...ls.value };
