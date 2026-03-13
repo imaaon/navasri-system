@@ -1146,6 +1146,7 @@
           <button class="btn btn-ghost" onclick="openCreateInvoiceModal()" style="border:1px solid var(--border);">+ เอกสารทั่วไป</button>
           <button class="btn btn-ghost" onclick="openExpenseModal()" style="background:rgba(230,126,34,.1);color:#e67e22;border-color:#e67e22;">📋 ค่าใช้จ่าย</button>
           <button class="btn btn-ghost" onclick="runAutoBilling()" style="background:rgba(90,158,122,.1);color:var(--accent);border-color:var(--accent);">🤖 ออกบิลอัตโนมัติ</button>
+          <button class="btn btn-ghost" onclick="openInvoiceResetLogModal()" style="color:#8e44ad;border-color:#8e44ad;">📋 ประวัติการ Reset</button>
           <button class="btn btn-ghost" onclick="showPage('billing-settings')">⚙️ ตั้งค่า</button>
         </div>
 
@@ -1777,6 +1778,16 @@
         <label class="form-label">พยาบาลผู้ให้ยา</label>
         <input class="form-control" id="mar-entry-by" placeholder="ชื่อพยาบาล">
       </div>
+      <div class="form-group">
+        <label class="form-label">สถานะการให้ยา <span class="required">*</span></label>
+        <select class="form-control" id="mar-entry-status" onchange="onMARStatusChange()">
+          <option value="given">✅ ให้ยาปกติ</option>
+          <option value="refused">❌ ผู้ป่วยปฏิเสธ</option>
+          <option value="omitted">⏸️ งดยาชั่วคราว (แพทย์สั่ง)</option>
+          <option value="held">🕐 เลื่อนเวลาให้ยา</option>
+          <option value="npo">🚫 งดยาเพราะผ่าตัด/ทำหัตถการ</option>
+        </select>
+      </div>
       <div class="form-group" style="margin:0;">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="mar-entry-note" placeholder="เช่น ผู้รับบริการปฏิเสธ, ให้ช้ากว่ากำหนด 30 นาที">
@@ -1784,7 +1795,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-mar-entry')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveMAREntry()">✔️ บันทึกการให้ยา</button>
+      <button class="btn btn-primary" id="mar-entry-btn" onclick="saveMAREntry()">✔️ บันทึกการให้ยา</button>
     </div>
   </div>
 </div>
@@ -2952,6 +2963,100 @@
   </div>
 </div>
 
+
+<!-- Modal จำหน่ายผู้รับบริการ (Discharge) -->
+<div class="modal-overlay" id="modal-discharge">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-title">🚪 จำหน่ายผู้รับบริการ</div>
+      <button class="modal-close" onclick="closeModal('modal-discharge')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="discharge-patient-id">
+      <div class="form-group">
+        <label class="form-label">ผู้รับบริการ</label>
+        <div id="discharge-patient-name" style="font-weight:600;font-size:14px;padding:8px;background:var(--bg2);border-radius:7px;"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันที่จำหน่าย <span class="required">*</span></label>
+          <input class="form-control" type="date" id="discharge-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">เหตุผลการจำหน่าย <span class="required">*</span></label>
+          <select class="form-control" id="discharge-reason">
+            <option value="กลับบ้าน">🏠 กลับบ้าน</option>
+            <option value="ย้ายไปโรงพยาบาล">🏥 ย้ายไปโรงพยาบาล</option>
+            <option value="ย้ายสถานดูแลอื่น">🔄 ย้ายสถานดูแลอื่น</option>
+            <option value="เสียชีวิต">🕊️ เสียชีวิต</option>
+            <option value="ครบสัญญา">📋 ครบสัญญา</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">สรุปอาการก่อนจำหน่าย (Discharge Summary)</label>
+        <textarea class="form-control" id="discharge-summary" rows="3" placeholder="สรุปสภาพผู้รับบริการก่อนจำหน่าย เช่น อาการดีขึ้น สัญญาณชีพปกติ..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-discharge')">ยกเลิก</button>
+      <button class="btn btn-danger" onclick="saveDischarge()" style="background:#c0392b;color:#fff;">🚪 ยืนยันการจำหน่าย</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal Reset บิล -->
+<div class="modal-overlay" id="modal-invoice-reset">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">🔄 Reset สถานะบิล</div>
+      <button class="modal-close" onclick="closeModal('modal-invoice-reset')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="reset-invoice-id">
+      <div style="background:#fff3e0;border:1px solid #e67e22;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-weight:700;color:#e67e22;margin-bottom:4px;">⚠️ คำเตือน</div>
+        <div style="font-size:13px;color:#7d4e00;">การ Reset จะบันทึก Log ไว้ทุกครั้ง และจะแสดงในประวัติการ Reset ครับ</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">บิลที่จะ Reset</label>
+        <div id="reset-invoice-info" style="font-weight:600;font-size:13px;padding:8px;background:var(--bg2);border-radius:7px;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reset เป็นสถานะ <span class="required">*</span></label>
+        <select class="form-control" id="reset-invoice-status">
+          <option value="draft">ร่าง</option>
+          <option value="sent">รอชำระ (วางบิลแล้ว)</option>
+          <option value="partial">ชำระบางส่วน</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">เหตุผลที่ Reset <span class="required">*</span></label>
+        <input class="form-control" id="reset-invoice-reason" placeholder="เช่น แก้ไขวันที่ชำระ, ยอดเงินไม่ถูกต้อง">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-invoice-reset')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveInvoiceReset()" style="background:#8e44ad;">🔄 ยืนยัน Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ประวัติการ Reset บิล -->
+<div class="modal-overlay" id="modal-invoice-reset-log">
+  <div class="modal" style="max-width:750px;">
+    <div class="modal-header">
+      <div class="modal-title">📋 ประวัติการ Reset บิล</div>
+      <button class="modal-close" onclick="closeModal('modal-invoice-reset-log')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div id="invoice-reset-log-list" style="max-height:500px;overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Add Allergy Modal -->
 <div class="modal-overlay" id="modal-add-allergy">
   <div class="modal" style="max-width:480px;">
@@ -3177,7 +3282,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">สถานะ</label>
-        <select class="form-control" id="pat-status">
+        <select class="form-control" id="pat-status" onchange="onPatStatusChange(this)">
           <option value="active">พักอยู่</option>
           <option value="inactive">ออกแล้ว</option>
         </select>
@@ -3566,6 +3671,7 @@ let db = {
   approvalLogs: [], // approval_logs
   returnItems: [],  // return_items
   roomHistory: [], // patient_room_history
+  invoiceResetLogs: [], // invoice_reset_logs
   appointments: [], // patient_appointments
   belongings: [],   // patient_belongings
   patientConsents: [], // patient_consents (DNR)
@@ -3586,7 +3692,7 @@ let db = {
 async function loadDB() {
   showLoadingOverlay(true);
   try {
-    const [items, patients, staff, reqs, purchases, users, settings, itemLots, rooms, beds, contracts, payments, approvalLogs, returnItems, appointments, belongings, patientConsents, invoices, expenses, roomHistoryRes] = await Promise.all([
+    const [items, patients, staff, reqs, purchases, users, settings, itemLots, rooms, beds, contracts, payments, approvalLogs, returnItems, appointments, belongings, patientConsents, invoices, expenses, roomHistoryRes, invoiceResetLogsRes] = await Promise.all([
       supa.from('items').select('*').order('id'),
       supa.from('patients').select('*, medical_logs(*), patient_allergies(*), patient_contacts(*)').order('id'),
       supa.from('staff').select('*').order('id'),
@@ -3603,6 +3709,7 @@ async function loadDB() {
       supa.from('return_items').select('*').order('created_at', {ascending: false}),
       supa.from('patient_appointments').select('*').order('appt_date', {ascending: true}),
       supa.from('patient_room_history').select('*').order('transfer_date', {ascending: false}).limit(200),
+      supa.from('invoice_reset_logs').select('*').order('reset_at', {ascending: false}).limit(200),
       supa.from('patient_belongings').select('*').order('created_at', {ascending: false}),
       supa.from('patient_consents').select('*'),
       supa.from('invoices').select('*').order('created_at', {ascending: false}),
@@ -3620,7 +3727,8 @@ async function loadDB() {
     db.payments     = (payments.data || []).map(mapPayment);
     db.approvalLogs = (approvalLogs.data || []).map(mapApprovalLog);
     db.returnItems  = (returnItems.data || []).map(mapReturnItem);
-    db.roomHistory  = (roomHistoryRes?.data || []);
+    db.roomHistory       = (roomHistoryRes?.data || []);
+    db.invoiceResetLogs  = (invoiceResetLogsRes?.data || []);
     db.appointments = (appointments.data || []).map(mapAppointment);
     db.belongings   = (belongings.data || []).map(mapBelonging);
     db.patientConsents = (patientConsents.data || []).map(mapConsent);
@@ -4099,6 +4207,90 @@ function renderPage(page) {
 
 // ===== DASHBOARD =====
 function renderDashboard() {
+  const role = currentUser?.role || 'staff';
+  // แสดง Dashboard ตาม Role
+  if (role === 'nurse' || role === 'caregiver') {
+    renderNurseDashboard();
+    return;
+  }
+  renderAdminDashboard();
+}
+
+function renderNurseDashboard() {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const activePatients = db.patients.filter(p => p.status === 'active');
+
+  // นัดหมายสัปดาห์นี้
+  const weekLater = new Date(); weekLater.setDate(weekLater.getDate() + 7);
+  const weekStr = weekLater.toISOString().split('T')[0];
+  const upcomingAppts = (db.appointments || []).filter(a =>
+    a.apptDate >= todayStr && a.apptDate <= weekStr && a.status !== 'done'
+  ).sort((a,b) => a.apptDate.localeCompare(b.apptDate));
+
+  // ยาที่ยังไม่ได้บันทึกวันนี้
+  const missedMeds = [];
+  activePatients.forEach(p => {
+    const meds = db.medications?.[p.internalId] || [];
+    meds.filter(m => m.active !== false).forEach(med => {
+      const todayRecord = (db.marRecords?.[p.internalId] || []).find(r =>
+        r.medicationId == med.id && r.date === todayStr
+      );
+      if (!todayRecord) missedMeds.push({ patient: p.name, med: med.name, patientId: p.id });
+    });
+  });
+
+  const dashEl = document.getElementById('page-dashboard');
+  dashEl.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:20px;">
+      <div class="card" style="padding:18px;text-align:center;">
+        <div style="font-size:28px;font-weight:800;color:var(--accent);">${activePatients.length}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px;">👥 ผู้รับบริการปัจจุบัน</div>
+      </div>
+      <div class="card" style="padding:18px;text-align:center;">
+        <div style="font-size:28px;font-weight:800;color:#e67e22;">${upcomingAppts.length}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px;">📅 นัดหมายสัปดาห์นี้</div>
+      </div>
+      <div class="card" style="padding:18px;text-align:center;">
+        <div style="font-size:28px;font-weight:800;color:#c0392b;">${missedMeds.length}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px;">💊 ยาที่ยังไม่บันทึกวันนี้</div>
+      </div>
+    </div>
+
+    ${upcomingAppts.length > 0 ? `
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header"><div class="card-title">📅 นัดหมายสัปดาห์นี้</div></div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:var(--bg2);">
+          <th style="padding:8px 12px;text-align:left;">วันที่</th>
+          <th style="padding:8px 12px;text-align:left;">ผู้รับบริการ</th>
+          <th style="padding:8px 12px;text-align:left;">สถานที่/แพทย์</th>
+        </tr></thead>
+        <tbody>${upcomingAppts.slice(0,10).map(a => `<tr style="border-top:1px solid var(--border);">
+          <td style="padding:8px 12px;font-weight:600;color:var(--accent);">${a.apptDate}</td>
+          <td style="padding:8px 12px;">${a.patientName || '-'}</td>
+          <td style="padding:8px 12px;color:var(--text2);">${a.location || a.doctor || '-'}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>` : ''}
+
+    ${missedMeds.length > 0 ? `
+    <div class="card">
+      <div class="card-header"><div class="card-title" style="color:#c0392b;">💊 ยาที่ยังไม่บันทึกวันนี้</div></div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:#fff5f5;">
+          <th style="padding:8px 12px;text-align:left;">ผู้รับบริการ</th>
+          <th style="padding:8px 12px;text-align:left;">ยา</th>
+        </tr></thead>
+        <tbody>${missedMeds.slice(0,15).map(m => `<tr style="border-top:1px solid var(--border);">
+          <td style="padding:8px 12px;font-weight:600;">${m.patient}</td>
+          <td style="padding:8px 12px;color:#c0392b;">💊 ${m.med}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>` : `<div class="card" style="padding:20px;text-align:center;color:#27ae60;">✅ บันทึกการให้ยาครบทุกรายการแล้ววันนี้</div>`}
+  `;
+}
+
+function renderAdminDashboard() {
   const lowItems = db.items.filter(i => i.qty <= i.reorder);
   const todayStr = new Date().toISOString().split('T')[0];
   const todayReqs = db.requisitions.filter(r => r.date === todayStr);
@@ -4193,7 +4385,7 @@ function renderDashboard() {
     </div>`;
   }).join('');
   renderUpcomingAppts();
-}
+}  // end renderAdminDashboard
 
 // ===== STOCK =====
 function renderStock() {
@@ -4646,13 +4838,10 @@ async function approveReq(reqId) {
       p_qty: req.qty
     });
     if (rpcErr) {
-      console.warn('deduct_stock RPC error:', rpcErr.message);
-      // Fallback: ตัดแบบเดิมถ้า RPC ยังไม่ได้สร้าง
-      const newQty = Math.max(0, item.qty - req.qty);
-      await supa.from('items').update({ qty: newQty }).eq('id', item.id);
-      item.qty = newQty;
+      toast('❌ ระบบขัดข้อง: ' + rpcErr.message + ' — กรุณากดอนุมัติใหม่อีกครั้ง', 'error');
+      showLoadingOverlay(false);
+      return;
     } else {
-      // อัปเดต local cache
       if (rpcResult?.new_qty !== undefined) item.qty = rpcResult.new_qty;
       // sync lots จาก Supabase
       const { data: lotsData } = await supa.from('item_lots').select('*').eq('item_id', item.id);
@@ -4801,11 +4990,8 @@ async function saveReturnItem() {
       p_qty: qty
     });
     if (rpcErr) {
-      console.warn('return_stock RPC error:', rpcErr.message);
-      // Fallback: บวกแบบเดิมถ้า RPC ยังไม่ได้สร้าง
-      const newQty = item.qty + qty;
-      await supa.from('items').update({ qty: newQty }).eq('id', item.id);
-      item.qty = newQty;
+      toast('❌ ระบบขัดข้อง: ' + rpcErr.message + ' — กรุณาบันทึกใหม่อีกครั้ง', 'error');
+      return;
     } else {
       if (rpcResult?.new_qty !== undefined) item.qty = rpcResult.new_qty;
     }
@@ -6055,8 +6241,28 @@ function openMAREntryModal(patientId, pid, medId) {
   openModal('modal-mar-entry');
 }
 
+function onMARStatusChange() {
+  const status = document.getElementById('mar-entry-status').value;
+  const timeField = document.getElementById('mar-entry-time');
+  const btn = document.getElementById('mar-entry-btn');
+  if (status === 'given') {
+    timeField.disabled = false;
+    btn.textContent = '✔️ บันทึกการให้ยา';
+    btn.style.background = '';
+  } else if (status === 'refused') {
+    timeField.disabled = false;
+    btn.textContent = '❌ บันทึกการปฏิเสธยา';
+    btn.style.background = '#c0392b';
+  } else {
+    timeField.disabled = false;
+    btn.textContent = '⏸️ บันทึกการงดยา';
+    btn.style.background = '#e67e22';
+  }
+}
+
 async function saveMAREntry() {
   const timeVal = document.getElementById('mar-entry-time').value;
+  const status  = document.getElementById('mar-entry-status').value;
   if (!timeVal) { toast('กรุณาระบุเวลา','warning'); return; }
   const givenAt = new Date(timeVal).toISOString();
   const date    = timeVal.slice(0,10);
@@ -6064,6 +6270,7 @@ async function saveMAREntry() {
     patient_id:    _marPatientId,
     medication_id: _marMedId,
     date, given_at: givenAt,
+    status:   status || 'given',
     timing:   document.getElementById('mar-entry-timing').value,
     given_by: document.getElementById('mar-entry-by').value.trim(),
     note:     document.getElementById('mar-entry-note').value.trim(),
@@ -6654,6 +6861,206 @@ async function deleteBed(id) {
   toast('ลบเรียบร้อย'); renderRooms();
 }
 
+
+
+
+
+// ===== INVOICE RESET =====
+function openInvoiceResetModal(id) {
+  // ตรวจสิทธิ์
+  const role = currentUser?.role;
+  if (!['admin','manager','officer'].includes(role)) {
+    toast('❌ ไม่มีสิทธิ์ Reset บิล', 'error'); return;
+  }
+  const inv = (db.invoices||[]).find(i=>i.id===id);
+  if (!inv) return;
+
+  document.getElementById('reset-invoice-id').value = id;
+  document.getElementById('reset-invoice-reason').value = '';
+  document.getElementById('reset-invoice-status').value = 'sent';
+
+  const dynStatus = getDynamicInvoiceStatus(inv);
+  const STATUS_LABELS = { draft:'ร่าง', sent:'รอชำระ', partial:'ชำระบางส่วน', paid:'ชำระครบ' };
+  const paid = getInvoicePaidAmount(id);
+  document.getElementById('reset-invoice-info').innerHTML =
+    `<div>เลขที่: <strong>${inv.docNo||'-'}</strong></div>
+     <div>สถานะปัจจุบัน: <strong style="color:#c0392b;">${STATUS_LABELS[dynStatus]||dynStatus}</strong></div>
+     <div>ยอดรับชำระแล้ว: <strong>${formatThb(paid)}</strong> / ${formatThb(inv.grandTotal||0)}</div>`;
+
+  openModal('modal-invoice-reset');
+}
+
+async function saveInvoiceReset() {
+  const id     = document.getElementById('reset-invoice-id').value;
+  const newStatus = document.getElementById('reset-invoice-status').value;
+  const reason = document.getElementById('reset-invoice-reason').value.trim();
+
+  if (!reason) { toast('กรุณาระบุเหตุผล', 'warning'); return; }
+
+  const inv = (db.invoices||[]).find(i=>i.id===id);
+  if (!inv) return;
+
+  const dynStatus = getDynamicInvoiceStatus(inv);
+  const paid = getInvoicePaidAmount(id);
+
+  // บันทึก Log ก่อน
+  const logData = {
+    invoice_id:     id,
+    doc_no:         inv.docNo || '-',
+    patient_name:   inv.patientName || '-',
+    old_status:     dynStatus,
+    new_status:     newStatus,
+    old_paid_amount: paid,
+    grand_total:    inv.grandTotal || 0,
+    reason:         reason,
+    reset_by:       currentUser?.displayName || currentUser?.username || '',
+    reset_by_role:  currentUser?.role || '',
+    reset_at:       new Date().toISOString()
+  };
+  const { error: logErr } = await supa.from('invoice_reset_logs').insert(logData);
+  if (logErr) console.warn('reset log error:', logErr.message);
+
+  // ถ้า reset เป็น draft หรือ sent → ลบประวัติการชำระทั้งหมดของบิลนี้ออก
+  if (newStatus === 'draft' || newStatus === 'sent') {
+    await supa.from('payments').delete().eq('invoice_id', id);
+    db.payments = (db.payments||[]).filter(p => p.invoiceId != id);
+  }
+
+  // อัปเดตสถานะบิล
+  await supa.from('invoices').update({ status: newStatus }).eq('id', id);
+  inv.status = newStatus;
+
+  // บันทึก log ใน local
+  if (!db.invoiceResetLogs) db.invoiceResetLogs = [];
+  db.invoiceResetLogs.unshift(logData);
+
+  toast(`✅ Reset บิล ${inv.docNo} เรียบร้อย → ${newStatus}`, 'success');
+  closeModal('modal-invoice-reset');
+  renderBilling();
+}
+
+function openInvoiceResetLogModal() {
+  renderInvoiceResetLog();
+  openModal('modal-invoice-reset-log');
+}
+
+function renderInvoiceResetLog() {
+  const logs = db.invoiceResetLogs || [];
+  const el = document.getElementById('invoice-reset-log-list');
+  const STATUS_LABELS = { draft:'ร่าง', sent:'รอชำระ', partial:'ชำระบางส่วน', paid:'ชำระครบ' };
+
+  if (!logs.length) {
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);">ยังไม่มีประวัติการ Reset</div>';
+    return;
+  }
+
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead><tr style="background:var(--bg2);position:sticky;top:0;">
+      <th style="padding:10px 12px;text-align:left;">เวลา</th>
+      <th style="padding:10px 12px;text-align:left;">เลขที่บิล</th>
+      <th style="padding:10px 12px;text-align:left;">ผู้รับบริการ</th>
+      <th style="padding:10px 12px;text-align:left;">สถานะเดิม</th>
+      <th style="padding:10px 12px;text-align:left;">Reset เป็น</th>
+      <th style="padding:10px 12px;text-align:right;">ยอดชำระเดิม</th>
+      <th style="padding:10px 12px;text-align:left;">เหตุผล</th>
+      <th style="padding:10px 12px;text-align:left;">ผู้ Reset</th>
+    </tr></thead>
+    <tbody>${logs.map(l => `<tr style="border-top:1px solid var(--border);">
+      <td style="padding:9px 12px;font-size:11px;color:var(--text3);">${l.reset_at ? new Date(l.reset_at).toLocaleString('th-TH') : '-'}</td>
+      <td style="padding:9px 12px;font-weight:600;font-family:monospace;">${l.doc_no||'-'}</td>
+      <td style="padding:9px 12px;">${l.patient_name||'-'}</td>
+      <td style="padding:9px 12px;"><span style="color:#c0392b;font-weight:600;">${STATUS_LABELS[l.old_status]||l.old_status||'-'}</span></td>
+      <td style="padding:9px 12px;"><span style="color:#27ae60;font-weight:600;">${STATUS_LABELS[l.new_status]||l.new_status||'-'}</span></td>
+      <td style="padding:9px 12px;text-align:right;">${l.old_paid_amount ? formatThb(l.old_paid_amount) : '-'}</td>
+      <td style="padding:9px 12px;color:var(--text2);">${l.reason||'-'}</td>
+      <td style="padding:9px 12px;font-size:12px;">${l.reset_by||'-'} <span style="color:var(--text3);">(${l.reset_by_role||'-'})</span></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ===== DISCHARGE MANAGEMENT =====
+function onPatStatusChange(sel) {
+  const editId = document.getElementById('pat-edit-id')?.value;
+  if (sel.value === 'inactive' && editId) {
+    const p = db.patients.find(x => x.id == editId);
+    if (p && p.status === 'active') {
+      sel.value = 'active'; // reset ไว้ก่อน
+      openDischargeModal(editId);
+    }
+  }
+}
+
+function openDischargeModal(patientId) {
+  const p = db.patients.find(x => x.id == patientId);
+  if (!p) return;
+  document.getElementById('discharge-patient-id').value = patientId;
+  document.getElementById('discharge-patient-name').textContent = p.name;
+  document.getElementById('discharge-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('discharge-reason').value = 'กลับบ้าน';
+  document.getElementById('discharge-summary').value = '';
+  openModal('modal-discharge');
+}
+
+async function saveDischarge() {
+  const patId  = document.getElementById('discharge-patient-id').value;
+  const date   = document.getElementById('discharge-date').value;
+  const reason = document.getElementById('discharge-reason').value;
+  const summary = document.getElementById('discharge-summary').value.trim();
+  if (!date || !reason) { toast('กรุณากรอกข้อมูลให้ครบ', 'warning'); return; }
+
+  const p = db.patients.find(x => x.id == patId);
+  if (!p) return;
+
+  // อัปเดตสถานะคนไข้
+  const { error } = await supa.from('patients').update({
+    status: 'inactive',
+    end_date: date,
+    discharge_reason: reason,
+    discharge_summary: summary,
+    discharged_by: currentUser?.displayName || currentUser?.username || ''
+  }).eq('id', patId);
+
+  if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+
+  // คืนเตียง
+  if (p.currentBedId) {
+    await supa.from('beds').update({ status: 'available' }).eq('id', p.currentBedId);
+    const bed = db.beds.find(b => b.id == p.currentBedId);
+    if (bed) bed.status = 'available';
+  }
+
+  p.status = 'inactive';
+  p.endDate = date;
+
+  toast(`🚪 จำหน่าย ${p.name} เรียบร้อย (${reason})`, 'success');
+  closeModal('modal-discharge');
+  closeModal('modal-add-patient');
+  renderPatients();
+}
+
+// ===== AUTO-LOGOUT (15 นาที ไม่มีการใช้งาน) =====
+let _idleTimer = null;
+const IDLE_MINUTES = 15;
+
+function resetIdleTimer() {
+  if (!currentUser) return;
+  clearTimeout(_idleTimer);
+  _idleTimer = setTimeout(async () => {
+    await supa.auth.signOut();
+    currentUser = null;
+    try { sessionStorage.removeItem('navasri_user'); } catch(e) {}
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginError').style.display = 'none';
+    toast('⏱️ ระบบออกจากการเข้าใช้งานอัตโนมัติเนื่องจากไม่มีการใช้งานเกิน ' + IDLE_MINUTES + ' นาที', 'warning');
+  }, IDLE_MINUTES * 60 * 1000);
+}
+
+// ดักจับทุก event ที่แสดงว่ายังใช้งานอยู่
+['mousemove','mousedown','keypress','touchstart','scroll','click'].forEach(evt => {
+  document.addEventListener(evt, resetIdleTimer, { passive: true });
+});
 
 // ===== ROOM TRANSFER (ย้ายห้อง) =====
 function openTransferRoomModal(patientId) {
@@ -9295,6 +9702,7 @@ function renderBilling() {
         <button class="btn btn-ghost btn-sm" onclick="exportInvoicePDF('${inv.id}')" title="Export PDF" style="color:#e74c3c;">📄</button>
         <button class="btn btn-ghost btn-sm" onclick="editInvoice('${inv.id}')" title="แก้ไข">✏️</button>
         ${dynStatus!=='paid'?`<button class="btn btn-primary btn-sm" onclick="openRecordPaymentModal('${inv.id}')" title="รับชำระ" style="font-size:11px;">💳 รับชำระ</button>`:''}
+        ${['admin','manager','officer'].includes(currentUser?.role) && (dynStatus==='paid'||dynStatus==='partial') ? `<button class="btn btn-ghost btn-sm" onclick="openInvoiceResetModal('${inv.id}')" title="Reset บิล" style="color:#8e44ad;font-size:11px;">🔄 Reset</button>` : ''}
         <button class="btn btn-ghost btn-sm" onclick="deleteInvoice('${inv.id}')" style="color:#e74c3c;">🗑️</button>
       </td>
     </tr>`;
@@ -9813,6 +10221,13 @@ async function saveInvoice(status) {
 function editInvoice(id) {
   const inv=(db.invoices||[]).find(i=>i.id===id);
   if(!inv) return;
+  if (inv.status === 'paid') {
+    toast('❌ ไม่สามารถแก้ไขบิลที่ชำระแล้วได้ — หากต้องการแก้ไขให้ยกเลิกบิลแล้วออกใหม่', 'error');
+    return;
+  }
+  if (inv.status === 'partial') {
+    if (!confirm('⚠️ บิลนี้มีการรับเงินบางส่วนแล้ว การแก้ไขอาจทำให้ยอดไม่ตรงกับใบเสร็จ\nต้องการแก้ไขต่อหรือไม่?')) return;
+  }
   document.getElementById('inv-edit-id').value   = inv.id;
   document.getElementById('inv-type').value       = inv.type;
   document.getElementById('inv-docno').value      = inv.docNo;
