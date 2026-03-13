@@ -103,70 +103,89 @@ function removeReqItem(idx) {
 }
 
 async function submitReq() {
-  const patId = document.getElementById('req-patient').value;
+  const patId   = document.getElementById('req-patient').value;
   const staffId = document.getElementById('req-staff').value;
-  const date = document.getElementById('req-date').value;
-  const note = document.getElementById('req-note').value;
+  const date    = document.getElementById('req-date').value;
+  const note    = document.getElementById('req-note').value;
 
-  if (!patId) { toast('กรุณาเลือกผู้รับบริการ', 'warning'); return; }
+  if (!patId)   { toast('กรุณาเลือกผู้รับบริการ', 'warning'); return; }
   if (!staffId) { toast('กรุณาเลือกผู้เบิก', 'warning'); return; }
 
   const validItems = reqItems.filter(ri => ri.itemId && ri.qty > 0);
   if (validItems.length === 0) { toast('กรุณาเพิ่มรายการที่ต้องการเบิก', 'warning'); return; }
 
   const patient = db.patients.find(p => p.id == patId);
-  const staff = db.staff.find(s => s.id == staffId);
+  const staff   = db.staff.find(s => s.id == staffId);
 
-  let errors = [];
+  // เช็คสต็อกก่อน
+  const errors = [];
   validItems.forEach(ri => {
     const item = db.items.find(i => i.id == ri.itemId);
     if (item && item.qty < ri.qty) errors.push(`${item.name}: คงเหลือ ${item.qty} ${item.unit}`);
   });
-  if (errors.length > 0) {
-    toast('สินค้าไม่เพียงพอ: ' + errors.join(', '), 'error'); return;
+  if (errors.length > 0) { toast('สินค้าไม่เพียงพอ: ' + errors.join(', '), 'error'); return; }
+
+  showLoadingOverlay(true);
+  try {
+    // ใช้ RPC submit_requisition — บันทึก header + lines แบบ atomic
+    const lines = validItems.map(ri => {
+      const item = db.items.find(i => i.id == ri.itemId);
+      return { item_id: item.id, item_name: item.name, qty_requested: ri.qty, unit: ri.unit || item.unit };
+    });
+
+    const { data: rpcResult, error: rpcErr } = await supa.rpc('submit_requisition', {
+      p_patient_id:   parseInt(patId),
+      p_patient_name: patient.name,
+      p_staff_id:     parseInt(staffId),
+      p_staff_name:   staff.name,
+      p_date:         date,
+      p_note:         note || '',
+      p_created_by:   currentUser?.username || '',
+      p_lines:        lines,
+    });
+
+    if (rpcErr) { toast('บันทึกไม่สำเร็จ: ' + rpcErr.message, 'error'); return; }
+
+    const refNo    = rpcResult.ref_no;
+    const headerId = rpcResult.header_id;
+
+    // อัปเดต local cache (db.requisitions) เพื่อให้ approval panel เห็นทันที
+    validItems.forEach(ri => {
+      const item = db.items.find(i => i.id == ri.itemId);
+      if (!item) return;
+      db.requisitions.unshift({
+        id: headerId, refNo, date,
+        patientId: patId, patientName: patient.name,
+        itemId: item.id, itemName: item.name,
+        qty: ri.qty, unit: ri.unit || item.unit,
+        staffId, staffName: staff.name, note, status: 'pending'
+      });
+    });
+
+    toast(`บันทึกการเบิก ${validItems.length} รายการเรียบร้อย (${refNo})`, 'success');
+
+    // Line notification
+    sendLineNotify('new_requisition', buildLineMsg('new_requisition', {
+      refNo, patient: patient.name, itemCount: validItems.length, staff: staff.name
+    }), { patientName: patient.name, itemCount: validItems.length });
+
+    // Low stock check
+    validItems.forEach(ri => {
+      const item = db.items.find(i => i.id == ri.itemId);
+      if (item && item.qty <= item.reorder) {
+        sendLineNotify('low_stock', buildLineMsg('low_stock', {
+          itemName: item.name, qty: item.qty, unit: item.unit, reorder: item.reorder
+        }), { itemName: item.name, qty: item.qty });
+      }
+    });
+
+    closeModal('modal-req');
+    clearReq();
+  } catch(e) {
+    toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+  } finally {
+    showLoadingOverlay(false);
   }
-
-  for (const ri of validItems) {
-    const item = db.items.find(i => i.id == ri.itemId);
-    if (!item) continue;
-    // DO NOT cut stock here — stock is cut only after final approval
-    const refNo = 'REQ-' + String(Date.now()).slice(-6) + '-' + ri.itemId;
-    const row = {
-      date, patient_id: patId, patient_name: patient.name,
-      item_id: item.id, item_name: item.name,
-      qty: ri.qty, unit: ri.unit || item.unit,
-      staff_id: staffId, staff_name: staff.name, note,
-      status: 'pending',
-      ref_no: refNo,
-    };
-    const { data: ins, error: reqErr } = await supa.from('requisitions').insert(row).select().single();
-    if (reqErr) { toast('บันทึกไม่สำเร็จ: ' + reqErr.message, 'error'); return; }
-    db.requisitions.unshift({ id: ins.id, refNo, date, patientId: patId, patientName: patient.name,
-      itemId: item.id, itemName: item.name, qty: ri.qty, unit: ri.unit || item.unit,
-      staffId, staffName: staff.name, note, status: 'pending' });
-  }
-
-  toast(`บันทึกการเบิก ${validItems.length} รายการเรียบร้อย`, 'success');
-
-  // Line notification
-  sendLineNotify('new_requisition', buildLineMsg('new_requisition', {
-    refNo: 'REQ-' + String(Date.now()).slice(-6),
-    patient: patient.name,
-    itemCount: validItems.length,
-    staff: staff.name
-  }), { patientName: patient.name, itemCount: validItems.length });
-
-  // Low stock check
-  validItems.forEach(ri => {
-    const item = db.items.find(i => i.id == ri.itemId);
-    if (item && item.qty <= item.reorder) {
-      sendLineNotify('low_stock', buildLineMsg('low_stock', {
-        itemName: item.name, qty: item.qty, unit: item.unit, reorder: item.reorder
-      }), { itemName: item.name, qty: item.qty });
-    }
-  });
-
-  clearReq();
 }
 
 function clearReq() {
@@ -324,28 +343,31 @@ async function approveReq(reqId) {
   if (!req) return;
   if (!canApproveReq()) { toast('ไม่มีสิทธิ์อนุมัติ','error'); return; }
 
-  const actor = currentUser?.displayName || currentUser?.username || '';
+  const actor     = currentUser?.displayName || currentUser?.username || '';
   const actorRole = currentUser?.role || '';
 
-  // Update req status
-  const { error } = await supa.from('requisitions').update({ status:'approved' }).eq('id', reqId);
-  if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
-  req.status = 'approved';
-
-  // Cut stock — ใช้ RPC เพื่อป้องกัน Race Condition (Atomic)
-  const item = db.items.find(i=>i.id==req.itemId);
-  if (item) {
-    const { data: rpcResult, error: rpcErr } = await supa.rpc('deduct_stock', {
-      p_item_id: item.id,
-      p_qty: req.qty
+  showLoadingOverlay(true);
+  try {
+    // ใช้ RPC approve_requisition — ตัดสต็อก FEFO + audit แบบ atomic
+    const { data: rpcResult, error: rpcErr } = await supa.rpc('approve_requisition', {
+      p_header_id:      reqId,
+      p_approved_by:    actor,
+      p_approved_role:  actorRole,
     });
-    if (rpcErr) {
-      toast('❌ ระบบขัดข้อง: ' + rpcErr.message + ' — กรุณากดอนุมัติใหม่อีกครั้ง', 'error');
-      showLoadingOverlay(false);
+
+    if (rpcErr || !rpcResult?.ok) {
+      toast('❌ อนุมัติไม่สำเร็จ: ' + (rpcErr?.message || rpcResult?.error), 'error');
       return;
-    } else {
-      if (rpcResult?.new_qty !== undefined) item.qty = rpcResult.new_qty;
-      // sync lots จาก Supabase
+    }
+
+    // อัปเดต local cache
+    req.status = 'approved';
+    const item = db.items.find(i => i.id == req.itemId);
+    if (item) {
+      // sync item qty จาก Supabase
+      const { data: updItem } = await supa.from('items').select('qty').eq('id', item.id).single();
+      if (updItem) item.qty = updItem.qty;
+      // sync lots
       const { data: lotsData } = await supa.from('item_lots').select('*').eq('item_id', item.id);
       if (lotsData) {
         db.itemLots = db.itemLots.filter(l => l.itemId != item.id);
@@ -356,21 +378,18 @@ async function approveReq(reqId) {
         }));
       }
     }
+
+    sendLineNotify('approved', buildLineMsg('approved', {
+      refNo: req.refNo||('REQ#'+reqId), patient: req.patientName, itemCount: 1
+    }), { patientName: req.patientName, itemCount: 1 });
+
+    toast(`✅ อนุมัติใบเบิก ${req.refNo||reqId} — ตัดสต็อกเรียบร้อย`, 'success');
+    updateApprovalBadge();
+    renderApprovalPanel();
+    renderHistory();
+  } finally {
+    showLoadingOverlay(false);
   }
-
-  // Write audit log
-  const logData = { req_id: reqId, action:'approved', level:1, actor_name: actor, actor_role: actorRole, reason:'' };
-  const { data: logIns } = await supa.from('approval_logs').insert(logData).select().single();
-  if (logIns) { if(!db.approvalLogs) db.approvalLogs=[]; db.approvalLogs.unshift(mapApprovalLog(logIns)); }
-
-  sendLineNotify('approved', buildLineMsg('approved', {
-    refNo: req.refNo||('REQ#'+reqId), patient: req.patientName, itemCount: 1
-  }), { patientName: req.patientName, itemCount:1 });
-
-  toast(`✅ อนุมัติใบเบิก #${reqId} — ตัดสต็อกเรียบร้อย`, 'success');
-  updateApprovalBadge();
-  renderApprovalPanel();
-  renderHistory();
 }
 
 async function approveAllReq() {
@@ -402,14 +421,16 @@ async function confirmRejectReq() {
   if (!req) return;
   const actor = currentUser?.displayName || currentUser?.username || '';
 
-  await supa.from('requisitions').update({ status:'rejected', note: req.note ? req.note+' | ไม่อนุมัติ: '+reason : 'ไม่อนุมัติ: '+reason }).eq('id', reqId);
+  // ใช้ RPC reject_requisition — บันทึก audit ด้วย
+  const { data: rpcRes, error: rpcErr } = await supa.rpc('reject_requisition', {
+    p_header_id:   parseInt(reqId),
+    p_rejected_by: actor,
+    p_reason:      reason,
+  });
+  if (rpcErr || !rpcRes?.ok) {
+    toast('❌ ไม่สำเร็จ: ' + (rpcErr?.message || rpcRes?.error), 'error'); return;
+  }
   req.status = 'rejected';
-
-  // Audit log
-  const logData = { req_id: reqId, action:'reject', level:1,
-    actor_name: actor, actor_role: currentUser?.role||'', reason };
-  const { data: logIns } = await supa.from('approval_logs').insert(logData).select().single();
-  if (logIns) { if(!db.approvalLogs) db.approvalLogs=[]; db.approvalLogs.unshift(mapApprovalLog(logIns)); }
 
   // Send Line notification
   sendLineNotify('rejected', buildLineMsg('rejected', {
