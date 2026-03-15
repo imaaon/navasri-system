@@ -11,14 +11,16 @@ function renderPatients() {
   );
   if (statusF) pats = pats.filter(p => p.status === statusF);
 
-  const active = pats.filter(p => p.status === 'active').length;
-  const total  = pats.length;
+  const active   = pats.filter(p => p.status === 'active').length;
+  const hospital = pats.filter(p => p.status === 'hospital').length;
+  const total    = pats.length;
 
   const sumEl = document.getElementById('patSummary');
   if (sumEl) sumEl.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
     <div style="background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">👥 ทั้งหมด <strong>${total}</strong> คน</div>
     <div style="background:var(--green-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">✅ พักอยู่ <strong>${active}</strong> คน</div>
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">🚪 ออกแล้ว <strong>${total-active}</strong> คน</div>
+    ${hospital ? `<div style="background:#EBF5FB;border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">🏥 อยู่โรงพยาบาล <strong>${hospital}</strong> คน</div>` : ''}
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">🚪 ออกแล้ว <strong>${total-active-hospital}</strong> คน</div>
   </div>`;
 
   const tb = document.getElementById('patTable');
@@ -50,7 +52,7 @@ function renderPatients() {
       <td class="number" style="font-size:12px;">${p.admitDate||p.admit_date||'-'}</td>
       <td class="number" style="font-size:12px;">${p.endDate||p.end_date||'-'}</td>
       <td style="font-size:12px;color:var(--text2);">${dur}</td>
-      <td><span class="badge ${isActive ? 'badge-green' : 'badge-gray'}">${isActive ? 'พักอยู่' : 'ออกแล้ว'}</span></td>
+      <td><span class="badge ${p.status==='active' ? 'badge-green' : p.status==='hospital' ? 'badge-blue' : 'badge-gray'}">${p.status==='active' ? 'พักอยู่' : p.status==='hospital' ? '🏥 อยู่ รพ.' : 'ออกแล้ว'}</span></td>
       <td style="white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" onclick="openPatientProfile(${p.id})" title="ดูโปรไฟล์">🔍</button>
         <button class="btn btn-ghost btn-sm" onclick="editPatient(${p.id})" title="แก้ไข">✏️</button>

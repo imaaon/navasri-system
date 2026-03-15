@@ -42,8 +42,8 @@ function renderRooms() {
       : roomBeds.map(b => {
           const occupant = db.patients.find(p => p.currentBedId == b.id);
           if (b.status === 'inactive') return ''; // ซ่อนเตียงที่ปิดใช้งาน
-          const statusColor = b.status==='available'?'#27ae60':b.status==='occupied'?'#c0392b':b.status==='hospital'?'#2980b9':b.status==='maintenance'?'#e67e22':'#95a5a6';
-          const statusLabel = b.status==='available'?'ว่าง':b.status==='occupied'?'มีผู้พัก':b.status==='hospital'?'อยู่ รพ.':b.status==='maintenance'?'ซ่อมบำรุง':b.status==='other'?(b.otherNote||'อื่นๆ'):'ปิดใช้งาน';
+          const statusColor = b.status==='available'?'#27ae60':b.status==='occupied'?'#c0392b':b.status==='maintenance'?'#e67e22':'#95a5a6';
+          const statusLabel = b.status==='available'?'ว่าง':b.status==='occupied'?'มีผู้พัก':b.status==='maintenance'?'ซ่อมบำรุง':b.status==='other'?(b.otherNote||'อื่นๆ'):'ปิดใช้งาน';
           return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:${b.status==='available'?'#f9fff9':b.status==='occupied'?'#fff5f5':b.status==='maintenance'?'#fffbf0':'#f5f5f5'};">
             <span style="font-size:16px;">🛏️</span>
             <div style="flex:1;">

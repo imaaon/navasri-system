@@ -1253,7 +1253,6 @@
           <select class="form-control" id="bed-status" onchange="toggleBedOtherNote()">
             <option value="available">ว่าง</option>
             <option value="occupied">มีผู้พัก</option>
-            <option value="hospital">อยู่โรงพยาบาล</option>
             <option value="maintenance">ซ่อมบำรุง</option>
             <option value="inactive">ปิดใช้งาน</option>
             <option value="other">อื่นๆ (ระบุ)</option>
@@ -1658,6 +1657,7 @@
         <label class="form-label">สถานะ</label>
         <select class="form-control" id="pat-status" onchange="onPatStatusChange(this)">
           <option value="active">พักอยู่</option>
+          <option value="hospital">อยู่โรงพยาบาล</option>
           <option value="inactive">ออกแล้ว</option>
         </select>
       </div>
