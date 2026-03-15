@@ -123,6 +123,8 @@ function mapPatient(r) {
     status: r.status||'active', phone: r.phone, emergency: r.emergency,
     address: r.address, note: r.note, photo: r.photo,
     currentBedId: r.current_bed_id || null,
+    physioRatePerHour: r.physio_rate_per_hour || 0,
+    physioHoursPerDay: r.physio_hours_per_day || 0,
     allergies: (r.patient_allergies || []).map(a => ({
       id: a.id, allergen: a.allergen, allergyType: a.allergy_type||'ยา',
       severity: a.severity||'ปานกลาง', reaction: a.reaction||'', note: a.note||''
@@ -145,7 +147,7 @@ function mapRoom(r) {
 }
 function mapBed(r) {
   return { id: r.id, roomId: r.room_id, bedCode: r.bed_code,
-    status: r.status||'available', note: r.note||'' };
+    status: r.status||'available', note: r.note||'', otherNote: r.other_note||'' };
 }
 function mapContract(r) {
   return {

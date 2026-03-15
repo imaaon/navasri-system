@@ -94,6 +94,8 @@ function editPatient(id) {
   document.getElementById('pat-emergency').value= p.emergency || '';
   document.getElementById('pat-address').value  = p.address || '';
   document.getElementById('pat-note').value     = p.note || '';
+  document.getElementById('pat-physio-rate').value  = p.physioRatePerHour || 0;
+  document.getElementById('pat-physio-hours').value = p.physioHoursPerDay || 0;
   const photoData = document.getElementById('pat-photo-data');
   photoData.value = p.photo || '';
   const preview = document.getElementById('pat-photo-preview');
@@ -175,6 +177,8 @@ async function savePatient() {
     note:   document.getElementById('pat-note').value,
     photo:  photoVal || undefined,
     currentBedId: bedId ? parseInt(bedId) : null,
+    physioRatePerHour: parseFloat(document.getElementById('pat-physio-rate')?.value) || 0,
+    physioHoursPerDay: parseFloat(document.getElementById('pat-physio-hours')?.value) || 0,
   };
   const row = {
     name: data.name, idcard: data.idcard||null, id_type: data.idType||'thai',
@@ -183,6 +187,8 @@ async function savePatient() {
     emergency: data.emergency||null, address: data.address||null,
     note: data.note||null, photo: data.photo||null,
     current_bed_id: data.currentBedId,
+    physio_rate_per_hour: data.physioRatePerHour,
+    physio_hours_per_day: data.physioHoursPerDay,
   };
   if (editId) {
     // If bed changed, update old bed back to available

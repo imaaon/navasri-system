@@ -88,6 +88,7 @@ async function openPatientProfile(id) {
         <div class="tab" onclick="switchPatTab('appts')">🚐 นัดหมายแพทย์</div>
         <div class="tab" onclick="switchPatTab('belongings')">🧳 ทรัพย์สิน</div>
         <div class="tab" onclick="switchPatTab('dnr')">⚖️ DNR & Consent</div>
+        <div class="tab" onclick="switchPatTab('physio')">🤸 กายภาพบำบัด</div>
       </div>
       <div id="patprofile-tab-history">
         <div class="card">
@@ -218,19 +219,40 @@ async function openPatientProfile(id) {
           ${renderDnrPanel(p)}
         </div>
       </div>
+
+      <div id="patprofile-tab-physio" style="display:none;">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-weight:600;font-size:14px;">🤸 บันทึกกายภาพบำบัด</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="physio-month-filter" class="form-control" style="width:160px;font-size:13px;" onchange="renderPhysioTab('${p.id}')">
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="openPhysioSessionModal('${p.id}','${p.name}')">+ บันทึก Session</button>
+            </div>
+          </div>
+          <div id="physio-summary-${p.id}" style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
+          <div id="physio-list-${p.id}"></div>
+        </div>
+      </div>
     </div>
   </div>`;
   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
 function switchPatTab(tab) {
-  ['history','medical','meds','allergy','contacts','notes','mar','vitals','nursing','appts','belongings','dnr'].forEach(t => {
+  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','nursing','appts','belongings','dnr','physio'];
+  tabs.forEach(t => {
     const el = document.getElementById('patprofile-tab-'+t);
     if(el) el.style.display = t===tab ? '' : 'none';
   });
   document.querySelectorAll('#patprofileTabs .tab').forEach((el,i) => {
-    el.classList.toggle('active', ['history','medical','meds','allergy','contacts','notes','mar','vitals','nursing','appts','belongings','dnr'][i] === tab);
+    el.classList.toggle('active', tabs[i] === tab);
   });
+  if (tab === 'physio') {
+    const btn = document.querySelector('#patprofile-tab-physio button');
+    const pid = btn?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    if (pid) renderPhysioTab(pid);
+  }
 }
 
 // ==========================================

@@ -42,8 +42,8 @@ function renderRooms() {
       : roomBeds.map(b => {
           const occupant = db.patients.find(p => p.currentBedId == b.id);
           if (b.status === 'inactive') return ''; // ซ่อนเตียงที่ปิดใช้งาน
-          const statusColor = b.status==='available'?'#27ae60':b.status==='occupied'?'#c0392b':b.status==='maintenance'?'#e67e22':'#95a5a6';
-          const statusLabel = b.status==='available'?'ว่าง':b.status==='occupied'?'มีผู้พัก':b.status==='maintenance'?'ซ่อมบำรุง':'ปิดใช้งาน';
+          const statusColor = b.status==='available'?'#27ae60':b.status==='occupied'?'#c0392b':b.status==='hospital'?'#2980b9':b.status==='maintenance'?'#e67e22':'#95a5a6';
+          const statusLabel = b.status==='available'?'ว่าง':b.status==='occupied'?'มีผู้พัก':b.status==='hospital'?'อยู่ รพ.':b.status==='maintenance'?'ซ่อมบำรุง':b.status==='other'?(b.otherNote||'อื่นๆ'):'ปิดใช้งาน';
           return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:${b.status==='available'?'#f9fff9':b.status==='occupied'?'#fff5f5':b.status==='maintenance'?'#fffbf0':'#f5f5f5'};">
             <span style="font-size:16px;">🛏️</span>
             <div style="flex:1;">
@@ -142,6 +142,8 @@ function openAddBedModal(roomId=null, editId=null) {
   document.getElementById('bed-code').value = '';
   document.getElementById('bed-status').value = 'available';
   document.getElementById('bed-note').value = '';
+  const otherEl = document.getElementById('bed-other-note');
+  if (otherEl) { otherEl.value = ''; otherEl.style.display = 'none'; }
   const sel = document.getElementById('bed-room-id');
   sel.innerHTML = '<option value="">-- เลือกห้อง --</option>' +
     db.rooms.map(r => `<option value="${r.id}" ${roomId == r.id ? 'selected':''}>${r.name} (${r.roomType})</option>`).join('');
@@ -154,6 +156,10 @@ function openAddBedModal(roomId=null, editId=null) {
       document.getElementById('bed-code').value   = b.bedCode;
       document.getElementById('bed-status').value = b.status;
       document.getElementById('bed-note').value   = b.note||'';
+      if (b.status === 'other' && otherEl) {
+        otherEl.style.display = '';
+        otherEl.value = b.otherNote || '';
+      }
     }
   }
   openModal('modal-add-bed');
@@ -166,10 +172,12 @@ async function saveBed() {
   if (!roomId) { toast('กรุณาเลือกห้อง','warning'); return; }
   if (!code)   { toast('กรุณาระบุรหัสเตียง','warning'); return; }
   const editId = document.getElementById('bed-edit-id').value;
+  const otherNote = document.getElementById('bed-other-note')?.value?.trim() || '';
   const data = {
     room_id: roomId, bed_code: code,
     status: document.getElementById('bed-status').value,
     note:   document.getElementById('bed-note').value.trim(),
+    other_note: otherNote || null,
   };
   if (editId) {
     const { error } = await supa.from('beds').update(data).eq('id', editId);

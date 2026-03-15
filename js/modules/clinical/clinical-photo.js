@@ -56,11 +56,24 @@ function showItemPhoto(itemId) {
 
 function togglePatIdType() {
   const t = document.getElementById('pat-id-type').value;
-  document.getElementById('pat-id-label').textContent = t === 'passport' ? 'เลขพาสปอร์ต' : 'เลขบัตรประชาชน';
-  document.getElementById('pat-id').placeholder = t === 'passport' ? 'A1234567' : '0-0000-00000-00-0';
+  const labels = { thai: 'เลขบัตรประชาชน', passport: 'เลขพาสปอร์ต', alien: 'เลขบัตรประจำตัวคนต่างด้าว', workpermit: 'เลขใบอนุญาตทำงาน' };
+  const placeholders = { thai: '0-0000-00000-00-0', passport: 'A1234567', alien: '0-0000-00000-00-0', workpermit: 'WP-XXXXXXXX' };
+  document.getElementById('pat-id-label').textContent = labels[t] || 'เลขบัตร';
+  document.getElementById('pat-id').placeholder = placeholders[t] || '';
 }
 function toggleStaffIdType() {
   const t = document.getElementById('staff-id-type').value;
-  document.getElementById('staff-idcard-label').textContent = t === 'passport' ? 'เลขพาสปอร์ต' : 'เลขบัตรประชาชน';
-  document.getElementById('staff-idcard').placeholder = t === 'passport' ? 'A1234567' : '0-0000-00000-00-0';
+  const labels = { thai: 'เลขบัตรประชาชน', passport: 'เลขพาสปอร์ต', alien: 'เลขบัตรประจำตัวคนต่างด้าว', workpermit: 'เลขใบอนุญาตทำงาน' };
+  const placeholders = { thai: '0-0000-00000-00-0', passport: 'A1234567', alien: '0-0000-00000-00-0', workpermit: 'WP-XXXXXXXX' };
+  document.getElementById('staff-idcard-label').textContent = labels[t] || 'เลขบัตร';
+  document.getElementById('staff-idcard').placeholder = placeholders[t] || '';
+  // เฉพาะ thai ที่ lock ไม่ให้แก้ — อื่นๆ แก้ได้
+  const inp = document.getElementById('staff-idcard');
+  if (inp) inp.readOnly = false;
+}
+function toggleBedOtherNote() {
+  const s = document.getElementById('bed-status').value;
+  const noteEl = document.getElementById('bed-other-note');
+  if (noteEl) noteEl.style.display = s === 'other' ? '' : 'none';
+  if (s !== 'other' && noteEl) noteEl.value = '';
 }

@@ -1250,12 +1250,15 @@
         </div>
         <div class="form-group">
           <label class="form-label">สถานะ</label>
-          <select class="form-control" id="bed-status">
+          <select class="form-control" id="bed-status" onchange="toggleBedOtherNote()">
             <option value="available">ว่าง</option>
             <option value="occupied">มีผู้พัก</option>
+            <option value="hospital">อยู่โรงพยาบาล</option>
             <option value="maintenance">ซ่อมบำรุง</option>
             <option value="inactive">ปิดใช้งาน</option>
+            <option value="other">อื่นๆ (ระบุ)</option>
           </select>
+          <input class="form-control" id="bed-other-note" style="display:none;margin-top:6px;" placeholder="ระบุสถานะ เช่น ลาพักร้อน, รอผู้รับบริการใหม่...">
         </div>
       </div>
       <div class="form-group" style="margin:0;">
@@ -1623,6 +1626,8 @@
         <select class="form-control" id="pat-id-type" onchange="togglePatIdType()">
           <option value="thai">บัตรประชาชน</option>
           <option value="passport">พาสปอร์ต (ต่างด้าว)</option>
+          <option value="alien">บัตรประจำตัวคนต่างด้าว</option>
+          <option value="workpermit">ใบอนุญาตทำงาน</option>
         </select>
       </div>
       <div class="form-group" id="pat-id-group">
@@ -1692,6 +1697,25 @@
         <textarea class="form-control" id="pat-note" rows="2" placeholder="ข้อมูลเพิ่มเติม" style="resize:vertical;"></textarea>
       </div>
       <hr class="divider">
+      <!-- Physio Settings -->
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🤸 กายภาพบำบัด</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">ราคากายภาพต่อชั่วโมง (฿)</label>
+          <input class="form-control number" type="number" id="pat-physio-rate" min="0" placeholder="0" value="0">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">ชั่วโมงกายภาพต่อวัน</label>
+          <select class="form-control" id="pat-physio-hours">
+            <option value="0">ไม่มีกายภาพ</option>
+            <option value="0.5">0.5 ชม. (30 นาที)</option>
+            <option value="1">1 ชม.</option>
+            <option value="1.5">1.5 ชม.</option>
+            <option value="2">2 ชม.</option>
+          </select>
+        </div>
+      </div>
+      <hr class="divider">
       <!-- Room & Bed Assignment -->
       <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🛏️ ห้องพักและเตียง</div>
       <div class="form-group">
@@ -1755,6 +1779,8 @@
         <select class="form-control" id="staff-id-type" onchange="toggleStaffIdType()">
           <option value="thai">บัตรประชาชน (ไทย)</option>
           <option value="passport">พาสปอร์ต (ต่างด้าว)</option>
+          <option value="alien">บัตรประจำตัวคนต่างด้าว</option>
+          <option value="workpermit">ใบอนุญาตทำงาน</option>
         </select>
       </div>
       <div class="form-group">
@@ -2166,7 +2192,10 @@
 
       <!-- ค่ากายภาพบำบัด -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
-        <div style="font-weight:600;font-size:13px;margin-bottom:10px;color:var(--accent);">🤸 ค่ากายภาพบำบัด</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-weight:600;font-size:13px;color:var(--accent);">🤸 ค่ากายภาพบำบัด</div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="autoFillPhysioToInvoice()" style="font-size:12px;">📥 ดึงจากบันทึก Session</button>
+        </div>
         <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:end;">
           <div>
             <label style="font-size:11px;color:var(--text2);">รูปแบบ</label>
@@ -2404,6 +2433,69 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-expense')">ยกเลิก</button>
       <button class="btn btn-primary" onclick="saveExpense()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+<!-- ════════════════════════════════════════════════ -->
+<!-- Modal บันทึก Session กายภาพบำบัด               -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-physio-session">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <span id="modal-physio-title">🤸 บันทึกกายภาพบำบัด</span>
+      <button class="modal-close" onclick="closeModal('modal-physio-session')">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="form-group">
+        <label class="form-label">ผู้รับบริการ</label>
+        <input class="form-control" id="physio-patient-name" readonly style="background:var(--surface2);font-weight:600;">
+        <input type="hidden" id="physio-patient-id">
+        <input type="hidden" id="physio-session-id">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label class="form-label">วันที่ทำกายภาพ *</label>
+          <input class="form-control" type="date" id="physio-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">นักกายภาพที่ทำ</label>
+          <select class="form-control" id="physio-therapist-id">
+            <option value="">-- เลือกพนักงาน --</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label class="form-label">ระยะเวลา (นาที) *</label>
+          <select class="form-control" id="physio-duration">
+            <option value="30">30 นาที (ครึ่งชั่วโมง)</option>
+            <option value="60" selected>60 นาที (1 ชั่วโมง)</option>
+            <option value="90">90 นาที (1.5 ชั่วโมง)</option>
+            <option value="120">120 นาที (2 ชั่วโมง)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ราคา/ชั่วโมง (฿) *</label>
+          <input class="form-control number" type="number" id="physio-rate" min="0" placeholder="0" oninput="calcPhysioAmount()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ยอดรวม (฿)</label>
+          <input class="form-control number" id="physio-amount" readonly style="background:var(--surface2);font-weight:700;color:var(--accent);text-align:right;">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">หมายเหตุ</label>
+        <textarea class="form-control" id="physio-note" rows="2" placeholder="เช่น เน้นกล้ามเนื้อขา, ออกกำลังกายในน้ำ..."></textarea>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-physio-session')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="savePhysioSession()">💾 บันทึก</button>
     </div>
   </div>
 </div>
