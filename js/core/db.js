@@ -125,6 +125,8 @@ function mapPatient(r) {
     currentBedId: r.current_bed_id || null,
     physioRatePerHour: r.physio_rate_per_hour || 0,
     physioHoursPerDay: r.physio_hours_per_day || 0,
+    birthYear:  r.birth_year || null,
+    dobUnknown: r.dob_unknown || false,
     allergies: (r.patient_allergies || []).map(a => ({
       id: a.id, allergen: a.allergen, allergyType: a.allergy_type||'ยา',
       severity: a.severity||'ปานกลาง', reaction: a.reaction||'', note: a.note||''

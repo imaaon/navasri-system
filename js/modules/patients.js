@@ -87,8 +87,22 @@ function editPatient(id) {
   document.getElementById('pat-name').value     = p.name || '';
   document.getElementById('pat-id-type').value  = p.idType || 'thai';
   document.getElementById('pat-id').value       = p.idcard || p.idCard || '';
-  document.getElementById('pat-dob').value      = p.dob || '';
-  document.getElementById('pat-age-display').value = p.dob ? calcAge(p.dob) : '';
+  // วันเกิด
+  const dobUnknown = !!(p.dobUnknown);
+  document.getElementById('pat-dob-unknown').checked  = dobUnknown;
+  document.getElementById('pat-dob').value             = dobUnknown ? '' : (p.dob || '');
+  document.getElementById('pat-dob').disabled          = dobUnknown;
+  document.getElementById('pat-birth-year').value      = p.birthYear || '';
+  document.getElementById('pat-birth-year').disabled   = dobUnknown;
+  if (dobUnknown) {
+    document.getElementById('pat-age-display').value = 'ไม่ทราบ';
+  } else if (p.dob) {
+    document.getElementById('pat-age-display').value = calcAge(p.dob);
+  } else if (p.birthYear) {
+    document.getElementById('pat-age-display').value = (new Date().getFullYear() + 543 - parseInt(p.birthYear)) + ' ปี (ประมาณ)';
+  } else {
+    document.getElementById('pat-age-display').value = '';
+  }
   document.getElementById('pat-admit').value    = p.admitDate || p.admit_date || '';
   document.getElementById('pat-enddate').value  = p.endDate || p.end_date || '';
   document.getElementById('pat-status').value   = p.status || 'active';
@@ -115,19 +129,56 @@ function calcAge(dob) {
   return age + ' ปี';
 }
 
+function onPatDobChange() {
+  const dob = document.getElementById('pat-dob').value;
+  const ageEl = document.getElementById('pat-age-display');
+  if (dob) {
+    ageEl.value = calcAge(dob);
+    document.getElementById('pat-birth-year').value = '';
+  } else {
+    ageEl.value = '';
+  }
+}
+
+function onPatBirthYearChange() {
+  const yr = parseInt(document.getElementById('pat-birth-year').value);
+  const ageEl = document.getElementById('pat-age-display');
+  if (yr) {
+    ageEl.value = (new Date().getFullYear() + 543 - yr) + ' ปี (ประมาณ)';
+    document.getElementById('pat-dob').value = '';
+  } else {
+    ageEl.value = '';
+  }
+}
+
+function onPatDobUnknownChange() {
+  const unknown = document.getElementById('pat-dob-unknown').checked;
+  document.getElementById('pat-dob').disabled        = unknown;
+  document.getElementById('pat-birth-year').disabled = unknown;
+  document.getElementById('pat-age-display').value   = unknown ? 'ไม่ทราบ' : '';
+  if (unknown) {
+    document.getElementById('pat-dob').value        = '';
+    document.getElementById('pat-birth-year').value = '';
+  }
+}
+
 // ===== PATIENT CRUD =====
 function openAddPatientModal() {
   document.getElementById('pat-edit-id').value = '';
   document.getElementById('pat-name').value = '';
   document.getElementById('pat-id').value = '';
   document.getElementById('pat-dob').value = '';
+  document.getElementById('pat-dob').disabled = false;
+  document.getElementById('pat-birth-year').value = '';
+  document.getElementById('pat-birth-year').disabled = false;
+  document.getElementById('pat-dob-unknown').checked = false;
+  document.getElementById('pat-age-display').value = '';
   document.getElementById('pat-admit').value = '';
   document.getElementById('pat-enddate').value = '';
   document.getElementById('pat-status').value = 'active';
   document.getElementById('pat-note').value = '';
   document.getElementById('pat-photo-data').value = '';
   document.getElementById('pat-photo-preview').innerHTML = '👤';
-  // Populate bed dropdown
   populateBedDropdown(null);
   document.getElementById('pat-room-info').style.display = 'none';
   document.getElementById('modal-addPatient-title').textContent = 'เพิ่มผู้รับบริการ';
@@ -170,6 +221,8 @@ async function savePatient() {
     idcard: document.getElementById('pat-id').value,
     idType: document.getElementById('pat-id-type').value,
     dob:    document.getElementById('pat-dob').value,
+    birthYear: document.getElementById('pat-birth-year').value || null,
+    dobUnknown: document.getElementById('pat-dob-unknown').checked,
     admitDate: document.getElementById('pat-admit').value,
     endDate: document.getElementById('pat-enddate').value,
     status: document.getElementById('pat-status').value,
@@ -184,7 +237,9 @@ async function savePatient() {
   };
   const row = {
     name: data.name, idcard: data.idcard||null, id_type: data.idType||'thai',
-    dob: data.dob||null, admit_date: data.admitDate||null, end_date: data.endDate||null,
+    dob: data.dob||null, birth_year: data.birthYear||null,
+    dob_unknown: data.dobUnknown||false,
+    admit_date: data.admitDate||null, end_date: data.endDate||null,
     status: data.status||'active', phone: data.phone||null,
     emergency: data.emergency||null, address: data.address||null,
     note: data.note||null, photo: data.photo||null,
