@@ -80,9 +80,9 @@ async function doLogin() {
     try { sessionStorage.setItem('navasri_user', JSON.stringify(currentUser)); } catch(e) {}
 
     // Update UI
-    const initials = displayName.replace(/^(นาย|นาง|น\.ส\.|ม\.ร\.ว\.|น\.ส|นส)\s*/,'').trim().slice(0,2);
+    const initials = (displayName || '').trim().slice(0,2);
     document.getElementById('userAvatar').textContent = initials;
-    document.getElementById('userDisplayName').textContent = displayName.replace(/^(น\.ส\.|นาง|นาย)/,'').trim().split(' ')[0] || displayName;
+    document.getElementById('userDisplayName').textContent = (displayName || '').trim().split(' ')[0] || displayName;
 
     // โหลดข้อมูลหลัง login สำเร็จเท่านั้น!
     const ls2 = document.getElementById('loginScreen');
