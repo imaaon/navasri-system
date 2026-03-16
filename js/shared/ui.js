@@ -33,7 +33,7 @@ function loadLineSettingsUI() {
 function updateLineStatusDot() {
   try {
     if (typeof db === 'undefined' || !db || !db.lineSettings) return;
-    const dot = document.getElementById('line-status-dot');
+    const dot = document.getElementById('lineStatusDot');
     if (!dot) return;
     const s = db.lineSettings;
     dot.textContent = s.enabled && s.webhookUrl ? '🟢' : s.enabled ? '🟡' : '⚪';
