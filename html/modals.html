@@ -1,1 +1,2511 @@
+<!-- Modals -->
+<div class="modal-overlay" id="modal-addItem">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">เพิ่ม/แก้ไขรายการสินค้า</div>
+      <button class="modal-close" onclick="closeModal('modal-addItem')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editItemIdx">
+      <!-- Photo upload -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+        <div id="item-photo-preview" style="width:80px;height:80px;border-radius:8px;background:var(--surface2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;overflow:hidden;flex-shrink:0;" onclick="document.getElementById('item-photo-input').click()">📷</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:6px;">รูปภาพสินค้า</div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('item-photo-input').click()">📷 เลือกรูป</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="clearItemPhoto()" style="margin-left:4px;color:var(--text3);">✕ ลบรูป</button>
+          <input type="file" id="item-photo-input" accept="image/*" style="display:none;" onchange="previewItemPhoto()">
+          <input type="hidden" id="item-photo-data">
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">รองรับ JPG, PNG (แนะนำ 1:1)</div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="form-group">
+        <label class="form-label">ชื่อรายการ <span class="required">*</span></label>
+        <input class="form-control" id="item-name" placeholder="เช่น Paracetamol 500 mg">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ประเภท</label>
+          <select class="form-control" id="item-cat">
+            <option value="ยา">ยา</option>
+            <option value="เวชภัณฑ์">เวชภัณฑ์</option>
+            <option value="ของใช้">ของใช้</option>
+            <option value="บริการ">บริการ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">หน่วย</label>
+          <select class="form-control" id="item-unit">
+            <option>เม็ด</option><option>กล่อง</option><option>ขวด</option>
+            <option>ชิ้น</option><option>ชุด</option><option>Amp</option>
+            <option>Vial</option><option>ซอง</option><option>ถุง</option>
+            <option>ใบ</option><option>แผ่น</option><option>ม้วน</option>
+            <option>เส้น</option><option>หลอด</option><option>ห่อ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">จำนวนคงเหลือ</label>
+          <input class="form-control number" id="item-qty" type="number" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">จุดสั่งซื้อ (แจ้งเตือน)</label>
+          <input class="form-control number" id="item-reorder" type="number" min="0" value="10">
+        </div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">📦 หน่วยนับ (Unit Conversion)</div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="form-group">
+          <label class="form-label">หน่วยสั่งซื้อ <span style="font-size:10px;color:var(--text3);">(Purchase Unit)</span></label>
+          <input class="form-control" id="item-purchase-unit" placeholder="เช่น กระปุก, กล่อง">
+        </div>
+        <div class="form-group">
+          <label class="form-label">หน่วยเบิกจ่าย <span style="font-size:10px;color:var(--text3);">(Dispense Unit)</span></label>
+          <input class="form-control" id="item-dispense-unit" placeholder="เช่น เม็ด, ซอง">
+        </div>
+        <div class="form-group">
+          <label class="form-label">จำนวนต่อหน่วยซื้อ <span style="font-size:10px;color:var(--text3);">(เช่น 100 เม็ด/กระปุก)</span></label>
+          <input class="form-control number" id="item-conversion" type="number" min="1" value="1" placeholder="1">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;font-weight:600;">
+          <input type="checkbox" id="item-billable" style="width:16px;height:16px;accent-color:var(--accent);" checked>
+          <span>💰 เบิกเพื่อคิดเงินผู้รับบริการ (Billable)</span>
+        </label>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;margin-left:26px;">ปิดถ้าเป็นของใช้ส่วนกลางที่คลินิกรับผิดชอบ</div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">💰 ราคา</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ราคาซื้อ (บาท/หน่วย)</label>
+          <input class="form-control number" id="item-cost" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ราคาขาย (บาท/หน่วย)</label>
+          <input class="form-control number" id="item-price" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-addItem')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveItem()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lot Detail Modal -->
+<div class="modal-overlay" id="modal-lot-detail">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <div class="modal-title" id="lot-detail-title">🏷️ ข้อมูล Lot</div>
+      <button class="modal-close" onclick="closeModal('modal-lot-detail')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div id="lot-detail-unit" style="padding:10px 20px;font-size:12px;color:var(--accent);background:var(--sage-light);border-bottom:1px solid var(--border);"></div>
+      <table>
+        <thead><tr>
+          <th>Lot Number</th><th>วันรับเข้า</th><th>วันหมดอายุ</th>
+          <th class="number">จำนวนรับ</th><th class="number">คงเหลือ</th><th>สถานะ</th>
+        </tr></thead>
+        <tbody id="lot-detail-body"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-lot-detail')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAR Entry Modal — บันทึกการให้ยาทีละครั้ง -->
+<div class="modal-overlay" id="modal-mar-entry">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <div class="modal-title">💉 บันทึกการให้ยา</div>
+      <button class="modal-close" onclick="closeModal('modal-mar-entry')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--accent-light);border:1px solid #b8d9c5;border-radius:8px;padding:10px 14px;margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:2px;">ยาที่ให้</div>
+        <div style="font-size:15px;font-weight:700;color:var(--accent-dark);" id="mar-entry-med-name"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วัน/เวลาที่ให้จริง <span class="required">*</span></label>
+          <input class="form-control" type="datetime-local" id="mar-entry-time">
+        </div>
+        <div class="form-group">
+          <label class="form-label">มื้อ / กรณี</label>
+          <select class="form-control" id="mar-entry-timing"></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">พยาบาลผู้ให้ยา</label>
+        <input class="form-control" id="mar-entry-by" placeholder="ชื่อพยาบาล">
+      </div>
+      <div class="form-group">
+        <label class="form-label">สถานะการให้ยา <span class="required">*</span></label>
+        <select class="form-control" id="mar-entry-status" onchange="onMARStatusChange()">
+          <option value="given">✅ ให้ยาปกติ</option>
+          <option value="refused">❌ ผู้ป่วยปฏิเสธ</option>
+          <option value="omitted">⏸️ งดยาชั่วคราว (แพทย์สั่ง)</option>
+          <option value="held">🕐 เลื่อนเวลาให้ยา</option>
+          <option value="npo">🚫 งดยาเพราะผ่าตัด/ทำหัตถการ</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="mar-entry-note" placeholder="เช่น ผู้รับบริการปฏิเสธ, ให้ช้ากว่ากำหนด 30 นาที">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-mar-entry')">ยกเลิก</button>
+      <button class="btn btn-primary" id="mar-entry-btn" onclick="saveMAREntry()">✔️ บันทึกการให้ยา</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Medication Modal -->
+<div class="modal-overlay" id="modal-add-medication">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">💊 เพิ่มยาประจำ</div>
+      <button class="modal-close" onclick="closeModal('modal-add-medication')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="med-pat-id">
+      <div class="form-group">
+        <label class="form-label">ชื่อยา <span class="required">*</span></label>
+        <input class="form-control" id="med-name" placeholder="เช่น Amlodipine, Metformin, Aspirin">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ขนาดยา (Dose)</label>
+          <input class="form-control number" id="med-dose" placeholder="เช่น 5, 500, 100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">หน่วย</label>
+          <select class="form-control" id="med-unit">
+            <option>mg</option><option>mcg</option><option>g</option>
+            <option>ml</option><option>units</option><option>IU</option><option>หน่วย</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">วิธีใช้</label>
+          <select class="form-control" id="med-route">
+            <option>ทาน</option><option>อม</option><option>ฉีด SC</option>
+            <option>ฉีด IV</option><option>ทา</option><option>หยอดตา</option><option>สูดพ่น</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">มื้อ / เวลาที่ให้ยา <span class="required">*</span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+          ${['เช้า','กลางวัน','เย็น','ก่อนนอน','ก่อนอาหาร','หลังอาหาร','PRN (เมื่อมีอาการ)'].map(t => {
+            const id = 'med-timing-'+t.replace(/[^a-zA-Zก-๙]/g,'_');
+            return `<label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;">
+              <input type="checkbox" id="${id}" style="accent-color:var(--accent);"> ${t}
+            </label>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันเริ่มต้น</label>
+          <input class="form-control" type="date" id="med-start">
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันหมดอายุสั่ง</label>
+          <input class="form-control" type="date" id="med-end">
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ / คำแนะนำ</label>
+        <input class="form-control" id="med-note" placeholder="เช่น ให้หลังอาหาร, ระวังความดันต่ำ">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-medication')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveMedication()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Vital Signs Modal -->
+<div class="modal-overlay" id="modal-add-vital">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">📊 บันทึกสัญญาณชีพ</div>
+      <button class="modal-close" onclick="closeModal('modal-add-vital')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="vital-pat-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วัน/เวลา <span class="required">*</span></label>
+          <input class="form-control" type="datetime-local" id="vital-time">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ผู้วัด</label>
+          <input class="form-control" id="vital-by" placeholder="ชื่อพยาบาล">
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 8px;">สัญญาณชีพ</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="color:#e74c3c;">🩸 ความดัน SYS (mmHg)</label>
+          <input class="form-control number" type="number" id="vital-bp-sys" placeholder="120">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="color:#e74c3c;">🩸 ความดัน DIA (mmHg)</label>
+          <input class="form-control number" type="number" id="vital-bp-dia" placeholder="80">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="color:#3498db;">💓 ชีพจร (bpm)</label>
+          <input class="form-control number" type="number" id="vital-hr" placeholder="72">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="color:#e67e22;">🌡️ อุณหภูมิ (°C)</label>
+          <input class="form-control number" type="number" id="vital-temp" step="0.1" placeholder="37.0">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="color:#27ae60;">🫁 SpO₂ (%)</label>
+          <input class="form-control number" type="number" id="vital-spo2" placeholder="98">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="color:#8e44ad;">🍬 DTX (mg/dL)</label>
+          <input class="form-control number" type="number" id="vital-dtx" placeholder="100">
+        </div>
+        <div class="form-group" style="margin:0;grid-column:1;">
+          <label class="form-label" style="color:#16a085;">🫀 RR (/min)</label>
+          <input class="form-control number" type="number" id="vital-rr" placeholder="16">
+        </div>
+      </div>
+      <div class="form-group" style="margin:10px 0 0;">
+        <label class="form-label">📌 อื่นๆ <span style="font-size:11px;color:var(--text3);font-weight:400;">(ระบุค่าที่ต้องการเพิ่มเติม เช่น น้ำหนัก 58kg, ปัสสาวะ 200ml, ไข้ 38.5°C)</span></label>
+        <input class="form-control" id="vital-other" placeholder="เช่น น้ำหนัก 58kg · ปัสสาวะ 300ml · ท้องผูก">
+      </div>
+      <div class="form-group" style="margin:8px 0 0;">
+        <label class="form-label">หมายเหตุ / อาการสังเกต</label>
+        <input class="form-control" id="vital-note" placeholder="อาการผิดปกติ หรือสังเกตพิเศษ">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-vital')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveVitalSign()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Nursing Note Modal -->
+<div class="modal-overlay" id="modal-add-nursing">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-nursing-title">📋 บันทึกทางการพยาบาล</div>
+      <button class="modal-close" onclick="closeModal('modal-add-nursing')">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:75vh;overflow-y:auto;">
+      <input type="hidden" id="nursing-pat-id">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="form-group">
+          <label class="form-label">วันที่</label>
+          <input class="form-control" type="date" id="nursing-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">กะ <span class="required">*</span></label>
+          <select class="form-control" id="nursing-shift">
+            <option value="เช้า">🌅 เช้า (07:00–19:00)</option>
+            <option value="ดึก">🌙 ดึก (19:00–07:00)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ผู้บันทึก</label>
+          <input class="form-control" id="nursing-by" placeholder="ชื่อพยาบาล">
+        </div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🧍 อาการทั่วไปและสภาพผู้รับบริการ</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">อาการทั่วไป</label>
+          <input class="form-control" id="nursing-condition" placeholder="เช่น ปกติ, อ่อนเพลีย, อาการดีขึ้น">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ความรู้สึกตัว</label>
+          <input class="form-control" id="nursing-consciousness" placeholder="เช่น รู้สึกตัวดี, ซึมเล็กน้อย">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">อาการปวด (0-10)</label>
+        <input class="form-control" id="nursing-pain" placeholder="เช่น ไม่ปวด, ปวดเล็กน้อย 2/10, ปวดบริเวณหลัง 5/10">
+      </div>
+      <hr class="divider">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🍽️ การรับประทานอาหาร & การขับถ่าย</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">การทานอาหาร</label>
+          <input class="form-control" id="nursing-eating" placeholder="เช่น ทานข้าวได้ครึ่งจาน, ดื่มน้ำ 500ml">
+        </div>
+        <div class="form-group">
+          <label class="form-label">การขับถ่าย</label>
+          <input class="form-control" id="nursing-elimination" placeholder="เช่น อุจจาระ 1 ครั้ง ลักษณะปกติ, ปัสสาวะสีเหลืองใส">
+        </div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🌙 การนอนหลับ & กิจกรรม</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">การนอนหลับ</label>
+          <input class="form-control" id="nursing-sleep" placeholder="เช่น นอนหลับได้ดี 6-7 ชั่วโมง">
+        </div>
+        <div class="form-group">
+          <label class="form-label">กิจกรรม / การเคลื่อนไหว</label>
+          <input class="form-control" id="nursing-activity" placeholder="เช่น นั่งรถเข็น, เดินเองได้, บริหารร่างกาย 30 นาที">
+        </div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🩹 การดูแลพิเศษ</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">แผล / การดูแลผิวหนัง</label>
+          <input class="form-control" id="nursing-wound" placeholder="เช่น แผลกดทับดีขึ้น, ทำแผล 1 ครั้ง">
+        </div>
+        <div class="form-group">
+          <label class="form-label">IV / สายต่างๆ</label>
+          <input class="form-control" id="nursing-iv" placeholder="เช่น IV ยังดี เปลี่ยน dressing, NG tube ผ่านดี">
+        </div>
+        <div class="form-group">
+          <label class="form-label">O₂ / การหายใจ</label>
+          <input class="form-control" id="nursing-o2" placeholder="เช่น หายใจเองได้, ออกซิเจน 2L/min via NC">
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="form-group" style="margin:0;">
+        <label class="form-label" style="color:#c0392b;font-size:13px;">📢 บันทึกส่งเวร (สำหรับพยาบาลกะต่อไป)</label>
+        <textarea class="form-control" id="nursing-handover" rows="3" placeholder="ระบุสิ่งสำคัญที่ต้องติดตาม, ยาพิเศษ, อาการที่ต้องเฝ้าระวัง..." style="resize:vertical;border-color:#e74c3c;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-nursing')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveNursingNote()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Appointment Modal -->
+<div class="modal-overlay" id="modal-appt">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-appt-title">+ เพิ่มนัดหมาย</div>
+      <button class="modal-close" onclick="closeModal('modal-appt')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันที่นัด <span class="required">*</span></label>
+          <input class="form-control" type="date" id="appt-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">เวลา</label>
+          <input class="form-control" type="time" id="appt-time">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">โรงพยาบาล <span class="required">*</span></label>
+        <input class="form-control" id="appt-hospital" placeholder="เช่น โรงพยาบาลรามาธิบดี">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">แผนก</label>
+          <input class="form-control" id="appt-department" placeholder="เช่น อายุรกรรม, ศัลยกรรม">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ชื่อแพทย์</label>
+          <input class="form-control" id="appt-doctor" placeholder="นพ./พญ. ...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">วัตถุประสงค์การนัด</label>
+        <input class="form-control" id="appt-purpose" placeholder="เช่น Follow-up เบาหวาน, ตรวจ Lab 3 เดือน">
+      </div>
+      <div class="form-group">
+        <label class="form-label">📋 สิ่งที่ต้องเตรียม</label>
+        <textarea class="form-control" id="appt-preparation" rows="2" placeholder="เช่น งดน้ำงดอาหาร 6 ชม., เอาผล Lab เดิมไปด้วย, ใส่ Diaper"></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">การเดินทาง</label>
+          <select class="form-control" id="appt-transport">
+            <option value="รถคลินิก">🚐 รถคลินิก</option>
+            <option value="ญาติมารับ">👨‍👩‍👧 ญาติมารับ</option>
+            <option value="แท็กซี่/รถรับจ้าง">🚕 แท็กซี่/รถรับจ้าง</option>
+            <option value="รถพยาบาล">🚑 รถพยาบาล</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">สถานะ</label>
+          <select class="form-control" id="appt-status">
+            <option value="upcoming">🔵 กำลังจะถึง</option>
+            <option value="done">✅ เสร็จแล้ว</option>
+            <option value="postponed">⏸ เลื่อน</option>
+            <option value="cancelled">❌ ยกเลิก</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุการเดินทาง / รายละเอียดเพิ่มเติม</label>
+        <input class="form-control" id="appt-transport-note" placeholder="">
+      </div>
+      <div class="form-group" style="margin:0;margin-top:10px;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="appt-note" placeholder="">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-appt')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveAppt()">💾 บันทึกนัดหมาย</button>
+    </div>
+  </div>
+</div>
+
+<!-- Incident Modal -->
+<div class="modal-overlay" id="modal-incident">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-incident-title">⚠️ บันทึกอุบัติเหตุ / ความเสี่ยง</div>
+      <button class="modal-close" onclick="closeModal('modal-incident')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="incident-edit-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
+          <select class="form-control" id="incident-patient"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ประเภทอุบัติเหตุ <span class="required">*</span></label>
+          <select class="form-control" id="incident-type">
+            <option value="พลัดตกหกล้ม">🚶 พลัดตกหกล้ม</option>
+            <option value="ให้ยาผิด">💊 ให้ยาผิด</option>
+            <option value="สำลัก">😮 สำลัก/ติดคอ</option>
+            <option value="กดทับ">🛏️ แผลกดทับ</option>
+            <option value="บาดเจ็บ">🩹 บาดเจ็บอื่นๆ</option>
+            <option value="อื่นๆ">📝 อื่นๆ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันที่เกิดเหตุ <span class="required">*</span></label>
+          <input class="form-control" type="date" id="incident-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">เวลา</label>
+          <input class="form-control" type="time" id="incident-time">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">สถานที่เกิดเหตุ</label>
+        <input class="form-control" id="incident-location" placeholder="เช่น ห้องนอน 101, ห้องน้ำ, โถงทางเดิน">
+      </div>
+      <div class="form-group">
+        <label class="form-label">รายละเอียดเหตุการณ์ <span class="required">*</span></label>
+        <textarea class="form-control" id="incident-detail" rows="3" placeholder="อธิบายสิ่งที่เกิดขึ้น เช่น ผู้ป่วยลื่นล้มในห้องน้ำ บาดเจ็บที่หัวเข่าด้านขวา..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">การปฐมพยาบาลเบื้องต้น</label>
+        <textarea class="form-control" id="incident-firstaid" rows="2" placeholder="เช่น ทำความสะอาดแผล, ประคบเย็น, แจ้งแพทย์..."></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ระดับความรุนแรง</label>
+          <select class="form-control" id="incident-severity">
+            <option value="เล็กน้อย">🟢 เล็กน้อย</option>
+            <option value="ปานกลาง">🟡 ปานกลาง</option>
+            <option value="รุนแรง">🔴 รุนแรง</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ผู้บันทึก</label>
+          <input class="form-control" id="incident-recorder" placeholder="ชื่อผู้บันทึก">
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">แจ้งญาติแล้ว?</label>
+        <select class="form-control" id="incident-notified">
+          <option value="ยังไม่แจ้ง">❌ ยังไม่แจ้ง</option>
+          <option value="แจ้งแล้ว">✅ แจ้งแล้ว</option>
+          <option value="ไม่จำเป็น">— ไม่จำเป็น</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-incident')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveIncident()">💾 บันทึกอุบัติเหตุ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Wound Care Modal -->
+<div class="modal-overlay" id="modal-wound">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-wound-title">🩹 บันทึกการทำแผล / แผลกดทับ</div>
+      <button class="modal-close" onclick="closeModal('modal-wound')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="wound-edit-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
+          <select class="form-control" id="wound-patient"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันที่ทำแผล <span class="required">*</span></label>
+          <input class="form-control" type="date" id="wound-date">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ตำแหน่งแผล <span class="required">*</span></label>
+          <select class="form-control" id="wound-location">
+            <option value="กระเบนเหน็บ (Sacrum)">กระเบนเหน็บ (Sacrum)</option>
+            <option value="ส้นเท้าซ้าย">ส้นเท้าซ้าย</option>
+            <option value="ส้นเท้าขวา">ส้นเท้าขวา</option>
+            <option value="สะโพกซ้าย">สะโพกซ้าย</option>
+            <option value="สะโพกขวา">สะโพกขวา</option>
+            <option value="ข้อเท้าซ้าย">ข้อเท้าซ้าย</option>
+            <option value="ข้อเท้าขวา">ข้อเท้าขวา</option>
+            <option value="หลัง">หลัง</option>
+            <option value="ศีรษะ">ศีรษะ</option>
+            <option value="อื่นๆ">อื่นๆ (ระบุในหมายเหตุ)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stage แผลกดทับ</label>
+          <select class="form-control" id="wound-stage">
+            <option value="Stage 1">Stage 1 — ผิวหนังแดง ไม่มีรอยแผล</option>
+            <option value="Stage 2">Stage 2 — ผิวหนังพุพอง/ถลอก</option>
+            <option value="Stage 3">Stage 3 — แผลลึกถึงชั้นไขมัน</option>
+            <option value="Stage 4">Stage 4 — แผลลึกถึงกระดูก/เส้นเอ็น</option>
+            <option value="ไม่ใช่แผลกดทับ">— ไม่ใช่แผลกดทับ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">กว้าง (ซม.)</label>
+          <input class="form-control number" type="number" id="wound-width" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ยาว (ซม.)</label>
+          <input class="form-control number" type="number" id="wound-length" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ลึก (ซม.)</label>
+          <input class="form-control number" type="number" id="wound-depth" min="0" step="0.1" placeholder="0.0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ลักษณะแผล</label>
+        <input class="form-control" id="wound-appearance" placeholder="เช่น มี exudate, เนื้อเยื่อตาย, กำลังสมาน...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">วิธีการรักษา/ยาที่ใช้</label>
+        <textarea class="form-control" id="wound-treatment" rows="2" placeholder="เช่น ล้างด้วย NSS, ทา Betadine, ปิดด้วย Foam dressing..."></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">แนวโน้ม</label>
+          <select class="form-control" id="wound-trend">
+            <option value="ดีขึ้น">📈 ดีขึ้น</option>
+            <option value="คงที่">➡️ คงที่</option>
+            <option value="แย่ลง">📉 แย่ลง</option>
+            <option value="ใหม่">🆕 แผลใหม่</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ผู้บันทึก</label>
+          <input class="form-control" id="wound-recorder" placeholder="ชื่อพยาบาล/ผู้ดูแล">
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="wound-note" placeholder="">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-wound')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveWound()">🩹 บันทึกแผล</button>
+    </div>
+  </div>
+</div>
+
+<!-- Diet Modal -->
+<div class="modal-overlay" id="modal-diet">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-diet-title">🍽️ กำหนดแผนอาหารผู้ป่วย</div>
+      <button class="modal-close" onclick="closeModal('modal-diet')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="diet-edit-id">
+      <div class="form-group">
+        <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
+        <select class="form-control" id="diet-patient"></select>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ประเภทอาหาร <span class="required">*</span></label>
+          <select class="form-control" id="diet-type">
+            <option value="ธรรมดา">🍚 ธรรมดา</option>
+            <option value="สับละเอียด">🔪 สับละเอียด</option>
+            <option value="ปั่นละเอียด">🥣 ปั่นละเอียด</option>
+            <option value="อาหารเหลวใส">🫗 อาหารเหลวใส</option>
+            <option value="สายยาง (Tube Feed)">🧪 สายยาง (Tube Feed)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">มื้ออาหาร</label>
+          <select class="form-control" id="diet-meals">
+            <option value="3 มื้อ">3 มื้อ</option>
+            <option value="5 มื้อ (เพิ่มว่าง)">5 มื้อ (เพิ่มว่าง)</option>
+            <option value="ตามแผน Tube Feed">ตามแผน Tube Feed</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ข้อจำกัดอาหาร (เลือกได้หลายข้อ)</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;" id="diet-restrictions-wrap">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="Low Sodium"> Low Sodium (เกลือต่ำ)</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="Low Purine"> Low Purine (เกาต์)</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="No Seafood"> No Seafood</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="Diabetic Diet"> Diabetic Diet (เบาหวาน)</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="Low Potassium"> Low Potassium (โรคไต)</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="Low Fat"> Low Fat (ไขมันต่ำ)</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="No Pork"> No Pork</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="Vegetarian"> Vegetarian</label>
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุพิเศษ</label>
+        <textarea class="form-control" id="diet-note" rows="2" placeholder="เช่น ไม่ชอบผัก, แพ้กุ้ง, ต้องการน้ำอุ่นเสมอ..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-diet')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveDiet()">💾 บันทึกแผนอาหาร</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tube Feed Modal -->
+<div class="modal-overlay" id="modal-tubefeed">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-tubefeed-title">🧪 บันทึกการให้อาหารทางสายยาง</div>
+      <button class="modal-close" onclick="closeModal('modal-tubefeed')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="tubefeed-edit-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
+          <select class="form-control" id="tubefeed-patient"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันที่ <span class="required">*</span></label>
+          <input class="form-control" type="date" id="tubefeed-date">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">เวลา</label>
+          <input class="form-control" type="time" id="tubefeed-time">
+        </div>
+        <div class="form-group">
+          <label class="form-label">มื้อ</label>
+          <select class="form-control" id="tubefeed-meal">
+            <option value="เช้า">เช้า</option>
+            <option value="สาย">สาย</option>
+            <option value="เที่ยง">เที่ยง</option>
+            <option value="บ่าย">บ่าย</option>
+            <option value="เย็น">เย็น</option>
+            <option value="ก่อนนอน">ก่อนนอน</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">สูตรอาหาร/ชนิดอาหาร</label>
+        <input class="form-control" id="tubefeed-formula" placeholder="เช่น Ensure Plus, อาหารปั่น, Jevity...">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ปริมาตรอาหาร (ml)</label>
+          <input class="form-control number" type="number" id="tubefeed-volume" min="0" placeholder="เช่น 200">
+        </div>
+        <div class="form-group">
+          <label class="form-label">น้ำตาม (ml)</label>
+          <input class="form-control number" type="number" id="tubefeed-water" min="0" placeholder="เช่น 100">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Residual ก่อนฟีด (ml)</label>
+          <input class="form-control number" type="number" id="tubefeed-residual" min="0" placeholder="อาหารตกค้าง">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ผู้บันทึก</label>
+          <input class="form-control" id="tubefeed-recorder" placeholder="ชื่อพยาบาล/ผู้ดูแล">
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ (อาการขณะฟีด ฯลฯ)</label>
+        <input class="form-control" id="tubefeed-note" placeholder="เช่น ให้อาหารได้ปกติ, มีอาการแน่นท้องเล็กน้อย...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-tubefeed')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveTubeFeed()">🧪 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Deposit Modal -->
+<div class="modal-overlay" id="modal-deposit">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-deposit-title">🏦 บันทึกเงินมัดจำ / เงินประกัน</div>
+      <button class="modal-close" onclick="closeModal('modal-deposit')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="deposit-edit-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
+          <select class="form-control" id="deposit-patient"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ประเภท</label>
+          <select class="form-control" id="deposit-type">
+            <option value="เงินมัดจำ">🏦 เงินมัดจำ (Security Deposit)</option>
+            <option value="เงินประกัน">🛡️ เงินประกัน</option>
+            <option value="เงินล่วงหน้า">💳 ชำระล่วงหน้า</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">จำนวนเงิน (฿) <span class="required">*</span></label>
+          <input class="form-control number" type="number" id="deposit-amount" min="0" placeholder="เช่น 20000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันที่รับ <span class="required">*</span></label>
+          <input class="form-control" type="date" id="deposit-date-in">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วิธีชำระ</label>
+          <select class="form-control" id="deposit-pay-method">
+            <option value="เงินสด">💵 เงินสด</option>
+            <option value="โอนเงิน">📱 โอนเงิน</option>
+            <option value="เช็ค">📝 เช็ค</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">สถานะ</label>
+          <select class="form-control" id="deposit-status">
+            <option value="active">💼 ถือครองอยู่</option>
+            <option value="refunded">✅ คืนเงินแล้ว</option>
+            <option value="deducted">🔄 หักชำระค่าบริการ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" id="deposit-return-group" style="display:none;">
+        <label class="form-label">วันที่คืน/หักชำระ</label>
+        <input class="form-control" type="date" id="deposit-date-out">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="deposit-note" placeholder="เช่น วางมัดจำตอนรับเข้าพัก, หักค่าบริการเดือนสุดท้าย...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-deposit')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveDeposit()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Belonging Modal -->
+<div class="modal-overlay" id="modal-belonging">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">🧳 บันทึกทรัพย์สิน / ของมีค่า</div>
+      <button class="modal-close" onclick="closeModal('modal-belonging')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">ชื่อสิ่งของ <span class="required">*</span></label>
+        <input class="form-control" id="belonging-item-name" placeholder="เช่น แว่นตา, ฟันเทียม, นาฬิกา, แหวน">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">จำนวน</label>
+          <input class="form-control number" type="number" id="belonging-qty" value="1" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">สภาพ</label>
+          <select class="form-control" id="belonging-condition">
+            <option value="ดี">✅ ดี</option>
+            <option value="ปานกลาง">⚠️ ปานกลาง (มีรอย)</option>
+            <option value="ชำรุด">❌ ชำรุด</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">รายละเอียด / ลักษณะเฉพาะ</label>
+        <input class="form-control" id="belonging-description" placeholder="เช่น กรอบสีทอง, ฟันบน 12 ซี่, มีรอยขีดข่วนที่ขา">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันที่รับเข้า</label>
+          <input class="form-control" type="date" id="belonging-date-in">
+        </div>
+        <div class="form-group">
+          <label class="form-label">รับโดย</label>
+          <input class="form-control" id="belonging-received-by" placeholder="">
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="belonging-note" placeholder="">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-belonging')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveBelonging()">🧳 บันทึกสิ่งของ</button>
+    </div>
+  </div>
+</div>
+
+<!-- DNR & Consent Modal -->
+<div class="modal-overlay" id="modal-dnr">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header" style="background:linear-gradient(90deg,#c0392b11,transparent);">
+      <div class="modal-title">⚖️ DNR & Advance Consent</div>
+      <button class="modal-close" onclick="closeModal('modal-dnr')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#fff5f5;border:1.5px solid #c0392b44;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#c0392b;">
+        ⚠️ ข้อมูลนี้เป็นความประสงค์ทางการแพทย์ที่สำคัญ กรุณาบันทึกหลังได้รับการยินยอมจากผู้ป่วย/ญาติเท่านั้น
+      </div>
+      <div class="form-group">
+        <label class="form-label">สถานะ DNR <span class="required">*</span></label>
+        <select class="form-control" id="dnr-status" style="font-size:14px;">
+          <option value="not_set">❓ ยังไม่ได้กำหนด</option>
+          <option value="dnr">🚫 DNR — ไม่ต้องการการช่วยชีวิต</option>
+          <option value="full">✅ Full Code — ยินยอมให้ช่วยชีวิตเต็มที่</option>
+          <option value="limited">⚠️ Limited — ยินยอมบางส่วน</option>
+        </select>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">🫀 CPR (การกู้คืนหัวใจ)</label>
+          <select class="form-control" id="dnr-cpr">
+            <option value="null">❓ ไม่ระบุ</option>
+            <option value="true">✅ ยินยอม</option>
+            <option value="false">❌ ไม่ยินยอม</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">🫁 เครื่องช่วยหายใจ</label>
+          <select class="form-control" id="dnr-vent">
+            <option value="null">❓ ไม่ระบุ</option>
+            <option value="true">✅ ยินยอม</option>
+            <option value="false">❌ ไม่ยินยอม</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">🏥 โรงพยาบาลที่ต้องการหากเกิดเหตุฉุกเฉิน</label>
+        <input class="form-control" id="dnr-hospital" placeholder="เช่น โรงพยาบาลรามาธิบดี, รพ.ใกล้บ้าน">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">👤 ผู้ติดต่อฉุกเฉิน (ญาติ)</label>
+          <input class="form-control" id="dnr-ec-name" placeholder="ชื่อ-นามสกุล ความสัมพันธ์">
+        </div>
+        <div class="form-group">
+          <label class="form-label">📞 เบอร์โทรฉุกเฉิน</label>
+          <input class="form-control" id="dnr-ec-phone" placeholder="08x-xxx-xxxx">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📜 Advance Directive / ข้อปฏิบัติพิเศษ</label>
+        <textarea class="form-control" id="dnr-directive" rows="2" placeholder="เช่น ไม่ต้องการรักษาแบบประคับประคอง, ต้องการพระมาสวดอยู่ด้วย..."></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันที่ลงนาม</label>
+          <input class="form-control" type="date" id="dnr-signed-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ลงนามโดย (ญาติ/พยาน)</label>
+          <input class="form-control" id="dnr-signed-by" placeholder="ชื่อ ความสัมพันธ์">
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="dnr-note" placeholder="">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-dnr')">ยกเลิก</button>
+      <button class="btn" style="background:#c0392b;color:#fff;" onclick="saveDnr()">⚖️ บันทึก DNR & Consent</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Req Modal -->
+<div class="modal-overlay" id="modal-reject-req">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <div class="modal-title">❌ ไม่อนุมัติใบเบิก</div>
+      <button class="modal-close" onclick="closeModal('modal-reject-req')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="reject-req-ids">
+      <div id="reject-req-summary" style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">เหตุผลที่ไม่อนุมัติ <span class="required">*</span></label>
+        <textarea class="form-control" id="reject-reason" rows="3" placeholder="ระบุเหตุผล เช่น สินค้าไม่พอ / ไม่ตรงตามระเบียบ / รออนุมัติงบ..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-reject-req')">ยกเลิก</button>
+      <button class="btn" style="background:#e74c3c;color:#fff;" onclick="confirmRejectReq()">❌ ยืนยันไม่อนุมัติ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Return to Stock Modal -->
+<div class="modal-overlay" id="modal-return-item">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">↩️ บันทึกการคืนสินค้า</div>
+      <button class="modal-close" onclick="closeModal('modal-return-item')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ใบเบิกต้นฉบับ <span class="required">*</span></label>
+          <select class="form-control" id="return-req-id" onchange="onReturnReqChange()">
+            <option value="">-- เลือกใบเบิก --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันที่คืน</label>
+          <input class="form-control" type="date" id="return-date">
+        </div>
+      </div>
+      <div id="return-req-info" style="display:none;background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;"></div>
+      <div class="form-group">
+        <label class="form-label">จำนวนที่คืน <span class="required">*</span></label>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input class="form-control number" type="number" id="return-qty" min="1" placeholder="0" style="width:140px;">
+          <span id="return-unit-label" style="font-size:13px;color:var(--text2);"></span>
+          <span style="font-size:12px;color:var(--text3);" id="return-max-label"></span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">เหตุผลการคืน <span class="required">*</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+          ${['ญาติซื้อมาให้','ผู้รับบริการจำหน่าย','สินค้าเกินความต้องการ','สินค้าชำรุด/หมดอายุ','อื่นๆ'].map(r=>`
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;">
+              <input type="radio" name="return-reason-preset" value="${r}" onchange="toggleReturnOther()"> ${r}
+            </label>`).join('')}
+        </div>
+        <div id="return-other-wrap" style="display:none;">
+          <input class="form-control" id="return-reason-other" placeholder="ระบุเหตุผล...">
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุเพิ่มเติม</label>
+        <input class="form-control" id="return-note" placeholder="">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-return-item')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveReturnItem()">↩️ บันทึกการคืน</button>
+    </div>
+  </div>
+</div>
+
+<!-- Record Payment Modal -->
+<div class="modal-overlay" id="modal-record-payment">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-title">💳 บันทึกรับชำระเงิน</div>
+      <button class="modal-close" onclick="closeModal('modal-record-payment')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pay-invoice-id">
+      <div id="pay-invoice-info" style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">จำนวนเงินที่รับ (฿) <span class="required">*</span></label>
+          <input class="form-control number" type="number" id="pay-amount" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันที่รับชำระ <span class="required">*</span></label>
+          <input class="form-control" type="date" id="pay-date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ช่องทางการชำระ</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;" id="pay-method-buttons">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;">
+            <input type="radio" name="pay-method" value="เงินสด" onchange="togglePayOther()"> 💵 เงินสด
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;">
+            <input type="radio" name="pay-method" value="โอนเงิน" checked onchange="togglePayOther()"> 🏦 โอนเงิน
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;">
+            <input type="radio" name="pay-method" value="บัตรเครดิต" onchange="togglePayOther()"> 💳 บัตรเครดิต
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;">
+            <input type="radio" name="pay-method" value="เช็ค" onchange="togglePayOther()"> 📝 เช็ค
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;">
+            <input type="radio" name="pay-method" value="อื่นๆ" onchange="togglePayOther()"> ✏️ อื่นๆ
+          </label>
+        </div>
+        <div id="pay-method-other-wrap" style="display:none;margin-top:8px;">
+          <input class="form-control" id="pay-method-other" placeholder="ระบุช่องทางการชำระ เช่น PromptPay, ตั๋วแลกเงิน, หักบัญชี...">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">เลขอ้างอิง / หมายเลขโอน</label>
+          <input class="form-control" id="pay-ref" placeholder="เช่น 202503250001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">รับโดย</label>
+          <input class="form-control" id="pay-by" placeholder="ชื่อผู้รับเงิน">
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="pay-note" placeholder="">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-record-payment')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="savePayment()">💾 บันทึกการชำระ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Contract Modal -->
+<div class="modal-overlay" id="modal-add-contract">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-contract-title">📋 เพิ่มแพ็กเกจรายเดือน</div>
+      <button class="modal-close" onclick="closeModal('modal-add-contract')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="contract-edit-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ผู้รับบริการ <span class="required">*</span></label>
+          <select class="form-control" id="contract-patient">
+            <option value="">-- เลือกผู้รับบริการ --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ชื่อแพ็กเกจ <span class="required">*</span></label>
+          <input class="form-control" id="contract-name" placeholder="เช่น ค่าดูแลรายเดือน Basic">
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 8px;">รายการค่าบริการในแพ็กเกจ</div>
+      <div id="contract-items-container">
+        <!-- Dynamic rows -->
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="addContractItem()">+ เพิ่มรายการ</button>
+      <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;color:var(--text2);">ยอดรวมต่อเดือน</span>
+        <span id="contract-total-display" style="font-size:16px;font-weight:700;color:var(--accent);">0 ฿</span>
+      </div>
+      <hr class="divider">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันออกบิลในเดือน <span class="required">*</span></label>
+          <input class="form-control number" type="number" id="contract-billing-day" value="1" min="1" max="28" placeholder="1-28">
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;">ระบบจะออกร่างบิลทุกวันที่นี้ของเดือน</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">กำหนดชำระภายใน (วัน)</label>
+          <input class="form-control number" type="number" id="contract-due-days" value="7" min="1" placeholder="7">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">เริ่มต้น</label>
+          <input class="form-control" type="date" id="contract-start">
+        </div>
+        <div class="form-group">
+          <label class="form-label">สิ้นสุด (เว้นว่างถ้าไม่กำหนด)</label>
+          <input class="form-control" type="date" id="contract-end">
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="contract-note" placeholder="">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-contract')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveContract()">💾 บันทึกแพ็กเกจ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Room Modal -->
+<div class="modal-overlay" id="modal-add-room">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-room-title">🏠 เพิ่มห้องพัก</div>
+      <button class="modal-close" onclick="closeModal('modal-add-room')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="room-edit-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ชื่อห้อง <span class="required">*</span></label>
+          <input class="form-control" id="room-name" placeholder="เช่น 101, A1, VIP-01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ประเภทห้อง</label>
+          <select class="form-control" id="room-type">
+            <option value="ห้องเดี่ยว">ห้องเดี่ยว (1 เตียง)</option>
+            <option value="ห้อง 2 เตียง">ห้อง 2 เตียง</option>
+            <option value="ห้อง 3 เตียง">ห้อง 3 เตียง</option>
+            <option value="ห้อง 4 เตียง">ห้อง 4 เตียง</option>
+            <option value="วอร์ดรวม">วอร์ดรวม</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">โซน / ชั้น</label>
+        <input class="form-control" id="room-zone" placeholder="เช่น โซน A, ชั้น 2, ตึกเหนือ">
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">💰 ค่าห้อง</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ค่าห้องรายเดือน (฿)</label>
+          <input class="form-control number" id="room-monthly" type="number" min="0" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ค่าห้องรายวัน (฿)</label>
+          <input class="form-control number" id="room-daily" type="number" min="0" placeholder="0">
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="room-note" placeholder="รายละเอียดเพิ่มเติม">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-room')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveRoom()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Bed Modal -->
+<div class="modal-overlay" id="modal-add-bed">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-bed-title">🛏️ เพิ่มเตียง</div>
+      <button class="modal-close" onclick="closeModal('modal-add-bed')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="bed-edit-id">
+      <div class="form-group">
+        <label class="form-label">ห้องพัก <span class="required">*</span></label>
+        <select class="form-control" id="bed-room-id">
+          <option value="">-- เลือกห้อง --</option>
+        </select>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">รหัสเตียง <span class="required">*</span></label>
+          <input class="form-control" id="bed-code" placeholder="เช่น A, B, 1, 2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">สถานะ</label>
+          <select class="form-control" id="bed-status" onchange="toggleBedOtherNote()">
+            <option value="available">ว่าง</option>
+            <option value="occupied">มีผู้พัก</option>
+            <option value="maintenance">ซ่อมบำรุง</option>
+            <option value="inactive">ปิดใช้งาน</option>
+            <option value="other">อื่นๆ (ระบุ)</option>
+          </select>
+          <input class="form-control" id="bed-other-note" style="display:none;margin-top:6px;" placeholder="ระบุสถานะ เช่น ลาพักร้อน, รอผู้รับบริการใหม่...">
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="bed-note" placeholder="รายละเอียด">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-bed')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveBed()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal ย้ายห้อง -->
+<div class="modal-overlay" id="modal-transfer-room">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">🔄 ย้ายห้อง / เตียง</div>
+      <button class="modal-close" onclick="closeModal('modal-transfer-room')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="transfer-patient-id">
+      <div class="form-group">
+        <label class="form-label">ผู้รับบริการ</label>
+        <div id="transfer-patient-name" style="font-weight:600;font-size:14px;padding:8px;background:var(--bg2);border-radius:7px;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ห้องปัจจุบัน</label>
+        <div id="transfer-current-room" style="font-size:13px;color:var(--text2);padding:6px 8px;background:var(--bg2);border-radius:7px;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">วันที่ย้าย <span class="required">*</span></label>
+        <input class="form-control" type="date" id="transfer-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ห้องใหม่ <span class="required">*</span></label>
+        <select class="form-control" id="transfer-room-id" onchange="updateTransferBeds()">
+          <option value="">-- เลือกห้อง --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">เตียงใหม่ <span class="required">*</span></label>
+        <select class="form-control" id="transfer-bed-id">
+          <option value="">-- เลือกเตียง --</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="transfer-note" placeholder="เหตุผลการย้าย">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-transfer-room')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveTransferRoom()">🔄 บันทึกการย้าย</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ประวัติย้ายห้อง -->
+<div class="modal-overlay" id="modal-room-history">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-header">
+      <div class="modal-title">📋 ประวัติการย้ายห้อง</div>
+      <button class="modal-close" onclick="closeModal('modal-room-history')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+        <input class="form-control" id="history-search" placeholder="ค้นหาชื่อผู้รับบริการ..." oninput="renderRoomHistory()" style="max-width:300px;">
+      </div>
+      <div id="room-history-list" style="max-height:450px;overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal จำหน่ายผู้รับบริการ (Discharge) -->
+<div class="modal-overlay" id="modal-discharge">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-title">🚪 จำหน่ายผู้รับบริการ</div>
+      <button class="modal-close" onclick="closeModal('modal-discharge')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="discharge-patient-id">
+      <div class="form-group">
+        <label class="form-label">ผู้รับบริการ</label>
+        <div id="discharge-patient-name" style="font-weight:600;font-size:14px;padding:8px;background:var(--bg2);border-radius:7px;"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันที่จำหน่าย <span class="required">*</span></label>
+          <input class="form-control" type="date" id="discharge-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">เหตุผลการจำหน่าย <span class="required">*</span></label>
+          <select class="form-control" id="discharge-reason">
+            <option value="กลับบ้าน">🏠 กลับบ้าน</option>
+            <option value="ย้ายไปโรงพยาบาล">🏥 ย้ายไปโรงพยาบาล</option>
+            <option value="ย้ายสถานดูแลอื่น">🔄 ย้ายสถานดูแลอื่น</option>
+            <option value="เสียชีวิต">🕊️ เสียชีวิต</option>
+            <option value="ครบสัญญา">📋 ครบสัญญา</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">สรุปอาการก่อนจำหน่าย (Discharge Summary)</label>
+        <textarea class="form-control" id="discharge-summary" rows="3" placeholder="สรุปสภาพผู้รับบริการก่อนจำหน่าย เช่น อาการดีขึ้น สัญญาณชีพปกติ..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-discharge')">ยกเลิก</button>
+      <button class="btn btn-danger" onclick="saveDischarge()" style="background:#c0392b;color:#fff;">🚪 ยืนยันการจำหน่าย</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal Reset บิล -->
+<div class="modal-overlay" id="modal-invoice-reset">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">🔄 Reset สถานะบิล</div>
+      <button class="modal-close" onclick="closeModal('modal-invoice-reset')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="reset-invoice-id">
+      <div style="background:#fff3e0;border:1px solid #e67e22;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-weight:700;color:#e67e22;margin-bottom:4px;">⚠️ คำเตือน</div>
+        <div style="font-size:13px;color:#7d4e00;">การ Reset จะบันทึก Log ไว้ทุกครั้ง และจะแสดงในประวัติการ Reset ครับ</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">บิลที่จะ Reset</label>
+        <div id="reset-invoice-info" style="font-weight:600;font-size:13px;padding:8px;background:var(--bg2);border-radius:7px;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reset เป็นสถานะ <span class="required">*</span></label>
+        <select class="form-control" id="reset-invoice-status">
+          <option value="draft">ร่าง</option>
+          <option value="sent">รอชำระ (วางบิลแล้ว)</option>
+          <option value="partial">ชำระบางส่วน</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">เหตุผลที่ Reset <span class="required">*</span></label>
+        <input class="form-control" id="reset-invoice-reason" placeholder="เช่น แก้ไขวันที่ชำระ, ยอดเงินไม่ถูกต้อง">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-invoice-reset')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveInvoiceReset()" style="background:#8e44ad;">🔄 ยืนยัน Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ประวัติการ Reset บิล -->
+<div class="modal-overlay" id="modal-invoice-reset-log">
+  <div class="modal" style="max-width:750px;">
+    <div class="modal-header">
+      <div class="modal-title">📋 ประวัติการ Reset บิล</div>
+      <button class="modal-close" onclick="closeModal('modal-invoice-reset-log')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div id="invoice-reset-log-list" style="max-height:500px;overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Allergy Modal -->
+<div class="modal-overlay" id="modal-add-allergy">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">🚨 เพิ่มประวัติการแพ้ยา / อาหาร</div>
+      <button class="modal-close" onclick="closeModal('modal-add-allergy')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="allergy-pat-id">
+      <div class="form-group">
+        <label class="form-label">สิ่งที่แพ้ <span class="required">*</span> <span style="font-size:11px;color:var(--text3);">เช่น Penicillin, นม, อาหารทะเล</span></label>
+        <input class="form-control" id="allergy-allergen" placeholder="ระบุชื่อยา / อาหาร / สารที่แพ้">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ประเภท</label>
+          <select class="form-control" id="allergy-type">
+            <option>ยา</option><option>อาหาร</option><option>สารเคมี</option><option>อื่นๆ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ระดับ / หมายเหตุความรุนแรง</label>
+          <input class="form-control" id="allergy-severity" placeholder="เช่น รุนแรงมาก, ผื่น, แพ้ถึงขั้นช็อก...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">อาการที่เกิดขึ้น</label>
+        <input class="form-control" id="allergy-reaction" placeholder="เช่น ผื่นลมพิษ, หายใจลำบาก, ช็อก">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="allergy-note" placeholder="ข้อมูลเพิ่มเติม">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-allergy')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveAllergy()" style="background:#c0392b;">🚨 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Contact Modal -->
+<div class="modal-overlay" id="modal-add-contact">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">👥 เพิ่มผู้ติดต่อ / ผู้รับผิดชอบ</div>
+      <button class="modal-close" onclick="closeModal('modal-add-contact')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="contact-pat-id">
+      <div class="form-group">
+        <label class="form-label">ชื่อ-นามสกุล <span class="required">*</span></label>
+        <input class="form-control" id="contact-name" placeholder="ชื่อผู้ติดต่อ">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ความสัมพันธ์</label>
+          <input class="form-control" id="contact-relation" placeholder="เช่น ลูกสาว, ลูกชาย, คู่สมรส">
+        </div>
+        <div class="form-group">
+          <label class="form-label">บทบาท</label>
+          <select class="form-control" id="contact-role">
+            <option>ญาติ</option><option>ผู้ดูแล</option><option>ตัวแทนทางกฎหมาย</option><option>อื่นๆ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">เบอร์โทรศัพท์ <span class="required">*</span></label>
+          <input class="form-control" id="contact-phone" placeholder="0xx-xxx-xxxx">
+        </div>
+        <div class="form-group">
+          <label class="form-label">อีเมล</label>
+          <input class="form-control" id="contact-email" placeholder="email@example.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">บทบาทพิเศษ</label>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+            <input type="checkbox" id="contact-is-payer" style="accent-color:var(--accent);width:15px;height:15px;">
+            <span>💰 ผู้จ่ายเงิน (Payer) — รับใบวางบิล</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+            <input type="checkbox" id="contact-is-dm" style="accent-color:#6c5ce7;width:15px;height:15px;">
+            <span>🧠 ผู้ตัดสินใจด้านการรักษา</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="contact-note" placeholder="เพิ่มเติม">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-contact')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveContact()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-receive">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">📦 สั่งซื้อ / รับสินค้าเข้าคลัง</div>
+      <button class="modal-close" onclick="closeModal('modal-receive')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">รายการสินค้า <span class="required">*</span></label>
+        <select class="form-control" id="recv-item" onchange="onRecvItemChange()"></select>
+      </div>
+      <div id="recv-unit-info" style="display:none;background:var(--sage-light);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--accent);">
+        📦 <span id="recv-unit-text"></span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">จำนวนที่รับเข้า <span class="required">*</span> <span id="recv-unit-label" style="color:var(--text3);font-weight:400;"></span></label>
+          <input class="form-control number" id="recv-qty" type="number" min="1" value="">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ราคาซื้อจริง (฿/หน่วยซื้อ)</label>
+          <input class="form-control number" id="recv-cost" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🏷️ ข้อมูล Lot / วันหมดอายุ</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">เลข Lot Number</label>
+          <input class="form-control" id="recv-lot" placeholder="เช่น LOT2568001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันที่ผลิต (Mfg. Date)</label>
+          <input class="form-control" type="date" id="recv-mfg-date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">วันหมดอายุ (Expiry Date) <span style="color:var(--danger);font-size:11px;">— สำคัญสำหรับยา</span></label>
+        <input class="form-control" type="date" id="recv-expiry">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันที่รับสินค้า</label>
+          <input class="form-control" type="date" id="recv-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">เลข PO / ใบสั่งซื้อ</label>
+          <input class="form-control" id="recv-po" placeholder="เช่น PO-2568-001">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ชื่อผู้จำหน่าย / Supplier</label>
+        <input class="form-control" id="recv-supplier" placeholder="เช่น บ.เมดิซัพพลาย จำกัด">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="recv-note" placeholder="เพิ่มเติม">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-receive')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="receiveItem()">📦 บันทึกรับสินค้า</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-addPatient">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-addPatient-title">เพิ่มผู้รับบริการ</div>
+      <button class="modal-close" onclick="closeModal('modal-addPatient')">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:72vh;overflow-y:auto;">
+      <input type="hidden" id="pat-edit-id">
+      <!-- Photo upload -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+        <div id="pat-photo-preview" style="width:72px;height:72px;border-radius:50%;background:var(--sage-light);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;overflow:hidden;" onclick="document.getElementById('pat-photo-input').click()">👤</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px;">รูปถ่าย</div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('pat-photo-input').click()">📷 เลือกรูป</button>
+          <input type="file" id="pat-photo-input" accept="image/*" style="display:none;" onchange="previewPhoto('pat')">
+          <input type="hidden" id="pat-photo-data">
+        </div>
+      </div>
+      <hr class="divider">
+      <!-- Basic info -->
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">ข้อมูลทั่วไป</div>
+      <div class="form-group">
+        <label class="form-label">ชื่อ-นามสกุล <span class="required">*</span></label>
+        <input class="form-control" id="pat-name" placeholder="เช่น นาง สมใจ ใจดี">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ประเภทบัตร</label>
+        <select class="form-control" id="pat-id-type" onchange="togglePatIdType()">
+          <option value="thai">บัตรประชาชน</option>
+          <option value="passport">พาสปอร์ต (ต่างด้าว)</option>
+          <option value="alien">บัตรประจำตัวคนต่างด้าว</option>
+          <option value="workpermit">ใบอนุญาตทำงาน</option>
+        </select>
+      </div>
+      <div class="form-group" id="pat-id-group">
+        <label class="form-label" id="pat-id-label">เลขบัตรประชาชน</label>
+        <input class="form-control number" id="pat-id" placeholder="0-0000-00000-00-0">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันเกิด</label>
+          <input class="form-control" type="date" id="pat-dob" onchange="onPatDobChange()">
+          <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
+            <label style="font-size:12px;color:var(--text2);">หรือระบุเฉพาะปีเกิด (พ.ศ.):</label>
+            <input class="form-control number" type="number" id="pat-birth-year" min="2400" max="2580" placeholder="เช่น 2490" style="width:110px;" onchange="onPatBirthYearChange()">
+          </div>
+          <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;cursor:pointer;">
+            <input type="checkbox" id="pat-dob-unknown" onchange="onPatDobUnknownChange()">
+            <span style="color:var(--text2);">ไม่ทราบวันเดือนปีเกิด</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">อายุ</label>
+          <input class="form-control" id="pat-age-display" readonly placeholder="-" style="background:var(--surface2);cursor:default;">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันแรกรับบริการ</label>
+          <input class="form-control" type="date" id="pat-admit">
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันสิ้นสุดสัญญา</label>
+          <input class="form-control" type="date" id="pat-enddate">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">สถานะ</label>
+        <select class="form-control" id="pat-status" onchange="onPatStatusChange(this)">
+          <option value="active">พักอยู่</option>
+          <option value="hospital">อยู่โรงพยาบาล</option>
+          <option value="inactive">ออกแล้ว</option>
+        </select>
+      </div>
+      <hr class="divider">
+      <!-- Contact -->
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">ข้อมูลติดต่อ</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">เบอร์โทรศัพท์</label>
+          <input class="form-control number" id="pat-phone" placeholder="0xx-xxx-xxxx">
+        </div>
+        <div class="form-group">
+          <label class="form-label">เบอร์ผู้ดูแล/ครอบครัว</label>
+          <input class="form-control number" id="pat-emergency" placeholder="0xx-xxx-xxxx">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ที่อยู่</label>
+        <textarea class="form-control" id="pat-address" rows="2" placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด" style="resize:vertical;"></textarea>
+      </div>
+      <hr class="divider">
+      <!-- Medical history - managed from profile page -->
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">ประวัติการรักษา / โรคประจำตัว</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);margin-bottom:12px;">
+        💡 จัดการรายละเอียดได้ในหน้าโปรไฟล์ผู้รับบริการ (แท็บ ประวัติการรักษา)
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">ประวัติการให้ยา / ยาประจำ</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);margin-bottom:4px;">
+        💡 จัดการรายละเอียดได้ในหน้าโปรไฟล์ผู้รับบริการ (แท็บ ยาประจำ)
+      </div>
+      <input type="hidden" id="pat-medical">
+      <input type="hidden" id="pat-medications">
+      <hr class="divider">
+      <!-- Notes -->
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">หมายเหตุ</div>
+      <div class="form-group" style="margin:0;">
+        <textarea class="form-control" id="pat-note" rows="2" placeholder="ข้อมูลเพิ่มเติม" style="resize:vertical;"></textarea>
+      </div>
+      <hr class="divider">
+      <!-- Physio Settings -->
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🤸 กายภาพบำบัด</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">ราคากายภาพต่อชั่วโมง (฿)</label>
+          <input class="form-control number" type="number" id="pat-physio-rate" min="0" placeholder="0" value="0">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label">ชั่วโมงกายภาพต่อวัน</label>
+          <select class="form-control" id="pat-physio-hours">
+            <option value="0">ไม่มีกายภาพ</option>
+            <option value="0.5">0.5 ชม. (30 นาที)</option>
+            <option value="1">1 ชม.</option>
+            <option value="1.5">1.5 ชม.</option>
+            <option value="2">2 ชม.</option>
+          </select>
+        </div>
+      </div>
+      <hr class="divider">
+      <!-- Room & Bed Assignment -->
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🛏️ ห้องพักและเตียง</div>
+      <div class="form-group">
+        <label class="form-label">มอบหมายเตียง</label>
+        <select class="form-control" id="pat-bed" onchange="onPatBedChange()">
+          <option value="">-- ไม่ระบุ / ยังไม่มีเตียง --</option>
+        </select>
+      </div>
+      <div id="pat-room-info" style="display:none;background:var(--accent-light);border-radius:7px;padding:8px 14px;font-size:12px;color:var(--accent-dark);margin-bottom:4px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-addPatient')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="savePatient()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-addStaff">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-addStaff-title">เพิ่มพนักงาน</div>
+      <button class="modal-close" onclick="closeModal('modal-addStaff')">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:72vh;overflow-y:auto;">
+      <input type="hidden" id="staff-edit-id">
+      <!-- Photo -->
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+        <div id="staff-photo-preview" style="width:72px;height:72px;border-radius:50%;background:var(--sage-light);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;overflow:hidden;" onclick="document.getElementById('staff-photo-input').click()">👤</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px;">รูปถ่าย</div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('staff-photo-input').click()">📷 เลือกรูป</button>
+          <input type="file" id="staff-photo-input" accept="image/*" style="display:none;" onchange="previewPhoto('staff')">
+          <input type="hidden" id="staff-photo-data">
+        </div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">ข้อมูลทั่วไป</div>
+      <div class="form-group">
+        <label class="form-label">ชื่อ-นามสกุล <span class="required">*</span></label>
+        <input class="form-control" id="staff-name" placeholder="เช่น น.ส.สมใจ ใจดี">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ชื่อเล่น</label>
+          <input class="form-control" id="staff-nickname" placeholder="เช่น แนน">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ตำแหน่ง</label>
+          <select class="form-control" id="staff-pos">
+            <option value="">-- เลือกตำแหน่ง --</option>
+            <option>ผู้บริหาร</option><option>พยาบาล</option><option>PN</option>
+            <option>หมอ</option><option>ธุรการ</option><option>บัญชี</option>
+            <option>นักกายภาพ</option><option>โภชนากร</option><option>บริบาล</option>
+            <option>แม่บ้าน</option><option>พ่อบ้าน</option>
+            <option>แม่ครัว</option><option>พ่อครัว</option><option>อื่นๆ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ประเภทบัตร</label>
+        <select class="form-control" id="staff-id-type" onchange="toggleStaffIdType()">
+          <option value="thai">บัตรประชาชน (ไทย)</option>
+          <option value="passport">พาสปอร์ต (ต่างด้าว)</option>
+          <option value="alien">บัตรประจำตัวคนต่างด้าว</option>
+          <option value="workpermit">ใบอนุญาตทำงาน</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="staff-idcard-label">เลขบัตรประชาชน</label>
+        <input class="form-control number" id="staff-idcard" placeholder="0-0000-00000-00-0">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันเกิด</label>
+          <input class="form-control" type="date" id="staff-dob">
+        </div>
+        <div class="form-group">
+          <label class="form-label">อายุ</label>
+          <input class="form-control" id="staff-age-display" readonly placeholder="-" style="background:var(--surface2);cursor:default;">
+        </div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">ข้อมูลการจ้างงาน</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">วันเริ่มงาน</label>
+          <input class="form-control" type="date" id="staff-start">
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันสิ้นสุดสัญญา</label>
+          <input class="form-control" type="date" id="staff-enddate">
+        </div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">ข้อมูลติดต่อ</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">เบอร์โทรศัพท์</label>
+          <input class="form-control number" id="staff-phone" placeholder="0xx-xxx-xxxx">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ที่อยู่</label>
+        <textarea class="form-control" id="staff-address" rows="2" placeholder="ที่อยู่" style="resize:vertical;"></textarea>
+      </div>
+      <hr class="divider">
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">หมายเหตุ</label>
+        <textarea class="form-control" id="staff-note" rows="2" placeholder="ข้อมูลเพิ่มเติม" style="resize:vertical;"></textarea>
+      </div>
+      <hr class="divider">
+      <!-- Contract PDF -->
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">📄 สัญญาว่าจ้าง</div>
+      <div style="display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+        <span style="font-size:28px;">📄</span>
+        <div style="flex:1;">
+          <div id="staff-contract-name" style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:4px;">ยังไม่มีไฟล์</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('staff-contract-input').click()">📎 แนบไฟล์ PDF</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="staff-contract-view-btn" onclick="viewStaffContract()" style="display:none;">👁️ ดูไฟล์</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="staff-contract-clear-btn" onclick="clearStaffContract()" style="display:none;color:#e74c3c;">✕ ลบ</button>
+          </div>
+          <input type="file" id="staff-contract-input" accept=".pdf,application/pdf" style="display:none;" onchange="loadStaffContract()">
+          <input type="hidden" id="staff-contract-data">
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">รองรับ PDF เท่านั้น · แนะนำไม่เกิน 5 MB</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-addStaff')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveStaff()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Account Modal -->
+<div class="modal-overlay" id="modal-addAccount">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-addAccount-title">เพิ่ม Account</div>
+      <button class="modal-close" onclick="closeModal('modal-addAccount')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="acc-edit-username">
+      <div class="form-group">
+        <label class="form-label">Username <span class="required">*</span></label>
+        <input class="form-control" id="acc-username" placeholder="เช่น nurse01" autocomplete="off">
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;">ภาษาอังกฤษ/ตัวเลข ไม่มีช่องว่าง</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ชื่อ-นามสกุล (แสดงในระบบ) <span class="required">*</span></label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="form-control" id="acc-displayname" placeholder="เช่น น.ส.สมใจ ใจดี" style="flex:1;">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="pickStaffForAccount()" style="white-space:nowrap;">เลือกจากพนักงาน</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role / สิทธิ์ <span class="required">*</span></label>
+        <select class="form-control" id="acc-role">
+          <option value="">-- เลือก Role --</option>
+          <option value="admin">👑 admin — เข้าถึงทุกอย่าง + จัดการ account</option>
+          <option value="manager">🏆 ผู้บริหาร (Executive) — เห็นทุกอย่าง ยกเว้นจัดการ account</option>
+          <option value="officer">📋 ธุรการ (Officer) — เบิก / ประวัติทั้งหมด / ผู้รับบริการ / พนักงาน</option>
+          <option value="nurse">🏥 พยาบาล — เบิก / ประวัติทั้งหมด / ผู้รับบริการ</option>
+          <option value="caregiver">👤 ผู้ดูแล / บริบาล — เบิกได้ / เห็นเฉพาะรายการของตัวเอง</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ตำแหน่ง</label>
+        <input class="form-control" id="acc-position" placeholder="เช่น พยาบาล, ธุรการ">
+      </div>
+      <hr class="divider">
+      <div class="form-group">
+        <label class="form-label" id="acc-pass-label">Password <span class="required">*</span></label>
+        <input class="form-control" id="acc-password" type="password" placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="new-password">
+        <div id="acc-pass-hint" style="font-size:11px;color:var(--text3);margin-top:4px;display:none;">เว้นว่างไว้ถ้าไม่ต้องการเปลี่ยน password</div>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">ยืนยัน Password <span class="required" id="acc-confirm-req">*</span></label>
+        <input class="form-control" id="acc-password2" type="password" placeholder="กรอก password อีกครั้ง" autocomplete="new-password">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-addAccount')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveAccount()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pick Staff Modal -->
+<div class="modal-overlay" id="modal-pickStaff">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <div class="modal-title">เลือกพนักงาน</div>
+      <button class="modal-close" onclick="closeModal('modal-pickStaff')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+        <input class="form-control" id="pickStaffSearch" placeholder="🔍 ค้นหาชื่อ..." oninput="renderPickStaffList()">
+      </div>
+      <div id="pickStaffList" style="max-height:320px;overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Medical Log Modal -->
+<div class="modal-overlay" id="modal-addMedLog">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-title" id="medlog-title">เพิ่มรายการ</div>
+      <button class="modal-close" onclick="closeModal('modal-addMedLog')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="medlog-type">
+      <input type="hidden" id="medlog-patid">
+      <input type="hidden" id="medlog-editidx">
+      <div class="form-group">
+        <label class="form-label">วันที่ <span class="required">*</span></label>
+        <input class="form-control" type="date" id="medlog-date">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">รายละเอียด <span class="required">*</span></label>
+        <textarea class="form-control" id="medlog-detail" rows="4" placeholder="กรอกรายละเอียด..." style="resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-addMedLog')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveMedLog()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Line Setup Guide Modal -->
+<div class="modal-overlay" id="modal-guide">
+  <div class="modal" style="max-width:680px;max-height:88vh;overflow-y:auto;">
+    <div class="modal-header" style="position:sticky;top:0;background:var(--surface);z-index:1;">
+      <div class="modal-title">📖 คู่มือตั้งค่า Line Notification</div>
+      <button class="modal-close" onclick="closeModal('modal-guide')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px 24px;">
+
+      <div style="background:#e8f5fa;border:1px solid #b0d8e8;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;">
+        💡 ใช้ <strong>n8n</strong> (แนะนำ — ฟรี self-host หรือ cloud trial) หรือ <strong>Make.com</strong> (ฟรี 1,000 operations/เดือน) เป็นตัวกลางเชื่อม Webhook → Line
+      </div>
+
+      <!-- PART A: LINE OA -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+          <span style="background:#06c755;color:white;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">A</span>
+          สร้าง Line Official Account & Messaging API
+        </div>
+        <div style="display:grid;gap:8px;">
+          <div class="guide-step"><span class="guide-num">1</span><div>ไปที่ <strong>developers.line.biz</strong> → Login → Create Provider</div></div>
+          <div class="guide-step"><span class="guide-num">2</span><div>Create Channel → เลือก <strong>Messaging API</strong> → กรอกข้อมูล OA</div></div>
+          <div class="guide-step"><span class="guide-num">3</span><div>ไปที่แท็บ <strong>Messaging API</strong> → ก๊อป <strong>Channel Access Token</strong> (Long-lived) เก็บไว้</div></div>
+          <div class="guide-step"><span class="guide-num">4</span><div>เพิ่ม Bot เข้า Line Group ที่ต้องการแจ้งเตือน จากนั้นส่งข้อความใดก็ได้ใน Group</div></div>
+          <div class="guide-step"><span class="guide-num">5</span><div>หา <strong>Group ID</strong>: ใช้ Line Bot API เรียก <code style="background:#f0f0f0;padding:1px 6px;border-radius:4px;font-size:12px;">GET /v2/bot/group/{groupId}/summary</code> หรือดูจาก webhook event แรก</div></div>
+        </div>
+      </div>
+
+      <!-- PART B: n8n -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+          <span style="background:#e67e22;color:white;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">B</span>
+          สร้าง Workflow ใน n8n
+        </div>
+        <div style="display:grid;gap:8px;">
+          <div class="guide-step"><span class="guide-num">1</span><div>ไปที่ <strong>n8n.io</strong> → Sign Up (ฟรี Cloud trial) หรือ Self-host</div></div>
+          <div class="guide-step"><span class="guide-num">2</span><div>New Workflow → Add Node → เลือก <strong>Webhook</strong></div></div>
+          <div class="guide-step"><span class="guide-num">3</span><div>ตั้งค่า Webhook: Method = <strong>POST</strong>, Authentication = <strong>None</strong> → Copy Webhook URL</div></div>
+          <div class="guide-step"><span class="guide-num">4</span><div>เพิ่ม Node → <strong>HTTP Request</strong> → ตั้งค่าดังนี้:<br>
+            <div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:6px;padding:10px;margin-top:8px;font-family:monospace;font-size:12px;line-height:1.7;">
+              URL: <strong>https://api.line.me/v2/bot/message/push</strong><br>
+              Method: <strong>POST</strong><br>
+              Header: <strong>Authorization: Bearer {Channel Access Token}</strong><br>
+              Header: <strong>Content-Type: application/json</strong><br>
+              Body (JSON):<br>
+              {<br>
+              &nbsp;&nbsp;"to": "<strong>{Group ID}</strong>",<br>
+              &nbsp;&nbsp;"messages": [{"type": "text", "text": "{{ $json.message }}"}]<br>
+              }
+            </div>
+          </div></div>
+          <div class="guide-step"><span class="guide-num">5</span><div>บันทึก Workflow → <strong>Activate</strong> → กลับมากรอก Webhook URL ในระบบนี้</div></div>
+        </div>
+      </div>
+
+      <!-- PART C: Make.com -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+          <span style="background:#9b59b6;color:white;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">C</span>
+          ทางเลือก: Make.com
+        </div>
+        <div style="display:grid;gap:8px;">
+          <div class="guide-step"><span class="guide-num">1</span><div><strong>make.com</strong> → Create Scenario → Add Module → <strong>Webhooks → Custom Webhook</strong></div></div>
+          <div class="guide-step"><span class="guide-num">2</span><div>Copy Webhook URL → ต่อ Module <strong>HTTP → Make a Request</strong> → ยิงไป Line API เหมือน n8n</div></div>
+          <div class="guide-step"><span class="guide-num">3</span><div>หรือใช้ Module <strong>Line → Send a Message</strong> โดยตรง (ต้อง Connect Line account)</div></div>
+        </div>
+      </div>
+
+      <!-- Payload format -->
+      <div style="background:#1a1714;border-radius:8px;padding:16px;color:#e0ddd8;">
+        <div style="font-size:12px;color:#a09890;margin-bottom:8px;font-weight:600;">📦 รูปแบบ JSON ที่ระบบนี้ส่งไป (Webhook Payload)</div>
+        <pre style="font-family:monospace;font-size:12px;line-height:1.7;white-space:pre-wrap;">{
+  "event": "new_requisition",
+  "message": "📋 ใบเบิกใหม่ #REQ-0001\n👤 ผู้รับบริการ: นาง สมใจ ใจดี\n📦 รายการ: 3 รายการ\n👨‍⚕️ เบิกโดย: น.ส.ปิยะวรรณ\n🕐 เวลา: 14:32",
+  "data": {
+    "refNo": "REQ-0001",
+    "patient": "นาง สมใจ ใจดี",
+    "itemCount": 3,
+    "staff": "น.ส.ปิยะวรรณ"
+  }
+}</pre>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('modal-guide')">เข้าใจแล้ว</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+
+<div class="modal-overlay" id="modal-doc-preview" style="z-index:2000;">
+  <div class="modal" style="max-width:860px;width:97%;max-height:94vh;overflow-y:auto;padding:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:10;">
+      <div style="font-weight:700;font-size:15px;" id="preview-modal-title">ดูเอกสาร</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-ghost btn-sm" id="preview-print-btn" onclick="printFromPreview()">🖨️ พิมพ์</button>
+        <button class="btn btn-ghost btn-sm" id="preview-pdf-btn" onclick="pdfFromPreview()" style="color:#e74c3c;">📄 PDF</button>
+        <button class="btn btn-ghost btn-sm" id="preview-excel-btn" onclick="excelFromPreview()" style="color:#27ae60;">📊 Excel</button>
+        <button class="modal-close" style="position:static;margin-left:8px;" onclick="closeModal('modal-doc-preview')">✕</button>
+      </div>
+    </div>
+    <div id="preview-content" style="padding:32px;background:#f5f5f5;min-height:400px;">
+      <div style="background:white;max-width:800px;margin:0 auto;padding:32px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.1);" id="preview-doc-body">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: QUICK INVOICE (เลือกผู้รับบริการ + ช่วงวันที่) ===== -->
+<div class="modal-overlay" id="modal-quick-invoice">
+  <div class="modal" style="max-width:520px;width:95%;">
+    <div class="modal-title">🧾 สร้างใบวางบิล</div>
+    <button class="modal-close" onclick="closeModal('modal-quick-invoice')">✕</button>
+    <div style="display:grid;gap:16px;padding-top:4px;">
+
+      <div>
+        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">ผู้รับบริการ <span class="required">*</span></label>
+        <select id="qi-patient" class="form-control">
+          <option value="">-- เลือกผู้รับบริการ --</option>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">ตั้งแต่วันที่ <span class="required">*</span></label>
+          <input id="qi-date-from" type="date" class="form-control">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">ถึงวันที่ <span class="required">*</span></label>
+          <input id="qi-date-to" type="date" class="form-control">
+        </div>
+      </div>
+
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:12px;color:var(--text2);line-height:1.7;">
+        <div style="font-weight:600;color:var(--text1);margin-bottom:4px;">📋 ระบบจะดึงข้อมูลให้อัตโนมัติ:</div>
+        ✅ รายการเบิกสินค้าที่อนุมัติแล้ว → แยกเข้าหมวดตามประเภท (ยา / เวชภัณฑ์ / ของใช้ / บริการ) อัตโนมัติ<br>
+        ✅ เลขที่เอกสารอัตโนมัติ<br>
+        ✅ นำไปหน้าใบวางบิลเพื่อกรอกค่าห้อง / ค่าดูแล / ค่าอื่นๆ เพิ่มเติม
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-quick-invoice')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="confirmQuickInvoice()">➡️ ดำเนินการต่อ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CREATE INVOICE ===== -->
+<div class="modal-overlay" id="modal-createInvoice">
+  <div class="modal" style="max-width:720px;width:95%;max-height:92vh;overflow-y:auto;">
+    <div class="modal-title" id="modal-invoice-title">สร้างใบแจ้งหนี้</div>
+    <button class="modal-close" onclick="closeModal('modal-createInvoice')">✕</button>
+    <div style="display:grid;gap:14px;">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">ประเภทเอกสาร <span class="required">*</span></label>
+          <select id="inv-type" class="form-control" onchange="updateInvoiceTitle()">
+            <option value="quotation">ใบเสนอราคา</option>
+            <option value="invoice">ใบแจ้งหนี้ / วางบิล</option>
+            <option value="tax_invoice">ใบกำกับภาษี</option>
+            <option value="receipt">ใบเสร็จรับเงิน</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">เลขที่เอกสาร</label>
+          <input id="inv-docno" type="text" class="form-control" placeholder="จะสร้างอัตโนมัติ" onblur="checkDocNoDuplicate(this.value,'invoice')">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">ผู้รับบริการ <span class="required">*</span></label>
+          <select id="inv-patient" class="form-control" onchange="onInvoicePatientChange()">
+            <option value="">-- เลือกผู้รับบริการ --</option>
+          </select>
+          <div id="inv-payer-info" style="display:none;margin-top:6px;font-size:12px;color:var(--accent-dark);background:var(--accent-light);border-radius:5px;padding:6px 10px;"></div>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">วันที่เอกสาร <span class="required">*</span></label>
+          <input id="inv-date" type="date" class="form-control">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">กำหนดชำระ</label>
+          <input id="inv-due-date" type="date" class="form-control">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">ชื่องาน / หมายเหตุงาน</label>
+          <input id="inv-job-name" type="text" class="form-control" placeholder="เช่น ค่าห้องและค่าดูแล 03/69">
+        </div>
+      </div>
+
+      <!-- ค่าห้องและค่าดูแล -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-weight:600;font-size:13px;color:var(--accent);">🏠 ค่าห้องและค่าดูแล</div>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;">
+            <input type="checkbox" id="inv-room-enabled" checked onchange="recalcInvoice()"> เปิดใช้
+          </label>
+        </div>
+        <!-- Auto-filled room info strip -->
+        <div id="inv-room-autofill" style="display:none;background:var(--accent-light);border:1px solid #b8d9c5;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--accent-dark);display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span>🛏️ <span id="inv-room-autofill-text"></span></span>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="applyRoomRate('monthly')">ใช้รายเดือน</button>
+            <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="applyRoomRate('daily')">ใช้รายวัน</button>
+          </div>
+        </div>
+        <!-- Editable room label (description on invoice) -->
+        <div style="margin-bottom:8px;">
+          <label style="font-size:11px;color:var(--text2);">ชื่อที่แสดงในใบวางบิล</label>
+          <input id="inv-room-label" type="text" class="form-control" placeholder="เช่น ค่าห้อง 101 (ห้องเดี่ยว) เดือนมีนาคม" style="font-size:13px;">
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;align-items:end;">
+          <div>
+            <label style="font-size:11px;color:var(--text2);">รูปแบบการคิด</label>
+            <select id="inv-room-type" class="form-control" onchange="onInvRoomTypeChange()">
+              <option value="monthly">รายเดือน</option>
+              <option value="daily">รายวัน</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text2);" id="inv-room-qty-label">จำนวน (เดือน)</label>
+            <input id="inv-room-qty" type="number" class="form-control" value="1" min="0" step="0.5" oninput="recalcInvoice()">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text2);">ราคา/หน่วย (฿) <span style="color:var(--accent);font-size:10px;">แก้ไขได้</span></label>
+            <input id="inv-room-rate" type="number" class="form-control" value="0" min="0" oninput="recalcInvoice()" style="border-color:var(--accent);">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text2);">รวม (฿)</label>
+            <input id="inv-room-total" type="text" class="form-control" readonly style="background:var(--surface2);font-weight:700;text-align:right;color:var(--accent);" value="0.00">
+          </div>
+        </div>
+      </div>
+
+      <!-- ค่ากายภาพบำบัด -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-weight:600;font-size:13px;color:var(--accent);">🤸 ค่ากายภาพบำบัด</div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="autoFillPhysioToInvoice()" style="font-size:12px;">📥 ดึงจากบันทึก Session</button>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:end;">
+          <div>
+            <label style="font-size:11px;color:var(--text2);">รูปแบบ</label>
+            <select id="inv-pt-type" class="form-control" onchange="recalcInvoice()">
+              <option value="monthly">รายเดือน</option>
+              <option value="daily">รายวัน</option>
+              <option value="session">ต่อครั้ง</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text2);">จำนวน</label>
+            <input id="inv-pt-qty" type="number" class="form-control" value="1" min="0" step="0.5" oninput="recalcInvoice()">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text2);">ราคา/หน่วย (฿)</label>
+            <input id="inv-pt-rate" type="number" class="form-control" value="0" min="0" oninput="recalcInvoice()">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text2);">รวม (฿)</label>
+            <input id="inv-pt-total" type="text" class="form-control" readonly style="background:var(--surface2);font-weight:600;text-align:right;" value="0.00">
+          </div>
+          <div>
+            <label style="font-size:11px;color:transparent;">x</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+              <input type="checkbox" id="inv-pt-enabled" onchange="recalcInvoice()"> เปิดใช้
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ค่าเวชภัณฑ์ -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-weight:600;font-size:13px;color:var(--accent);">💊 ค่าเวชภัณฑ์ / ยา / ของใช้ / บริการ</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input id="inv-med-from" type="month" class="form-control" style="font-size:12px;padding:4px 8px;">
+            <span style="font-size:12px;color:var(--text2);">ถึง</span>
+            <input id="inv-med-to" type="month" class="form-control" style="font-size:12px;padding:4px 8px;">
+            <button class="btn btn-ghost btn-sm" onclick="loadRequisitionsForInvoice()">🔄 ดึงรายการ</button>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+              <input type="checkbox" id="inv-hide-items" onchange="renderInvoiceItems()"> ซ่อนรายการ
+            </label>
+          </div>
+        </div>
+        <div id="inv-items-container">
+          <div style="text-align:center;color:var(--text3);padding:16px;font-size:13px;">เลือกช่วงเดือนแล้วกด 🔄 หรือกด + เพิ่มเองด้านล่าง</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="addManualInvoiceItem()">+ เพิ่มรายการ</button>
+          <div style="font-size:13px;color:var(--text2);">รวมเวชภัณฑ์: <strong id="inv-items-total">0.00 ฿</strong></div>
+        </div>
+      </div>
+
+      <!-- ค่าอื่นๆ -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-weight:600;font-size:13px;color:var(--accent);">📋 ค่าอื่นๆ</div>
+          <button class="btn btn-ghost btn-sm" onclick="addOtherItem()">+ เพิ่ม</button>
+        </div>
+        <div id="inv-other-container">
+          <div style="text-align:center;color:var(--text3);padding:12px;font-size:13px;">กด + เพิ่มรายการค่าใช้จ่ายอื่นๆ</div>
+        </div>
+        <div style="text-align:right;margin-top:8px;font-size:13px;color:var(--text2);">รวมค่าอื่นๆ: <strong id="inv-other-total">0.00 ฿</strong></div>
+      </div>
+
+      <!-- ยอดรวม -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;">
+        <div style="display:grid;gap:8px;max-width:360px;margin-left:auto;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;">
+            <span style="color:var(--text2);">รวมเป็นเงิน</span>
+            <span id="inv-subtotal" style="font-weight:600;">0.00 ฿</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;align-items:center;">
+            <span style="color:var(--text2);">ภาษีมูลค่าเพิ่ม
+              <select id="inv-vat-rate" onchange="recalcInvoice()" style="border:1px solid var(--border);border-radius:4px;padding:1px 4px;background:var(--surface2);color:var(--text1);font-size:12px;margin-left:4px;">
+                <option value="0">0%</option>
+                <option value="7">7%</option>
+              </select>
+            </span>
+            <span id="inv-vat-amount">0.00 ฿</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;border-top:1px solid var(--border);padding-top:8px;">
+            <span>จำนวนเงินรวมทั้งสิ้น</span>
+            <span id="inv-before-wht" style="color:var(--accent);">0.00 ฿</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;align-items:center;border-top:1px solid var(--border);padding-top:8px;">
+            <span style="color:var(--text2);">หัก ณ ที่จ่าย
+              <select id="inv-wht-rate" onchange="recalcInvoice()" style="border:1px solid var(--border);border-radius:4px;padding:1px 4px;background:var(--surface2);color:var(--text1);font-size:12px;margin-left:4px;">
+                <option value="0">ไม่หัก</option>
+                <option value="1">1%</option>
+                <option value="3">3%</option>
+              </select>
+            </span>
+            <span id="inv-wht-amount" style="color:#e74c3c;">0.00 ฿</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;background:var(--accent);color:white;padding:10px 12px;border-radius:6px;">
+            <span>ยอดชำระ</span>
+            <span id="inv-grand-total">0.00 ฿</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">หมายเหตุ</label>
+        <textarea id="inv-note" class="form-control" rows="2" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+      </div>
+
+      <input type="hidden" id="inv-edit-id" value="">
+      <input type="hidden" id="inv-req-items-data" value="[]">
+      <input type="hidden" id="inv-other-items-data" value="[]">
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-createInvoice')">ยกเลิก</button>
+      <button class="btn btn-ghost" onclick="saveInvoice('draft')">💾 บันทึกร่าง</button>
+      <button class="btn btn-primary" onclick="saveInvoice('sent')">📤 บันทึก & ส่ง</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: EXPENSE NOTE ===== -->
+<div class="modal-overlay" id="modal-expense">
+  <div class="modal" style="max-width:680px;width:95%;max-height:90vh;overflow-y:auto;">
+    <div class="modal-title" id="modal-expense-title">บันทึกค่าใช้จ่าย</div>
+    <button class="modal-close" onclick="closeModal('modal-expense')">✕</button>
+    <div style="display:grid;gap:14px;">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">เลขที่เอกสาร</label>
+          <input id="exp-docno" type="text" class="form-control" placeholder="EXP202503xxxx (อัตโนมัติ)" onblur="checkDocNoDuplicate(this.value,'expense')">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">วันที่ <span class="required">*</span></label>
+          <input id="exp-date" type="date" class="form-control">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">ผู้จัดทำ</label>
+          <input id="exp-preparer" type="text" class="form-control" placeholder="ชื่อพนักงาน">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">ชื่องาน / Project</label>
+          <input id="exp-job" type="text" class="form-control" placeholder="เช่น ใบเสร็จค่าน้ำมัน">
+        </div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+        <div style="font-weight:600;font-size:13px;margin-bottom:10px;color:var(--accent);">🏪 ผู้จำหน่าย / Vendor</div>
+        <div style="display:grid;gap:10px;">
+          <input id="exp-vendor-name" type="text" class="form-control" placeholder="ชื่อบริษัท / ร้านค้า">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <input id="exp-vendor-addr" type="text" class="form-control" placeholder="ที่อยู่">
+            <input id="exp-vendor-taxid" type="text" class="form-control" placeholder="เลขประจำตัวผู้เสียภาษี">
+          </div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-weight:600;font-size:13px;color:var(--accent);">📋 รายการค่าใช้จ่าย</div>
+          <button class="btn btn-ghost btn-sm" onclick="addExpenseItem()">+ เพิ่มรายการ</button>
+        </div>
+        <div id="exp-items-container">
+          <div style="text-align:center;color:var(--text3);padding:16px;font-size:13px;">กด + เพิ่มรายการ</div>
+        </div>
+        <div style="text-align:right;margin-top:8px;font-size:13px;">รวม: <strong id="exp-items-total">0.00 ฿</strong></div>
+      </div>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;">
+        <div style="display:grid;gap:8px;max-width:340px;margin-left:auto;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;">
+            <span style="color:var(--text2);">รวมเป็นเงิน</span>
+            <span id="exp-subtotal">0.00 ฿</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;">
+            <span style="color:var(--text2);">VAT 7%</span>
+            <span id="exp-vat">0.00 ฿</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;border-top:1px solid var(--border);padding-top:6px;">
+            <span>จำนวนเงินรวมทั้งสิ้น</span>
+            <span id="exp-total-vat">0.00 ฿</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;align-items:center;">
+            <span style="color:var(--text2);">หัก ณ ที่จ่าย
+              <select id="exp-wht-rate" onchange="recalcExpense()" style="border:1px solid var(--border);border-radius:4px;padding:1px 4px;background:var(--surface2);color:var(--text1);font-size:12px;margin-left:4px;">
+                <option value="0">ไม่หัก</option>
+                <option value="1">1%</option>
+                <option value="3">3%</option>
+              </select>
+            </span>
+            <span id="exp-wht">0.00 ฿</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;background:var(--accent);color:white;padding:10px 12px;border-radius:6px;">
+            <span>ยอดชำระ</span>
+            <span id="exp-net">0.00 ฿</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+        <div style="font-weight:600;font-size:13px;margin-bottom:10px;color:var(--accent);">💳 รายละเอียดการชำระเงิน</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="radio" name="exp-payment" value="cash" id="exp-pay-cash" checked> เงินสด</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="radio" name="exp-payment" value="transfer" id="exp-pay-transfer"> โอนเงิน</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="radio" name="exp-payment" value="cheque" id="exp-pay-cheque"> เช็ค</label>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:11px;color:var(--text2);">ธนาคาร</label>
+            <input id="exp-bank" type="text" class="form-control" placeholder="ชื่อธนาคาร">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text2);">เลขที่</label>
+            <input id="exp-bank-no" type="text" class="form-control" placeholder="เลขบัญชี/เช็ค">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--text2);">วันที่ชำระ</label>
+            <input id="exp-pay-date" type="date" class="form-control">
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">หมายเหตุ</label>
+        <textarea id="exp-note" class="form-control" rows="2" placeholder="หมายเหตุ..."></textarea>
+      </div>
+
+      <input type="hidden" id="exp-edit-id" value="">
+      <input type="hidden" id="exp-items-data" value="[]">
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-expense')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveExpense()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+<!-- ════════════════════════════════════════════════ -->
+<!-- Modal บันทึก Session กายภาพบำบัด               -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-physio-session">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <span id="modal-physio-title">🤸 บันทึกกายภาพบำบัด</span>
+      <button class="modal-close" onclick="closeModal('modal-physio-session')">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px;">
+
+      <div class="form-group">
+        <label class="form-label">ผู้รับบริการ</label>
+        <input class="form-control" id="physio-patient-name" readonly style="background:var(--surface2);font-weight:600;">
+        <input type="hidden" id="physio-patient-id">
+        <input type="hidden" id="physio-session-id">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label class="form-label">วันที่ทำกายภาพ *</label>
+          <input class="form-control" type="date" id="physio-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">นักกายภาพที่ทำ</label>
+          <select class="form-control" id="physio-therapist-id">
+            <option value="">-- เลือกพนักงาน --</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label class="form-label">ระยะเวลา (นาที) *</label>
+          <select class="form-control" id="physio-duration">
+            <option value="30">30 นาที (ครึ่งชั่วโมง)</option>
+            <option value="60" selected>60 นาที (1 ชั่วโมง)</option>
+            <option value="90">90 นาที (1.5 ชั่วโมง)</option>
+            <option value="120">120 นาที (2 ชั่วโมง)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ราคา/ชั่วโมง (฿) *</label>
+          <input class="form-control number" type="number" id="physio-rate" min="0" placeholder="0" oninput="calcPhysioAmount()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ยอดรวม (฿)</label>
+          <input class="form-control number" id="physio-amount" readonly style="background:var(--surface2);font-weight:700;color:var(--accent);text-align:right;">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">หมายเหตุ</label>
+        <textarea class="form-control" id="physio-note" rows="2" placeholder="เช่น เน้นกล้ามเนื้อขา, ออกกำลังกายในน้ำ..."></textarea>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-physio-session')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="savePhysioSession()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
 
