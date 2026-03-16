@@ -18,7 +18,8 @@ function renderPageExtra(page) {
 }
 
 // ── Init ─────────────────────────────────────────────
-function initBilling() {
+async function initBilling() {
+  await ensureSecondaryDB();
   if (!db.invoices) db.invoices = [];
   if (!db.expenses) db.expenses = [];
 }

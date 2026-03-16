@@ -39,12 +39,10 @@ let db = {
 async function loadDB() {
   showLoadingOverlay(true);
   try {
+    // ── Core data: โหลดทันที (ต้องการ dashboard + ทุกหน้า) ──
     const [
       itemsRes, patientsRes, staffRes, reqsRes, purchasesRes,
-      settingsRes, itemLotsRes, roomsRes, bedsRes, contractsRes,
-      paymentsRes, approvalLogsRes, returnItemsRes, appointmentsRes,
-      belongingsRes, consentsRes, invoicesRes, expensesRes,
-      roomHistoryRes, invoiceResetLogsRes
+      settingsRes, itemLotsRes, roomsRes, bedsRes
     ] = await Promise.all([
       supa.from('items').select('*').order('id'),
       supa.from('patients').select('*').order('id'),
@@ -55,6 +53,41 @@ async function loadDB() {
       supa.from('item_lots').select('*').order('expiry_date', {ascending: true}).limit(500),
       supa.from('rooms').select('*').order('name'),
       supa.from('beds').select('*').order('room_id'),
+    ]);
+    db.items        = (itemsRes.data || []).map(mapItem);
+    db.patients     = (patientsRes.data || []).map(mapPatient);
+    db.staff        = (staffRes.data || []).map(mapStaff);
+    db.requisitions = (reqsRes.data || []).map(mapReq);
+    db.purchases    = (purchasesRes.data || []).map(mapPurchase);
+    db.itemLots     = (itemLotsRes.data || []).map(mapLot);
+    db.rooms        = (roomsRes.data || []).map(mapRoom);
+    db.beds         = (bedsRes.data || []).map(mapBed);
+    db.users = {};
+    const ls = (settingsRes.data || []).find(s => s.key === 'lineSettings');
+    if (ls) db.lineSettings = { ...db.lineSettings, ...ls.value };
+    if (typeof loadBillingFromSettings === 'function') {
+      loadBillingFromSettings(settingsRes.data || []);
+    }
+    if (db.items.length === 0) seedData();
+    window._dbLoaded = true;
+  } catch(e) {
+    console.error('loadDB error', e);
+    window._dbLoaded = true;
+    toast('เชื่อมต่อฐานข้อมูลไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต', 'error');
+  }
+  showLoadingOverlay(false);
+  // โหลด secondary data แบบ non-blocking หลัง UI ขึ้นแล้ว
+  setTimeout(() => loadDBSecondary(), 500);
+}
+
+async function loadDBSecondary() {
+  // ── Secondary data: โหลดหลัง dashboard ขึ้น (billing, clinical history) ──
+  try {
+    const [
+      contractsRes, paymentsRes, approvalLogsRes, returnItemsRes,
+      appointmentsRes, belongingsRes, consentsRes, invoicesRes,
+      expensesRes, roomHistoryRes, invoiceResetLogsRes
+    ] = await Promise.all([
       supa.from('patient_contracts').select('*').order('created_at', {ascending: false}).limit(200),
       supa.from('payments').select('*').order('payment_date', {ascending: false}).limit(300),
       supa.from('approval_logs').select('*').order('created_at', {ascending: false}).limit(200),
@@ -67,14 +100,6 @@ async function loadDB() {
       supa.from('patient_room_history').select('*').order('transfer_date', {ascending: false}).limit(200),
       supa.from('invoice_reset_logs').select('*').order('reset_at', {ascending: false}).limit(200),
     ]);
-    db.items           = (itemsRes.data || []).map(mapItem);
-    db.patients        = (patientsRes.data || []).map(mapPatient);
-    db.staff           = (staffRes.data || []).map(mapStaff);
-    db.requisitions    = (reqsRes.data || []).map(mapReq);
-    db.purchases       = (purchasesRes.data || []).map(mapPurchase);
-    db.itemLots        = (itemLotsRes.data || []).map(mapLot);
-    db.rooms           = (roomsRes.data || []).map(mapRoom);
-    db.beds            = (bedsRes.data || []).map(mapBed);
     db.contracts       = (contractsRes.data || []).map(mapContract);
     db.payments        = (paymentsRes.data || []).map(mapPayment);
     db.approvalLogs    = (approvalLogsRes.data || []).map(mapApprovalLog);
@@ -86,25 +111,21 @@ async function loadDB() {
     db.expenses        = (expensesRes.data || []).map(mapExpense);
     db.roomHistory     = (roomHistoryRes?.data || []);
     db.invoiceResetLogs = (invoiceResetLogsRes?.data || []);
-    // ไม่ดึง app_users/password มาที่ browser เพื่อความปลอดภัย
-    // role ตรวจสอบจาก server ผ่าน get_my_role() RPC เท่านั้น
-    db.users = {};
-    // settings: line + billing (billingSettings only — invoices/expenses now in own tables)
-    const ls = (settingsRes.data || []).find(s => s.key === 'lineSettings');
-    if (ls) db.lineSettings = { ...db.lineSettings, ...ls.value };
-    if (typeof loadBillingFromSettings === 'function') {
-      loadBillingFromSettings(settingsRes.data || []);
-    }
-
-    if (db.items.length === 0) seedData();
-    window._dbLoaded = true;
+    window._dbSecondaryLoaded = true;
   } catch(e) {
-    console.error('loadDB error', e);
-    window._dbLoaded = true; // ยัง login ด้วย BUILTIN_ACCOUNTS ได้แม้ Supabase มีปัญหา
-    toast('เชื่อมต่อฐานข้อมูลไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต', 'error');
+    console.warn('loadDBSecondary error', e);
   }
-  showLoadingOverlay(false);
 }
+// ── Helper: รอให้ secondary data โหลดเสร็จก่อนแสดง billing/clinical ──
+async function ensureSecondaryDB() {
+  if (window._dbSecondaryLoaded) return;
+  // รอสูงสุด 5 วินาที
+  for (let i = 0; i < 50; i++) {
+    if (window._dbSecondaryLoaded) return;
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
+
 
 // ── Map functions (snake_case → camelCase) ──────────────────
 function mapItem(r) {
