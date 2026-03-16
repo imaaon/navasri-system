@@ -226,7 +226,7 @@ function saveStaff() {
       const { error } = await supa.from('staff').update(row).eq('id', editId);
       if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
       const idx = db.staff.findIndex(s => s.id == editId);
-      if (idx >= 0) db.staff[idx] = { ...db.staff[idx], ...data, id: parseInt(editId) };
+      if (idx >= 0) db.staff[idx] = { ...db.staff[idx], ...data, id: editId };
       toast('แก้ไขข้อมูลเรียบร้อย','success');
     } else {
       const { data: ins, error } = await supa.from('staff').insert(row).select().single();
