@@ -243,10 +243,7 @@ function switchHistoryTab(tab) {
 // Single-level approval: only 'officer' (ธุรการ) can approve/reject
 // pending → approved (stock cut on approval)
 
-function canApproveReq() {
-  const role = currentUser?.role||'';
-  return ['admin','officer'].includes(role);
-}
+
 
 function getPendingForMe() {
   if (canApproveReq()) {
