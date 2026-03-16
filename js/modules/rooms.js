@@ -183,7 +183,7 @@ async function saveBed() {
     const { error } = await supa.from('beds').update(data).eq('id', editId);
     if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
     const b = db.beds.find(x => x.id == editId);
-    if (b) Object.assign(b, { roomId: parseInt(roomId), bedCode: code, status: data.status, note: data.note });
+    if (b) Object.assign(b, { roomId: roomId, bedCode: code, status: data.status, note: data.note });
     toast('แก้ไขเตียงเรียบร้อย','success');
   } else {
     const { data: ins, error } = await supa.from('beds').insert(data).select().single();
@@ -262,15 +262,15 @@ async function saveTransferRoom() {
 
   // บันทึกประวัติย้ายห้องใน Supabase
   const histData = {
-    patient_id:   parseInt(patId),
+    patient_id:   patId,
     patient_name: p.name,
     from_room_id: oldBed?.roomId || p.currentRoomId || null,
     from_room:    oldRoom?.name || '-',
     from_bed_id:  p.currentBedId || null,
     from_bed:     oldBed?.bedCode || '-',
-    to_room_id:   parseInt(newRoomId),
+    to_room_id:   newRoomId,
     to_room:      newRoom?.name || '-',
-    to_bed_id:    parseInt(newBedId),
+    to_bed_id:    newBedId,
     to_bed:       newBed?.bedCode || '-',
     transfer_date: date,
     note:         note,
@@ -287,16 +287,16 @@ async function saveTransferRoom() {
   }
 
   // อัปเดตสถานะเตียงใหม่ → มีผู้พัก
-  await supa.from('beds').update({ status: 'occupied', patient_id: parseInt(patId) }).eq('id', newBedId);
-  if (newBed) { newBed.status = 'occupied'; newBed.patientId = parseInt(patId); }
+  await supa.from('beds').update({ status: 'occupied', patient_id: patId }).eq('id', newBedId);
+  if (newBed) { newBed.status = 'occupied'; newBed.patientId = patId; }
 
   // อัปเดตข้อมูลคนไข้
   await supa.from('patients').update({
-    room_id: parseInt(newRoomId),
-    bed_id:  parseInt(newBedId)
+    room_id: newRoomId,
+    bed_id:  newBedId
   }).eq('id', patId);
-  p.currentRoomId = parseInt(newRoomId);
-  p.currentBedId  = parseInt(newBedId);
+  p.currentRoomId = newRoomId;
+  p.currentBedId  = newBedId;
 
   // บันทึก local history
   if (!db.roomHistory) db.roomHistory = [];

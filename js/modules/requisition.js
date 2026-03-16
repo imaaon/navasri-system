@@ -179,7 +179,6 @@ async function submitReq() {
       }
     });
 
-    closeModal('modal-req');
     clearReq();
   } catch(e) {
     toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
@@ -423,7 +422,7 @@ async function confirmRejectReq() {
 
   // ใช้ RPC reject_requisition — บันทึก audit ด้วย
   const { data: rpcRes, error: rpcErr } = await supa.rpc('reject_requisition', {
-    p_header_id:   parseInt(reqId),
+    p_header_id:   reqId,
     p_rejected_by: actor,
     p_reason:      reason,
   });
@@ -522,7 +521,7 @@ async function saveReturnItem() {
 
   // Save return record
   const returnData = {
-    req_id: parseInt(reqId), ref_no: refNo,
+    req_id: reqId, ref_no: refNo,
     patient_id: req.patientId, patient_name: req.patientName,
     item_id: req.itemId, item_name: req.itemName,
     qty_returned: qty, unit: req.unit,

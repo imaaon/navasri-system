@@ -1,8 +1,8 @@
 // ===== SHARED UTILS =====
 
 // ===== MODAL HELPERS =====
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openModal(id) { const el = document.getElementById(id); if (el) el.classList.add('open'); else console.warn('openModal: not found:', id); }
+function closeModal(id) { const el = document.getElementById(id); if (el) el.classList.remove('open'); }
 // Modal click-outside ต้องรัน หลัง DOM โหลด (ถูกเรียกจาก loadHTMLPartials แล้ว)
 function initModalClickOutside() {
   document.querySelectorAll('.modal-overlay').forEach(overlay => {

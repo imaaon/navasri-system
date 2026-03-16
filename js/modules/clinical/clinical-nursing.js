@@ -222,6 +222,6 @@ async function saveDischarge() {
 
   toast(`🚪 จำหน่าย ${p.name} เรียบร้อย (${reason})`, 'success');
   closeModal('modal-discharge');
-  closeModal('modal-add-patient');
+  closeModal('modal-addPatient');
   renderPatients();
 }

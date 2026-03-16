@@ -231,7 +231,7 @@ async function savePatient() {
     address: document.getElementById('pat-address').value,
     note:   document.getElementById('pat-note').value,
     photo:  photoVal || undefined,
-    currentBedId: bedId ? parseInt(bedId) : null,
+    currentBedId: bedId || null,
     physioRatePerHour: parseFloat(document.getElementById('pat-physio-rate')?.value) || 0,
     physioHoursPerDay: parseFloat(document.getElementById('pat-physio-hours')?.value) || 0,
   };

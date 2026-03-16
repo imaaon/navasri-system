@@ -104,7 +104,7 @@ function saveMedLog() {
   closeModal('modal-addMedLog');
   // Refresh the profile tab in place
   const tabEl = document.getElementById(`patprofile-tab-${type}`);
-  if (tabEl) tabEl.innerHTML = renderMedLogTab(parseInt(patId), type);
+  if (tabEl) tabEl.innerHTML = renderMedLogTab(patId, type);
 }
 
 function deleteMedLog(patId, type, idx) {
