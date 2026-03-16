@@ -163,7 +163,7 @@ window.onload = async function() {
       if (saved) {
         currentUser = JSON.parse(saved);
         const displayName = currentUser.displayName || currentUser.username || '';
-        const initials = displayName.replace(/^(นาย|นาง|น\.ส\.|ม\.ร\.ว\.)\s*/,'').trim().slice(0,2);
+        const initials = (displayName || '').trim().slice(0,2);
         document.getElementById('userAvatar').textContent       = initials || '?';
         document.getElementById('userDisplayName').textContent  = displayName.split(' ')[0] || displayName;
         loginScreen.style.display = 'none';
