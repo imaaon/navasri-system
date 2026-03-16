@@ -38,10 +38,10 @@ function renderPatients() {
       <td>
         <div style="display:flex;align-items:center;gap:10px;">
           ${p.photo
-            ? `<img src="${p.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--sage);cursor:zoom-in;flex-shrink:0;" onclick="showPatientPhoto(${p.id})" title="คลิกเพื่อขยาย">`
-            : `<div style="width:52px;height:52px;border-radius:50%;background:var(--sage-light);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;cursor:pointer;" onclick="editPatient(${p.id})" title="เพิ่มรูปภาพ">👤</div>`}
+            ? `<img src="${p.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--sage);cursor:zoom-in;flex-shrink:0;" onclick=\"showPatientPhoto('${p.id}')\" title="คลิกเพื่อขยาย">`
+            : `<div style="width:52px;height:52px;border-radius:50%;background:var(--sage-light);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;cursor:pointer;" onclick=\"editPatient('${p.id}')\" title="เพิ่มรูปภาพ">👤</div>`}
           <div>
-            <div style="font-weight:600;cursor:pointer;color:var(--accent);line-height:1.3;" onclick="openPatientProfile(${p.id})">${p.name}</div>
+            <div style="font-weight:600;cursor:pointer;color:var(--accent);line-height:1.3;" onclick=\"openPatientProfile('${p.id}')\">${p.name}</div>
             <div style="font-size:11px;color:var(--text3);">${p.position||''}</div>
           </div>
         </div>
@@ -54,8 +54,8 @@ function renderPatients() {
       <td style="font-size:12px;color:var(--text2);">${dur}</td>
       <td><span class="badge ${p.status==='active' ? 'badge-green' : p.status==='hospital' ? 'badge-blue' : 'badge-gray'}">${p.status==='active' ? 'พักอยู่' : p.status==='hospital' ? '🏥 อยู่ รพ.' : 'ออกแล้ว'}</span></td>
       <td style="white-space:nowrap;">
-        <button class="btn btn-ghost btn-sm" onclick="openPatientProfile(${p.id})" title="ดูโปรไฟล์">🔍</button>
-        <button class="btn btn-ghost btn-sm" onclick="editPatient(${p.id})" title="แก้ไข">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick=\"openPatientProfile('${p.id}')\" title="ดูโปรไฟล์">🔍</button>
+        <button class="btn btn-ghost btn-sm" onclick=\"editPatient('${p.id}')\" title="แก้ไข">✏️</button>
       </td>
     </tr>`;
   }).join('');

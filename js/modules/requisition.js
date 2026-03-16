@@ -134,9 +134,9 @@ async function submitReq() {
     });
 
     const { data: rpcResult, error: rpcErr } = await supa.rpc('submit_requisition', {
-      p_patient_id:   parseInt(patId),
+      p_patient_id:   patId,
       p_patient_name: patient.name,
-      p_staff_id:     parseInt(staffId),
+      p_staff_id:     staffId,
       p_staff_name:   staff.name,
       p_date:         date,
       p_note:         note || '',

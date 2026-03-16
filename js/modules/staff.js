@@ -43,7 +43,7 @@ function renderStaff() {
       <td>
         <div style="display:flex;align-items:center;gap:8px;">
           ${s.photo ? `<img src="${s.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">` : `<div style="width:32px;height:32px;border-radius:50%;background:var(--sage-light);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;">👤</div>`}
-          <span style="font-weight:600;cursor:pointer;color:var(--accent);" onclick="openStaffProfile(${s.id})">${s.name}</span>
+          <span style="font-weight:600;cursor:pointer;color:var(--accent);" onclick=\"openStaffProfile('${s.id}')\">${s.name}</span>
         </div>
       </td>
       <td style="color:var(--green-dark);font-weight:500;">${s.nickname||'-'}</td>
@@ -55,8 +55,8 @@ function renderStaff() {
       <td style="font-size:12px;color:var(--text2);">${tenure}</td>
       <td class="number" style="font-size:12px;">${endD}</td>
       <td style="white-space:nowrap;">
-        <button class="btn btn-ghost btn-sm" onclick="openStaffProfile(${s.id})" title="ดูโปรไฟล์">🔍</button>
-        <button class="btn btn-ghost btn-sm" onclick="editStaff(${s.id})" title="แก้ไข">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick=\"openStaffProfile('${s.id}')\" title="ดูโปรไฟล์">🔍</button>
+        <button class="btn btn-ghost btn-sm" onclick=\"editStaff('${s.id}')\" title="แก้ไข">✏️</button>
       </td>
     </tr>`;
   }).join('');
@@ -125,9 +125,9 @@ async function openStaffProfile(id) {
           </div>
         </div>
         <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
-          <button class="btn btn-primary" style="width:100%;" onclick="editStaff(${s.id})">✏️ แก้ไขข้อมูล</button>
-          ${s.photo ? `<button class="btn btn-ghost btn-sm" style="width:100%;" onclick="showStaffPhoto(${s.id})">🖼️ ดูรูปถ่าย</button>` : ''}
-          ${s.contractData ? `<button class="btn btn-ghost btn-sm" style="width:100%;color:var(--accent);" onclick="viewStaffContractById(${s.id})">📄 ดูสัญญาว่าจ้าง</button>` : '<div style="font-size:11px;color:var(--text3);text-align:center;padding:4px 0;">ยังไม่มีสัญญาว่าจ้าง</div>'}
+          <button class="btn btn-primary" style="width:100%;" onclick=\"editStaff('${s.id}')\">✏️ แก้ไขข้อมูล</button>
+          ${s.photo ? `<button class="btn btn-ghost btn-sm" style="width:100%;" onclick=\"showStaffPhoto('${s.id}')\">🖼️ ดูรูปถ่าย</button>` : ''}
+          ${s.contractData ? `<button class="btn btn-ghost btn-sm" style="width:100%;color:var(--accent);" onclick=\"viewStaffContractById('${s.id}')\">📄 ดูสัญญาว่าจ้าง</button>` : '<div style="font-size:11px;color:var(--text3);text-align:center;padding:4px 0;">ยังไม่มีสัญญาว่าจ้าง</div>'}
         </div>
       </div>
       <div class="card" style="margin-top:16px;">
