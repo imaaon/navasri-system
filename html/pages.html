@@ -1,0 +1,1051 @@
+      <!-- DASHBOARD -->
+      <div id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card orange">
+            <div class="stat-label">รายการสินค้าทั้งหมด</div>
+            <div class="stat-value number" id="stat-total">0</div>
+            <div class="stat-sub">รายการในคลัง</div>
+            <div class="stat-icon">📦</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-label">สินค้าใกล้หมด</div>
+            <div class="stat-value number" id="stat-low">0</div>
+            <div class="stat-sub">ต้องสั่งเพิ่ม</div>
+            <div class="stat-icon">⚠️</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">เบิกวันนี้</div>
+            <div class="stat-value number" id="stat-today">0</div>
+            <div class="stat-sub">รายการ</div>
+            <div class="stat-icon">📋</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-label">ผู้รับบริการ</div>
+            <div class="stat-value number" id="stat-patients">0</div>
+            <div class="stat-sub">คนปัจจุบัน</div>
+            <div class="stat-icon">👥</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <!-- Low stock alert -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">⚠️ สินค้าใกล้หมด</div>
+              <button class="btn btn-ghost btn-sm" onclick="showPage('stock')">ดูทั้งหมด</button>
+            </div>
+            <div class="card-body" style="padding:0;">
+              <table>
+                <thead>
+                  <tr><th>รายการ</th><th>คงเหลือ</th><th>หน่วย</th><th>สถานะ</th></tr>
+                </thead>
+                <tbody id="lowStockTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Recent requisitions -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🕐 การเบิกล่าสุด</div>
+              <button class="btn btn-ghost btn-sm" onclick="showPage('history')">ดูทั้งหมด</button>
+            </div>
+            <div class="card-body" style="padding:0 20px;">
+              <div class="timeline" id="recentTimeline"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upcoming Appointments Widget -->
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header" style="background:#eef4ff;">
+            <div class="card-title" style="color:#1e5fa0;">🚐 นัดหมายแพทย์ที่กำลังจะถึง</div>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('patients')">ดูคนไข้ทั้งหมด</button>
+          </div>
+          <div id="dashboard-appts" style="min-height:40px;"></div>
+        </div>
+
+        <!-- Expiry alert -->
+        <div class="card" id="expiry-alert-card" style="margin-bottom:20px;display:none;">
+          <div class="card-header" style="background:#fff8f0;border-bottom:1px solid #ffe0b2;">
+            <div class="card-title" style="color:#e65100;">🚨 แจ้งเตือนยา / สินค้าใกล้หมดอายุ</div>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('stock')">ดูทั้งหมด</button>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table>
+              <thead><tr><th>รายการ</th><th>Lot</th><th>คงเหลือ</th><th>หน่วย</th><th>วันหมดอายุ</th><th>สถานะ</th></tr></thead>
+              <tbody id="expiryAlertTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Category summary -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">สรุปสต็อกตามประเภท</div>
+          </div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;" id="catSummary"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STOCK -->
+      <div id="page-stock" style="display:none;">
+        <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center;flex-wrap:wrap;">
+          <div class="search-wrap" style="flex:1;min-width:200px;">
+            <span class="search-icon">🔍</span>
+            <input class="form-control" id="stockSearch" placeholder="ค้นหารายการสินค้า..." oninput="renderStock()">
+          </div>
+          <select class="form-control" id="stockCatFilter" style="width:160px;" onchange="renderStock()">
+            <option value="">ทุกประเภท</option>
+            <option value="ยา">ยา</option>
+            <option value="เวชภัณฑ์">เวชภัณฑ์</option>
+            <option value="ของใช้">ของใช้</option>
+            <option value="บริการ">บริการ</option>
+          </select>
+          <select class="form-control" id="stockStatusFilter" style="width:150px;" onchange="renderStock()">
+            <option value="">ทุกสถานะ</option>
+            <option value="low">ใกล้หมด</option>
+            <option value="out">หมดแล้ว</option>
+            <option value="ok">ปกติ</option>
+          </select>
+          <button class="btn btn-primary" onclick="openAddItemModal()">+ เพิ่มรายการ</button>
+          <button class="btn btn-secondary" onclick="openReceiveModal()">📥 รับสินค้าเข้า</button>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">คลังสต็อกสินค้า</div>
+            <div style="font-size:12px;color:var(--text2);" id="stockCount">รายการทั้งหมด: 0</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th style="width:56px;">รูป</th>
+                  <th>ชื่อรายการ</th>
+                  <th>ประเภท</th>
+                  <th>คงเหลือ</th>
+                  <th>หน่วย</th>
+                  <th>จุดสั่งซื้อ</th>
+                  <th style="white-space:nowrap;">ราคาซื้อ (฿)</th>
+                  <th style="white-space:nowrap;">ราคาขาย (฿)</th>
+                  <th>สถานะ</th>
+                  <th>จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="stockTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REQUISITION -->
+      <div id="page-requisition" style="display:none;">
+        <div class="card" style="max-width:680px;">
+          <div class="card-header">
+            <div class="card-title">📋 ฟอร์มเบิกสินค้า</div>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">ผู้รับบริการ <span class="required">*</span></label>
+                <select class="form-control" id="req-patient" onchange="onReqPatientChange()">
+                  <option value="">-- เลือกผู้รับบริการ --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ผู้เบิก (พนักงาน) <span class="required">*</span></label>
+                <select class="form-control" id="req-staff">
+                  <option value="">-- เลือกพนักงาน --</option>
+                </select>
+              </div>
+            </div>
+            <!-- Allergy Alert Banner — shows when patient has allergies -->
+            <div id="req-allergy-alert" style="display:none;"></div>
+            <!-- Bed info strip -->
+            <div id="req-bed-info" style="display:none;background:var(--accent-light);border:1px solid var(--border);border-radius:7px;padding:8px 14px;font-size:12px;color:var(--accent-dark);margin-bottom:12px;">
+              🛏️ <span id="req-bed-text"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">วันที่เบิก</label>
+              <input class="form-control" type="date" id="req-date">
+            </div>
+
+            <hr class="divider">
+            <div style="font-size:13px;font-weight:600;margin-bottom:12px;">รายการที่เบิก</div>
+
+            <div id="reqItems"></div>
+            <button class="btn btn-secondary" style="width:100%;margin-top:4px;border-style:dashed;" onclick="addReqItem()">+ เพิ่มรายการ</button>
+
+            <hr class="divider">
+            <div class="form-group">
+              <label class="form-label">หมายเหตุ</label>
+              <input class="form-control" id="req-note" placeholder="ระบุเพิ่มเติม (ถ้ามี)">
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+              <button class="btn btn-ghost" onclick="clearReq()">ล้างข้อมูล</button>
+              <button class="btn btn-primary" onclick="submitReq()">✓ บันทึกการเบิก</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div id="page-history" style="display:none;">
+        <!-- Tabs -->
+        <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;" id="history-tabs">
+          <div class="history-tab active-htab" onclick="switchHistoryTab('list')" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:2px solid var(--accent);margin-bottom:-2px;color:var(--accent);">📋 ประวัติการเบิก</div>
+          <div class="history-tab" onclick="switchHistoryTab('approval')" id="htab-approval" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);">✅ อนุมัติใบเบิก <span id="approval-badge" style="display:none;background:#e74c3c;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;"></span></div>
+          <div class="history-tab" onclick="switchHistoryTab('returns')" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);">↩️ คืนสินค้า</div>
+        </div>
+
+        <!-- TAB: LIST (existing history) -->
+        <div id="history-tab-list">
+          <!-- Filter bar -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="padding:16px 20px;">
+              <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                <div class="form-group" style="margin:0;flex:2;min-width:160px;">
+                  <label class="form-label" style="font-size:11px;">🔍 ค้นหา</label>
+                  <div class="search-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input class="form-control" id="histSearch" placeholder="ชื่อสินค้า / คนไข้ / พนักงาน..." oninput="renderHistory()">
+                  </div>
+                </div>
+                <div class="form-group" style="margin:0;min-width:140px;">
+                  <label class="form-label" style="font-size:11px;">📅 เดือน-ปี</label>
+                  <input class="form-control" type="month" id="histMonth" onchange="renderHistory()">
+                </div>
+                <div class="form-group" style="margin:0;min-width:150px;">
+                  <label class="form-label" style="font-size:11px;">สถานะ</label>
+                  <select class="form-control" id="histStatus" onchange="renderHistory()">
+                    <option value="">ทั้งหมด</option>
+                    <option value="pending">รอหัวหน้า</option>
+                    <option value="forward">รอผู้บริหาร</option>
+                    <option value="approved">อนุมัติแล้ว</option>
+                    <option value="rejected">ไม่อนุมัติ</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;min-width:170px;">
+                  <label class="form-label" style="font-size:11px;">🏥 ผู้รับบริการ</label>
+                  <select class="form-control" id="histPatient" onchange="renderHistory()">
+                    <option value="">ทั้งหมด</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0;min-width:170px;">
+                  <label class="form-label" style="font-size:11px;">👤 พนักงาน</label>
+                  <select class="form-control" id="histStaff" onchange="renderHistory()">
+                    <option value="">ทั้งหมด</option>
+                  </select>
+                </div>
+                <button class="btn btn-ghost" onclick="resetHistFilters()" style="margin-bottom:1px;">รีเซ็ต</button>
+              </div>
+            </div>
+          </div>
+          <div id="histSummaryStrip" style="margin-bottom:12px;"></div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title" id="histTableTitle">ประวัติการเบิกสินค้า</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>วันที่</th><th>ผู้รับบริการ</th><th>รายการ</th><th>จำนวน</th><th>หน่วย</th><th>ผู้เบิก</th><th>สถานะ</th><th>หมายเหตุ</th><th></th></tr>
+                </thead>
+                <tbody id="histTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: APPROVAL -->
+        <div id="history-tab-approval" style="display:none;">
+          <div id="approval-panel-content">
+            <div style="text-align:center;padding:40px;color:var(--text3);">กำลังโหลด...</div>
+          </div>
+        </div>
+
+        <!-- TAB: RETURNS -->
+        <div id="history-tab-returns" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+              <div style="font-size:15px;font-weight:700;">↩️ รายการคืนสินค้า</div>
+              <div style="font-size:12px;color:var(--text3);">คืนสต็อกอัตโนมัติ · ระบุเหตุผลการคืน</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openReturnModal()">+ บันทึกการคืน</button>
+          </div>
+          <div id="returns-list">
+            <div style="text-align:center;padding:40px;color:var(--text3);">กำลังโหลด...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORT -->
+      <div id="page-report" style="display:none;">
+        <!-- Filter bar -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-body" style="padding:16px 20px;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+              <div class="form-group" style="margin:0;min-width:150px;">
+                <label class="form-label" style="font-size:11px;">📅 เดือน-ปี</label>
+                <input class="form-control" type="month" id="reportMonth" onchange="renderReport()">
+              </div>
+              <div class="form-group" style="margin:0;min-width:170px;">
+                <label class="form-label" style="font-size:11px;">🏥 ผู้รับบริการ</label>
+                <select class="form-control" id="reportPatient" onchange="renderReport()">
+                  <option value="">ทั้งหมด</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;min-width:170px;">
+                <label class="form-label" style="font-size:11px;">👤 พนักงาน</label>
+                <select class="form-control" id="reportStaff" onchange="renderReport()">
+                  <option value="">ทั้งหมด</option>
+                </select>
+              </div>
+              <button class="btn btn-ghost" onclick="resetReportFilters()" style="margin-bottom:1px;">รีเซ็ต</button>
+            </div>
+          </div>
+        </div>
+        <!-- Summary strip -->
+        <div id="reportSummaryStrip" style="margin-bottom:12px;"></div>
+        <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+          <div class="tabs" id="reportTabs">
+            <div class="tab active" onclick="switchReportTab('summary')">รายการทั้งหมด</div>
+            <div class="tab" onclick="switchReportTab('bypatient')">แยกตามผู้รับบริการ</div>
+            <div class="tab" onclick="switchReportTab('byitem')">แยกตามสินค้า</div>
+            <div class="tab" onclick="switchReportTab('bystaff')">แยกตามพนักงาน</div>
+          </div>
+        </div>
+        <div id="report-summary">
+          <div class="card">
+            <div class="card-header"><div class="card-title">สรุปยอดการเบิกรายเดือน</div></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>วันที่</th><th>รายการ</th><th>ผู้รับบริการ</th><th>จำนวน</th><th>หน่วย</th><th>ผู้เบิก</th></tr></thead>
+                <tbody id="reportTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="report-bypatient" style="display:none;">
+          <div class="card"><div class="card-header"><div class="card-title">สรุปแยกตามผู้รับบริการ</div></div>
+            <div class="table-wrap"><table><thead><tr><th>ผู้รับบริการ</th><th>จำนวนครั้ง</th><th>สินค้าที่เบิก</th><th>ครั้งล่าสุด</th></tr></thead><tbody id="reportByPatient"></tbody></table></div>
+          </div>
+        </div>
+        <div id="report-byitem" style="display:none;">
+          <div class="card"><div class="card-header"><div class="card-title">สรุปแยกตามรายการสินค้า</div></div>
+            <div class="table-wrap"><table><thead><tr><th>รายการ</th><th>จำนวนที่เบิกรวม</th><th>หน่วย</th><th>จำนวนครั้ง</th></tr></thead><tbody id="reportByItem"></tbody></table></div>
+          </div>
+        </div>
+        <div id="report-bystaff" style="display:none;">
+          <div class="card"><div class="card-header"><div class="card-title">สรุปแยกตามพนักงาน</div></div>
+            <div class="table-wrap"><table><thead><tr><th>พนักงาน</th><th>จำนวนครั้งที่เบิก</th><th>รายการสินค้า</th><th>รายการล่าสุด</th></tr></thead><tbody id="reportByStaff"></tbody></table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATIENTS -->
+      <!-- ROOMS MANAGEMENT PAGE -->
+      <div id="page-rooms" style="display:none;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <button class="btn btn-ghost" onclick="showPage('patients')" style="padding:6px 12px;">← กลับ</button>
+          <h2 style="font-size:18px;font-weight:700;">🛏️ จัดการห้องพักและเตียง</h2>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <button class="btn btn-ghost" onclick="openRoomHistoryModal()">📋 ประวัติย้ายห้อง</button>
+            <button class="btn btn-ghost" onclick="openAddRoomModal()">+ เพิ่มห้อง</button>
+            <button class="btn btn-primary" onclick="openAddBedModal()">+ เพิ่มเตียง</button>
+          </div>
+        </div>
+        <!-- Room type summary -->
+        <div id="room-summary" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px;"></div>
+        <!-- Rooms list -->
+        <div id="rooms-list"></div>
+      </div>
+
+      <div id="page-patients" style="display:none;">
+        <!-- Filter bar -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-body" style="padding:14px 20px;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+              <div class="form-group" style="margin:0;flex:2;min-width:180px;">
+                <label class="form-label" style="font-size:11px;">🔍 ค้นหา</label>
+                <div class="search-wrap">
+                  <span class="search-icon">🔍</span>
+                  <input class="form-control" id="patSearch" placeholder="ชื่อ / เลขบัตร..." oninput="renderPatients()">
+                </div>
+              </div>
+              <div class="form-group" style="margin:0;min-width:140px;">
+                <label class="form-label" style="font-size:11px;">สถานะ</label>
+                <select class="form-control" id="patStatusFilter" onchange="renderPatients()">
+                  <option value="">ทั้งหมด</option>
+                  <option value="active">พักอยู่</option>
+                  <option value="hospital">🏥 อยู่โรงพยาบาล</option>
+                  <option value="inactive">ออกแล้ว</option>
+                </select>
+              </div>
+              <div style="margin-left:auto;display:flex;gap:8px;">
+                <button class="btn btn-ghost" onclick="showPage('rooms')">🛏️ จัดการห้องพัก</button>
+                <button class="btn btn-primary" onclick="openAddPatientModal()">+ เพิ่มผู้รับบริการ</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Summary -->
+        <div id="patSummary" style="margin-bottom:12px;"></div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title" id="patTableTitle">รายชื่อผู้รับบริการ</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>เลขบัตรประชาชน</th><th>วันเกิด</th><th>อายุ</th><th>วันเข้ารับบริการ</th><th>วันสิ้นสุดสัญญา</th><th>ระยะเวลา</th><th>สถานะ</th><th></th></tr></thead>
+              <tbody id="patTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAFF -->
+      <div id="page-staff" style="display:none;">
+        <!-- Filter bar -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-body" style="padding:14px 20px;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+              <div class="form-group" style="margin:0;flex:2;min-width:180px;">
+                <label class="form-label" style="font-size:11px;">🔍 ค้นหา</label>
+                <div class="search-wrap">
+                  <span class="search-icon">🔍</span>
+                  <input class="form-control" id="staffSearch" placeholder="ชื่อ / ชื่อเล่น / ตำแหน่ง..." oninput="renderStaff()">
+                </div>
+              </div>
+              <div class="form-group" style="margin:0;min-width:150px;">
+                <label class="form-label" style="font-size:11px;">ตำแหน่ง</label>
+                <select class="form-control" id="staffPosFilter" onchange="renderStaff()">
+                  <option value="">ทั้งหมด</option>
+                  <option>ผู้บริหาร</option><option>พยาบาล</option><option>PN</option>
+                  <option>หมอ</option><option>ธุรการ</option><option>บัญชี</option>
+                  <option>นักกายภาพ</option><option>โภชนากร</option><option>แม่บ้าน</option>
+                  <option>พ่อบ้าน</option><option>แม่ครัว</option><option>พ่อครัว</option><option>บริบาล</option>
+                </select>
+              </div>
+              <div style="margin-left:auto;">
+                <button class="btn btn-primary" onclick="openAddStaffModal()">+ เพิ่มพนักงาน</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="staffSummary" style="margin-bottom:12px;"></div>
+        <div class="card">
+          <div class="card-header"><div class="card-title" id="staffTableTitle">ข้อมูลพนักงาน</div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>ชื่อเล่น</th><th>ตำแหน่ง</th><th>เลขบัตรประชาชน</th><th>วันเกิด</th><th>อายุ</th><th>วันเริ่มงาน</th><th>อายุงาน</th><th>วันสิ้นสัญญา</th><th></th></tr></thead>
+              <tbody id="staffTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATIENT PROFILE -->
+      <div id="page-patprofile" style="display:none;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <button class="btn btn-ghost" onclick="showPage('patients')" style="padding:6px 12px;">← กลับ</button>
+          <h2 id="patprofile-breadcrumb" style="margin:0;font-size:15px;color:var(--text2);">ผู้รับบริการ</h2>
+        </div>
+        <div id="patprofile-content"></div>
+      </div>
+
+      <!-- STAFF PROFILE -->
+      <div id="page-staffprofile" style="display:none;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <button class="btn btn-ghost" onclick="showPage('staff')" style="padding:6px 12px;">← กลับ</button>
+          <h2 id="staffprofile-breadcrumb" style="margin:0;font-size:15px;color:var(--text2);">พนักงาน</h2>
+        </div>
+        <div id="staffprofile-content"></div>
+      </div>
+
+      <!-- HEALTH REPORT PAGE -->
+      <div id="page-healthreport" style="display:none;">
+        <!-- Filter bar -->
+        <div class="card" style="margin-bottom:16px;">
+          <div style="padding:14px 20px;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+              <div class="form-group" style="margin:0;min-width:160px;">
+                <label class="form-label" style="font-size:11px;">📅 เดือน</label>
+                <input class="form-control" type="month" id="hr-month" onchange="renderHealthReport()">
+              </div>
+              <div class="form-group" style="margin:0;flex:1;min-width:180px;">
+                <label class="form-label" style="font-size:11px;">🏥 ผู้รับบริการ</label>
+                <select class="form-control" id="hr-patient" onchange="renderHealthReport()">
+                  <option value="">ทั้งหมด</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;min-width:140px;">
+                <label class="form-label" style="font-size:11px;">ประเภท</label>
+                <select class="form-control" id="hr-type" onchange="renderHealthReport()">
+                  <option value="both">ทั้งหมด</option>
+                  <option value="medical">ประวัติการรักษา</option>
+                  <option value="meds">ยาประจำ</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:8px;margin-bottom:2px;">
+                <button class="btn btn-ghost btn-sm" onclick="resetHealthFilters()">↺ ล้าง</button>
+                <button class="btn btn-primary btn-sm" onclick="exportHealthExcel()">📊 Excel</button>
+                <button class="btn btn-ghost btn-sm" onclick="exportHealthPDF()">📄 PDF</button>
+                <button class="btn btn-ghost btn-sm" onclick="printHealthReport()">🖨️ Print</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Summary strip -->
+        <div id="hr-summary" style="margin-bottom:14px;"></div>
+        <!-- Content -->
+        <div id="hr-content"></div>
+      </div>
+
+      <!-- PURCHASE HISTORY -->
+      <div id="page-purchasehistory" style="display:none;">
+        <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+          <div style="flex:1;">
+            <div style="font-size:13px;color:var(--text2);">รายการสั่งซื้อและรับสินค้าเข้าคลังทั้งหมด</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <input class="form-control" type="month" id="ph-month" onchange="renderPurchaseHistory()" style="width:160px;">
+            <select class="form-control" id="ph-item-filter" onchange="renderPurchaseHistory()" style="width:180px;">
+              <option value="">ทุกรายการ</option>
+            </select>
+            <button class="btn btn-primary" onclick="openModal('modal-receive')">+ รับสินค้า</button>
+          </div>
+        </div>
+        <div id="ph-summary" style="margin-bottom:14px;"></div>
+        <div class="card">
+          <div class="card-header"><div class="card-title" id="ph-table-title">ประวัติการสั่งซื้อ</div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>วันที่</th><th>รายการสินค้า</th><th>จำนวน</th><th>หน่วย</th><th style="white-space:nowrap;">ราคาซื้อ (฿)</th><th style="white-space:nowrap;">รวม (฿)</th><th>เลข PO</th><th>Supplier</th><th>ผู้บันทึก</th><th>หมายเหตุ</th></tr></thead>
+              <tbody id="ph-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ITEMS -->
+      <div id="page-items" style="display:none;">
+        <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center;">
+          <div class="search-wrap" style="flex:1;">
+            <span class="search-icon">🔍</span>
+            <input class="form-control" id="itemSearch" placeholder="ค้นหารายการสินค้า..." oninput="renderItemMaster()">
+          </div>
+          <button class="btn btn-primary" onclick="openAddItemModal()">+ เพิ่มรายการ</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">รายการสินค้าทั้งหมด</div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th style="width:60px;">รูป</th><th>ชื่อรายการ</th><th>ประเภท</th><th>หน่วย</th><th>คงเหลือ</th><th style="white-space:nowrap;">ราคาซื้อ (฿)</th><th style="white-space:nowrap;">ราคาขาย (฿)</th><th>จุดสั่งซื้อ</th><th>จัดการ</th></tr></thead>
+              <tbody id="itemMasterTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SETTINGS / LINE PAGE ===== -->
+      <!-- ACCOUNTS MANAGEMENT (admin only) -->
+
+      <!-- ===== PAGE: BILLING ===== -->
+      <div id="page-billing" style="display:none;">
+        <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+          <div style="flex:1;">
+            <h2 style="margin:0;font-size:20px;">💰 ระบบบัญชี</h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ใบแจ้งหนี้ · รับชำระ · แพ็กเกจรายเดือน</div>
+          </div>
+          <button class="btn btn-primary" onclick="openQuickInvoiceModal()">🧾 สร้างใบวางบิล</button>
+          <button class="btn btn-ghost" onclick="openCreateInvoiceModal()" style="border:1px solid var(--border);">+ เอกสารทั่วไป</button>
+          <button class="btn btn-ghost" onclick="openExpenseModal()" style="background:rgba(230,126,34,.1);color:#e67e22;border-color:#e67e22;">📋 ค่าใช้จ่าย</button>
+          <button class="btn btn-ghost" onclick="runAutoBilling()" style="background:rgba(90,158,122,.1);color:var(--accent);border-color:var(--accent);">🤖 ออกบิลอัตโนมัติ</button>
+          <button class="btn btn-ghost" onclick="openInvoiceResetLogModal()" style="color:#8e44ad;border-color:#8e44ad;">📋 ประวัติการ Reset</button>
+          <button class="btn btn-ghost" onclick="showPage('billing-settings')">⚙️ ตั้งค่า</button>
+        </div>
+
+        <!-- Tabs: Invoices / Contracts / Payments -->
+        <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;" id="billing-tabs">
+          <div class="billing-tab active" onclick="switchBillingTab('invoices')" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:2px solid var(--accent);margin-bottom:-2px;color:var(--accent);">📄 เอกสาร</div>
+          <div class="billing-tab" onclick="switchBillingTab('contracts')" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);">📋 แพ็กเกจรายเดือน</div>
+          <div class="billing-tab" onclick="switchBillingTab('payments')" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);">💳 รับชำระเงิน</div>
+        </div>
+
+        <!-- TAB: INVOICES -->
+        <div id="billing-tab-invoices">
+          <!-- Filter Row -->
+          <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+            <select id="billing-filter-type" onchange="renderBilling()" style="border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:var(--surface2);color:var(--text1);font-size:13px;">
+              <option value="">ประเภทเอกสารทั้งหมด</option>
+              <option value="quotation">ใบเสนอราคา</option>
+              <option value="invoice">ใบแจ้งหนี้ / วางบิล</option>
+              <option value="tax_invoice">ใบกำกับภาษี</option>
+              <option value="receipt">ใบเสร็จรับเงิน</option>
+              <option value="expense">ค่าใช้จ่าย</option>
+            </select>
+            <select id="billing-filter-status" onchange="renderBilling()" style="border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:var(--surface2);color:var(--text1);font-size:13px;">
+              <option value="">สถานะทั้งหมด</option>
+              <option value="draft">ร่าง</option>
+              <option value="sent">ส่งแล้ว</option>
+              <option value="partial">ชำระบางส่วน</option>
+              <option value="paid">ชำระครบ</option>
+              <option value="cancelled">ยกเลิก</option>
+            </select>
+            <select id="billing-filter-month" onchange="renderBilling()" style="border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:var(--surface2);color:var(--text1);font-size:13px;">
+              <option value="">ทุกเดือน</option>
+            </select>
+            <input id="billing-search" type="text" placeholder="ค้นหาชื่อผู้รับบริการ..." onkeyup="renderBilling()" style="border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:var(--surface2);color:var(--text1);font-size:13px;min-width:200px;">
+          </div>
+          <!-- Summary Cards -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;">
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+              <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">ยอดรวมทั้งหมด</div>
+              <div id="billing-total-amount" style="font-size:18px;font-weight:700;color:var(--accent);">0 ฿</div>
+            </div>
+            <div style="background:#fff8f0;border:1px solid #f39c12;border-radius:10px;padding:14px;text-align:center;cursor:pointer;" onclick="document.getElementById('billing-filter-status').value='sent';renderBilling()">
+              <div style="font-size:11px;color:#e67e22;margin-bottom:4px;">⏳ รอชำระ / ค้างชำระ</div>
+              <div id="billing-pending-amount" style="font-size:18px;font-weight:700;color:#e67e22;">0 ฿</div>
+              <div id="billing-overdue-count" style="font-size:11px;color:#e74c3c;margin-top:2px;"></div>
+            </div>
+            <div style="background:#f0fff4;border:1px solid #27ae60;border-radius:10px;padding:14px;text-align:center;">
+              <div style="font-size:11px;color:#27ae60;margin-bottom:4px;">✅ ชำระแล้ว</div>
+              <div id="billing-paid-amount" style="font-size:18px;font-weight:700;color:#27ae60;">0 ฿</div>
+            </div>
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+              <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">จำนวนเอกสาร</div>
+              <div id="billing-doc-count" style="font-size:18px;font-weight:700;">0</div>
+            </div>
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+              <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">ค่าใช้จ่ายรวม</div>
+              <div id="billing-exp-amount" style="font-size:18px;font-weight:700;color:#e67e22;">0 ฿</div>
+            </div>
+          </div>
+          <!-- Table -->
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>เลขที่เอกสาร</th>
+                  <th>ประเภท</th>
+                  <th>ผู้รับบริการ</th>
+                  <th>วันที่</th>
+                  <th>กำหนดชำระ</th>
+                  <th style="text-align:right;">ยอดรวม</th>
+                  <th style="text-align:right;">ชำระแล้ว</th>
+                  <th style="text-align:right;">คงค้าง</th>
+                  <th>สถานะ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="billing-table-body">
+                <tr><td colspan="10" style="text-align:center;color:var(--text3);padding:40px;">ไม่มีเอกสาร</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB: CONTRACTS -->
+        <div id="billing-tab-contracts" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+              <div style="font-size:15px;font-weight:700;">📋 แพ็กเกจค่าบริการรายเดือน</div>
+              <div style="font-size:12px;color:var(--text3);">กำหนดค่าแพ็กเกจรายคน · ระบบจะออกบิลให้อัตโนมัติตามรอบแอดมิท</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openAddContractModal()">+ เพิ่มแพ็กเกจ</button>
+          </div>
+          <div id="contracts-list">
+            <div style="text-align:center;padding:40px;color:var(--text3);">กำลังโหลด...</div>
+          </div>
+        </div>
+
+        <!-- TAB: PAYMENTS -->
+        <div id="billing-tab-payments" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+              <div style="font-size:15px;font-weight:700;">💳 ประวัติรับชำระเงิน</div>
+              <div style="font-size:12px;color:var(--text3);">บันทึกทุกการชำระ รวมแบ่งจ่ายหลายงวด</div>
+            </div>
+          </div>
+          <div id="payments-list">
+            <div style="text-align:center;padding:40px;color:var(--text3);">กำลังโหลด...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PAGE: BILLING SETTINGS ===== -->
+      <div id="page-billing-settings" style="display:none;">
+        <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center;">
+          <button class="btn btn-ghost" onclick="showPage('billing')" style="padding:6px 12px;">← กลับ</button>
+          <div>
+            <h2 style="margin:0;font-size:20px;">⚙️ ตั้งค่าระบบบัญชี</h2>
+          </div>
+        </div>
+        <div style="max-width:600px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:24px;">
+          <div style="display:grid;gap:16px;">
+            <div>
+              <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">ชื่อกิจการ / บริษัท</label>
+              <input id="bs-company" type="text" class="form-control" placeholder="เช่น บริษัท นวศรี เนอร์สซิ่งโฮม จำกัด">
+            </div>
+            <div>
+              <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">ที่อยู่</label>
+              <textarea id="bs-address" class="form-control" rows="3" placeholder="ที่อยู่กิจการ..."></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">เลขประจำตัวผู้เสียภาษี</label>
+                <input id="bs-taxid" type="text" class="form-control" placeholder="0-0000-00000-00-0">
+              </div>
+              <div>
+                <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">เบอร์โทรศัพท์</label>
+                <input id="bs-phone" type="text" class="form-control" placeholder="02-xxx-xxxx">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">อีเมล</label>
+              <input id="bs-email" type="email" class="form-control" placeholder="contact@navasri.com">
+            </div>
+            <div>
+              <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">รูปแบบเลขที่เอกสาร</label>
+              <input id="bs-doc-prefix" type="text" class="form-control" placeholder="INV" value="INV" style="width:100px;display:inline-block;margin-right:8px;">
+              <span style="font-size:13px;color:var(--text2);">BL=วางบิล, RE=เสร็จ, QT=เสนอราคา, TX=ภาษี, EXP=ค่าใช้จ่าย (reset ทุกเดือน)</span>
+            </div>
+            <div>
+              <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">⏰ แจ้งเตือนยาใกล้หมดอายุล่วงหน้า (วัน)</label>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <input id="bs-expiry-warn" type="number" min="1" max="365" value="30" class="form-control" style="width:90px;">
+                <span style="font-size:13px;color:var(--text2);">วัน (ค่าเริ่มต้น: 30 วัน)</span>
+              </div>
+            </div>
+
+            <div style="padding-top:8px;">
+              <button class="btn btn-primary" onclick="saveBillingSettings()">💾 บันทึกการตั้งค่า</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-accounts" style="display:none;">
+        <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center;flex-wrap:wrap;">
+          <div style="flex:1;">
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">จัดการ username/password และสิทธิ์ของพนักงานแต่ละคน</div>
+          </div>
+          <button class="btn btn-primary" onclick="openAddAccountModal()">+ เพิ่ม Account</button>
+        </div>
+        <!-- Role legend -->
+        <div class="card" style="margin-bottom:16px;">
+          <div style="padding:14px 20px;">
+            <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">สิทธิ์แต่ละ Role</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;font-size:12px;">
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
+                <div style="font-weight:700;color:#c0392b;margin-bottom:6px;">👑 admin</div>
+                <div style="color:var(--text2);">ทุกหน้า + จัดการ Account</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
+                <div style="font-weight:700;color:#c0392b;margin-bottom:6px;">🏆 ผู้บริหาร (Executive)</div>
+                <div style="color:var(--text2);">เห็นทุกหน้า · ดูรายงาน · ไม่จัดการ account</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
+                <div style="font-weight:700;color:#8e44ad;margin-bottom:6px;">📋 ธุรการ (Officer)</div>
+                <div style="color:var(--text2);">เบิก · ประวัติทั้งหมด · ผู้รับบริการ · พนักงาน</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
+                <div style="font-weight:700;color:#2980b9;margin-bottom:6px;">🏥 พยาบาล</div>
+                <div style="color:var(--text2);">เบิก · ประวัติทั้งหมด · ผู้รับบริการ</div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
+                <div style="font-weight:700;color:#27ae60;margin-bottom:6px;">👤 ผู้ดูแล / บริบาล</div>
+                <div style="color:var(--text2);">เบิกสินค้า · เห็นเฉพาะรายการของตัวเอง</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title" id="accTableTitle">รายการ Account ทั้งหมด</div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Username</th><th>ชื่อ-นามสกุล</th><th>Role</th><th>ตำแหน่ง</th><th>สร้างเมื่อ</th><th>เข้าสู่ระบบล่าสุด</th><th></th></tr></thead>
+              <tbody id="accTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-settings" style="display:none;">
+        <div style="max-width:680px;">
+
+          <!-- Line Status Banner -->
+          <div id="lineBanner" style="display:none;margin-bottom:20px;"></div>
+
+          <!-- Line Integration Card -->
+          <div class="card" style="margin-bottom:20px;">
+            <div class="card-header">
+              <div class="card-title" style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:22px;">💬</span>
+                <div>
+                  <div>การแจ้งเตือนผ่าน Line</div>
+                  <div style="font-size:11px;font-weight:400;color:var(--text2);margin-top:1px;">ส่งการแจ้งเตือนอัตโนมัติเข้า Line Group ของทีม</div>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="lineEnabled" onchange="saveLineSettings()">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="card-body" style="padding:20px;">
+
+              <!-- How it works -->
+              <div style="background:var(--blue-light,#e8f0fa);border:1px solid #c0d8f0;border-radius:8px;padding:14px 16px;margin-bottom:18px;">
+                <div style="font-weight:700;font-size:13px;color:var(--blue);margin-bottom:8px;">🔗 วิธีการทำงาน</div>
+                <div style="display:flex;gap:0;align-items:center;flex-wrap:wrap;gap:6px;font-size:12.5px;color:var(--text2);">
+                  <div style="background:white;border-radius:6px;padding:6px 12px;border:1px solid #c0d8f0;font-weight:600;color:var(--blue);">Webapp นี้</div>
+                  <div style="color:var(--text3);">──► POST ──►</div>
+                  <div style="background:white;border-radius:6px;padding:6px 12px;border:1px solid #c0d8f0;font-weight:600;color:#e67e22;">n8n / Make</div>
+                  <div style="color:var(--text3);">──► ส่งต่อ ──►</div>
+                  <div style="background:#06c755;border-radius:6px;padding:6px 12px;font-weight:600;color:white;">Line Group</div>
+                </div>
+                <div style="margin-top:10px;font-size:12px;color:var(--text2);">
+                  ต้องสร้าง <strong>Webhook URL</strong> จาก n8n หรือ Make.com ก่อน แล้วกรอกด้านล่าง
+                  (<a href="#" onclick="showGuideModal();return false;" style="color:var(--blue);">ดูคู่มือการตั้งค่า</a>)
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Webhook URL <span class="required">*</span></label>
+                <div style="display:flex;gap:8px;">
+                  <input class="form-control number" id="webhookUrl" placeholder="https://hooks.n8n.cloud/webhook/..." style="font-size:12.5px;flex:1;" oninput="saveLineSettings()">
+                  <button class="btn btn-secondary" onclick="testWebhook()" id="testBtn">🧪 ทดสอบ</button>
+                </div>
+                <div style="font-size:11.5px;color:var(--text3);margin-top:4px;">รองรับ n8n Cloud, n8n Self-hosted, Make.com, Zapier หรือ Webhook ใดก็ได้</div>
+              </div>
+
+              <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;">
+                <div style="font-weight:700;font-size:13px;margin-bottom:12px;">เลือกสถานการณ์ที่ต้องการแจ้งเตือน</div>
+                <div style="display:grid;gap:10px;">
+                  <label class="checkbox-row">
+                    <input type="checkbox" id="notifyNewReq" onchange="saveLineSettings()">
+                    <div>
+                      <div style="font-weight:600;font-size:13.5px;">📋 พนักงานสร้างใบเบิกใหม่</div>
+                      <div style="font-size:12px;color:var(--text2);">แจ้งเตือน <strong>หัวหน้า</strong> เมื่อมีใบเบิกใหม่รอตรวจสอบ</div>
+                    </div>
+                  </label>
+                  <label class="checkbox-row">
+                    <input type="checkbox" id="notifyForward" onchange="saveLineSettings()">
+                    <div>
+                      <div style="font-weight:600;font-size:13.5px;">📤 หัวหน้าส่งต่อใบเบิก</div>
+                      <div style="font-size:12px;color:var(--text2);">แจ้งเตือน <strong>แผนกเบิกจ่าย</strong> เมื่อมีใบเบิกรออนุมัติ</div>
+                    </div>
+                  </label>
+                  <label class="checkbox-row">
+                    <input type="checkbox" id="notifyApproved" onchange="saveLineSettings()">
+                    <div>
+                      <div style="font-weight:600;font-size:13.5px;">✅ อนุมัติใบเบิกแล้ว</div>
+                      <div style="font-size:12px;color:var(--text2);">แจ้งเตือน <strong>ผู้เบิก</strong> เมื่อใบเบิกได้รับการอนุมัติและตัดสต็อกแล้ว</div>
+                    </div>
+                  </label>
+                  <label class="checkbox-row">
+                    <input type="checkbox" id="notifyRejected" onchange="saveLineSettings()">
+                    <div>
+                      <div style="font-weight:600;font-size:13.5px;">❌ ไม่อนุมัติใบเบิก</div>
+                      <div style="font-size:12px;color:var(--text2);">แจ้งเตือน <strong>ผู้เบิก</strong> เมื่อใบเบิกถูกปฏิเสธพร้อมเหตุผล</div>
+                    </div>
+                  </label>
+                  <label class="checkbox-row">
+                    <input type="checkbox" id="notifyLowStock" onchange="saveLineSettings()">
+                    <div>
+                      <div style="font-weight:600;font-size:13.5px;">⚠️ สินค้าใกล้หมด / หมดสต็อก</div>
+                      <div style="font-size:12px;color:var(--text2);">แจ้งเตือน <strong>แผนกเบิกจ่าย</strong> ทันทีที่สต็อกถึงจุดแจ้งเตือน</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Test log -->
+          <div class="card" id="testLogCard" style="display:none;">
+            <div class="card-header"><div class="card-title">📡 Log การส่งล่าสุด</div><button class="btn btn-ghost btn-sm" onclick="clearLog()">ล้าง</button></div>
+            <div class="card-body" style="padding:0;">
+              <div id="testLog" style="font-family:var(--mono);font-size:12px;padding:14px;max-height:200px;overflow-y:auto;"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+        </div>
+      </div>
+
+      <!-- ══ REQUISITION FORM PAGE (printable) ══ -->
+      <div id="page-reqform" style="display:none;">
+        <!-- Toolbar (no-print) -->
+        <div class="no-print" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="btn btn-ghost" onclick="showPage('history')">← กลับ</button>
+            <span style="font-size:15px;font-weight:700;" id="reqFormPageTitle">ใบเบิกสินค้า</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div id="pdfSpinner" style="display:none;font-size:13px;color:var(--text2);">⏳ กำลังสร้าง PDF...</div>
+            <button class="btn btn-secondary" onclick="printReqForm()">🖨️ พิมพ์</button>
+            <button class="btn btn-primary" onclick="exportReqPDF()" id="btnExportPDF">📄 Export PDF</button>
+          </div>
+        </div>
+
+        <!-- Printable form -->
+        <div id="reqFormContent" class="rq-print" style="border:1px solid var(--border);box-shadow:var(--shadow);margin:0 auto;">
+          <!-- filled dynamically by renderReqForm() -->
+        </div>
+      </div>
+
+      <!-- ===== PAGE: INCIDENT & WOUND CARE ===== -->
+      <div id="page-incident" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary" onclick="openIncidentModal()">⚠️ + บันทึกอุบัติเหตุ</button>
+            <button class="btn btn-secondary" onclick="openWoundModal()">🩹 + บันทึกการทำแผล</button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select class="form-control" id="incident-filter-type" onchange="renderIncidentPage()" style="width:160px;">
+              <option value="">ทุกประเภท</option>
+              <option value="incident">อุบัติเหตุ</option>
+              <option value="wound">แผลกดทับ</option>
+            </select>
+            <input class="form-control" type="month" id="incident-filter-month" onchange="renderIncidentPage()" style="width:150px;">
+          </div>
+        </div>
+        <div class="tabs" id="incident-tabs">
+          <div class="tab active" onclick="switchIncidentTab('incidents')">⚠️ รายงานอุบัติเหตุ</div>
+          <div class="tab" onclick="switchIncidentTab('wounds')">🩹 บันทึกแผลกดทับ</div>
+        </div>
+        <div id="incident-tab-incidents">
+          <div class="card">
+            <div class="card-header"><div class="card-title">⚠️ รายงานอุบัติเหตุและความเสี่ยง</div></div>
+            <div class="card-body" style="padding:0;">
+              <div class="table-wrap"><table>
+                <thead><tr>
+                  <th>วันที่/เวลา</th><th>ผู้ป่วย</th><th>ประเภท</th><th>สถานที่</th><th>รายละเอียด</th><th>การปฐมพยาบาล</th><th>ผู้บันทึก</th><th>การจัดการ</th>
+                </tr></thead>
+                <tbody id="incident-table-body"><tr><td colspan="8" class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">ยังไม่มีรายงานอุบัติเหตุ</div></td></tr></tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+        <div id="incident-tab-wounds" style="display:none;">
+          <div class="card">
+            <div class="card-header"><div class="card-title">🩹 บันทึกการทำแผล / แผลกดทับ</div></div>
+            <div class="card-body" style="padding:0;">
+              <div class="table-wrap"><table>
+                <thead><tr>
+                  <th>วันที่</th><th>ผู้ป่วย</th><th>ตำแหน่งแผล</th><th>Stage</th><th>ขนาด (ซม.)</th><th>ลักษณะ</th><th>การรักษา</th><th>ผู้บันทึก</th><th>จัดการ</th>
+                </tr></thead>
+                <tbody id="wound-table-body"><tr><td colspan="9" class="empty"><div class="empty-icon">🩹</div><div class="empty-text">ยังไม่มีบันทึกแผลกดทับ</div></td></tr></tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PAGE: DIETARY & TUBE FEEDING ===== -->
+      <div id="page-dietary" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary" onclick="openDietModal()">🍽️ + กำหนดอาหารผู้ป่วย</button>
+            <button class="btn btn-secondary" onclick="openTubeFeedModal()">🧪 + บันทึกการให้อาหารทางสาย</button>
+          </div>
+          <button class="btn btn-ghost" onclick="printDietaryReport()">🖨️ พิมพ์ใบจัดอาหาร</button>
+        </div>
+        <div class="tabs">
+          <div class="tab active" onclick="switchDietTab('diets')">🍽️ แผนอาหารผู้ป่วย</div>
+          <div class="tab" onclick="switchDietTab('tubefeed')">🧪 บันทึกสายให้อาหาร</div>
+        </div>
+        <div id="diet-tab-diets">
+          <div class="card">
+            <div class="card-header"><div class="card-title">🍽️ แผนโภชนาการผู้ป่วย</div></div>
+            <div class="card-body" style="padding:0;">
+              <div class="table-wrap"><table>
+                <thead><tr>
+                  <th>ผู้ป่วย</th><th>ประเภทอาหาร</th><th>ข้อจำกัด</th><th>วิธีรับอาหาร</th><th>หมายเหตุ</th><th>อัปเดต</th><th>จัดการ</th>
+                </tr></thead>
+                <tbody id="diet-table-body"><tr><td colspan="7" class="empty"><div class="empty-icon">🍽️</div><div class="empty-text">ยังไม่มีแผนอาหาร</div></td></tr></tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+        <div id="diet-tab-tubefeed" style="display:none;">
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">
+            <select class="form-control" id="tubefeed-filter-patient" onchange="renderTubeFeedTable()" style="width:220px;">
+              <option value="">— เลือกผู้ป่วย —</option>
+            </select>
+            <input class="form-control" type="date" id="tubefeed-filter-date" onchange="renderTubeFeedTable()" style="width:160px;">
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">🧪 บันทึกการให้อาหารทางสายยาง (Tube Feeding)</div></div>
+            <div class="card-body" style="padding:0;">
+              <div class="table-wrap"><table>
+                <thead><tr>
+                  <th>วันที่/เวลา</th><th>ผู้ป่วย</th><th>สูตรอาหาร</th><th>ปริมาตร (ml)</th><th>น้ำตาม (ml)</th><th>Residual (ml)</th><th>ผู้บันทึก</th><th>หมายเหตุ</th><th>จัดการ</th>
+                </tr></thead>
+                <tbody id="tubefeed-table-body"><tr><td colspan="9" class="empty"><div class="empty-icon">🧪</div><div class="empty-text">ยังไม่มีบันทึก</div></td></tr></tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PAGE: DEPOSITS ===== -->
+      <div id="page-deposits" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+          <button class="btn btn-primary" onclick="openDepositModal()">🏦 + บันทึกเงินมัดจำ</button>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input class="form-control" id="deposit-search" placeholder="🔍 ค้นหาผู้ป่วย..." oninput="renderDeposits()" style="width:220px;">
+            <select class="form-control" id="deposit-filter-status" onchange="renderDeposits()" style="width:160px;">
+              <option value="">ทุกสถานะ</option>
+              <option value="active">ถือครองอยู่</option>
+              <option value="refunded">คืนแล้ว</option>
+              <option value="deducted">หักชำระแล้ว</option>
+            </select>
+          </div>
+        </div>
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+          <div class="stat-card green">
+            <div class="stat-label">ยอดมัดจำรวม</div>
+            <div class="stat-value" id="dep-stat-total">฿0</div>
+            <div class="stat-sub">ทุกรายการที่บันทึก</div>
+            <div class="stat-icon">🏦</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-label">ยังถือครองอยู่</div>
+            <div class="stat-value" id="dep-stat-active">฿0</div>
+            <div class="stat-sub">รอคืนเมื่อย้ายออก</div>
+            <div class="stat-icon">💰</div>
+          </div>
+          <div class="stat-card orange">
+            <div class="stat-label">คืน/หักชำระแล้ว</div>
+            <div class="stat-value" id="dep-stat-done">฿0</div>
+            <div class="stat-sub">ปิดรายการแล้ว</div>
+            <div class="stat-icon">✅</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">🏦 รายการเงินมัดจำและเงินประกัน</div></div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap"><table>
+              <thead><tr>
+                <th>ผู้ป่วย</th><th>ประเภท</th><th>จำนวนเงิน</th><th>วันที่รับ</th><th>วิธีชำระ</th><th>สถานะ</th><th>วันที่คืน/หัก</th><th>หมายเหตุ</th><th>จัดการ</th>
+              </tr></thead>
+              <tbody id="deposit-table-body"><tr><td colspan="9" class="empty"><div class="empty-icon">🏦</div><div class="empty-text">ยังไม่มีรายการมัดจำ</div></td></tr></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
