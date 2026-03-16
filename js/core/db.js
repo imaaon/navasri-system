@@ -47,7 +47,7 @@ async function loadDB() {
       roomHistoryRes, invoiceResetLogsRes
     ] = await Promise.all([
       supa.from('items').select('*').order('id'),
-      supa.from('patients').select('*, patient_allergies(*), patient_contacts(*)').order('id'),
+      supa.from('patients').select('*').order('id'),
       supa.from('staff').select('*').order('id'),
       supa.from('requisitions').select('*').order('id', {ascending: false}).limit(500),
       supa.from('purchases').select('*').order('created_at', {ascending: false}).limit(500),
