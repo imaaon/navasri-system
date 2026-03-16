@@ -77,7 +77,7 @@ function renderVitalsTab(pid, patientId) {
                   <td style="font-size:12px;color:var(--text2);max-width:120px;">${v.otherFields||'-'}</td>
                   <td style="font-size:12px;">${v.recordedBy||'-'}</td>
                   <td style="font-size:12px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis;">${v.note||''}</td>
-                  <td><button class="btn btn-ghost btn-sm" onclick="deleteVitalSign('${patientId}','${pid}',${v.id})">🗑️</button></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="deleteVitalSign('${patientId}','${pid}','${v.id}')">🗑️</button></td>
                 </tr>`;
               }).join('')}
           </tbody>

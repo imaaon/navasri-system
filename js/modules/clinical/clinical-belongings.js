@@ -22,8 +22,8 @@ function renderBelongingList(patientId) {
           <td style="font-size:12px;">${b.receivedBy}</td>
           <td style="font-size:12px;color:var(--text2);">${b.note||'-'}</td>
           <td style="white-space:nowrap;">
-            ${b.status==='held'?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;" onclick="returnBelonging(${b.id},'${patientId}')">↩️ คืน</button>`:`<span style="font-size:11px;color:var(--text3);">คืนแล้ว ${b.dateOut||''}</span>`}
-            <button class="btn btn-ghost btn-sm" onclick="deleteBelonging(${b.id},'${patientId}')" style="font-size:11px;color:#e74c3c;">🗑️</button>
+            ${b.status==='held'?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;" onclick="returnBelonging('${b.id}','${patientId}')">↩️ คืน</button>`:`<span style="font-size:11px;color:var(--text3);">คืนแล้ว ${b.dateOut||''}</span>`}
+            <button class="btn btn-ghost btn-sm" onclick="deleteBelonging('${b.id}','${patientId}')" style="font-size:11px;color:#e74c3c;">🗑️</button>
           </td>
         </tr>`).join('')}
       </tbody>

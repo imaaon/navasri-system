@@ -202,9 +202,9 @@ function renderContracts() {
                 </span>
               </td>
               <td style="white-space:nowrap;">
-                <button class="btn btn-primary btn-sm" onclick="generateContractInvoice(${c.id})">🧾 ออกบิล</button>
-                <button class="btn btn-ghost btn-sm" onclick="openAddContractModal(${c.id})">✏️</button>
-                <button class="btn btn-ghost btn-sm" onclick="deleteContract(${c.id})" style="color:#e74c3c;">🗑️</button>
+                <button class="btn btn-primary btn-sm" onclick="generateContractInvoice('${c.id}')">🧾 ออกบิล</button>
+                <button class="btn btn-ghost btn-sm" onclick="openAddContractModal('${c.id}')">✏️</button>
+                <button class="btn btn-ghost btn-sm" onclick="deleteContract('${c.id}')" style="color:#e74c3c;">🗑️</button>
               </td>
             </tr>`;
           }).join('')}

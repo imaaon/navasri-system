@@ -34,8 +34,8 @@ function renderMARTab(pid, patientId) {
                 <td style="font-size:12px;">${lastGiven ? `<span style="color:#27ae60;font-weight:600;">${lastGiven.givenAt?.slice(11,16)||''}</span> โดย ${lastGiven.givenBy||'-'}` : '<span style="color:var(--text3);">ยังไม่ได้ให้วันนี้</span>'}</td>
                 <td style="text-align:center;"><span style="background:${todayForMed.length?'#27ae60':'var(--surface2)'};color:${todayForMed.length?'white':'var(--text3)'};border-radius:10px;padding:2px 10px;font-size:12px;">${todayForMed.length} ครั้ง</span></td>
                 <td style="display:flex;gap:4px;">
-                  <button class="btn btn-primary btn-sm" onclick="openMAREntryModal('${patientId}','${pid}',${med.id})">+ บันทึกการให้</button>
-                  <button class="btn btn-ghost btn-sm" onclick="deleteMedication('${patientId}',${med.id})">🗑️</button>
+                  <button class="btn btn-primary btn-sm" onclick="openMAREntryModal('${patientId}','${pid}','${med.id}')">+ บันทึกการให้</button>
+                  <button class="btn btn-ghost btn-sm" onclick="deleteMedication('${patientId}','${med.id}')">🗑️</button>
                 </td>
               </tr>`;
             }).join('')}
@@ -77,7 +77,7 @@ function renderMARTab(pid, patientId) {
                   <td><span style="background:var(--sage-light);border-radius:4px;padding:2px 8px;font-size:12px;">${r.timing||'-'}</span></td>
                   <td style="font-size:12px;">${r.givenBy||'-'}</td>
                   <td style="font-size:12px;color:var(--text3);">${r.note||''}</td>
-                  <td><button class="btn btn-ghost btn-sm" onclick="deleteMAREntry('${pid}','${patientId}',${r.id})">🗑️</button></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="deleteMAREntry('${pid}','${patientId}','${r.id}')">🗑️</button></td>
                 </tr>`;
               }).join('') : '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text3);">ไม่มีรายการวันนี้</td></tr>';
             })()}

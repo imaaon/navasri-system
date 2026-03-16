@@ -291,10 +291,10 @@ function renderApprovalPanel() {
       <td>${STATUS_PILL(r.status)}</td>
       <td style="white-space:nowrap;">
         ${canApproveReq() ? `
-          <button class="btn btn-primary btn-sm" onclick="approveReq(${r.id})" style="font-size:11px;">✅ อนุมัติ</button>
-          <button class="btn btn-sm" style="background:#e74c3c22;color:#e74c3c;font-size:11px;" onclick="openRejectModal(${r.id})">❌ ไม่อนุมัติ</button>
+          <button class="btn btn-primary btn-sm" onclick="approveReq('${r.id}')" style="font-size:11px;">✅ อนุมัติ</button>
+          <button class="btn btn-sm" style="background:#e74c3c22;color:#e74c3c;font-size:11px;" onclick="openRejectModal('${r.id}')">❌ ไม่อนุมัติ</button>
         ` : '<span style="font-size:12px;color:var(--text3);">ไม่มีสิทธิ์</span>'}
-        <button class="btn btn-ghost btn-sm" onclick="openReqForm(${r.id})">🖨️</button>
+        <button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')">🖨️</button>
       </td>
     </tr>`).join('');
 
@@ -664,7 +664,7 @@ async function renderHistory() {
     <td>${r.staffName}</td>
     <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${STATUS_COLOR[r.status]||'#888'}22;color:${STATUS_COLOR[r.status]||'#888'};">${STATUS_LABEL[r.status]||r.status}</span></td>
     <td style="color:var(--text2);font-size:12px;">${r.note || '-'}</td>
-    <td><button class="btn btn-ghost btn-sm" onclick="openReqForm(${r.id})" title="ดูใบเบิก">🖨️</button></td>
+    <td><button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')" title="ดูใบเบิก">🖨️</button></td>
   </tr>`).join('');
 }
 

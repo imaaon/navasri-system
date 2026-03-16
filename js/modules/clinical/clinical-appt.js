@@ -31,9 +31,9 @@ function renderApptList(patientId) {
             <div style="font-size:12px;margin-top:4px;">${TRANSPORT_ICON[a.transport]||'🚗'} ${a.transport} ${a.transportNote?'('+a.transportNote+')':''}</div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            ${a.status==='upcoming'?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;" onclick="markApptDone(${a.id})">✅ เสร็จ</button>`:''}
-            <button class="btn btn-ghost btn-sm" onclick="openApptModal(${a.id})" style="font-size:11px;">✏️</button>
-            <button class="btn btn-ghost btn-sm" onclick="deleteAppt(${a.id},'${patientId}')" style="font-size:11px;color:#e74c3c;">🗑️</button>
+            ${a.status==='upcoming'?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;" onclick="markApptDone('${a.id}')">✅ เสร็จ</button>`:''}
+            <button class="btn btn-ghost btn-sm" onclick="openApptModal('${a.id}')" style="font-size:11px;">✏️</button>
+            <button class="btn btn-ghost btn-sm" onclick="deleteAppt('${a.id}','${patientId}')" style="font-size:11px;color:#e74c3c;">🗑️</button>
           </div>
         </div>
         ${a.note?`<div style="font-size:12px;color:var(--text3);margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">💬 ${a.note}</div>`:''}

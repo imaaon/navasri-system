@@ -38,7 +38,7 @@ async function openPatientProfile(id) {
           </div>
         </div>
         <div style="margin-top:16px;">
-          <button class="btn btn-primary" style="width:100%;" onclick="editPatient(${p.id})">✏️ แก้ไขข้อมูล</button>
+          <button class="btn btn-primary" style="width:100%;" onclick="editPatient('${p.id}')">✏️ แก้ไขข้อมูล</button>
         </div>
       </div>
       <!-- Info card -->
@@ -61,7 +61,7 @@ async function openPatientProfile(id) {
       <div class="card" style="margin-top:12px;">
         <div class="card-header" style="background:var(--accent-light);">
           <div class="card-title" style="font-size:13px;color:var(--accent-dark);">🛏️ ห้องพักปัจจุบัน</div>
-          <button class="btn btn-ghost btn-sm" onclick="editPatient(${p.id})">เปลี่ยน</button>
+          <button class="btn btn-ghost btn-sm" onclick="editPatient('${p.id}')">เปลี่ยน</button>
         </div>
         <div style="padding:12px 16px;font-size:13px;display:flex;flex-direction:column;gap:8px;">
           <div><span style="color:var(--text3);min-width:80px;display:inline-block;">ห้อง</span><strong>${room?.name||'-'}</strong></div>
@@ -103,7 +103,7 @@ async function openPatientProfile(id) {
                     <td class="number">${r.qty||0}</td>
                     <td>${r.unit||''}</td>
                     <td style="font-size:12px;">${r.staffName||'-'}</td>
-                    <td><button class="btn btn-ghost btn-sm" onclick="openReqForm(${r.id})">🖨️</button></td>
+                    <td><button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')">🖨️</button></td>
                   </tr>`).join('')}
               </tbody>
             </table>
@@ -121,7 +121,7 @@ async function openPatientProfile(id) {
         <div class="card">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;">🚨 ประวัติการแพ้ยา / อาหาร</div>
-            <button class="btn btn-primary btn-sm" onclick="openAddAllergyModal(${p.id})">+ เพิ่ม</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddAllergyModal('${p.id}')">+ เพิ่ม</button>
           </div>
           ${p.allergies?.length === 0 ? `<div style="padding:24px;text-align:center;color:var(--text3);">✅ ไม่มีประวัติการแพ้ที่บันทึกไว้</div>` :
           `<table>
@@ -133,7 +133,7 @@ async function openPatientProfile(id) {
                   <td><span class="badge badge-gray">${a.allergyType}</span></td>
                   <td style="font-size:12px;color:var(--text2);">${a.severity||'-'}</td>
                   <td style="font-size:12px;color:var(--text2);">${a.reaction||'-'}</td>
-                  <td><button class="btn btn-ghost btn-sm" onclick="deleteAllergy(${p.id},${a.id})">🗑️</button></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="deleteAllergy('${p.id}','${a.id}')">🗑️</button></td>
                 </tr>`;
               }).join('')}
             </tbody>
@@ -145,7 +145,7 @@ async function openPatientProfile(id) {
         <div class="card">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;">👥 ผู้ติดต่อ / ผู้รับผิดชอบค่าใช้จ่าย</div>
-            <button class="btn btn-primary btn-sm" onclick="openAddContactModal(${p.id})">+ เพิ่ม</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddContactModal('${p.id}')">+ เพิ่ม</button>
           </div>
           ${p.contacts?.length === 0 ? `<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีข้อมูลผู้ติดต่อ</div>` :
           `<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
@@ -162,7 +162,7 @@ async function openPatientProfile(id) {
                     </div>
                     ${c.note ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">📝 ${c.note}</div>` : ''}
                   </div>
-                  <button class="btn btn-ghost btn-sm" onclick="deleteContact(${p.id},${c.id})">🗑️</button>
+                  <button class="btn btn-ghost btn-sm" onclick="deleteContact('${p.id}','${c.id}')">🗑️</button>
                 </div>
               </div>`).join('')}
           </div>`}
@@ -172,7 +172,7 @@ async function openPatientProfile(id) {
         <div class="card">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;">📝 หมายเหตุ</div>
-            <button class="btn btn-ghost btn-sm" onclick="editPatient(${p.id})">✏️ แก้ไข</button>
+            <button class="btn btn-ghost btn-sm" onclick="editPatient('${p.id}')">✏️ แก้ไข</button>
           </div>
           <div style="padding:16px 20px;font-size:13px;line-height:1.7;white-space:pre-wrap;min-height:80px;">${p.note || '<span style="color:var(--text3);">ยังไม่มีข้อมูล</span>'}</div>
         </div>

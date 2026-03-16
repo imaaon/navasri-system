@@ -159,7 +159,7 @@ async function openStaffProfile(id) {
                   <td style="font-weight:500;">${r.itemName||'-'}</td>
                   <td class="number">${r.qty||0}</td>
                   <td>${r.unit||''}</td>
-                  <td><button class="btn btn-ghost btn-sm" onclick="openReqForm(${r.id})">🖨️</button></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')">🖨️</button></td>
                 </tr>`).join('')}
             </tbody>
           </table>

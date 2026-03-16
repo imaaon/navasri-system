@@ -51,9 +51,9 @@ function renderRooms() {
               ${occupant ? `<div style="font-size:11px;color:#c0392b;font-weight:600;">👤 ${occupant.name}</div>` : ''}
             </div>
             <span style="font-size:11px;font-weight:700;color:${statusColor};">● ${statusLabel}</span>
-            ${occupant ? `<button class="btn btn-ghost btn-sm" onclick="openTransferRoomModal(${occupant.id})" style="padding:3px 7px;font-size:11px;color:#2980b9;">🔄 ย้าย</button>` : ''}
-            <button class="btn btn-ghost btn-sm" onclick="editBed(${b.id})" style="padding:3px 7px;font-size:11px;">✏️</button>
-            <button class="btn btn-ghost btn-sm" onclick="deleteBed(${b.id})" style="padding:3px 7px;font-size:11px;">🗑️</button>
+            ${occupant ? `<button class="btn btn-ghost btn-sm" onclick="openTransferRoomModal('${occupant.id}')" style="padding:3px 7px;font-size:11px;color:#2980b9;">🔄 ย้าย</button>` : ''}
+            <button class="btn btn-ghost btn-sm" onclick="editBed('${b.id}')" style="padding:3px 7px;font-size:11px;">✏️</button>
+            <button class="btn btn-ghost btn-sm" onclick="deleteBed('${b.id}')" style="padding:3px 7px;font-size:11px;">🗑️</button>
           </div>`;
         }).join('');
     return `<div class="card" style="margin-bottom:14px;">
@@ -63,9 +63,9 @@ function renderRooms() {
           <div style="font-size:12px;color:var(--accent);margin-top:2px;">💰 ${rateText}</div>
         </div>
         <div style="display:flex;gap:6px;">
-          <button class="btn btn-ghost btn-sm" onclick="editRoom(${room.id})">✏️ แก้ไข</button>
-          <button class="btn btn-ghost btn-sm" onclick="deleteRoom(${room.id})">🗑️</button>
-          <button class="btn btn-primary btn-sm" onclick="openAddBedModal(${room.id})">+ เตียง</button>
+          <button class="btn btn-ghost btn-sm" onclick="editRoom('${room.id}')">✏️ แก้ไข</button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteRoom('${room.id}')">🗑️</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddBedModal('${room.id}')">+ เตียง</button>
         </div>
       </div>
       <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">

@@ -501,7 +501,7 @@ function renderInvoiceItems() {
         style="width:80px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:13px;">
     </td>
     <td style="padding:5px 6px;text-align:right;font-weight:600;" id="inv-item-row-${it._idx}">${formatThb((it.qty||0)*(it.price||0))}</td>
-    <td><button onclick="removeInvItem(${it._idx})" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>
+    <td><button onclick="removeInvItem('${it._idx}')" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>
   </tr>`;
   const allCats = [...CAT_ORDER, ...Object.keys(grouped).filter(c=>!CAT_ORDER.includes(c))];
   let html = '';
@@ -1125,9 +1125,9 @@ function renderContracts() {
                 </span>
               </td>
               <td style="white-space:nowrap;">
-                <button class="btn btn-primary btn-sm" onclick="generateContractInvoice(${c.id})">🧾 ออกบิล</button>
-                <button class="btn btn-ghost btn-sm" onclick="openAddContractModal(${c.id})">✏️</button>
-                <button class="btn btn-ghost btn-sm" onclick="deleteContract(${c.id})" style="color:#e74c3c;">🗑️</button>
+                <button class="btn btn-primary btn-sm" onclick="generateContractInvoice('${c.id}')">🧾 ออกบิล</button>
+                <button class="btn btn-ghost btn-sm" onclick="openAddContractModal('${c.id}')">✏️</button>
+                <button class="btn btn-ghost btn-sm" onclick="deleteContract('${c.id}')" style="color:#e74c3c;">🗑️</button>
               </td>
             </tr>`;
           }).join('')}
@@ -2623,8 +2623,8 @@ function renderIncidentPage() {
     <td style="font-size:12px;max-width:150px;">${x.firstAid||'-'}</td>
     <td style="font-size:12px;">${x.recorder||'-'}</td>
     <td style="white-space:nowrap;">
-      <button class="btn btn-ghost btn-sm" onclick="openIncidentModal(${x.id})">✏️</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteIncident(${x.id})">🗑️</button>
+      <button class="btn btn-ghost btn-sm" onclick="openIncidentModal('${x.id}')">✏️</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteIncident('${x.id}')">🗑️</button>
     </td>
   </tr>`).join('') : `<tr><td colspan="8"><div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">ยังไม่มีรายงานอุบัติเหตุ</div></div></td></tr>`;
 
@@ -2639,8 +2639,8 @@ function renderIncidentPage() {
     <td style="font-size:12px;max-width:160px;">${x.treatment||'-'}</td>
     <td style="font-size:12px;">${x.recorder||'-'} ${TREND[x.trend]||''}</td>
     <td style="white-space:nowrap;">
-      <button class="btn btn-ghost btn-sm" onclick="openWoundModal(${x.id})">✏️</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteWound(${x.id})">🗑️</button>
+      <button class="btn btn-ghost btn-sm" onclick="openWoundModal('${x.id}')">✏️</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteWound('${x.id}')">🗑️</button>
     </td>
   </tr>`).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🩹</div><div class="empty-text">ยังไม่มีบันทึกแผลกดทับ</div></div></td></tr>`;
 }
@@ -2813,8 +2813,8 @@ function renderDietaryPage() {
     <td style="font-size:12px;">${d.note||'—'}</td>
     <td style="font-size:11px;color:var(--text2);">${(d.updatedAt||'').slice(0,10)}</td>
     <td style="white-space:nowrap;">
-      <button class="btn btn-ghost btn-sm" onclick="openDietModal(${d.id})">✏️</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteDiet(${d.id})">🗑️</button>
+      <button class="btn btn-ghost btn-sm" onclick="openDietModal('${d.id}')">✏️</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteDiet('${d.id}')">🗑️</button>
     </td>
   </tr>`).join('') : `<tr><td colspan="7"><div class="empty"><div class="empty-icon">🍽️</div><div class="empty-text">ยังไม่มีแผนอาหาร</div></div></td></tr>`;
 }
@@ -2836,8 +2836,8 @@ function renderTubeFeedTable() {
     <td style="font-size:12px;">${x.recorder||'—'}</td>
     <td style="font-size:12px;">${x.note||'—'}</td>
     <td style="white-space:nowrap;">
-      <button class="btn btn-ghost btn-sm" onclick="openTubeFeedModal(${x.id})">✏️</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteTubeFeed(${x.id})">🗑️</button>
+      <button class="btn btn-ghost btn-sm" onclick="openTubeFeedModal('${x.id}')">✏️</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteTubeFeed('${x.id}')">🗑️</button>
     </td>
   </tr>`).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🧪</div><div class="empty-text">ยังไม่มีบันทึก</div></div></td></tr>`;
 }
@@ -2962,8 +2962,8 @@ function renderDeposits() {
     <td style="font-size:12px;">${d.dateOut||'—'}</td>
     <td style="font-size:12px;max-width:150px;">${d.note||'—'}</td>
     <td style="white-space:nowrap;">
-      <button class="btn btn-ghost btn-sm" onclick="openDepositModal(${d.id})">✏️</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteDeposit(${d.id})">🗑️</button>
+      <button class="btn btn-ghost btn-sm" onclick="openDepositModal('${d.id}')">✏️</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteDeposit('${d.id}')">🗑️</button>
     </td>
   </tr>`).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🏦</div><div class="empty-text">ยังไม่มีรายการมัดจำ</div></div></td></tr>`;
 }

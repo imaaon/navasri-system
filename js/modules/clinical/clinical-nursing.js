@@ -34,8 +34,8 @@ function renderNursingTab(pid, patientId) {
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <div style="font-size:11px;font-weight:700;color:${c};">กะ${shift} <span style="font-weight:400;color:var(--text3);">(${SHIFT_TIMES[shift]})</span></div>
             <div style="display:flex;gap:4px;">
-              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="editNursingNote('${patientId}','${pid}',${note.id})">✏️</button>
-              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="deleteNursingNote('${patientId}','${pid}',${note.id})">🗑️</button>
+              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="editNursingNote('${patientId}','${pid}','${note.id}')">✏️</button>
+              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="deleteNursingNote('${patientId}','${pid}','${note.id}')">🗑️</button>
             </div>
           </div>
           <div style="font-size:12px;display:flex;flex-direction:column;gap:3px;">

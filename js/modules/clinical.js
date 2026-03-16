@@ -114,7 +114,7 @@ async function openPatientProfile(id) {
           </div>
         </div>
         <div style="margin-top:16px;">
-          <button class="btn btn-primary" style="width:100%;" onclick="editPatient(${p.id})">✏️ แก้ไขข้อมูล</button>
+          <button class="btn btn-primary" style="width:100%;" onclick="editPatient('${p.id}')">✏️ แก้ไขข้อมูล</button>
         </div>
       </div>
       <!-- Info card -->
@@ -137,7 +137,7 @@ async function openPatientProfile(id) {
       <div class="card" style="margin-top:12px;">
         <div class="card-header" style="background:var(--accent-light);">
           <div class="card-title" style="font-size:13px;color:var(--accent-dark);">🛏️ ห้องพักปัจจุบัน</div>
-          <button class="btn btn-ghost btn-sm" onclick="editPatient(${p.id})">เปลี่ยน</button>
+          <button class="btn btn-ghost btn-sm" onclick="editPatient('${p.id}')">เปลี่ยน</button>
         </div>
         <div style="padding:12px 16px;font-size:13px;display:flex;flex-direction:column;gap:8px;">
           <div><span style="color:var(--text3);min-width:80px;display:inline-block;">ห้อง</span><strong>${room?.name||'-'}</strong></div>
@@ -178,7 +178,7 @@ async function openPatientProfile(id) {
                     <td class="number">${r.qty||0}</td>
                     <td>${r.unit||''}</td>
                     <td style="font-size:12px;">${r.staffName||'-'}</td>
-                    <td><button class="btn btn-ghost btn-sm" onclick="openReqForm(${r.id})">🖨️</button></td>
+                    <td><button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')">🖨️</button></td>
                   </tr>`).join('')}
               </tbody>
             </table>
@@ -196,7 +196,7 @@ async function openPatientProfile(id) {
         <div class="card">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;">🚨 ประวัติการแพ้ยา / อาหาร</div>
-            <button class="btn btn-primary btn-sm" onclick="openAddAllergyModal(${p.id})">+ เพิ่ม</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddAllergyModal('${p.id}')">+ เพิ่ม</button>
           </div>
           ${p.allergies?.length === 0 ? `<div style="padding:24px;text-align:center;color:var(--text3);">✅ ไม่มีประวัติการแพ้ที่บันทึกไว้</div>` :
           `<table>
@@ -208,7 +208,7 @@ async function openPatientProfile(id) {
                   <td><span class="badge badge-gray">${a.allergyType}</span></td>
                   <td style="font-size:12px;color:var(--text2);">${a.severity||'-'}</td>
                   <td style="font-size:12px;color:var(--text2);">${a.reaction||'-'}</td>
-                  <td><button class="btn btn-ghost btn-sm" onclick="deleteAllergy(${p.id},${a.id})">🗑️</button></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="deleteAllergy('${p.id}','${a.id}')">🗑️</button></td>
                 </tr>`;
               }).join('')}
             </tbody>
@@ -220,7 +220,7 @@ async function openPatientProfile(id) {
         <div class="card">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;">👥 ผู้ติดต่อ / ผู้รับผิดชอบค่าใช้จ่าย</div>
-            <button class="btn btn-primary btn-sm" onclick="openAddContactModal(${p.id})">+ เพิ่ม</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddContactModal('${p.id}')">+ เพิ่ม</button>
           </div>
           ${p.contacts?.length === 0 ? `<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีข้อมูลผู้ติดต่อ</div>` :
           `<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
@@ -237,7 +237,7 @@ async function openPatientProfile(id) {
                     </div>
                     ${c.note ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">📝 ${c.note}</div>` : ''}
                   </div>
-                  <button class="btn btn-ghost btn-sm" onclick="deleteContact(${p.id},${c.id})">🗑️</button>
+                  <button class="btn btn-ghost btn-sm" onclick="deleteContact('${p.id}','${c.id}')">🗑️</button>
                 </div>
               </div>`).join('')}
           </div>`}
@@ -247,7 +247,7 @@ async function openPatientProfile(id) {
         <div class="card">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;">📝 หมายเหตุ</div>
-            <button class="btn btn-ghost btn-sm" onclick="editPatient(${p.id})">✏️ แก้ไข</button>
+            <button class="btn btn-ghost btn-sm" onclick="editPatient('${p.id}')">✏️ แก้ไข</button>
           </div>
           <div style="padding:16px 20px;font-size:13px;line-height:1.7;white-space:pre-wrap;min-height:80px;">${p.note || '<span style="color:var(--text3);">ยังไม่มีข้อมูล</span>'}</div>
         </div>
@@ -340,9 +340,9 @@ function renderApptList(patientId) {
             <div style="font-size:12px;margin-top:4px;">${TRANSPORT_ICON[a.transport]||'🚗'} ${a.transport} ${a.transportNote?'('+a.transportNote+')':''}</div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            ${a.status==='upcoming'?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;" onclick="markApptDone(${a.id})">✅ เสร็จ</button>`:''}
-            <button class="btn btn-ghost btn-sm" onclick="openApptModal(${a.id})" style="font-size:11px;">✏️</button>
-            <button class="btn btn-ghost btn-sm" onclick="deleteAppt(${a.id},'${patientId}')" style="font-size:11px;color:#e74c3c;">🗑️</button>
+            ${a.status==='upcoming'?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;" onclick="markApptDone('${a.id}')">✅ เสร็จ</button>`:''}
+            <button class="btn btn-ghost btn-sm" onclick="openApptModal('${a.id}')" style="font-size:11px;">✏️</button>
+            <button class="btn btn-ghost btn-sm" onclick="deleteAppt('${a.id}','${patientId}')" style="font-size:11px;color:#e74c3c;">🗑️</button>
           </div>
         </div>
         ${a.note?`<div style="font-size:12px;color:var(--text3);margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">💬 ${a.note}</div>`:''}
@@ -472,8 +472,8 @@ function renderBelongingList(patientId) {
           <td style="font-size:12px;">${b.receivedBy}</td>
           <td style="font-size:12px;color:var(--text2);">${b.note||'-'}</td>
           <td style="white-space:nowrap;">
-            ${b.status==='held'?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;" onclick="returnBelonging(${b.id},'${patientId}')">↩️ คืน</button>`:`<span style="font-size:11px;color:var(--text3);">คืนแล้ว ${b.dateOut||''}</span>`}
-            <button class="btn btn-ghost btn-sm" onclick="deleteBelonging(${b.id},'${patientId}')" style="font-size:11px;color:#e74c3c;">🗑️</button>
+            ${b.status==='held'?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;" onclick="returnBelonging('${b.id}','${patientId}')">↩️ คืน</button>`:`<span style="font-size:11px;color:var(--text3);">คืนแล้ว ${b.dateOut||''}</span>`}
+            <button class="btn btn-ghost btn-sm" onclick="deleteBelonging('${b.id}','${patientId}')" style="font-size:11px;color:#e74c3c;">🗑️</button>
           </td>
         </tr>`).join('')}
       </tbody>
@@ -673,8 +673,8 @@ function renderMARTab(pid, patientId) {
                 <td style="font-size:12px;">${lastGiven ? `<span style="color:#27ae60;font-weight:600;">${lastGiven.givenAt?.slice(11,16)||''}</span> โดย ${lastGiven.givenBy||'-'}` : '<span style="color:var(--text3);">ยังไม่ได้ให้วันนี้</span>'}</td>
                 <td style="text-align:center;"><span style="background:${todayForMed.length?'#27ae60':'var(--surface2)'};color:${todayForMed.length?'white':'var(--text3)'};border-radius:10px;padding:2px 10px;font-size:12px;">${todayForMed.length} ครั้ง</span></td>
                 <td style="display:flex;gap:4px;">
-                  <button class="btn btn-primary btn-sm" onclick="openMAREntryModal('${patientId}','${pid}',${med.id})">+ บันทึกการให้</button>
-                  <button class="btn btn-ghost btn-sm" onclick="deleteMedication('${patientId}',${med.id})">🗑️</button>
+                  <button class="btn btn-primary btn-sm" onclick="openMAREntryModal('${patientId}','${pid}','${med.id}')">+ บันทึกการให้</button>
+                  <button class="btn btn-ghost btn-sm" onclick="deleteMedication('${patientId}','${med.id}')">🗑️</button>
                 </td>
               </tr>`;
             }).join('')}
@@ -716,7 +716,7 @@ function renderMARTab(pid, patientId) {
                   <td><span style="background:var(--sage-light);border-radius:4px;padding:2px 8px;font-size:12px;">${r.timing||'-'}</span></td>
                   <td style="font-size:12px;">${r.givenBy||'-'}</td>
                   <td style="font-size:12px;color:var(--text3);">${r.note||''}</td>
-                  <td><button class="btn btn-ghost btn-sm" onclick="deleteMAREntry('${pid}','${patientId}',${r.id})">🗑️</button></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="deleteMAREntry('${pid}','${patientId}','${r.id}')">🗑️</button></td>
                 </tr>`;
               }).join('') : '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text3);">ไม่มีรายการวันนี้</td></tr>';
             })()}
@@ -930,7 +930,7 @@ function renderVitalsTab(pid, patientId) {
                   <td style="font-size:12px;color:var(--text2);max-width:120px;">${v.otherFields||'-'}</td>
                   <td style="font-size:12px;">${v.recordedBy||'-'}</td>
                   <td style="font-size:12px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis;">${v.note||''}</td>
-                  <td><button class="btn btn-ghost btn-sm" onclick="deleteVitalSign('${patientId}','${pid}',${v.id})">🗑️</button></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="deleteVitalSign('${patientId}','${pid}','${v.id}')">🗑️</button></td>
                 </tr>`;
               }).join('')}
           </tbody>
@@ -1036,8 +1036,8 @@ function renderNursingTab(pid, patientId) {
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <div style="font-size:11px;font-weight:700;color:${c};">กะ${shift} <span style="font-weight:400;color:var(--text3);">(${SHIFT_TIMES[shift]})</span></div>
             <div style="display:flex;gap:4px;">
-              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="editNursingNote('${patientId}','${pid}',${note.id})">✏️</button>
-              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="deleteNursingNote('${patientId}','${pid}',${note.id})">🗑️</button>
+              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="editNursingNote('${patientId}','${pid}','${note.id}')">✏️</button>
+              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="deleteNursingNote('${patientId}','${pid}','${note.id}')">🗑️</button>
             </div>
           </div>
           <div style="font-size:12px;display:flex;flex-direction:column;gap:3px;">

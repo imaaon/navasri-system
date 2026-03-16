@@ -32,16 +32,16 @@ function renderStock() {
 
     const fillColor = item.qty === 0 ? 'var(--red)' : item.qty <= item.reorder ? 'var(--orange)' : 'var(--green)';
     const photoEl = item.photo
-      ? `<img src="${item.photo}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;" onclick="showItemPhoto(${item.id})" title="${item.name}">`
-      : `<div style="width:40px;height:40px;border-radius:6px;border:2px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;" onclick="editItem(${item.id})" title="เพิ่มรูปภาพ">📷</div>`;
+      ? `<img src="${item.photo}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;" onclick="showItemPhoto('${item.id}')" title="${item.name}">`
+      : `<div style="width:40px;height:40px;border-radius:6px;border:2px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;" onclick="editItem('${item.id}')" title="เพิ่มรูปภาพ">📷</div>`;
 
     // Lot info
     const lots = getLotsForItem(item.id);
     const nearExpLots = lots.filter(l => getLotStatus(l.expiryDate) !== 'ok');
     const lotBadge = nearExpLots.length > 0
-      ? `<span class="badge badge-red" title="${nearExpLots.length} lot ใกล้/หมดอายุ" style="cursor:pointer;" onclick="showLotDetail(${item.id})">🚨 ${nearExpLots.length} lot</span>`
+      ? `<span class="badge badge-red" title="${nearExpLots.length} lot ใกล้/หมดอายุ" style="cursor:pointer;" onclick="showLotDetail('${item.id}')">🚨 ${nearExpLots.length} lot</span>`
       : lots.length > 0
-        ? `<span class="badge badge-gray" style="cursor:pointer;font-size:10px;" onclick="showLotDetail(${item.id})">${lots.length} lot</span>`
+        ? `<span class="badge badge-gray" style="cursor:pointer;font-size:10px;" onclick="showLotDetail('${item.id}')">${lots.length} lot</span>`
         : '';
 
     // Unit conversion badge
@@ -72,8 +72,8 @@ function renderStock() {
       <td class="number" style="font-size:12px;color:var(--text2);">${item.price > 0 ? item.price.toLocaleString('th-TH',{minimumFractionDigits:2}) : '-'}</td>
       <td>${statusBadge}${lotBadge ? '<br>'+lotBadge : ''}</td>
       <td>
-        <button class="btn btn-ghost btn-sm" onclick="editItem(${item.id})" style="margin-right:4px;">✏️</button>
-        <button class="btn btn-ghost btn-sm" onclick="deleteItem(${item.id})">🗑️</button>
+        <button class="btn btn-ghost btn-sm" onclick="editItem('${item.id}')" style="margin-right:4px;">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteItem('${item.id}')">🗑️</button>
       </td>
     </tr>`;
   }).join('');
@@ -120,7 +120,7 @@ function renderItemMaster() {
   tb.innerHTML = items.map((item, i) => {
     const photoEl = item.photo
       ? `<img src="${item.photo}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;" onclick="showItemPhoto('${item.id}')" title="${item.name}">`
-      : `<div style="width:40px;height:40px;border-radius:6px;border:2px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;" onclick="editItem(${item.id})" title="เพิ่มรูปภาพ">📷</div>`;
+      : `<div style="width:40px;height:40px;border-radius:6px;border:2px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;" onclick="editItem('${item.id}')" title="เพิ่มรูปภาพ">📷</div>`;
     const qtyColor = item.qty === 0 ? 'color:#e74c3c;font-weight:700;' : item.qty <= item.reorder ? 'color:#e67e22;font-weight:600;' : '';
     return `<tr>
     <td style="color:var(--text3);" class="number">${i+1}</td>
@@ -133,8 +133,8 @@ function renderItemMaster() {
     <td class="number" style="font-size:12px;">${item.price > 0 ? item.price.toLocaleString('th-TH',{minimumFractionDigits:2}) : '-'}</td>
     <td class="number">${item.reorder}</td>
     <td style="white-space:nowrap;">
-      <button class="btn btn-ghost btn-sm" onclick="editItem(${item.id})" style="margin-right:4px;">✏️</button>
-      <button class="btn btn-ghost btn-sm" onclick="deleteItem(${item.id})">🗑️</button>
+      <button class="btn btn-ghost btn-sm" onclick="editItem('${item.id}')" style="margin-right:4px;">✏️</button>
+      <button class="btn btn-ghost btn-sm" onclick="deleteItem('${item.id}')">🗑️</button>
     </td>
   </tr>`;
   }).join('');

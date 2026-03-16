@@ -387,7 +387,7 @@ function renderInvoiceItems() {
         style="width:80px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:13px;">
     </td>
     <td style="padding:5px 6px;text-align:right;font-weight:600;" id="inv-item-row-${it._idx}">${formatThb((it.qty||0)*(it.price||0))}</td>
-    <td><button onclick="removeInvItem(${it._idx})" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>
+    <td><button onclick="removeInvItem('${it._idx}')" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>
   </tr>`;
   const allCats = [...CAT_ORDER, ...Object.keys(grouped).filter(c=>!CAT_ORDER.includes(c))];
   let html = '';
