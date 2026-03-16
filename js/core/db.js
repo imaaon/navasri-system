@@ -141,7 +141,7 @@ function mapPatient(r) {
   };
 }
 function mapRoom(r) {
-  return { id: r.id, name: r.name, roomType: r.room_type||'ห้องรวม',
+  return { id: r.id, name: r.name, roomType: r.room_type||'ห้องเดี่ยว',
     zone: r.zone||'', monthlyRate: r.monthly_rate||0, dailyRate: r.daily_rate||0,
     capacity: r.capacity||1, note: r.note||'' };
 }
