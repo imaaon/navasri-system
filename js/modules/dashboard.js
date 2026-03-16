@@ -179,5 +179,5 @@ function renderAdminDashboard() {
       ${lowCount > 0 ? `<div style="font-size:11px;color:var(--red);margin-top:4px;">⚠️ ${lowCount} รายการใกล้หมด</div>` : '<div style="font-size:11px;color:var(--green);margin-top:4px;">✅ ปกติ</div>'}
     </div>`;
   }).join('');
-  renderUpcomingAppts();
+  if (typeof renderUpcomingAppts === 'function') renderUpcomingAppts();
 }  // end renderAdminDashboard

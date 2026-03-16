@@ -90,10 +90,10 @@ async function loadDB() {
     // role ตรวจสอบจาก server ผ่าน get_my_role() RPC เท่านั้น
     db.users = {};
     // settings: line + billing (billingSettings only — invoices/expenses now in own tables)
-    const ls = (settings.data || []).find(s => s.key === 'lineSettings');
+    const ls = (settingsRes.data || []).find(s => s.key === 'lineSettings');
     if (ls) db.lineSettings = { ...db.lineSettings, ...ls.value };
     if (typeof loadBillingFromSettings === 'function') {
-      loadBillingFromSettings(settings.data || []);
+      loadBillingFromSettings(settingsRes.data || []);
     }
 
     if (db.items.length === 0) seedData();
