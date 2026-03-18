@@ -297,15 +297,35 @@ async function saveItem() {
   };
   if (editId) {
     const { error } = await supa.from('items').update(data).eq('id', editId);
-    if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
+    if (error) {
+      if (error.code === '23505' || (error.message && error.message.includes('duplicate'))) {
+        toast('รหัสบาร์โค้ดซ้ำกับสินค้าอื่น กรุณาเปลี่ยนรหัสแล้วบันทึกใหม่', 'error');
+      } else {
+        toast('เกิดข้อผิดพลาด: ' + error.message, 'error');
+      }
+      return;
+    }
     const item = db.items.find(i => i.id == editId);
     Object.assign(item, { ...data, purchaseUnit, dispenseUnit, conversionFactor: convFactor, isBillable });
     if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
     toast('แก้ไขรายการเรียบร้อย', 'success');
   } else {
-    const { data: inserted, error } = await supa.from('items').insert(data).select().single();
-    if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
-    db.items.push(mapItem({ ...data, id: inserted.id }));
+    let insertData = { ...data };
+    let { data: inserted, error } = await supa.from('items').insert(insertData).select().single();
+    // ถ้าเกิด unique conflict (23505) ให้ generate รหัสใหม่แล้ว retry 1 ครั้ง
+    if (error && (error.code === '23505' || (error.message && error.message.includes('duplicate')))) {
+      const newCode = generateBarcode(insertData.category || '');
+      insertData = { ...insertData, barcode: newCode };
+      const retry = await supa.from('items').insert(insertData).select().single();
+      inserted = retry.data;
+      error = retry.error;
+      if (error) { toast('รหัสบาร์โค้ดซ้ำ กรุณาตรวจสอบแล้วบันทึกใหม่', 'error'); return; }
+      toast('รหัสบาร์โค้ดซ้ำ ระบบสร้างรหัสใหม่ให้อัตโนมัติ (' + newCode + ')', 'warning');
+    } else if (error) {
+      toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return;
+    }
+    if (!inserted) { toast('บันทึกไม่สำเร็จ กรุณาลองใหม่', 'error'); return; }
+    db.items.push(mapItem({ ...insertData, id: inserted.id }));
     if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
     toast('เพิ่มรายการเรียบร้อย', 'success');
   }
