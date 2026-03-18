@@ -1129,15 +1129,6 @@ function getReqPrintCSS() {
     .center { text-align:center; }
   `;
 }
-// ── Export Excel Helper ──────────────────────────────────────
-function _xlsxDownload(rows, sheetName, filename) {
-  if (typeof XLSX === 'undefined') { toast('ไม่พบ SheetJS กรุณา refresh หน้า', 'error'); return; }
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  XLSX.writeFile(wb, filename + '.xlsx');
-  toast('ดาวน์โหลด Excel แล้ว ✅', 'success');
-}
 
 function exportRequisitionExcel() {
   const rows = [
@@ -1153,4 +1144,38 @@ function exportRequisitionExcel() {
     ]);
   });
   _xlsxDownload(rows, 'ใบเบิกสินค้า', 'navasri_requisitions_' + new Date().toISOString().slice(0,10));
+}
+
+// ===== BARCODE SCAN FOR REQUISITION =====
+function onReqBarcodeScan() {
+  const el = document.getElementById('req-barcode-scan');
+  if (!el) return;
+  clearTimeout(el._scanTimer);
+  el._scanTimer = setTimeout(() => {
+    const code = el.value.trim();
+    if (!code) return;
+    const item = lookupItemByBarcode(code);
+    if (!item) {
+      if (code.length >= 4) toast('ไม่พบสินค้ารหัส: ' + code, 'warning');
+      el.value = '';
+      return;
+    }
+    addReqItemByBarcode(item);
+    el.value = '';
+    el.focus();
+  }, 300);
+}
+
+function addReqItemByBarcode(item) {
+  // ตรวจว่ามีในรายการแล้วไหม
+  const existing = reqItems.find(r => r.itemId === item.id);
+  if (existing) {
+    existing.qty = (existing.qty || 1) + 1;
+    renderReqItems();
+    toast(`เพิ่ม ${item.name} (${existing.qty} ${item.unit})`, 'success');
+    return;
+  }
+  reqItems.push({ itemId: item.id, itemName: item.name, qty: 1, unit: item.dispenseUnit || item.unit });
+  renderReqItems();
+  toast(`เพิ่ม ${item.name} ✅`, 'success');
 }

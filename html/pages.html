@@ -127,6 +127,7 @@
                   <th>#</th>
                   <th style="width:56px;">รูป</th>
                   <th>ชื่อรายการ</th>
+                  <th>รหัสบาร์โค้ด</th>
                   <th>ประเภท</th>
                   <th>คงเหลือ</th>
                   <th>หน่วย</th>
@@ -178,6 +179,13 @@
             <hr class="divider">
             <div style="font-size:13px;font-weight:600;margin-bottom:12px;">รายการที่เบิก</div>
 
+            <div style="margin-bottom:10px;">
+              <label class="form-label" style="font-size:11px;">สแกนบาร์โค้ดสินค้า</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input class="form-control" id="req-barcode-scan" placeholder="ยิงบาร์โค้ดหรือพิมพ์รหัสสินค้า..." style="font-family:monospace;" oninput="onReqBarcodeScan()">
+              </div>
+              <div style="font-size:11px;color:var(--text3);margin-top:3px;">ยิงบาร์โค้ดเพื่อเพิ่มสินค้าลงรายการเบิกอัตโนมัติ</div>
+            </div>
             <div id="reqItems"></div>
             <button class="btn btn-secondary" style="width:100%;margin-top:4px;border-style:dashed;" onclick="addReqItem()">+ เพิ่มรายการ</button>
 

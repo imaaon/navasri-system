@@ -33,11 +33,15 @@ function loadLineSettingsUI() {
 function updateLineStatusDot() {
   try {
     if (typeof db === 'undefined' || !db || !db.lineSettings) return;
-    const dot = document.getElementById('lineStatusDot');
-    if (!dot) return;
     const s = db.lineSettings;
-    dot.textContent = s.enabled && s.webhookUrl ? '🟢' : s.enabled ? '🟡' : '⚪';
-    dot.title = s.enabled && s.webhookUrl ? 'Line: เชื่อมต่อแล้ว' : s.enabled ? 'Line: ยังไม่กรอก URL' : 'Line: ปิดอยู่';
+    const emoji = s.enabled && s.webhookUrl ? '🟢' : s.enabled ? '🟡' : '⚪';
+    const title = s.enabled && s.webhookUrl ? 'Line: เชื่อมต่อแล้ว' : s.enabled ? 'Line: ยังไม่ตั้ง URL' : 'Line: ปิดอยู่';
+    // topbar icon (index.html)
+    const topbar = document.getElementById('line-status-dot');
+    if (topbar) { topbar.textContent = emoji; topbar.title = title; }
+    // sidebar dot (sidebar.html)
+    const sidebar = document.getElementById('lineStatusDot');
+    if (sidebar) { sidebar.title = title; sidebar.style.background = s.enabled && s.webhookUrl ? '#1D9E75' : s.enabled ? '#EF9F27' : '#B4B2A9'; }
   } catch(e) { /* ยังไม่พร้อม */ }
 }
 

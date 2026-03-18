@@ -26,8 +26,23 @@
       </div>
       <div class="form-grid">
         <div class="form-group">
+          <label class="form-label">รหัสบาร์โค้ด (ระบบ)</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input class="form-control" id="item-barcode" placeholder="สร้างอัตโนมัติ" style="font-family:monospace;flex:1;">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="printItemBarcode()" id="btn-print-barcode" style="display:none;">🖨 พิมพ์</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;">ระบบสร้างให้อัตโนมัติ หรือแก้ไขเองได้</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">บาร์โค้ดผู้ผลิต (ถ้ามี)</label>
+          <input class="form-control" id="item-barcode-ext" placeholder="เช่น 8850006123456" style="font-family:monospace;">
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;">บาร์โค้ดที่ติดมากับสินค้าจากโรงงาน</div>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
           <label class="form-label">ประเภท</label>
-          <select class="form-control" id="item-cat">
+          <select class="form-control" id="item-cat" onchange="onItemCategoryChange()">
             <option value="ยา">ยา</option>
             <option value="เวชภัณฑ์">เวชภัณฑ์</option>
             <option value="ของใช้">ของใช้</option>
@@ -1537,6 +1552,10 @@
       <button class="modal-close" onclick="closeModal('modal-receive')">✕</button>
     </div>
     <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">ยิงบาร์โค้ด (หรือเลือกจากรายการ)</label>
+        <input class="form-control" id="recv-barcode-scan" placeholder="ยิงบาร์โค้ดหรือพิมพ์รหัส..." oninput="onRecvBarcodeScan()" style="font-family:monospace;letter-spacing:1px;">
+      </div>
       <div class="form-group">
         <label class="form-label">รายการสินค้า <span class="required">*</span></label>
         <select class="form-control" id="recv-item" onchange="onRecvItemChange()"></select>

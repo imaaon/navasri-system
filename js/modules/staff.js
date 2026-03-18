@@ -311,15 +311,6 @@ function openBase64PDF(dataUrl) {
     </head><body><iframe src="${dataUrl}"></iframe></body></html>`);
   win.document.close();
 }
-// ── Export Excel Helper ──────────────────────────────────────
-function _xlsxDownload(rows, sheetName, filename) {
-  if (typeof XLSX === 'undefined') { toast('ไม่พบ SheetJS กรุณา refresh หน้า', 'error'); return; }
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  XLSX.writeFile(wb, filename + '.xlsx');
-  toast('ดาวน์โหลด Excel แล้ว ✅', 'success');
-}
 
 function exportStaffExcel() {
   const rows = [

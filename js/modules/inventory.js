@@ -1,6 +1,69 @@
 // ===== INVENTORY MODULE =====
 
 // ===== STOCK =====
+
+// ===== BARCODE FUNCTIONS =====
+function generateBarcode(category) {
+  // หมายเหตุ: รหัสสร้างจาก local cache (db.items)
+  // ความเสี่ยง: ถ้าหลายคนสร้างสินค้าพร้อมกัน อาจได้รหัสซ้ำกันได้
+  // แนะนำ: ย้ายการสร้างรหัสไปทำที่ Supabase (function/trigger) ในอนาคต
+  const prefixMap = { 'ยา':'MED', 'เวชภัณฑ์':'SUP', 'ของใช้':'GEN', 'บริการ':'SVC' };
+  const prefix = prefixMap[category] || 'OTH';
+  const existing = new Set(db.items.filter(i => i.barcode).map(i => i.barcode));
+  let seq = db.items.filter(i => i.category === category && i.barcode).length + 1;
+  let code;
+  do {
+    code = `NVS-${prefix}-${String(seq).padStart(3,'0')}`;
+    seq++;
+  } while (existing.has(code));
+  return code;
+}
+
+function onItemCategoryChange() {
+  const cat = document.getElementById('item-cat').value;
+  const editId = document.getElementById('editItemIdx').value;
+  if (!editId) {
+    const bc = document.getElementById('item-barcode');
+    if (!bc.value) bc.value = generateBarcode(cat);
+  }
+}
+
+
+
+function printItemBarcode() {
+  const code = document.getElementById('item-barcode').value.trim();
+  const name = document.getElementById('item-name').value.trim();
+  if (!code) { toast('ไม่มีรหัสบาร์โค้ด', 'warning'); return; }
+  // สร้าง barcode SVG จาก JsBarcode ที่โหลดแล้วใน index.html (ไม่ต้องพึ่ง CDN อีกครั้ง)
+  const tmpSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  document.body.appendChild(tmpSvg);
+  try {
+    JsBarcode(tmpSvg, code, { format:'CODE128', width:2, height:60, displayValue:false, margin:8 });
+  } catch(e) {
+    document.body.removeChild(tmpSvg);
+    toast('สร้างบาร์โค้ดไม่สำเร็จ: ' + e.message, 'error');
+    return;
+  }
+  const svgHtml = tmpSvg.outerHTML;
+  document.body.removeChild(tmpSvg);
+  const safeName = name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const safeCode = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const win = window.open('', '_blank', 'width=340,height=220');
+  win.document.write(`<!DOCTYPE html><html><head><title>Barcode</title>
+    <style>
+      body{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif;}
+      .code{font-size:13px;font-weight:600;letter-spacing:1.5px;margin-top:2px;}
+      .name{font-size:10px;color:#555;margin-top:2px;max-width:220px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    </style>
+    </head><body>
+    ${svgHtml}
+    <div class="code">${safeCode}</div>
+    <div class="name">${safeName}</div>
+    <script>setTimeout(() => window.print(), 300);<\/script>
+    </body></html>`);
+  win.document.close();
+}
+
 function renderStock() {
   const search = (document.getElementById('stockSearch')?.value || '').toLowerCase();
   const catFilter = document.getElementById('stockCatFilter')?.value || '';
@@ -20,7 +83,7 @@ function renderStock() {
   const catBadges = { ยา:'badge-red', เวชภัณฑ์:'badge-orange', ของใช้:'badge-blue', บริการ:'badge-purple' };
   const tb = document.getElementById('stockTable');
   if (items.length === 0) {
-    tb.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบรายการ</td></tr>';
+    tb.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบรายการ</td></tr>';
     return;
   }
   tb.innerHTML = items.map((item, i) => {
@@ -61,6 +124,7 @@ function renderStock() {
       <td style="color:var(--text3);font-size:12px;" class="number">${i+1}</td>
       <td style="padding:6px 8px;">${photoEl}</td>
       <td style="font-weight:600;">${item.name}<br>${billableBadge}</td>
+      <td><span style="font-family:monospace;font-size:11px;color:var(--text3);">${item.barcode||'—'}</span></td>
       <td><span class="badge ${catBadges[item.category]||'badge-gray'}">${item.category}</span></td>
       <td>
         <div class="number" style="font-weight:600;">${item.qty}</div>
@@ -156,6 +220,9 @@ function openAddItemModal() {
   document.getElementById('item-dispense-unit').value = '';
   document.getElementById('item-conversion').value = 1;
   document.getElementById('item-billable').checked = true;
+  document.getElementById('item-barcode').value = '';
+  document.getElementById('item-barcode-ext').value = '';
+  document.getElementById('btn-print-barcode').style.display = 'none';
   document.querySelector('.modal-overlay#modal-addItem .modal-title').textContent = 'เพิ่มรายการสินค้า';
   openModal('modal-addItem');
 }
@@ -179,6 +246,9 @@ function editItem(id) {
   document.getElementById('item-photo-data').value = photoData;
   const prev = document.getElementById('item-photo-preview');
   prev.innerHTML = photoData ? `<img src="${photoData}" style="width:80px;height:80px;object-fit:cover;">` : '📷';
+  document.getElementById('item-barcode').value = item.barcode || '';
+  document.getElementById('item-barcode-ext').value = item.barcodeExternal || '';
+  document.getElementById('btn-print-barcode').style.display = item.barcode ? '' : 'none';
   document.querySelector('.modal-overlay#modal-addItem .modal-title').textContent = 'แก้ไขรายการสินค้า';
   openModal('modal-addItem');
 }
@@ -200,8 +270,21 @@ async function saveItem() {
   const dispenseUnit = document.getElementById('item-dispense-unit').value.trim() || unitVal;
   const convFactor   = parseFloat(document.getElementById('item-conversion').value) || 1;
   const isBillable   = document.getElementById('item-billable').checked;
+  const barcodeVal = document.getElementById('item-barcode').value.trim();
+  const barcodeExt = document.getElementById('item-barcode-ext').value.trim();
+  // ตรวจ duplicate barcode
+  if (barcodeVal) {
+    const dup = db.items.find(i => i.barcode === barcodeVal && i.id != editId);
+    if (dup) { toast(`รหัสบาร์โค้ด "${barcodeVal}" ซ้ำกับ "${dup.name}"`, 'error'); return; }
+  }
+  if (barcodeExt) {
+    const dupExt = db.items.find(i => i.barcodeExternal === barcodeExt && i.id != editId);
+    if (dupExt) { toast(`บาร์โค้ดผู้ผลิต "${barcodeExt}" ซ้ำกับ "${dupExt.name}"`, 'error'); return; }
+  }
   const data = {
     name, category: document.getElementById('item-cat').value,
+    ...(barcodeVal ? { barcode: barcodeVal } : {}),
+    ...(barcodeExt ? { barcode_external: barcodeExt } : {}),
     unit: unitVal,
     qty: parseInt(document.getElementById('item-qty').value) || 0,
     reorder: parseInt(document.getElementById('item-reorder').value) || 10,
@@ -217,11 +300,13 @@ async function saveItem() {
     if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
     const item = db.items.find(i => i.id == editId);
     Object.assign(item, { ...data, purchaseUnit, dispenseUnit, conversionFactor: convFactor, isBillable });
+    if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
     toast('แก้ไขรายการเรียบร้อย', 'success');
   } else {
     const { data: inserted, error } = await supa.from('items').insert(data).select().single();
     if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
     db.items.push(mapItem({ ...data, id: inserted.id }));
+    if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
     toast('เพิ่มรายการเรียบร้อย', 'success');
   }
   closeModal('modal-addItem');
@@ -233,6 +318,7 @@ async function deleteItem(id) {
   const { error } = await supa.from('items').delete().eq('id', id);
   if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
   db.items = db.items.filter(i => i.id !== id);
+  if (typeof buildBarcodeMap === "function") buildBarcodeMap();
   toast('ลบรายการเรียบร้อย');
   renderPage(currentPage);
 }
@@ -394,15 +480,6 @@ async function renderPurchaseHistory() {
     <td style="font-size:12px;color:var(--text2);">${r.note||'-'}</td>
   </tr>`).join('');
 }
-// ── Export Excel Helper ──────────────────────────────────────
-function _xlsxDownload(rows, sheetName, filename) {
-  if (typeof XLSX === 'undefined') { toast('ไม่พบ SheetJS กรุณา refresh หน้า', 'error'); return; }
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  XLSX.writeFile(wb, filename + '.xlsx');
-  toast('ดาวน์โหลด Excel แล้ว ✅', 'success');
-}
 
 function exportInventoryExcel() {
   const rows = [
@@ -431,4 +508,29 @@ function exportItemLotsExcel() {
     ]);
   });
   _xlsxDownload(rows, 'Lot สินค้า', 'navasri_item_lots_' + new Date().toISOString().slice(0,10));
+}
+
+// ===== BARCODE SCAN FOR RECEIVE MODAL =====
+function onRecvBarcodeScan() {
+  const el = document.getElementById('recv-barcode-scan');
+  if (!el) return;
+  const code = el.value.trim();
+  if (!code) return;
+  // รอ Enter หรือ debounce 300ms (บาร์โค้ดส่ง suffix Enter)
+  clearTimeout(el._scanTimer);
+  el._scanTimer = setTimeout(() => {
+    const item = lookupItemByBarcode(code);
+    if (item) {
+      const sel = document.getElementById('recv-item');
+      if (sel) {
+        sel.value = item.id;
+        onRecvItemChange();
+        toast(`พบสินค้า: ${item.name}`, 'success');
+      }
+      el.value = '';
+    } else if (code.length >= 4) {
+      toast(`ไม่พบสินค้า: ${code}`, 'warning');
+      el.value = '';
+    }
+  }, 300);
 }

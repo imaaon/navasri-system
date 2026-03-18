@@ -36,6 +36,24 @@ let db = {
 };
 
 // ── Load all data from Supabase ─────────────────────────────
+
+// ── Barcode Lookup Maps (O(1)) ───────────────────────────────
+const _barcodeMap = {};         // barcode (NVS-xxx) → item
+const _barcodeExtMap = {};      // barcode_external (EAN) → item
+
+function buildBarcodeMap() {
+  Object.keys(_barcodeMap).forEach(k => delete _barcodeMap[k]);
+  Object.keys(_barcodeExtMap).forEach(k => delete _barcodeExtMap[k]);
+  (db.items || []).forEach(item => {
+    if (item.barcode) _barcodeMap[item.barcode] = item;
+    if (item.barcodeExternal) _barcodeExtMap[item.barcodeExternal] = item;
+  });
+}
+
+function lookupItemByBarcode(code) {
+  if (!code) return null;
+  return _barcodeMap[code] || _barcodeExtMap[code] || null;
+}
 async function loadDB() {
   showLoadingOverlay(true);
   try {
@@ -70,6 +88,7 @@ async function loadDB() {
     }
     if (db.items.length === 0) seedData();
     window._dbLoaded = true;
+    buildBarcodeMap();
   } catch(e) {
     console.error('loadDB error', e);
     window._dbLoaded = true;
@@ -112,6 +131,7 @@ async function loadDBSecondary() {
     db.roomHistory     = (roomHistoryRes?.data || []);
     db.invoiceResetLogs = (invoiceResetLogsRes?.data || []);
     window._dbSecondaryLoaded = true;
+    buildBarcodeMap();
   } catch(e) {
     console.warn('loadDBSecondary error', e);
   }
@@ -129,7 +149,7 @@ async function ensureSecondaryDB() {
 
 // ── Map functions (snake_case → camelCase) ──────────────────
 function mapItem(r) {
-  return { id: r.id, name: r.name, category: r.category, unit: r.unit,
+  return { id: r.id, name: r.name, category: r.category, unit: r.unit, barcode: r.barcode||'', barcodeExternal: r.barcode_external||'',
     qty: r.qty, reorder: r.reorder, cost: r.cost||0, price: r.price||0, photo: r.photo,
     purchaseUnit: r.purchase_unit || r.unit || 'ชิ้น',
     dispenseUnit: r.dispense_unit || r.unit || 'ชิ้น',
