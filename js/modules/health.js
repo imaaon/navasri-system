@@ -77,6 +77,7 @@ function editMedLog(patId, type, idx) {
 }
 
 function saveMedLog() {
+  if (!canManageVitals()) { toast('ไม่มีสิทธิ์บันทึกข้อมูลสุขภาพ','error'); return; }
   const type   = document.getElementById('medlog-type').value;
   const patId  = document.getElementById('medlog-patid').value;
   const editIdx = document.getElementById('medlog-editidx').value;

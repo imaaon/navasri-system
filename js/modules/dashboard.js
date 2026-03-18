@@ -180,4 +180,80 @@ function renderAdminDashboard() {
     </div>`;
   }).join('');
   if (typeof renderUpcomingAppts === 'function') renderUpcomingAppts();
+
+  // ── Executive Stats (Phase 4) ──────────────────────────────
+  const monthStr = new Date().toISOString().slice(0,7);
+  const el_staff    = document.getElementById('stat-staff');
+  const el_expiry   = document.getElementById('stat-expiry');
+  const el_recv     = document.getElementById('stat-recv-month');
+  const el_prPend   = document.getElementById('stat-pr-pending');
+
+  if (el_staff)  el_staff.textContent  = (db.staff||[]).filter(s=>!s.endDate||s.endDate>new Date().toISOString().slice(0,10)).length;
+  if (el_expiry) el_expiry.textContent = (db.itemLots||[]).filter(l=>l.expiryDate&&l.qtyRemaining>0&&typeof getLotStatus==='function'&&getLotStatus(l.expiryDate)!=='ok').length;
+  if (el_recv)   el_recv.textContent   = (db.purchases||[]).filter(p=>(p.date||'').startsWith(monthStr)).length;
+  if (el_prPend) el_prPend.textContent = (db.purchaseRequests||[]).filter(r=>['draft','submitted'].includes(r.status)).length;
+
+  // ── Executive Alerts ──────────────────────────────────────
+  const alertSection = document.getElementById('exec-alerts-section');
+  const alertBody    = document.getElementById('exec-alerts-body');
+  if (alertSection && alertBody) {
+    const alerts = [];
+    // สินค้าหมด
+    const outItems = (db.items||[]).filter(i=>i.qty<=0);
+    if (outItems.length > 0) alerts.push(`🔴 <b>สินค้าหมดสต็อก ${outItems.length} รายการ</b> — ต้องสั่งด่วน`);
+    // PR รออนุมัตินานเกิน 3 วัน
+    const staleDate = new Date(); staleDate.setDate(staleDate.getDate()-3);
+    const stalePRs = (db.purchaseRequests||[]).filter(r=>r.status==='submitted'&&r.createdAt&&new Date(r.createdAt)<staleDate);
+    if (stalePRs.length > 0) alerts.push(`🟡 <b>คำขอซื้อรออนุมัติ ${stalePRs.length} รายการ</b> (เกิน 3 วัน)`);
+    // Expiry ภายใน 7 วัน
+    const urgentExp = (db.itemLots||[]).filter(l=>{
+      if (!l.expiryDate||l.qtyRemaining<=0) return false;
+      const diff = Math.ceil((new Date(l.expiryDate)-new Date())/86400000);
+      return diff>=0 && diff<=7;
+    });
+    if (urgentExp.length > 0) alerts.push(`🟠 <b>สินค้าหมดอายุใน 7 วัน ${urgentExp.length} Lot</b>`);
+    // Billable reqs ยังไม่ออกบิล
+    const unbilledPats = new Set((db.requisitions||[]).filter(r=>r.status==='approved').map(r=>r.patientId)).size;
+    if (unbilledPats > 0) alerts.push(`🔵 <b>${unbilledPats} ผู้รับบริการ</b> มีรายการเบิกที่ยังไม่ออกบิล`);
+
+    if (alerts.length > 0) {
+      alertSection.style.display = '';
+      alertBody.innerHTML = alerts.map(a=>`<div style="padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px;">${a}</div>`).join('');
+    } else {
+      alertSection.style.display = 'none';
+    }
+  }
+
+  // ── Cost Summary ──────────────────────────────────────────
+  const costEl = document.getElementById('dash-cost-summary');
+  if (costEl) {
+    const monthPurchases = (db.purchases||[]).filter(p=>(p.date||'').startsWith(monthStr));
+    const totalCost = monthPurchases.reduce((s,p)=>s+(p.cost||0)*(p.qty||0),0);
+    const monthReqs  = (db.requisitions||[]).filter(r=>(r.date||'').startsWith(monthStr)&&r.status==='approved');
+    const billableAmt = monthReqs.reduce((s,r)=>{
+      const item = db.items.find(i=>i.id==r.itemId);
+      return s + (item?.isBillable!==false ? (item?.price||item?.cost||0)*(r.qty||0) : 0);
+    },0);
+    costEl.innerHTML =
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">` +
+      `<div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;"><div style="font-size:11px;color:var(--text3);">รับสินค้า</div><div style="font-size:20px;font-weight:600;">฿${totalCost.toLocaleString()}</div></div>` +
+      `<div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;"><div style="font-size:11px;color:var(--text3);">ค่าใช้จ่าย Billable</div><div style="font-size:20px;font-weight:600;color:var(--green);">฿${billableAmt.toLocaleString()}</div></div>` +
+      `</div>`;
+  }
+
+  // ── PR Summary ────────────────────────────────────────────
+  const prEl = document.getElementById('dash-pr-summary');
+  if (prEl) {
+    const prs = db.purchaseRequests||[];
+    const statusLabel = {draft:'ร่าง',submitted:'รอ',approved:'อนุมัติ',rejected:'ไม่อนุมัติ',ordered:'สั่งแล้ว',received:'รับแล้ว',closed:'ปิด'};
+    const counts = {};
+    prs.forEach(r=>{counts[r.status]=(counts[r.status]||0)+1;});
+    if (Object.keys(counts).length===0) {
+      prEl.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px;">ยังไม่มีคำขอซื้อ</div>';
+    } else {
+      prEl.innerHTML = Object.entries(counts).map(([s,n])=>
+        `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:13px;"><span>${statusLabel[s]||s}</span><span style="font-weight:600;">${n}</span></div>`
+      ).join('');
+    }
+  }
 }  // end renderAdminDashboard

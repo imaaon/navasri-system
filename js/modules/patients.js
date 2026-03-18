@@ -206,6 +206,7 @@ function onPatBedChange() {
   }
 }
 async function savePatient() {
+  if (!canManagePatients()) { toast('ไม่มีสิทธิ์แก้ไขข้อมูลผู้รับบริการ','error'); return; }
   const name = document.getElementById('pat-name').value.trim();
   if (!name) { toast('กรุณาระบุชื่อ', 'warning'); return; }
   const editId = document.getElementById('pat-edit-id').value;
@@ -272,6 +273,9 @@ async function savePatient() {
     const nb = db.beds.find(b => b.id == bedId);
     if (nb) nb.status = 'occupied';
   }
+  logAudit(AUDIT_MODULES.PATIENT,
+    editId ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
+    editId || 'new', { name: data.name || data.first_name });
   closeModal('modal-addPatient');
   renderPatients();
 }

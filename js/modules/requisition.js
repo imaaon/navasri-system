@@ -379,6 +379,29 @@ async function approveReq(reqId) {
       refNo: req.refNo||('REQ#'+reqId), patient: req.patientName, itemCount: 1
     }), { patientName: req.patientName, itemCount: 1 });
 
+    // บันทึก stock_movements (issue) เพื่อ traceability
+    if (typeof mapStockMovement === 'function') {
+      const beforeQty = item ? (item.qty + req.qty) : 0;
+      const afterQty  = item ? item.qty : 0;
+      const movData = {
+        item_id:       req.itemId,
+        barcode:       item?.barcode || null,
+        movement_type: 'issue',
+        quantity:      req.qty || 0,
+        before_qty:    beforeQty,
+        after_qty:     afterQty,
+        note:          `อนุมัติใบเบิก ${req.refNo||reqId} — ${req.patientName||''}`,
+        ref_type:      'requisition',
+        ref_id:        reqId,
+        created_by:    actor,
+      };
+      supa.from('stock_movements').insert(movData).select().single().then(({ data }) => {
+        if (data) db.stockMovements.unshift(mapStockMovement(data));
+      });
+    }
+    logAudit(AUDIT_MODULES.REQUISITION, AUDIT_ACTIONS.APPROVE, reqId, {
+      ref_no: req.refNo, patient: req.patientName, item: req.itemName, qty: req.qty, actor,
+    });
     toast(`✅ อนุมัติใบเบิก ${req.refNo||reqId} — ตัดสต็อกเรียบร้อย`, 'success');
     updateApprovalBadge();
     renderApprovalPanel();
@@ -710,14 +733,16 @@ const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.',
 
 function switchReportTab(tab) {
   reportTab = tab;
+  const allTabs = ['summary','bypatient','byitem','bystaff','cost'];
   document.querySelectorAll('#reportTabs .tab').forEach((t, i) => {
-    t.classList.toggle('active', ['summary','bypatient','byitem','bystaff'][i] === tab);
+    t.classList.toggle('active', allTabs[i] === tab);
   });
-  ['summary','bypatient','byitem','bystaff'].forEach(t => {
+  allTabs.forEach(t => {
     const el = document.getElementById('report-' + t);
     if (el) el.style.display = t === tab ? '' : 'none';
   });
-  renderReport();
+  if (tab === 'cost') renderCostReport();
+  else renderReport();
 }
 
 async function renderReport() {
@@ -1178,4 +1203,99 @@ function addReqItemByBarcode(item) {
   reqItems.push({ itemId: item.id, itemName: item.name, qty: 1, unit: item.dispenseUnit || item.unit });
   renderReqItems();
   toast(`เพิ่ม ${item.name} ✅`, 'success');
+}
+
+// ===== COST ANALYSIS REPORT (Phase 4) =====
+function renderCostReport() {
+  const monthFilter = document.getElementById('reportMonth')?.value || '';
+  const reqs = (db.requisitions || []).filter(r => {
+    if (r.status !== 'approved') return false;
+    if (monthFilter && !(r.date||'').startsWith(monthFilter)) return false;
+    return true;
+  });
+
+  // ── Cost by patient ──────────────────────────────────────
+  const byPatEl = document.getElementById('cost-bypatient');
+  if (byPatEl) {
+    const patMap = {};
+    reqs.forEach(r => {
+      const item  = db.items.find(i => i.id == r.itemId);
+      const price = item?.price || item?.cost || 0;
+      const amt   = (r.qty || 0) * price;
+      const billable = item?.isBillable !== false;
+      if (!patMap[r.patientId]) patMap[r.patientId] = { name: r.patientName || '-', bill: 0, nonBill: 0 };
+      if (billable) patMap[r.patientId].bill += amt;
+      else          patMap[r.patientId].nonBill += amt;
+    });
+    const sorted = Object.entries(patMap).sort((a,b) => (b[1].bill+b[1].nonBill) - (a[1].bill+a[1].nonBill));
+    if (sorted.length === 0) {
+      byPatEl.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text3);">ไม่มีข้อมูล</td></tr>';
+    } else {
+      byPatEl.innerHTML = sorted.map(([, d]) => {
+        const total = d.bill + d.nonBill;
+        return '<tr>' +
+          '<td style="font-weight:500;">' + d.name + '</td>' +
+          '<td style="text-align:right;color:var(--green);">฿' + d.bill.toLocaleString() + '</td>' +
+          '<td style="text-align:right;color:var(--text2);">฿' + d.nonBill.toLocaleString() + '</td>' +
+          '<td style="text-align:right;font-weight:600;">฿' + total.toLocaleString() + '</td></tr>';
+      }).join('');
+    }
+  }
+
+  // ── Top items ────────────────────────────────────────────
+  const topEl = document.getElementById('cost-topitems');
+  if (topEl) {
+    const itemMap = {};
+    reqs.forEach(r => {
+      const item  = db.items.find(i => i.id == r.itemId);
+      const price = item?.price || item?.cost || 0;
+      if (!itemMap[r.itemId]) itemMap[r.itemId] = { name: r.itemName || '-', qty: 0, value: 0 };
+      itemMap[r.itemId].qty   += (r.qty || 0);
+      itemMap[r.itemId].value += (r.qty || 0) * price;
+    });
+    const sorted = Object.entries(itemMap).sort((a,b) => b[1].value - a[1].value).slice(0, 10);
+    if (sorted.length === 0) {
+      topEl.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--text3);">ไม่มีข้อมูล</td></tr>';
+    } else {
+      topEl.innerHTML = sorted.map(([, d]) =>
+        '<tr><td style="font-weight:500;">' + d.name + '</td>' +
+        '<td style="text-align:right;">' + d.qty.toLocaleString() + '</td>' +
+        '<td style="text-align:right;font-weight:600;">฿' + d.value.toLocaleString() + '</td></tr>'
+      ).join('');
+    }
+  }
+
+  // ── Billable vs Non-billable summary ─────────────────────
+  const billEl = document.getElementById('cost-billable-summary');
+  if (billEl) {
+    let billAmt = 0, nonBillAmt = 0;
+    reqs.forEach(r => {
+      const item  = db.items.find(i => i.id == r.itemId);
+      const price = item?.price || item?.cost || 0;
+      const amt   = (r.qty || 0) * price;
+      if (item?.isBillable !== false) billAmt += amt;
+      else nonBillAmt += amt;
+    });
+    const total = billAmt + nonBillAmt;
+    const billPct    = total > 0 ? Math.round(billAmt / total * 100) : 0;
+    const nonBillPct = 100 - billPct;
+    billEl.innerHTML =
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">' +
+        '<div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;">' +
+          '<div style="font-size:11px;color:var(--text3);">💰 Billable</div>' +
+          '<div style="font-size:22px;font-weight:600;color:var(--green);">฿' + billAmt.toLocaleString() + '</div>' +
+          '<div style="font-size:12px;color:var(--text2);">' + billPct + '%</div>' +
+        '</div>' +
+        '<div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;">' +
+          '<div style="font-size:11px;color:var(--text3);">🏥 Non-Billable</div>' +
+          '<div style="font-size:22px;font-weight:600;color:var(--text2);">฿' + nonBillAmt.toLocaleString() + '</div>' +
+          '<div style="font-size:12px;color:var(--text2);">' + nonBillPct + '%</div>' +
+        '</div>' +
+        '<div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;">' +
+          '<div style="font-size:11px;color:var(--text3);">รวมทั้งหมด</div>' +
+          '<div style="font-size:22px;font-weight:600;">฿' + total.toLocaleString() + '</div>' +
+          '<div style="font-size:12px;color:var(--text2);">' + reqs.length + ' รายการ</div>' +
+        '</div>' +
+      '</div>';
+  }
 }

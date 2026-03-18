@@ -27,7 +27,7 @@ function showPage(page) {
     if (nb) nb.classList.add('active');
   }
   currentPage = page;
-  const titles = { dashboard:'Dashboard', stock:'คลังสต็อก', requisition:'เบิกสินค้า', history:'ประวัติการเบิก', report:'รายงาน', patients:'ผู้รับบริการ', rooms:'🛏️ ห้องพักและเตียง', staff:'พนักงาน', items:'รายการสินค้า', settings:'💬 Line & ตั้งค่า', reqform:'ใบเบิกสินค้า', patprofile:'ข้อมูลผู้รับบริการ', staffprofile:'ข้อมูลพนักงาน', accounts:'🔑 จัดการ Account', healthreport:'📋 รายงานสุขภาพ', purchasehistory:'📋 ประวัติการสั่งซื้อ', billing:'💰 ระบบบัญชี', 'billing-settings':'⚙️ ตั้งค่าบัญชี', incident:'⚠️ อุบัติเหตุ & แผลกดทับ', dietary:'🍽️ โภชนาการ & สายให้อาหาร', deposits:'🏦 มัดจำ & เงินประกัน' };
+  const titles = { dashboard:'Dashboard', stock:'คลังสต็อก', requisition:'เบิกสินค้า', history:'ประวัติการเบิก', report:'รายงาน', patients:'ผู้รับบริการ', rooms:'🛏️ ห้องพักและเตียง', staff:'พนักงาน', items:'รายการสินค้า', settings:'💬 Line & ตั้งค่า', reqform:'ใบเบิกสินค้า', patprofile:'ข้อมูลผู้รับบริการ', staffprofile:'ข้อมูลพนักงาน', accounts:'🔑 จัดการ Account', healthreport:'📋 รายงานสุขภาพ', purchasehistory:'📋 ประวัติการสั่งซื้อ', billing:'💰 ระบบบัญชี', 'billing-settings':'⚙️ ตั้งค่าบัญชี', incident:'⚠️ อุบัติเหตุ & แผลกดทับ', dietary:'🍽️ โภชนาการ & สายให้อาหาร', deposits:'🏦 มัดจำ & เงินประกัน', bi:'🔍 BI & วิเคราะห์กำไร', suppliers:'🏭 ผู้จำหน่าย', supplierinvoices:'🧾 ใบแจ้งหนี้ผู้จำหน่าย', purchaserequests:'📋 คำขอซื้อ', stockreport:'📊 รายงานสต็อก' };
   document.getElementById('pageTitle').textContent = titles[page] || page;
   closeSidebar();
   renderPage(page);
@@ -53,5 +53,18 @@ function renderPage(page) {
     const hrMonth = document.getElementById('hr-month');
     if (!hrMonth.value) hrMonth.value = new Date().toISOString().slice(0,7);
     renderHealthReport();
+  }
+  else if (page === 'bi') {
+    const biMonth = document.getElementById('bi-month');
+    if (biMonth && !biMonth.value) biMonth.value = new Date().toISOString().slice(0,7);
+    renderBIPage();
+  }
+  else if (page === 'suppliers') renderSuppliers();
+  else if (page === 'supplierinvoices') { renderSupplierInvoices(); populateSupInvFilters(); }
+  else if (page === 'purchaserequests') renderPurchaseRequests();
+  else if (page === 'stockreport') {
+    const srMonth = document.getElementById('sr-month');
+    if (srMonth && !srMonth.value) srMonth.value = new Date().toISOString().slice(0,7);
+    switchStockReportTab('lowstock');
   }
 }

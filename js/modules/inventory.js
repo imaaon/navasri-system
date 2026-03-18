@@ -308,6 +308,7 @@ async function saveItem() {
     const item = db.items.find(i => i.id == editId);
     Object.assign(item, { ...data, purchaseUnit, dispenseUnit, conversionFactor: convFactor, isBillable });
     if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
+    logAudit(AUDIT_MODULES.INVENTORY, AUDIT_ACTIONS.UPDATE, editId, { name: data.name, barcode: data.barcode });
     toast('แก้ไขรายการเรียบร้อย', 'success');
   } else {
     let insertData = { ...data };
@@ -327,6 +328,7 @@ async function saveItem() {
     if (!inserted) { toast('บันทึกไม่สำเร็จ กรุณาลองใหม่', 'error'); return; }
     db.items.push(mapItem({ ...insertData, id: inserted.id }));
     if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
+    logAudit(AUDIT_MODULES.INVENTORY, AUDIT_ACTIONS.CREATE, inserted.id, { name: insertData.name, barcode: insertData.barcode });
     toast('เพิ่มรายการเรียบร้อย', 'success');
   }
   closeModal('modal-addItem');
@@ -335,8 +337,10 @@ async function saveItem() {
 
 async function deleteItem(id) {
   if (!confirm('ต้องการลบรายการนี้?')) return;
+  const deleted = db.items.find(i => i.id === id);
   const { error } = await supa.from('items').delete().eq('id', id);
   if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
+  logAudit(AUDIT_MODULES.INVENTORY, AUDIT_ACTIONS.DELETE, id, { item_name: deleted?.name, barcode: deleted?.barcode });
   db.items = db.items.filter(i => i.id !== id);
   if (typeof buildBarcodeMap === "function") buildBarcodeMap();
   toast('ลบรายการเรียบร้อย');
@@ -356,6 +360,13 @@ function openReceiveModal() {
   document.getElementById('recv-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('recv-po').value = '';
   document.getElementById('recv-supplier').value = '';
+  // populate PR link dropdown
+  const prSel = document.getElementById('recv-pr-link');
+  if (prSel) {
+    prSel.innerHTML = '<option value="">-- ไม่อ้างอิง --</option>' +
+      (db.purchaseRequests||[]).filter(r=>['approved','ordered'].includes(r.status))
+        .map(r=>`<option value="${r.id}">${r.refNo}${r.supplierName ? ' ('+r.supplierName+')' : ''}</option>`).join('');
+  }
   onRecvItemChange();
   openModal('modal-receive');
 }
@@ -371,48 +382,124 @@ async function receiveItem() {
   const po      = document.getElementById('recv-po').value.trim();
   const supplier= document.getElementById('recv-supplier').value.trim();
   const note    = document.getElementById('recv-note').value.trim();
+  const prId    = document.getElementById('recv-pr-link')?.value || null;
 
-  if (!qty || qty < 1) { toast('กรุณาระบุจำนวนที่รับเข้า', 'warning'); return; }
+  // Validation
+  if (!itemId)  { toast('กรุณาเลือกสินค้า', 'warning'); return; }
+  if (!qty || qty < 1) { toast('กรุณาระบุจำนวนที่รับเข้า (ต้องมากกว่า 0)', 'warning'); return; }
+  if (!Number.isFinite(qty)) { toast('จำนวนไม่ถูกต้อง', 'warning'); return; }
+
   const item = db.items.find(i => i.id == itemId);
-  if (!item) return;
+  if (!item) { toast('ไม่พบสินค้านี้ในระบบ', 'error'); return; }
 
-  // คำนวณ qty เป็นหน่วยเบิกจ่าย
-  const factor = item.conversionFactor || 1;
+  const factor      = item.conversionFactor || 1;
   const qtyDispense = qty * factor;
+
+  showLoadingOverlay(true);
+  try {
+    // ใช้ RPC atomic (single transaction)
+    const { data: rpcResult, error: rpcErr } = await supa.rpc('receive_stock_atomic', {
+      p_item_id:      item.id,
+      p_qty_purchase: qty,
+      p_qty_dispense: qtyDispense,
+      p_cost:         cost,
+      p_lot_number:   lotNum   || null,
+      p_mfg_date:     mfgDate  || null,
+      p_expiry_date:  expiry   || null,
+      p_recv_date:    recvDate,
+      p_po:           po       || null,
+      p_supplier:     supplier || null,
+      p_pr_id:        prId     || null,
+      p_note:         note     || null,
+      p_created_by:   currentUser?.username || '',
+    });
+
+    if (rpcErr || !rpcResult?.ok) {
+      const errMsg = rpcErr?.message || rpcResult?.error || 'unknown error';
+      // ตรวจว่า RPC ยังไม่ได้รันใน Supabase (function does not exist)
+      const rpcMissing = errMsg.includes('does not exist') || errMsg.includes('Could not find');
+      if (rpcMissing) {
+        // RPC ยังไม่ได้รัน — แจ้ง admin และใช้ fallback พร้อม warning
+        console.warn('[receiveItem] RPC receive_stock_atomic ไม่พบ — ใช้ fallback (รัน receive_stock_atomic_rpc.sql ใน Supabase)');
+        toast('⚠️ กำลังใช้ fallback mode — กรุณารัน receive_stock_atomic_rpc.sql ใน Supabase', 'warning');
+        await _receiveItemFallback(item, qty, qtyDispense, cost, lotNum, mfgDate, expiry, recvDate, po, supplier, note);
+      } else {
+        // RPC มีแต่เกิด error จริง — หยุดทันที ไม่ fallback
+        toast('❌ รับสินค้าไม่สำเร็จ: ' + errMsg, 'error');
+        console.error('[receiveItem] RPC error:', errMsg);
+      }
+      return;
+    }
+
+    // อัปเดต local cache
+    const newQty = rpcResult.new_qty;
+    item.qty = newQty;
+    if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
+
+    // reload lots จาก Supabase
+    const { data: lotsData } = await supa.from('item_lots').select('*').eq('item_id', item.id);
+    if (lotsData) {
+      db.itemLots = db.itemLots.filter(l => l.itemId != item.id);
+      lotsData.forEach(l => db.itemLots.push(mapLot(l)));
+    }
+
+    const dispUnit = item.dispenseUnit || item.unit;
+    toast(`✅ รับเข้าคลัง ${item.name} ${qty} ${item.purchaseUnit||item.unit} = ${qtyDispense} ${dispUnit}`, 'success');
+    closeModal('modal-receive');
+    renderPage(currentPage);
+  } finally {
+    showLoadingOverlay(false);
+  }
+}
+
+async function _receiveItemFallback(item, qty, qtyDispense, cost, lotNum, mfgDate, expiry, recvDate, po, supplier, note) {
+  // Fallback แบบ multi-step (ใช้ถ้า RPC ยังไม่ได้รัน)
   const newQty = item.qty + qtyDispense;
 
-  // 1. อัปเดต items.qty
-  const { error: errItem } = await supa.from('items').update({ qty: newQty }).eq('id', itemId);
+  const { error: errItem } = await supa.from('items').update({ qty: newQty }).eq('id', item.id);
   if (errItem) { toast('เกิดข้อผิดพลาด: ' + errItem.message, 'error'); return; }
 
-  // 2. บันทึก lot ใน item_lots
   const lotData = {
-    item_id: itemId,
-    lot_number: lotNum || `LOT-${recvDate}-${itemId}`,
-    manufacturing_date: mfgDate,
-    expiry_date: expiry,
-    qty_in_lot: qtyDispense,
-    qty_remaining: qtyDispense,
-    received_date: recvDate,
-    notes: note,
+    item_id: item.id,
+    lot_number: lotNum || `LOT-${recvDate}-${item.id}`,
+    manufacturing_date: mfgDate, expiry_date: expiry,
+    qty_in_lot: qtyDispense, qty_remaining: qtyDispense,
+    received_date: recvDate, notes: note,
   };
   const { data: lotInserted, error: errLot } = await supa.from('item_lots').insert(lotData).select().single();
-  if (errLot) { console.warn('item_lots insert failed:', errLot.message); }
-  else { db.itemLots.push(mapLot(lotInserted)); }
+  if (errLot) console.warn('item_lots insert failed:', errLot.message);
+  else if (lotInserted) db.itemLots.push(mapLot(lotInserted));
 
-  // 3. บันทึก purchases
   const purchaseData = {
-    item_id: itemId, item_name: item.name,
+    item_id: item.id, item_name: item.name,
     unit: item.purchaseUnit || item.unit,
-    qty, cost, date: recvDate,
-    po, supplier, note, by_user: currentUser?.username || '',
+    qty, cost, date: recvDate, po, supplier, note,
+    by_user: currentUser?.username || '',
   };
   const { data: pInserted, error: errP } = await supa.from('purchases').insert(purchaseData).select().single();
   if (!errP && pInserted) db.purchases.unshift(mapPurchase(pInserted));
 
+  const movData = {
+    item_id: item.id, barcode: item.barcode || null,
+    movement_type: 'receive', quantity: qtyDispense,
+    before_qty: item.qty, after_qty: newQty,
+    lot_no: lotNum || null, expiry_date: expiry || null, cost,
+    note: [supplier ? 'ผู้จำหน่าย: '+supplier : '', po ? 'PO: '+po : '', note].filter(Boolean).join(' | ') || null,
+    ref_id: (!errP && pInserted) ? pInserted.id : null,
+    ref_type: 'purchase', created_by: currentUser?.username || '',
+  };
+  const { data: movInserted } = await supa.from('stock_movements').insert(movData).select().single();
+  if (movInserted) db.stockMovements.unshift(mapStockMovement(movInserted));
+
   item.qty = newQty;
+  if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
+  logAudit(AUDIT_MODULES.INVENTORY, AUDIT_ACTIONS.RECEIVE, item.id, {
+    item_name: item.name, qty_dispense: qtyDispense,
+    before_qty: newQty - qtyDispense, after_qty: newQty,
+    supplier, po, lot: lotNum, fallback: true,
+  });
   const dispUnit = item.dispenseUnit || item.unit;
-  toast(`✅ รับเข้าคลัง ${item.name} ${qty} ${item.purchaseUnit||item.unit} = ${qtyDispense} ${dispUnit}${expiry ? ' | หมดอายุ: ' + expiry : ''}`, 'success');
+  toast(`✅ รับเข้าคลัง ${item.name} ${qty} ${item.purchaseUnit||item.unit} = ${qtyDispense} ${dispUnit}`, 'success');
   closeModal('modal-receive');
   renderPage(currentPage);
 }
@@ -553,4 +640,288 @@ function onRecvBarcodeScan() {
       el.value = '';
     }
   }, 300);
+}
+
+// ===== STOCK MOVEMENT HISTORY =====
+async function renderMovementHistory() {
+  const tb = document.getElementById('mv-table');
+  if (!tb) return;
+  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3);">กำลังโหลด...</td></tr>';
+
+  const monthVal = document.getElementById('mv-month')?.value || '';
+  const typeVal  = document.getElementById('mv-type-filter')?.value || '';
+
+  let q = supa.from('stock_movements')
+    .select('*, items(name,barcode)')
+    .order('created_at', {ascending: false})
+    .limit(200);
+
+  if (monthVal) {
+    const [y, m] = monthVal.split('-');
+    q = q.gte('created_at', `${y}-${m}-01`).lte('created_at', `${y}-${m}-31`);
+  }
+  if (typeVal) q = q.eq('movement_type', typeVal);
+
+  const { data, error } = await q;
+  if (error) { tb.innerHTML = '<tr><td colspan="7" style="color:red;padding:16px;">โหลดข้อมูลไม่สำเร็จ</td></tr>'; return; }
+
+  const typeLabel = { receive:'รับเข้า', issue:'เบิกจ่าย', adjust:'ปรับ', return:'คืน' };
+  const typeBadge = { receive:'badge-green', issue:'badge-orange', adjust:'badge-blue', return:'badge-gray' };
+
+  if (!data || data.length === 0) {
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3);">ไม่มีข้อมูล</td></tr>';
+    return;
+  }
+
+  tb.innerHTML = data.map(r => {
+    const name = r.items?.name || '-';
+    const bc   = r.items?.barcode || r.barcode || '-';
+    const qty  = r.movement_type === 'issue' ? '-'+r.quantity : '+'+r.quantity;
+    const qtyColor = r.movement_type === 'issue' ? 'color:var(--red)' : 'color:var(--green)';
+    const badge = '<span class="badge ' + (typeBadge[r.movement_type]||'badge-gray') + '">' + (typeLabel[r.movement_type]||r.movement_type) + '</span>';
+    const date = r.created_at ? r.created_at.slice(0,16).replace('T',' ') : '-';
+    return '<tr>' +
+      '<td style="font-size:12px;color:var(--text2);">' + date + '</td>' +
+      '<td style="font-weight:600;">' + name + '<br><span style="font-family:monospace;font-size:10px;color:var(--text3);">' + bc + '</span></td>' +
+      '<td>' + badge + '</td>' +
+      '<td style="text-align:right;font-weight:600;' + qtyColor + '">' + qty + '</td>' +
+      '<td style="text-align:right;font-size:12px;color:var(--text2);">' + (r.before_qty||0) + ' → ' + (r.after_qty||0) + '</td>' +
+      '<td style="font-size:12px;color:var(--text2);">' + (r.lot_no||'-') + '</td>' +
+      '<td style="font-size:11px;color:var(--text3);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (r.note||'') + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+// ===== PURCHASE HISTORY TABS =====
+function switchPhTab(tab) {
+  const tabs = ['purchase', 'movement'];
+  tabs.forEach(t => {
+    const el = document.getElementById('ph-section-' + t);
+    const btn = document.getElementById('ph-tab-' + t);
+    if (!el || !btn) return;
+    if (t === tab) {
+      el.style.display = '';
+      btn.style.borderBottom = '2px solid var(--accent)';
+      btn.style.marginBottom = '-2px';
+      btn.style.color = 'var(--accent)';
+      btn.style.fontWeight = '600';
+    } else {
+      el.style.display = 'none';
+      btn.style.borderBottom = 'none';
+      btn.style.marginBottom = '0';
+      btn.style.color = 'var(--text2)';
+      btn.style.fontWeight = '400';
+    }
+  });
+  if (tab === 'movement') renderMovementHistory();
+}
+
+// ===== QUICK DISPENSE =====
+function openQuickDispenseModal() {
+  // populate patients
+  const patSel = document.getElementById('qd-patient');
+  if (patSel) {
+    patSel.innerHTML = '<option value="">-- เลือกผู้รับบริการ --</option>' +
+      (db.patients || []).filter(p => p.status === 'active' || p.status === 'hospital')
+        .map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  }
+  // populate staff
+  const staffSel = document.getElementById('qd-staff');
+  if (staffSel) {
+    staffSel.innerHTML = '<option value="">-- เลือกผู้เบิก --</option>' +
+      (db.staff || []).map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    // auto-select current user ถ้าเป็น staff
+    const me = db.staff.find(s => s.name === currentUser?.displayName);
+    if (me) staffSel.value = me.id;
+  }
+  // reset
+  const fields = ['qd-barcode','qd-note'];
+  fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('qd-qty').value = 1;
+  document.getElementById('qd-item-id').value = '';
+  document.getElementById('qd-item-info').style.display = 'none';
+  openModal('modal-quick-dispense');
+  setTimeout(() => document.getElementById('qd-barcode')?.focus(), 200);
+}
+
+function onQdBarcodeScan() {
+  const el = document.getElementById('qd-barcode');
+  if (!el) return;
+  clearTimeout(el._scanTimer);
+  el._scanTimer = setTimeout(() => {
+    const code = el.value.trim();
+    if (!code) return;
+    const item = lookupItemByBarcode(code);
+    if (item) {
+      document.getElementById('qd-item-id').value = item.id;
+      document.getElementById('qd-item-name').textContent = item.name;
+      document.getElementById('qd-item-qty').textContent = item.qty;
+      document.getElementById('qd-item-unit').textContent = item.unit || '';
+      document.getElementById('qd-item-billable').textContent = item.isBillable !== false ? '💰 เรียกเก็บได้' : '🏥 ไม่เรียกเก็บ';
+      document.getElementById('qd-item-info').style.display = '';
+      document.getElementById('qd-qty').focus();
+    } else if (code.length >= 4) {
+      toast('ไม่พบสินค้ารหัส: ' + code, 'warning');
+      el.value = '';
+    }
+  }, 300);
+}
+
+async function saveQuickDispense() {
+  const itemId  = document.getElementById('qd-item-id').value;
+  const patId   = document.getElementById('qd-patient').value;
+  const staffId = document.getElementById('qd-staff').value;
+  const qty     = parseFloat(document.getElementById('qd-qty').value);
+  const note    = document.getElementById('qd-note').value.trim();
+
+  // Validation
+  if (!itemId)  { toast('กรุณาระบุสินค้า (ยิงบาร์โค้ดหรือพิมพ์รหัส)', 'warning'); return; }
+  if (!patId)   { toast('กรุณาเลือกผู้รับบริการ', 'warning'); return; }
+  if (!qty || qty < 1) { toast('กรุณาระบุจำนวน (ต้องมากกว่า 0)', 'warning'); return; }
+
+  const item    = db.items.find(i => i.id == itemId);
+  const patient = db.patients.find(p => p.id == patId);
+  const staff   = db.staff.find(s => s.id == staffId);
+  if (!item)    { toast('ไม่พบสินค้านี้ในระบบ', 'error'); return; }
+  if (!patient) { toast('ไม่พบผู้รับบริการนี้ในระบบ', 'error'); return; }
+  if (item.qty < qty) {
+    toast(`สต็อกไม่พอ (คงเหลือ ${item.qty} ${item.unit})`, 'warning'); return;
+  }
+
+  showLoadingOverlay(true);
+  try {
+    const actor = currentUser?.username || '';
+    const date  = new Date().toISOString().slice(0, 10);
+
+    // 1. บันทึกใบเบิก (requisition) แล้ว approve ทันที
+    const { data: rpcResult, error: rpcErr } = await supa.rpc('create_and_approve_quick_dispense', {
+      p_patient_id:   patId,
+      p_patient_name: patient.name,
+      p_item_id:      itemId,
+      p_item_name:    item.name,
+      p_qty:          qty,
+      p_unit:         item.dispenseUnit || item.unit,
+      p_staff_id:     staffId || null,
+      p_staff_name:   staff?.name || actor,
+      p_note:         note || null,
+      p_created_by:   actor,
+      p_date:         date,
+    });
+
+    if (rpcErr || !rpcResult?.ok) {
+      // Fallback: บันทึก movement log โดยตรงถ้า RPC ไม่มี
+      await _saveQuickDispenseFallback(item, patient, staff, qty, note, actor, date);
+    } else {
+      // อัปเดต local cache
+      item.qty = rpcResult.new_qty ?? (item.qty - qty);
+      if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
+      toast(`✅ เบิกด่วน ${item.name} ${qty} ${item.unit} ให้ ${patient.name}`, 'success');
+    }
+
+    closeModal('modal-quick-dispense');
+    renderPage(currentPage);
+  } finally {
+    showLoadingOverlay(false);
+  }
+}
+
+async function _saveQuickDispenseFallback(item, patient, staff, qty, note, actor, date) {
+  // Fallback: ใช้ Supabase ตรงถ้า RPC ยังไม่ได้สร้าง
+  const beforeQty = item.qty;
+  const afterQty  = item.qty - qty;
+
+  // อัปเดต items.qty
+  const { error: errItem } = await supa.from('items').update({ qty: afterQty }).eq('id', item.id);
+  if (errItem) { toast('เกิดข้อผิดพลาด: ' + errItem.message, 'error'); return; }
+
+  // บันทึก stock_movements (issue)
+  const movData = {
+    item_id:       item.id,
+    barcode:       item.barcode || null,
+    movement_type: 'issue',
+    quantity:      qty,
+    before_qty:    beforeQty,
+    after_qty:     afterQty,
+    note:          `เบิกด่วนให้ ${patient.name}` + (note ? ` | ${note}` : ''),
+    ref_type:      'quick_dispense',
+    created_by:    actor,
+  };
+  const { data: movInserted } = await supa.from('stock_movements').insert(movData).select().single();
+  if (movInserted) db.stockMovements.unshift(mapStockMovement(movInserted));
+
+  item.qty = afterQty;
+  if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
+  toast(`✅ เบิกด่วน ${item.name} ${qty} ${item.unit} ให้ ${patient.name}`, 'success');
+}
+
+// ===== CAMERA SCAN (Phase 5 — ZXing lazy load) =====
+let _zxingReader = null;
+let _cameraStream = null;
+
+async function loadZXing() {
+  if (window.ZXing) return true;
+  return new Promise((resolve) => {
+    const s = document.createElement('script');
+    // โหลด local ก่อน (วางไฟล์ที่ js/lib/zxing-browser.min.js)
+    // ดาวน์โหลดได้จาก: https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.4/umd/index.min.js
+    s.src = 'js/lib/zxing-browser.min.js';
+    s.onload = () => resolve(true);
+    s.onerror = () => {
+      // local ไม่มี → fallback CDN พร้อม warning
+      console.warn('[ZXing] local file not found, falling back to CDN');
+      const f = document.createElement('script');
+      f.src = 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.4/umd/index.min.js';
+      f.onload  = () => resolve(true);
+      f.onerror = () => { toast('โหลด Camera Scanner ไม่สำเร็จ — วางไฟล์ zxing-browser.min.js ใน js/lib/', 'error'); resolve(false); };
+      document.head.appendChild(f);
+    };
+    document.head.appendChild(s);
+  });
+}
+
+async function openCameraScanner(targetInputId, onFound) {
+  const ok = await loadZXing();
+  if (!ok) return;
+
+  // สร้าง overlay
+  let overlay = document.getElementById('camera-scan-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'camera-scan-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+    overlay.innerHTML =
+      '<div style="color:#fff;font-size:14px;margin-bottom:12px;">📷 วางบาร์โค้ดในกรอบ</div>' +
+      '<video id="camera-scan-video" style="width:min(320px,90vw);border-radius:12px;border:3px solid #4CAF50;"></video>' +
+      '<button onclick="closeCameraScanner()" style="margin-top:16px;padding:10px 28px;background:#e53935;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">✕ ปิด</button>';
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+
+  try {
+    const ZXingBrowser = window.ZXing;
+    const codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+    _zxingReader = codeReader;
+    const videoEl = document.getElementById('camera-scan-video');
+    const devices  = await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
+    const deviceId = devices.length > 1 ? devices[devices.length-1].deviceId : undefined;
+
+    await codeReader.decodeFromVideoDevice(deviceId, videoEl, (result, err) => {
+      if (result) {
+        const code = result.getText();
+        closeCameraScanner();
+        const targetEl = document.getElementById(targetInputId);
+        if (targetEl) { targetEl.value = code; targetEl.dispatchEvent(new Event('input')); }
+        if (typeof onFound === 'function') onFound(code);
+      }
+    });
+  } catch(e) {
+    closeCameraScanner();
+    toast('ไม่สามารถเปิดกล้องได้: ' + e.message, 'error');
+  }
+}
+
+function closeCameraScanner() {
+  if (_zxingReader) { try { _zxingReader.reset(); } catch(e) {} _zxingReader = null; }
+  const overlay = document.getElementById('camera-scan-overlay');
+  if (overlay) overlay.style.display = 'none';
 }

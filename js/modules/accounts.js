@@ -2,17 +2,21 @@
 
 // ===== ACCOUNT MANAGEMENT =====
 const ROLE_LABELS = {
-  admin:     '👑 admin',
-  manager:   '🏆 ผู้บริหาร (Executive)',
-  officer:   '📋 ธุรการ (Officer)',
-  nurse:     '🏥 พยาบาล',
-  caregiver: '👤 ผู้ดูแล / บริบาล',
-  supervisor:'📋 หัวหน้า',
-  warehouse: '🏪 คลังสินค้า',
+  admin:             '👑 admin',
+  manager:           '🏆 ผู้บริหาร (Executive)',
+  officer:           '📋 ธุรการ (Officer)',
+  accounting:        '💰 บัญชี (Accounting)',
+  nurse:             '🏥 พยาบาล',
+  caregiver:         '👤 ผู้ดูแล / บริบาล',
+  physical_therapist:'🤸 นักกายภาพบำบัด',
+  supervisor:        '📋 หัวหน้า',
+  warehouse:         '🏪 คลังสินค้า',
 };
 const ROLE_BADGE = {
-  admin:'badge-red', manager:'badge-red', officer:'badge-purple', nurse:'badge-blue',
-  caregiver:'badge-green', supervisor:'badge-purple', warehouse:'badge-orange',
+  admin:'badge-red', manager:'badge-red', officer:'badge-purple',
+  accounting:'badge-orange', nurse:'badge-blue',
+  caregiver:'badge-green', physical_therapist:'badge-green',
+  supervisor:'badge-purple', warehouse:'badge-orange',
 };
 
 function renderAccounts() {

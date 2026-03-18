@@ -18,6 +18,10 @@ let db = {
   approvalLogs: [], // approval_logs
   returnItems: [],  // return_items
   roomHistory: [], // patient_room_history
+  stockMovements: [], // stock_movements
+  suppliers: [],       // suppliers master
+  purchaseRequests: [], // purchase_requests
+  supplierInvoices: [], // supplier_invoices
   invoiceResetLogs: [], // invoice_reset_logs
   appointments: [], // patient_appointments
   belongings: [],   // patient_belongings
@@ -105,7 +109,8 @@ async function loadDBSecondary() {
     const [
       contractsRes, paymentsRes, approvalLogsRes, returnItemsRes,
       appointmentsRes, belongingsRes, consentsRes, invoicesRes,
-      expensesRes, roomHistoryRes, invoiceResetLogsRes
+      expensesRes, roomHistoryRes, invoiceResetLogsRes,
+      stockMovementsRes, suppliersRes, purchaseRequestsRes, supplierInvoicesRes
     ] = await Promise.all([
       supa.from('patient_contracts').select('*').order('created_at', {ascending: false}).limit(200),
       supa.from('payments').select('*').order('payment_date', {ascending: false}).limit(300),
@@ -118,6 +123,10 @@ async function loadDBSecondary() {
       supa.from('expenses').select('*').order('created_at', {ascending: false}).limit(300),
       supa.from('patient_room_history').select('*').order('transfer_date', {ascending: false}).limit(200),
       supa.from('invoice_reset_logs').select('*').order('reset_at', {ascending: false}).limit(200),
+      supa.from('stock_movements').select('*').order('created_at', {ascending: false}).limit(200),
+      supa.from('suppliers').select('*').order('supplier_name'),
+      supa.from('purchase_requests').select('*').order('created_at', {ascending: false}).limit(200),
+      supa.from('supplier_invoices').select('*').order('created_at', {ascending: false}).limit(200),
     ]);
     db.contracts       = (contractsRes.data || []).map(mapContract);
     db.payments        = (paymentsRes.data || []).map(mapPayment);
@@ -129,7 +138,14 @@ async function loadDBSecondary() {
     db.invoices        = (invoicesRes.data || []).map(mapInvoice);
     db.expenses        = (expensesRes.data || []).map(mapExpense);
     db.roomHistory     = (roomHistoryRes?.data || []);
-    db.invoiceResetLogs = (invoiceResetLogsRes?.data || []);
+    db.invoiceResetLogs  = (invoiceResetLogsRes?.data || []);
+    db.stockMovements    = (stockMovementsRes?.data || []).map(mapStockMovement);
+    db.suppliers         = (suppliersRes?.data || []).map(mapSupplier);
+    db.purchaseRequests  = (purchaseRequestsRes?.data || []).map(mapPurchaseRequest);
+    db.supplierInvoices  = (supplierInvoicesRes?.data || []).map(mapSupplierInvoice);
+    db.suppliers         = (suppliersRes?.data || []).map(mapSupplier);
+    db.purchaseRequests  = (purchaseRequestsRes?.data || []).map(mapPurchaseRequest);
+    db.supplierInvoices  = (supplierInvoicesRes?.data || []).map(mapSupplierInvoice);
     window._dbSecondaryLoaded = true;
     buildBarcodeMap();
   } catch(e) {
@@ -148,6 +164,57 @@ async function ensureSecondaryDB() {
 
 
 // ── Map functions (snake_case → camelCase) ──────────────────
+
+function mapStockMovement(r) {
+  return {
+    id: r.id, itemId: r.item_id, barcode: r.barcode || '',
+    movementType: r.movement_type, quantity: r.quantity,
+    beforeQty: r.before_qty, afterQty: r.after_qty,
+    lotNo: r.lot_no || '', expiryDate: r.expiry_date || '',
+    cost: r.cost || 0, note: r.note || '',
+    refId: r.ref_id, refType: r.ref_type || '',
+    createdBy: r.created_by || '', createdAt: r.created_at,
+  };
+}
+
+
+function mapSupplierInvoice(r) {
+  return {
+    id: r.id, invoiceNo: r.invoice_no, date: r.invoice_date,
+    dueDate: r.due_date || '', supplierId: r.supplier_id,
+    supplierName: r.supplier_name, prId: r.purchase_request_id,
+    subtotal: r.subtotal || 0, vatRate: r.vat_rate || 7,
+    vatAmt: r.vat_amt || 0, total: r.total || 0,
+    status: r.status || 'pending', paidDate: r.paid_date || '',
+    paidAmount: r.paid_amount || 0, note: r.note || '',
+    createdBy: r.created_by || '', createdAt: r.created_at,
+    lines: [],
+  };
+}
+function mapSupplier(r) {
+  return {
+    id: r.id, code: r.supplier_code || '', name: r.supplier_name,
+    contactName: r.contact_name || '', phone: r.phone || '',
+    email: r.email || '', address: r.address || '',
+    taxId: r.tax_id || '', note: r.note || '',
+    status: r.status || 'active',
+    createdAt: r.created_at,
+  };
+}
+
+function mapPurchaseRequest(r) {
+  return {
+    id: r.id, refNo: r.ref_no, date: r.request_date,
+    requesterName: r.requester_name,
+    supplierId: r.supplier_id, supplierName: r.supplier_name || '',
+    urgency: r.urgency || 'normal', note: r.note || '',
+    status: r.status || 'draft',
+    approvedBy: r.approved_by || '', approvedAt: r.approved_at,
+    rejectReason: r.reject_reason || '',
+    createdBy: r.created_by || '', createdAt: r.created_at,
+    lines: [],
+  };
+}
 function mapItem(r) {
   return { id: r.id, name: r.name, category: r.category, unit: r.unit, barcode: r.barcode||'', barcodeExternal: r.barcode_external||'',
     qty: r.qty, reorder: r.reorder, cost: r.cost||0, price: r.price||0, photo: r.photo,

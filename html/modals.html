@@ -1554,7 +1554,8 @@
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">ยิงบาร์โค้ด (หรือเลือกจากรายการ)</label>
-        <input class="form-control" id="recv-barcode-scan" placeholder="ยิงบาร์โค้ดหรือพิมพ์รหัส..." oninput="onRecvBarcodeScan()" style="font-family:monospace;letter-spacing:1px;">
+        <input class="form-control" id="recv-barcode-scan" placeholder="ยิงบาร์โค้ดหรือพิมพ์รหัส..." oninput="onRecvBarcodeScan()" style="font-family:monospace;letter-spacing:1px;" inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="openCameraScanner('recv-barcode-scan')" style="margin-top:6px;width:100%;">📷 สแกนกล้อง (Mobile)</button>
       </div>
       <div class="form-group">
         <label class="form-label">รายการสินค้า <span class="required">*</span></label>
@@ -1602,6 +1603,12 @@
       <div class="form-group">
         <label class="form-label">ชื่อผู้จำหน่าย / Supplier</label>
         <input class="form-control" id="recv-supplier" placeholder="เช่น บ.เมดิซัพพลาย จำกัด">
+      </div>
+      <div class="form-group">
+        <label class="form-label">อ้างอิงคำขอซื้อ (ถ้ามี)</label>
+        <select class="form-control" id="recv-pr-link">
+          <option value="">-- ไม่อ้างอิง --</option>
+        </select>
       </div>
       <div class="form-group" style="margin:0;">
         <label class="form-label">หมายเหตุ</label>
@@ -1905,10 +1912,13 @@
         <select class="form-control" id="acc-role">
           <option value="">-- เลือก Role --</option>
           <option value="admin">👑 admin — เข้าถึงทุกอย่าง + จัดการ account</option>
-          <option value="manager">🏆 ผู้บริหาร (Executive) — เห็นทุกอย่าง ยกเว้นจัดการ account</option>
+          <option value="manager">🏆 ผู้บริหาร (Executive) — สิทธิ์เท่า admin ทุกอย่าง</option>
           <option value="officer">📋 ธุรการ (Officer) — เบิก / ประวัติทั้งหมด / ผู้รับบริการ / พนักงาน</option>
           <option value="nurse">🏥 พยาบาล — เบิก / ประวัติทั้งหมด / ผู้รับบริการ</option>
-          <option value="caregiver">👤 ผู้ดูแล / บริบาล — เบิกได้ / เห็นเฉพาะรายการของตัวเอง</option>
+          <option value="caregiver">👤 ผู้ดูแล / บริบาล — ดูผู้ป่วย + บันทึก vital / ไม่แก้ไขข้อมูลหลัก</option>
+          <option value="physical_therapist">🤸 นักกายภาพบำบัด — ดูผู้ป่วย + บันทึก vital + physio</option>
+          <option value="accounting">💰 บัญชี (Accounting) — การเงิน / บิล เท่านั้น</option>
+          <option value="warehouse">🏪 คลังสินค้า — สต็อก / รับสินค้า / เบิก</option>
         </select>
       </div>
       <div class="form-group">
@@ -2344,6 +2354,55 @@
   </div>
 </div>
 
+
+  <!-- Quick Dispense Modal -->
+  <div class="modal-overlay" id="modal-quick-dispense">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-quick-dispense-title">⚡ เบิกสินค้าด่วน</div>
+        <button class="modal-close" onclick="closeModal('modal-quick-dispense')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">ยิงบาร์โค้ดสินค้า</label>
+          <input class="form-control" id="qd-barcode" placeholder="ยิงบาร์โค้ดหรือพิมพ์รหัส..."
+            oninput="onQdBarcodeScan()" style="font-family:monospace;"
+            inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="openCameraScanner('qd-barcode')" style="margin-top:6px;width:100%;">📷 สแกนกล้อง (Mobile)</button>
+        </div>
+        <div id="qd-item-info" style="display:none;background:var(--accent-light);border:1px solid var(--accent);border-radius:8px;padding:10px 14px;margin-bottom:12px;">
+          <div style="font-weight:600;font-size:14px;" id="qd-item-name"></div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px;">
+            คงเหลือ: <span id="qd-item-qty"></span> <span id="qd-item-unit"></span>
+            &nbsp;·&nbsp; <span id="qd-item-billable"></span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ผู้รับบริการ <span class="required">*</span></label>
+          <select class="form-control" id="qd-patient"></select>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">จำนวน <span class="required">*</span></label>
+            <input class="form-control number" id="qd-qty" type="number" min="1" value="1" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ผู้เบิก</label>
+            <select class="form-control" id="qd-staff"></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">หมายเหตุ</label>
+          <input class="form-control" id="qd-note" placeholder="เช่น ใช้ทำแผล วันที่...">
+        </div>
+        <input type="hidden" id="qd-item-id">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-quick-dispense')">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="saveQuickDispense()">⚡ บันทึกเบิกด่วน</button>
+      </div>
+    </div>
+  </div>
 <!-- ===== MODAL: EXPENSE NOTE ===== -->
 <div class="modal-overlay" id="modal-expense">
   <div class="modal" style="max-width:680px;width:95%;max-height:90vh;overflow-y:auto;">
@@ -2527,3 +2586,176 @@
     </div>
   </div>
 </div>
+
+  <!-- Add/Edit Supplier Modal -->
+  <div class="modal-overlay" id="modal-addSupplier">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-addSupplier-title">+ เพิ่มผู้จำหน่าย</div>
+        <button class="modal-close" onclick="closeModal('modal-addSupplier')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editSupplierId">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">รหัสผู้จำหน่าย</label>
+            <input class="form-control" id="supplier-code" placeholder="เช่น SUP-001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ชื่อ <span class="required">*</span></label>
+            <input class="form-control" id="supplier-name" placeholder="ชื่อบริษัท/ร้านค้า">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ผู้ติดต่อ</label>
+            <input class="form-control" id="supplier-contact" placeholder="ชื่อผู้ติดต่อ">
+          </div>
+          <div class="form-group">
+            <label class="form-label">โทรศัพท์</label>
+            <input class="form-control" id="supplier-phone" placeholder="02-xxx-xxxx" inputmode="tel">
+          </div>
+          <div class="form-group">
+            <label class="form-label">อีเมล</label>
+            <input class="form-control" id="supplier-email" placeholder="email@example.com" inputmode="email">
+          </div>
+          <div class="form-group">
+            <label class="form-label">เลขผู้เสียภาษี</label>
+            <input class="form-control" id="supplier-taxid" placeholder="0-0000-00000-00-0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ที่อยู่</label>
+          <textarea class="form-control" id="supplier-address" rows="2" placeholder="ที่อยู่สำหรับจัดส่ง"></textarea>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">สถานะ</label>
+            <select class="form-control" id="supplier-status">
+              <option value="active">ใช้งาน</option>
+              <option value="inactive">ปิด</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">หมายเหตุ</label>
+            <input class="form-control" id="supplier-note" placeholder="หมายเหตุ">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-addSupplier')">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="saveSupplier()">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Purchase Request Modal -->
+  <div class="modal-overlay" id="modal-addPR">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header">
+        <div class="modal-title">📋 สร้างคำขอซื้อ</div>
+        <button class="modal-close" onclick="closeModal('modal-addPR')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editPRId">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">ผู้ขอซื้อ <span class="required">*</span></label>
+            <input class="form-control" id="pr-requester" placeholder="ชื่อผู้ขอ">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ความเร่งด่วน</label>
+            <select class="form-control" id="pr-urgency">
+              <option value="normal">ปกติ</option>
+              <option value="urgent">ด่วน</option>
+              <option value="critical">เร่งด่วนมาก</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ผู้จำหน่าย (ถ้าทราบ)</label>
+          <select class="form-control" id="pr-supplier">
+            <option value="">-- ผู้จำหน่าย (ถ้าทราบ) --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">รายการสินค้าที่ขอซื้อ</label>
+          <div id="pr-items-container" style="margin-bottom:8px;"></div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addPRItem()" style="width:100%;">+ เพิ่มรายการ</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label">หมายเหตุ</label>
+          <textarea class="form-control" id="pr-note" rows="2" placeholder="หมายเหตุเพิ่มเติม"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-addPR')">ยกเลิก</button>
+        <button class="btn btn-secondary" onclick="savePR('draft')">บันทึกร่าง</button>
+        <button class="btn btn-primary" onclick="savePR('submitted')">ส่งคำขอ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Supplier Invoice Modal -->
+  <div class="modal-overlay" id="modal-addSupInv">
+    <div class="modal" style="max-width:500px;">
+      <div class="modal-header">
+        <div class="modal-title">🧾 บันทึกใบแจ้งหนี้ผู้จำหน่าย</div>
+        <button class="modal-close" onclick="closeModal('modal-addSupInv')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editSupInvId">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">เลขที่ใบแจ้งหนี้ <span class="required">*</span></label>
+            <input class="form-control" id="supinv-no" placeholder="เช่น INV-2025-001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">วันที่ใบแจ้งหนี้</label>
+            <input class="form-control" id="supinv-date" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">วันครบกำหนดชำระ</label>
+            <input class="form-control" id="supinv-due" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">สถานะ</label>
+            <select class="form-control" id="supinv-status">
+              <option value="pending">รอจ่าย</option>
+              <option value="paid">จ่ายแล้ว</option>
+              <option value="overdue">เกินกำหนด</option>
+              <option value="cancelled">ยกเลิก</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ผู้จำหน่าย <span class="required">*</span></label>
+          <select class="form-control" id="supinv-supplier"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">อ้างอิงคำขอซื้อ</label>
+          <select class="form-control" id="supinv-pr"></select>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">มูลค่าก่อน VAT (฿) <span class="required">*</span></label>
+            <input class="form-control number" id="supinv-subtotal" type="number" min="0" step="0.01" oninput="calcSupInvTotal()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">VAT (%)</label>
+            <input class="form-control number" id="supinv-vat" type="number" value="7" min="0" max="100" oninput="calcSupInvTotal()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">รวมทั้งหมด (฿)</label>
+            <input class="form-control number" id="supinv-total" type="number" readonly style="background:var(--surface2);">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">หมายเหตุ</label>
+          <input class="form-control" id="supinv-note" placeholder="หมายเหตุ">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-addSupInv')">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="saveSupplierInvoice()">บันทึก</button>
+      </div>
+    </div>
+  </div>

@@ -89,6 +89,7 @@ async function openPatientProfile(id) {
         <div class="tab" onclick="switchPatTab('belongings')">🧳 ทรัพย์สิน</div>
         <div class="tab" onclick="switchPatTab('dnr')">⚖️ DNR & Consent</div>
         <div class="tab" onclick="switchPatTab('physio')">🤸 กายภาพบำบัด</div>
+<div class="tab" onclick="switchPatTab('dispense')">💊 เบิกสินค้า</div>
       </div>
       <div id="patprofile-tab-history">
         <div class="card">
@@ -235,13 +236,29 @@ async function openPatientProfile(id) {
           <div id="physio-list-${p.id}"></div>
         </div>
       </div>
+
+      <div id="patprofile-tab-dispense" style="display:none;">
+        <div class="card">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="card-title" style="font-size:13px;">💊 ประวัติการเบิกสินค้า</div>
+            <button class="btn btn-primary btn-sm" onclick="openQuickDispenseModal()">⚡ เบิกด่วน</button>
+          </div>
+          <div id="pat-dispense-list-${p.id}"></div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <div class="card-header">
+            <div class="card-title" style="font-size:13px;color:var(--orange);">🧾 รายการที่ยังไม่ออกบิล</div>
+          </div>
+          <div id="pat-unbilled-list-${p.id}"></div>
+        </div>
+      </div>
     </div>
   </div>`;
   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
 function switchPatTab(tab) {
-  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','nursing','appts','belongings','dnr','physio'];
+  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','nursing','appts','belongings','dnr','physio','dispense'];
   tabs.forEach(t => {
     const el = document.getElementById('patprofile-tab-'+t);
     if(el) el.style.display = t===tab ? '' : 'none';
@@ -254,6 +271,106 @@ function switchPatTab(tab) {
     const pid = btn?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
     if (pid) renderPhysioTab(pid);
   }
+  if (tab === 'dispense') {
+    const el = document.querySelector('[id^="pat-dispense-list-"]');
+    const patId = el?.id?.replace('pat-dispense-list-','');
+    if (patId) loadPatDispense(patId);
+  }
+}
+
+async function loadPatDispense(patId) {
+  const listEl     = document.getElementById('pat-dispense-list-' + patId);
+  const unbilledEl = document.getElementById('pat-unbilled-list-' + patId);
+  if (!listEl) return;
+
+  listEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);">กำลังโหลด...</div>';
+
+  const reqs = (db.requisitions || [])
+    .filter(r => String(r.patientId) === String(patId))
+    .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  if (reqs.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);">ยังไม่มีประวัติการเบิก</div>';
+  } else {
+    const statusBadge = s => s === 'approved'
+      ? '<span class="badge badge-green">อนุมัติ</span>'
+      : s === 'rejected'
+        ? '<span class="badge badge-red">ไม่อนุมัติ</span>'
+        : '<span class="badge badge-orange">รออนุมัติ</span>';
+    listEl.innerHTML = '<div class="table-wrap"><table><thead><tr>' +
+      '<th>วันที่</th><th>สินค้า</th><th style="text-align:right;">จำนวน</th>' +
+      '<th>หน่วย</th><th>สถานะ</th><th>ผู้เบิก</th>' +
+      '</tr></thead><tbody>' +
+      reqs.slice(0, 50).map(r =>
+        '<tr><td style="font-size:12px;">' + (r.date||'-') + '</td>' +
+        '<td style="font-weight:500;">' + (r.itemName||'-') + '</td>' +
+        '<td style="text-align:right;">' + (r.qty||0) + '</td>' +
+        '<td style="font-size:12px;">' + (r.unit||'') + '</td>' +
+        '<td>' + statusBadge(r.status) + '</td>' +
+        '<td style="font-size:12px;">' + (r.staffName||'-') + '</td></tr>'
+      ).join('') + '</tbody></table></div>';
+  }
+
+  // รายการ billable ที่ยังไม่มี invoice (unbilled)
+  if (unbilledEl) {
+    const items = reqs
+      .filter(r => r.status === 'approved')
+      .map(r => {
+        const item = db.items.find(i => i.id == r.itemId);
+        if (!item || item.isBillable === false) return null;
+        const price = item.price || item.cost || 0;
+        return { name: r.itemName, qty: r.qty, unit: r.unit, price, total: r.qty * price, date: r.date };
+      }).filter(Boolean);
+
+    if (items.length === 0) {
+      unbilledEl.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:13px;">ไม่มีรายการค้างเบิลล์</div>';
+    } else {
+      const grand = items.reduce((s, i) => s + i.total, 0);
+      unbilledEl.innerHTML = '<div class="table-wrap"><table><thead><tr>' +
+        '<th>วันที่</th><th>สินค้า</th><th style="text-align:right;">จำนวน</th>' +
+        '<th style="text-align:right;">ราคา/หน่วย</th><th style="text-align:right;">รวม</th>' +
+        '</tr></thead><tbody>' +
+        items.map(i =>
+          '<tr><td style="font-size:12px;">' + (i.date||'-') + '</td>' +
+          '<td>' + i.name + '</td>' +
+          '<td style="text-align:right;">' + i.qty + ' ' + i.unit + '</td>' +
+          '<td style="text-align:right;">' + i.price.toLocaleString() + '</td>' +
+          '<td style="text-align:right;font-weight:600;">' + i.total.toLocaleString() + '</td></tr>'
+        ).join('') +
+        '<tr style="background:var(--surface2);font-weight:600;">' +
+        '<td colspan="4" style="text-align:right;">รวมค้างเบิลล์</td>' +
+        '<td style="text-align:right;">฿' + grand.toLocaleString() + '</td></tr>' +
+        '</tbody></table></div>' +
+        '<div style="padding:10px 0;text-align:right;">' +
+          '<button class="btn btn-primary btn-sm" onclick="openBillingFromPatient(\''+patId+'\')">' +
+          '🧾 สร้าง Invoice จากรายการเบิก</button>' +
+        '</div>';
+    }
+  }
+}
+
+// ── Auto-billing shortcut จาก patient profile ────────────────
+function openBillingFromPatient(patId) {
+  if (typeof showPage !== 'function' || typeof openCreateInvoiceModal !== 'function') {
+    toast('กรุณาเปิดหน้า Billing ก่อน', 'warning'); return;
+  }
+  showPage('billing');
+  // delay ให้ billing load ก่อน
+  setTimeout(() => {
+    openCreateInvoiceModal();
+    // set patient
+    setTimeout(() => {
+      const sel = document.getElementById('inv-patient');
+      if (sel) {
+        sel.value = patId;
+        if (typeof onInvoicePatientChange === 'function') onInvoicePatientChange();
+        // auto-load requisitions
+        setTimeout(() => {
+          if (typeof loadRequisitionsForInvoice === 'function') loadRequisitionsForInvoice();
+        }, 300);
+      }
+    }, 200);
+  }, 400);
 }
 
 // ==========================================

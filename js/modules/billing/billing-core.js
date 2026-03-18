@@ -612,6 +612,9 @@ async function saveInvoice(status) {
   if (saveErr) { toast('บันทึกไม่สำเร็จ: '+saveErr.message,'error'); return; }
   if(editId) { const idx=db.invoices.findIndex(i=>i.id===editId); if(idx>=0) db.invoices[idx]={...db.invoices[idx],...inv}; else db.invoices.unshift(inv); }
   else db.invoices.unshift(inv);
+  logAudit(AUDIT_MODULES.BILLING, editId ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
+    editId || row.doc_no,
+    { doc_no: row.doc_no, patient: row.patient_name, status, total: row.grand_total });
   toast(status==='draft'?'บันทึกร่างแล้ว':'บันทึกเอกสารแล้ว','success');
   closeModal('modal-createInvoice');
   renderBilling();

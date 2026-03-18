@@ -86,6 +86,7 @@ async function loadPhysioSessionForEdit(sessionId) {
 
 // ── Save ──────────────────────────────────────────────────────
 async function savePhysioSession() {
+  if (!canManagePhysio()) { toast('ไม่มีสิทธิ์บันทึก physio session','error'); return; }
   const patientId  = document.getElementById('physio-patient-id').value;
   const sessionId  = document.getElementById('physio-session-id').value;
   const date       = document.getElementById('physio-date').value;
@@ -238,6 +239,7 @@ async function renderPhysioTab(patientId) {
 
 // ── Delete ────────────────────────────────────────────────────
 async function deletePhysioSession(sessionId, patientId) {
+  if (!canManagePhysio()) { toast('ไม่มีสิทธิ์ลบ physio session','error'); return; }
   if (!confirm('ลบบันทึก Session นี้?')) return;
   const { error } = await supa.from('physio_sessions').delete().eq('id', sessionId);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }

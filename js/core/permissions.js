@@ -3,20 +3,39 @@
 // ===== ROLE-BASED ACCESS CONTROL =====
 // Pages each role can see in sidebar
 const ROLE_PAGES = {
-  admin:     ['dashboard','stock','requisition','history','report','patients','rooms','staff','healthreport','items','purchasehistory','accounts','settings','billing','billing-settings'],
-  manager:   ['dashboard','stock','requisition','history','report','patients','rooms','staff','healthreport','items','purchasehistory','settings','billing','billing-settings'],
-  officer:   ['dashboard','stock','requisition','history','report','patients','rooms','staff','healthreport','items','purchasehistory','billing','billing-settings'],
-  nurse:     ['dashboard','requisition','history','report','patients','rooms','healthreport'],
-  caregiver: ['dashboard','requisition','history'],
+  admin:             ['dashboard','stock','requisition','history','report','patients','rooms','staff',
+                      'healthreport','items','purchasehistory','accounts','settings','billing','billing-settings',
+                      'suppliers','supplierinvoices','purchaserequests','stockreport',
+                      'incident','dietary','deposits','bi'],
+  // Manager = เหมือน admin ทุกอย่าง รวม accounts
+  manager:           ['dashboard','stock','requisition','history','report','patients','rooms','staff',
+                      'healthreport','items','purchasehistory','accounts','settings','billing','billing-settings',
+                      'suppliers','supplierinvoices','purchaserequests','stockreport',
+                      'incident','dietary','deposits','bi'],
+  officer:           ['dashboard','stock','requisition','history','report','patients','rooms','staff',
+                      'healthreport','items','purchasehistory','billing','billing-settings',
+                      'suppliers','supplierinvoices','purchaserequests','stockreport',
+                      'incident','dietary','deposits','bi'],
+  accounting:        ['dashboard','billing','billing-settings','report','history',
+                      'supplierinvoices','deposits','purchasehistory','bi'],
+  nurse:             ['dashboard','requisition','history','report','patients','rooms',
+                      'healthreport','incident','dietary'],
+  // Caregiver: ดูข้อมูลผู้ป่วย + บันทึก vital ได้ แต่ไม่แก้ไขข้อมูลหลัก
+  caregiver:         ['dashboard','patients','requisition','history','healthreport'],
+  // Physical Therapist: ดูผู้ป่วย + บันทึก vital + จัดการ physio เท่านั้น
+  physical_therapist:['dashboard','patients','healthreport'],
   // Legacy roles (backward compat)
-  supervisor:['dashboard','requisition','history','report','patients','rooms'],
-  warehouse: ['dashboard','stock','requisition','history','report','patients','items','purchasehistory','settings'],
+  supervisor:        ['dashboard','requisition','history','report','patients','rooms'],
+  warehouse:         ['dashboard','stock','requisition','history','report','patients',
+                      'items','purchasehistory','settings',
+                      'suppliers','purchaserequests','stockreport'],
 };
 
 // Data each role can see in history/report
 // caregiver = own records only; others = all
 function canSeeAllHistory() {
-  return currentUser && !['caregiver','staff'].includes(currentUser.role);
+  // caregiver และ physical_therapist เห็นเฉพาะรายการของตัวเอง
+  return currentUser && !['caregiver','physical_therapist','staff'].includes(currentUser.role);
 }
 
 function updateSidebarForRole() {
@@ -34,7 +53,7 @@ function updateSidebarForRole() {
   if (staffFilterWrap) staffFilterWrap.style.display = canSeeAllHistory() ? '' : 'none';
   // Show/hide account nav (admin only)
   const accNav = document.getElementById('nav-accounts');
-  if (accNav) accNav.style.display = currentUser.role === 'admin' ? '' : 'none';
+  if (accNav) accNav.style.display = ['admin','manager'].includes(currentUser.role) ? '' : 'none';
   // Show/hide billing nav section header
   const billingSection = document.getElementById('nav-section-billing');
   if (billingSection) billingSection.style.display = allowed.includes('billing') ? '' : 'none';
@@ -54,7 +73,23 @@ function canManageBilling() {
 }
 
 function canManagePatients() {
+  // แก้ไขข้อมูลผู้ป่วยได้: admin, manager, officer, nurse
+  // caregiver และ physical_therapist ดูได้อย่างเดียว
   return hasRole('admin', 'manager', 'officer', 'nurse');
+}
+
+function canViewPatients() {
+  return hasRole('admin','manager','officer','nurse','caregiver','physical_therapist','warehouse');
+}
+
+function canManagePhysio() {
+  // บันทึกและจัดการ physio sessions
+  return hasRole('admin','manager','officer','nurse','physical_therapist');
+}
+
+function canManageVitals() {
+  // บันทึก vital signs และสุขภาพ
+  return hasRole('admin','manager','officer','nurse','caregiver','physical_therapist');
 }
 
 function canManageInventory() {
@@ -66,7 +101,11 @@ function canManageStaff() {
 }
 
 function canViewAccounts() {
-  return hasRole('admin');
+  return hasRole('admin', 'manager');
+}
+
+function canManageAccounting() {
+  return hasRole('admin', 'manager', 'accounting');
 }
 
 function canResetInvoice() {
