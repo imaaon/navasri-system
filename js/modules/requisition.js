@@ -1129,3 +1129,28 @@ function getReqPrintCSS() {
     .center { text-align:center; }
   `;
 }
+// ── Export Excel Helper ──────────────────────────────────────
+function _xlsxDownload(rows, sheetName, filename) {
+  if (typeof XLSX === 'undefined') { toast('ไม่พบ SheetJS กรุณา refresh หน้า', 'error'); return; }
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, filename + '.xlsx');
+  toast('ดาวน์โหลด Excel แล้ว ✅', 'success');
+}
+
+function exportRequisitionExcel() {
+  const rows = [
+    ['#', 'วันที่', 'เลขอ้างอิง', 'ผู้รับบริการ', 'สินค้า', 'จำนวน', 'หน่วย', 'ผู้เบิก', 'สถานะ', 'หมายเหตุ']
+  ];
+  db.requisitions.forEach((r, i) => {
+    const statusLabel = r.status === 'approved' ? 'อนุมัติแล้ว' : r.status === 'rejected' ? 'ไม่อนุมัติ' : 'รออนุมัติ';
+    rows.push([
+      i+1, r.date || '', r.refNo || r.id || '',
+      r.patientName || '', r.itemName || '',
+      r.qty || 0, r.unit || '',
+      r.staffName || '', statusLabel, r.note || ''
+    ]);
+  });
+  _xlsxDownload(rows, 'ใบเบิกสินค้า', 'navasri_requisitions_' + new Date().toISOString().slice(0,10));
+}

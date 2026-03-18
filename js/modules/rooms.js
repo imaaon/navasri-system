@@ -340,3 +340,52 @@ function renderRoomHistory() {
     </tr>`).join('')}</tbody>
   </table>`;
 }
+// ── Export Excel Helper ──────────────────────────────────────
+function _xlsxDownload(rows, sheetName, filename) {
+  if (typeof XLSX === 'undefined') { toast('ไม่พบ SheetJS กรุณา refresh หน้า', 'error'); return; }
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, filename + '.xlsx');
+  toast('ดาวน์โหลด Excel แล้ว ✅', 'success');
+}
+
+function exportRoomsExcel() {
+  const rows = [
+    ['#', 'ห้อง', 'ประเภท', 'โซน', 'ค่าห้อง/เดือน', 'ค่าห้อง/วัน', 'ความจุ',
+     'เตียง', 'สถานะเตียง', 'ผู้พัก', 'หมายเหตุ']
+  ];
+  let idx = 1;
+  db.rooms.forEach(room => {
+    const roomBeds = db.beds.filter(b => b.roomId == room.id);
+    if (roomBeds.length === 0) {
+      rows.push([idx++, room.name, room.roomType, room.zone || '',
+        room.monthlyRate || 0, room.dailyRate || 0, room.capacity || 1,
+        '-', '-', '-', room.note || '']);
+    } else {
+      roomBeds.forEach(bed => {
+        const patient = db.patients.find(p => p.currentBedId == bed.id);
+        rows.push([idx++, room.name, room.roomType, room.zone || '',
+          room.monthlyRate || 0, room.dailyRate || 0, room.capacity || 1,
+          bed.bedCode, bed.status === 'available' ? 'ว่าง' : bed.status === 'occupied' ? 'มีผู้พัก' : bed.status,
+          patient?.name || '', room.note || '']);
+      });
+    }
+  });
+  _xlsxDownload(rows, 'ห้องพัก', 'navasri_rooms_' + new Date().toISOString().slice(0,10));
+}
+
+function exportRoomHistoryExcel() {
+  const rows = [
+    ['#', 'วันที่ย้าย', 'ผู้รับบริการ', 'จากห้อง', 'จากเตียง', 'ไปห้อง', 'ไปเตียง', 'หมายเหตุ']
+  ];
+  (db.roomHistory || []).forEach((h, i) => {
+    rows.push([
+      i+1, h.transfer_date || '', h.patient_name || '',
+      h.from_room || '', h.from_bed || '',
+      h.to_room || '', h.to_bed || '',
+      h.note || ''
+    ]);
+  });
+  _xlsxDownload(rows, 'ประวัติย้ายห้อง', 'navasri_room_history_' + new Date().toISOString().slice(0,10));
+}

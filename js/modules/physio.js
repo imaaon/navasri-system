@@ -286,3 +286,40 @@ async function autoFillPhysioToInvoice() {
 
   toast(`ดึงกายภาพ ${result.total_sessions} session รวม ${(result.total_hours||0).toFixed(1)} ชม. = ${(result.total_amount||0).toLocaleString('th-TH')} บาท`, 'success');
 }
+
+// ── Export Excel Helper ──────────────────────────────────────
+function _xlsxDownload(rows, sheetName, filename) {
+  if (typeof XLSX === 'undefined') { toast('ไม่พบ SheetJS กรุณา refresh หน้า', 'error'); return; }
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, filename + '.xlsx');
+  toast('ดาวน์โหลด Excel แล้ว ✅', 'success');
+}
+
+async function exportPhysioExcel() {
+  // ดึง sessions ทั้งหมด
+  const { data, error } = await supa.from('physio_sessions')
+    .select('*, patients(name)')
+    .order('session_date', {ascending: false})
+    .limit(1000);
+  if (error) { toast('โหลดข้อมูลไม่สำเร็จ', 'error'); return; }
+
+  const rows = [
+    ['#', 'วันที่', 'ผู้รับบริการ', 'นักกายภาพ', 'ระยะเวลา (นาที)', 'อัตรา/ชม.', 'ยอด (บาท)', 'เรียกเก็บแล้ว', 'หมายเหตุ']
+  ];
+  (data || []).forEach((s, i) => {
+    rows.push([
+      i+1,
+      s.session_date || '',
+      s.patients?.name || s.patient_name || '',
+      s.therapist_name || '',
+      s.duration_minutes || 0,
+      s.rate_per_hour || 0,
+      s.amount || 0,
+      s.billed ? 'แล้ว' : 'ยังไม่',
+      s.note || ''
+    ]);
+  });
+  _xlsxDownload(rows, 'กายภาพบำบัด', 'navasri_physio_' + new Date().toISOString().slice(0,10));
+}

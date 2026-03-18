@@ -368,3 +368,28 @@ async function deleteContact(patId, contactId) {
   toast('ลบเรียบร้อย');
   openPatientProfile(patId);
 }
+// ── Export Excel Helper ──────────────────────────────────────
+function _xlsxDownload(rows, sheetName, filename) {
+  if (typeof XLSX === 'undefined') { toast('ไม่พบ SheetJS กรุณา refresh หน้า', 'error'); return; }
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, filename + '.xlsx');
+  toast('ดาวน์โหลด Excel แล้ว ✅', 'success');
+}
+
+function exportPatientsExcel() {
+  const rows = [
+    ['#', 'ชื่อ-นามสกุล', 'ประเภทบัตร', 'เลขบัตร', 'วันเกิด', 'วันรับบริการ', 'วันสิ้นสุด', 'สถานะ', 'โทรศัพท์', 'ผู้ติดต่อฉุกเฉิน', 'ที่อยู่', 'หมายเหตุ']
+  ];
+  db.patients.forEach((p, i) => {
+    const statusLabel = p.status === 'active' ? 'พักอยู่' : p.status === 'hospital' ? 'อยู่โรงพยาบาล' : 'ออกแล้ว';
+    rows.push([
+      i+1, p.name || '', p.idType || '', p.idcard || '',
+      p.dob || '', p.admitDate || '', p.endDate || '',
+      statusLabel, p.phone || '', p.emergency || '',
+      p.address || '', p.note || ''
+    ]);
+  });
+  _xlsxDownload(rows, 'ผู้รับบริการ', 'navasri_patients_' + new Date().toISOString().slice(0,10));
+}

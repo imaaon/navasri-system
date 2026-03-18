@@ -227,6 +227,7 @@ async function openPatientProfile(id) {
             <div style="display:flex;gap:8px;align-items:center;">
               <select id="physio-month-filter" class="form-control" style="width:160px;font-size:13px;" onchange="renderPhysioTab('${p.id}')">
               </select>
+              <button class="btn btn-ghost btn-sm" onclick="exportPhysioExcel()" title="ส่งออก Excel">📥 Excel</button>
               <button class="btn btn-primary btn-sm" onclick="openPhysioSessionModal('${p.id}','${p.name}')">+ บันทึก Session</button>
             </div>
           </div>

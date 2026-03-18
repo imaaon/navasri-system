@@ -110,7 +110,8 @@
             <option value="out">หมดแล้ว</option>
             <option value="ok">ปกติ</option>
           </select>
-          <button class="btn btn-primary" onclick="openAddItemModal()">+ เพิ่มรายการ</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportInventoryExcel()" title="ส่งออก Excel">📥 Excel</button>
+                <button class="btn btn-primary" onclick="openAddItemModal()">+ เพิ่มรายการ</button>
           <button class="btn btn-secondary" onclick="openReceiveModal()">📥 รับสินค้าเข้า</button>
         </div>
 
@@ -355,6 +356,7 @@
           <button class="btn btn-ghost" onclick="showPage('patients')" style="padding:6px 12px;">← กลับ</button>
           <h2 style="font-size:18px;font-weight:700;">🛏️ จัดการห้องพักและเตียง</h2>
           <div style="margin-left:auto;display:flex;gap:8px;">
+                <button class="btn btn-ghost btn-sm" onclick="exportRoomsExcel()" title="ส่งออก Excel">📥 Excel</button>
             <button class="btn btn-ghost" onclick="openRoomHistoryModal()">📋 ประวัติย้ายห้อง</button>
             <button class="btn btn-ghost" onclick="openAddRoomModal()">+ เพิ่มห้อง</button>
             <button class="btn btn-primary" onclick="openAddBedModal()">+ เพิ่มเตียง</button>
@@ -388,6 +390,7 @@
                 </select>
               </div>
               <div style="margin-left:auto;display:flex;gap:8px;">
+                <button class="btn btn-ghost btn-sm" onclick="exportPatientsExcel()" title="ส่งออก Excel">📥 Excel</button>
                 <button class="btn btn-ghost" onclick="showPage('rooms')">🛏️ จัดการห้องพัก</button>
                 <button class="btn btn-primary" onclick="openAddPatientModal()">+ เพิ่มผู้รับบริการ</button>
               </div>
@@ -433,6 +436,7 @@
                 </select>
               </div>
               <div style="margin-left:auto;">
+                <button class="btn btn-ghost btn-sm" onclick="exportStaffExcel()" title="ส่งออก Excel">📥 Excel</button>
                 <button class="btn btn-primary" onclick="openAddStaffModal()">+ เพิ่มพนักงาน</button>
               </div>
             </div>
@@ -894,7 +898,8 @@
           <div style="display:flex;gap:8px;align-items:center;">
             <div id="pdfSpinner" style="display:none;font-size:13px;color:var(--text2);">⏳ กำลังสร้าง PDF...</div>
             <button class="btn btn-secondary" onclick="printReqForm()">🖨️ พิมพ์</button>
-            <button class="btn btn-primary" onclick="exportReqPDF()" id="btnExportPDF">📄 Export PDF</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportRequisitionExcel()" title="ส่งออก Excel">📥 Excel</button>
+                <button class="btn btn-primary" onclick="exportReqPDF()" id="btnExportPDF">📄 Export PDF</button>
           </div>
         </div>
 

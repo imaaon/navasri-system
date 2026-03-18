@@ -394,3 +394,41 @@ async function renderPurchaseHistory() {
     <td style="font-size:12px;color:var(--text2);">${r.note||'-'}</td>
   </tr>`).join('');
 }
+// ── Export Excel Helper ──────────────────────────────────────
+function _xlsxDownload(rows, sheetName, filename) {
+  if (typeof XLSX === 'undefined') { toast('ไม่พบ SheetJS กรุณา refresh หน้า', 'error'); return; }
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, filename + '.xlsx');
+  toast('ดาวน์โหลด Excel แล้ว ✅', 'success');
+}
+
+function exportInventoryExcel() {
+  const rows = [
+    ['#', 'ชื่อสินค้า', 'ประเภท', 'หน่วย', 'คงเหลือ', 'จุดสั่งซื้อ', 'ราคาทุน', 'ราคาขาย', 'สถานะ']
+  ];
+  db.items.forEach((item, i) => {
+    const status = item.qty <= 0 ? 'หมด' : item.qty <= item.reorder ? 'ใกล้หมด' : 'ปกติ';
+    rows.push([
+      i+1, item.name || '', item.category || '', item.unit || '',
+      item.qty || 0, item.reorder || 0,
+      item.cost || 0, item.price || 0, status
+    ]);
+  });
+  _xlsxDownload(rows, 'คลังสินค้า', 'navasri_inventory_' + new Date().toISOString().slice(0,10));
+}
+
+function exportItemLotsExcel() {
+  const rows = [
+    ['#', 'สินค้า', 'หน่วย', 'จำนวน', 'วันหมดอายุ', 'หมายเหตุ']
+  ];
+  db.itemLots.forEach((lot, i) => {
+    const item = db.items.find(x => x.id == lot.itemId);
+    rows.push([
+      i+1, item?.name || '', item?.unit || '',
+      lot.qty || 0, lot.expiryDate || '', lot.note || ''
+    ]);
+  });
+  _xlsxDownload(rows, 'Lot สินค้า', 'navasri_item_lots_' + new Date().toISOString().slice(0,10));
+}
