@@ -157,9 +157,9 @@ async function openPatientProfile(id) {
                     <div style="font-weight:700;font-size:14px;">${c.name} <span style="font-size:12px;font-weight:400;color:var(--text3);">(${c.relation})</span></div>
                     <div style="font-size:12px;color:var(--text2);margin-top:4px;">📞 ${c.phone||'-'} ${c.email ? '· ✉️ '+c.email : ''}</div>
                     <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
-                      ${c.isPayer ? '<span class="badge badge-green">💰 ผู้จ่ายเงิน (Payer)</span>' : ''}
-                      ${c.isDecisionMaker ? '<span class="badge" style="background:#e8e8f8;color:#3d3d9e;">🧠 ผู้ตัดสินใจ</span>' : ''}
-                      ${c.isPayer ? '' : (!c.isDecisionMaker ? '<span class="badge badge-gray">ผู้ติดต่อฉุกเฉิน</span>' : '')}
+                      ${c.isPayer ? '<span class="badge badge-green">💰 ผู้รับผิดชอบค่าใช้จ่าย</span>' : ''}
+                      ${c.isDecisionMaker ? '<span class="badge" style="background:#e8e8f8;color:#3d3d9e;">🧠 ผู้มีอำนาจตัดสินใจ</span>' : ''}
+                      ${!c.isPayer && !c.isDecisionMaker ? '<span class="badge badge-gray">📞 ผู้ติดต่อฉุกเฉิน</span>' : ''}
                     </div>
                     ${c.note ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">📝 ${c.note}</div>` : ''}
                   </div>
