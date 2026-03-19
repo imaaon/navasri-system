@@ -2444,9 +2444,9 @@ function printExpense(id) {
 }
 
 
-// ═══════════════════════════════════════════════════════
+// =======================================================
 // ── INCIDENT & WOUND CARE SYSTEM ────────────────────────
-// ═══════════════════════════════════════════════════════
+// =======================================================
 
 function switchIncidentTab(tab) {
   document.getElementById('incident-tab-incidents').style.display = tab==='incidents' ? '' : 'none';
@@ -2645,9 +2645,9 @@ function renderIncidentPage() {
   </tr>`).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🩹</div><div class="empty-text">ยังไม่มีบันทึกแผลกดทับ</div></div></td></tr>`;
 }
 
-// ═══════════════════════════════════════════════════════
+// =======================================================
 // ── DIETARY & TUBE FEEDING SYSTEM ───────────────────────
-// ═══════════════════════════════════════════════════════
+// =======================================================
 
 function switchDietTab(tab) {
   document.getElementById('diet-tab-diets').style.display = tab==='diets' ? '' : 'none';
@@ -2861,9 +2861,9 @@ function printDietaryReport() {
   w.document.close();
 }
 
-// ═══════════════════════════════════════════════════════
+// =======================================================
 // ── DEPOSITS SYSTEM ─────────────────────────────────────
-// ═══════════════════════════════════════════════════════
+// =======================================================
 
 function openDepositModal(id) {
   const patients = (db.patients||[]).filter(p=>p.status==='active');
@@ -2968,9 +2968,9 @@ function renderDeposits() {
   </tr>`).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🏦</div><div class="empty-text">ยังไม่มีรายการมัดจำ</div></div></td></tr>`;
 }
 
-// ═══════════════════════════════════════════════════════
+// =======================================================
 // ── HOOK INTO showPage & loadData ───────────────────────
-// ═══════════════════════════════════════════════════════
+// =======================================================
 
 // Patch renderPage to handle new pages
 // Hook new pages into existing renderPage

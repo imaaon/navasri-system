@@ -902,7 +902,7 @@ function renderReqForm({ reqs, first, group }) {
   const padRows = Math.max(0, minRows - reqs.length);
 
   document.getElementById('reqFormContent').innerHTML = `
-    <!-- ══ HEADER ══ -->
+    <!-- == HEADER == -->
     <div class="rq-print-header">
       <div style="display:flex;align-items:center;gap:14px;">
         <img src="img/logo.png" alt="Navasri Logo" style="width:70px;height:70px;object-fit:contain;border-radius:8px;background:#e8f4ee;padding:6px;flex-shrink:0;border:1px solid #cce8d8;">
@@ -920,7 +920,7 @@ function renderReqForm({ reqs, first, group }) {
       </div>
     </div>
 
-    <!-- ══ DOC INFO ══ -->
+    <!-- == DOC INFO == -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #ccc;border-radius:4px;margin:10px 0;font-size:12.5px;overflow:hidden;">
       <div style="padding:7px 12px;border-right:1px solid #ccc;border-bottom:1px solid #ccc;">
         <span style="color:#666;">เลขที่ใบเบิก:</span> <strong style="font-family:monospace;">${refNo}</strong>
@@ -936,7 +936,7 @@ function renderReqForm({ reqs, first, group }) {
       </div>
     </div>
 
-    <!-- ══ WORKFLOW TIMELINE ══ -->
+    <!-- == WORKFLOW TIMELINE == -->
     <div style="border:1px solid #e0e0e0;border-radius:4px;padding:10px 16px;margin:10px 0;background:#fafafa;">
       <div style="font-size:10px;color:#888;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">สถานะ Workflow</div>
       <div class="rq-timeline">
@@ -957,7 +957,7 @@ function renderReqForm({ reqs, first, group }) {
       </div>
     </div>
 
-    <!-- ══ ITEMS TABLE ══ -->
+    <!-- == ITEMS TABLE == -->
     <table class="rq-table">
       <thead>
         <tr>
@@ -987,13 +987,13 @@ function renderReqForm({ reqs, first, group }) {
       </tbody>
     </table>
 
-    <!-- ══ NOTE ══ -->
+    <!-- == NOTE == -->
     <div style="margin-top:8px;font-size:12px;">
       <strong>หมายเหตุ / Note:</strong>
       <div class="rq-note-box">${note || '&nbsp;'}</div>
     </div>
 
-    <!-- ══ SIGNATURES ══ -->
+    <!-- == SIGNATURES == -->
     <div class="rq-sign-row" style="margin-top:20px;">
       <div class="rq-sign-box">
         <div class="rq-sign-line"></div>
@@ -1019,7 +1019,7 @@ function renderReqForm({ reqs, first, group }) {
       </div>
     </div>
 
-    <!-- ══ FOOTER ══ -->
+    <!-- == FOOTER == -->
     <div style="margin-top:18px;padding-top:8px;border-top:1px dashed #ccc;display:flex;justify-content:space-between;font-size:10px;color:#aaa;">
       <span>เอกสารสร้างโดยระบบบริหารสต็อก นวศรี เนอร์สซิ่งโฮม</span>
       <span>${refNo} · ${new Date().toLocaleString('th-TH')}</span>
