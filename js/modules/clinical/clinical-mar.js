@@ -1,3 +1,25 @@
+
+function openEditMedModal(patientId, pid, medId) {
+  const meds = db.medications[pid] || [];
+  const med = meds.find(m => m.id == medId);
+  if (!med) return;
+  document.getElementById('med-pat-id').value = patientId;
+  document.getElementById('med-pat-id').dataset.editId = medId;
+  document.getElementById('med-pat-id').dataset.pid = pid;
+  document.getElementById('med-name').value = med.name || '';
+  document.getElementById('med-dose').value = med.dose || '';
+  document.getElementById('med-unit').value = med.unit || 'mg';
+  document.getElementById('med-route').value = med.route || 'ทาน';
+  document.getElementById('med-note').value = med.note || '';
+  document.getElementById('med-start').value = med.startDate || '';
+  document.getElementById('med-end').value = med.endDate || '';
+  MAR_TIMINGS.forEach(t => {
+    const cb = document.getElementById('med-timing-'+t.replace(/[^a-zA-Zก-๙]/g,'_'));
+    if (cb) cb.checked = (med.timing||[]).includes(t);
+  });
+  document.querySelector('#modal-add-medication .modal-title').textContent = '✏️ แก้ไขยาประจำ';
+  openModal('modal-add-medication');
+}
 // ===== CLINICAL: MAR (Medication Admin Record) =====
 
 // ==========================================
@@ -35,6 +57,7 @@ function renderMARTab(pid, patientId) {
                 <td style="text-align:center;"><span style="background:${todayForMed.length?'#27ae60':'var(--surface2)'};color:${todayForMed.length?'white':'var(--text3)'};border-radius:10px;padding:2px 10px;font-size:12px;">${todayForMed.length} ครั้ง</span></td>
                 <td style="display:flex;gap:4px;">
                   <button class="btn btn-primary btn-sm" onclick="openMAREntryModal('${patientId}','${pid}','${med.id}')">+ บันทึกการให้</button>
+                  <button class="btn btn-ghost btn-sm" onclick="openEditMedModal('${patientId}','${pid}','${med.id}')" title="แก้ไข">✏️</button>
                   <button class="btn btn-ghost btn-sm" onclick="deleteMedication('${patientId}','${med.id}')">🗑️</button>
                 </td>
               </tr>`;
@@ -193,12 +216,23 @@ async function saveMedication() {
     end_date:   document.getElementById('med-end').value||null,
     note: document.getElementById('med-note').value.trim(),
   };
-  const { data: ins, error } = await supa.from('patient_medications').insert(data).select().single();
+  const editId = document.getElementById('med-pat-id').dataset.editId || '';
+  const pid = String(document.getElementById('med-pat-id').dataset.pid || patientId);
+  let ins, error;
+  if (editId) {
+    ({data: ins, error} = await supa.from('patient_medications').update(data).eq('id', editId).select().single());
+    if (!error && ins) {
+      const idx = (db.medications[pid]||[]).findIndex(m => m.id == editId);
+      if (idx >= 0) db.medications[pid][idx] = mapMedication(ins);
+    }
+  } else {
+    ({data: ins, error} = await supa.from('patient_medications').insert(data).select().single());
+    if (!error) { if(!db.medications[pid]) db.medications[pid]=[]; db.medications[pid].push(mapMedication(ins)); }
+  }
+  document.getElementById('med-pat-id').dataset.editId = '';
+  document.querySelector('#modal-add-medication .modal-title').textContent = '💊 เพิ่มยาประจำ';
   if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
-  const pid = String(patientId);
-  if(!db.medications[pid]) db.medications[pid]=[];
-  db.medications[pid].push(mapMedication(ins));
-  toast(`เพิ่มยา "${name}" เรียบร้อย`,'success');
+  toast(editId ? `แก้ไขยา "${name}" เรียบร้อย` : `เพิ่มยา "${name}" เรียบร้อย`,'success');
   closeModal('modal-add-medication');
   document.getElementById('patprofile-tab-mar').innerHTML = renderMARTab(pid, patientId);
 }

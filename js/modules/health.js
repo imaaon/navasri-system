@@ -40,7 +40,7 @@ function renderMedLogTab(patId, type) {
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm" onclick="exportPatMedExcel(${patId},'${type}')" title="Export Excel" ${logs.length===0?'disabled':''}>📊 Excel</button>
         <button class="btn btn-ghost btn-sm" onclick="exportPatMedPDF(${patId},'${type}')" title="Export PDF" ${logs.length===0?'disabled':''}>📄 PDF</button>
-        <button class="btn btn-primary btn-sm" onclick="openAddMedLog(${patId},'${type}')">+ เพิ่มรายการ</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddMedLog('${patId}','${type}')">+ เพิ่มรายการ</button>
       </div>
     </div>
     <div style="padding:0 20px;">${rows}</div>

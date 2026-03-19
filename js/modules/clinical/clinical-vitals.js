@@ -151,6 +151,7 @@ async function saveVitalSign() {
     bp_sys: n('vital-bp-sys'), bp_dia: n('vital-bp-dia'),
     hr: n('vital-hr'), temp: n('vital-temp'),
     spo2: n('vital-spo2'), dtx: n('vital-dtx'), rr: n('vital-rr'),
+    weight: n('vital-weight'), height: n('vital-height'),
     other_fields: document.getElementById('vital-other').value.trim(),
     note: document.getElementById('vital-note').value.trim(),
   };

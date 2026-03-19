@@ -134,7 +134,10 @@ async function openPatientProfile(id) {
                   <td><span class="badge badge-gray">${a.allergyType}</span></td>
                   <td style="font-size:12px;color:var(--text2);">${a.severity||'-'}</td>
                   <td style="font-size:12px;color:var(--text2);">${a.reaction||'-'}</td>
-                  <td><button class="btn btn-ghost btn-sm" onclick="deleteAllergy('${p.id}','${a.id}')">🗑️</button></td>
+                  <td>
+                    <button class="btn btn-ghost btn-sm" onclick="openEditAllergyModal('${p.id}','${a.id}')" title="แก้ไข">✏️</button>
+                    <button class="btn btn-ghost btn-sm" onclick="deleteAllergy('${p.id}','${a.id}')">🗑️</button>
+                  </td>
                 </tr>`;
               }).join('')}
             </tbody>

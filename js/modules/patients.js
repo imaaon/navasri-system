@@ -1,3 +1,18 @@
+
+function openEditAllergyModal(patId, allergyId) {
+  const patient = db.patients.find(p => p.id == patId);
+  if (!patient) return;
+  const a = (patient.allergies||[]).find(x => x.id == allergyId);
+  if (!a) return;
+  document.getElementById('allergy-pat-id').value = patId;
+  document.getElementById('allergy-pat-id').dataset.editId = allergyId;
+  document.getElementById('allergy-allergen').value = a.allergen || '';
+  document.getElementById('allergy-type').value = a.allergyType || 'ยา';
+  document.getElementById('allergy-severity').value = a.severity || 'ปานกลาง';
+  document.getElementById('allergy-reaction').value = a.reaction || '';
+  document.getElementById('allergy-note').value = a.note || '';
+  openModal('modal-add-allergy');
+}
 // ===== PATIENTS MODULE =====
 
 // ===== PATIENTS =====
@@ -313,7 +328,14 @@ async function saveAllergy() {
     reaction:    document.getElementById('allergy-reaction').value.trim(),
     note:        document.getElementById('allergy-note').value.trim(),
   };
-  const { data: ins, error } = await supa.from('patient_allergies').insert(data).select().single();
+  const editAllergyId = document.getElementById('allergy-pat-id').dataset.editId || '';
+  document.getElementById('allergy-pat-id').dataset.editId = '';
+  let ins, error;
+  if (editAllergyId) {
+    ({data: ins, error} = await supa.from('patient_allergies').update(data).eq('id', editAllergyId).select().single());
+  } else {
+    ({data: ins, error} = await supa.from('patient_allergies').insert(data).select().single());
+  }
   if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
   const patient = db.patients.find(p => p.id == patId);
   if (patient) {
