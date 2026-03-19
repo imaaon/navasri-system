@@ -1,3 +1,22 @@
+
+async function openEditVitalModal(patientId, pid, vitalId) {
+  const vitals = db.vitals[pid] || [];
+  const v = vitals.find(x => x.id == vitalId);
+  if (!v) return;
+  document.getElementById('vital-pat-id').value = patientId;
+  document.getElementById('vital-pid').value = pid;
+  document.getElementById('vital-bp').value = v.bp || '';
+  document.getElementById('vital-pulse').value = v.pulse || '';
+  document.getElementById('vital-temp').value = v.temp || '';
+  document.getElementById('vital-spo2').value = v.spo2 || '';
+  document.getElementById('vital-weight').value = v.weight || '';
+  document.getElementById('vital-note').value = v.note || '';
+  const dt = v.recordedAt || new Date().toISOString();
+  document.getElementById('vital-date').value = dt.split('T')[0];
+  document.getElementById('vital-pat-id').dataset.editId = vitalId;
+  document.getElementById('modal-vital-title').textContent = '✏️ แก้ไข Vital Signs';
+  openModal('modal-add-vital');
+}
 // ===== CLINICAL: VITALS + NURSING NOTES =====
 
 // ===== VITAL SIGNS ========================
@@ -74,10 +93,12 @@ function renderVitalsTab(pid, patientId) {
                   <td style="text-align:center;font-weight:${spo2Alert?'700':'400'};color:${spo2Alert?'#e74c3c':'inherit'};">${v.spo2 ? v.spo2+'%' : '-'}</td>
                   <td style="text-align:center;">${v.dtx ? v.dtx+' mg/dL' : '-'}</td>
                   <td style="text-align:center;">${v.rr ? v.rr+'/min' : '-'}</td>
+                  <td style="font-size:12px;color:var(--text2);max-width:80px;">${v.weight ? v.weight+'kg' : '-'}</td>
+                  <td style="text-align:center;font-size:12px;color:var(--text2);">${v.height ? v.height+'cm' : '-'}</td>
                   <td style="font-size:12px;color:var(--text2);max-width:120px;">${v.otherFields||'-'}</td>
                   <td style="font-size:12px;">${v.recordedBy||'-'}</td>
                   <td style="font-size:12px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis;">${v.note||''}</td>
-                  <td><button class="btn btn-ghost btn-sm" onclick="deleteVitalSign('${patientId}','${pid}','${v.id}')">🗑️</button></td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="openEditVitalModal('${patientId}','${pid}','${v.id}')" title="แก้ไข">✏️</button><button class="btn btn-ghost btn-sm" onclick="deleteVitalSign('${patientId}','${pid}','${v.id}')" title="ลบ">🗑️</button></td>
                 </tr>`;
               }).join('')}
           </tbody>
@@ -117,6 +138,8 @@ function openAddVitalModal(patientId) {
 }
 
 async function saveVitalSign() {
+  const editId = document.getElementById('vital-pat-id').dataset.editId || '';
+  document.getElementById('vital-pat-id').dataset.editId = '';
   const patientId = document.getElementById('vital-pat-id').value;
   const time = document.getElementById('vital-time').value;
   if (!time) { toast('กรุณาระบุวัน/เวลา','warning'); return; }

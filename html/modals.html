@@ -220,12 +220,13 @@
       <div class="form-group">
         <label class="form-label">มื้อ / เวลาที่ให้ยา <span class="required">*</span></label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
-          ${['เช้า','กลางวัน','เย็น','ก่อนนอน','ก่อนอาหาร','หลังอาหาร','PRN (เมื่อมีอาการ)'].map(t => {
-            const id = 'med-timing-'+t.replace(/[^a-zA-Zก-๙]/g,'_');
-            return `<label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;">
-              <input type="checkbox" id="${id}" style="accent-color:var(--accent);"> ${t}
-            </label>`;
-          }).join('')}
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-เช้า" style="accent-color:var(--accent);"> เช้า</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-กลางวัน" style="accent-color:var(--accent);"> กลางวัน</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-เย็น" style="accent-color:var(--accent);"> เย็น</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-ก่อนนอน" style="accent-color:var(--accent);"> ก่อนนอน</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-ก่อนอาหาร" style="accent-color:var(--accent);"> ก่อนอาหาร</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-หลังอาหาร" style="accent-color:var(--accent);"> หลังอาหาร</label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-PRN__เมื่อมีอาการ_" style="accent-color:var(--accent);"> PRN (เมื่อมีอาการ)</label>
         </div>
       </div>
       <div class="form-grid">
@@ -254,7 +255,7 @@
 <div class="modal-overlay" id="modal-add-vital">
   <div class="modal" style="max-width:520px;">
     <div class="modal-header">
-      <div class="modal-title">📊 บันทึกสัญญาณชีพ</div>
+      <div class="modal-title" id="modal-vital-title">📊 บันทึกสัญญาณชีพ</div>
       <button class="modal-close" onclick="closeModal('modal-add-vital')">✕</button>
     </div>
     <div class="modal-body">
@@ -300,9 +301,20 @@
           <input class="form-control number" type="number" id="vital-rr" placeholder="16">
         </div>
       </div>
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 8px;">น้ำหนัก / ส่วนสูง (ไม่บังคับ)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="color:#8e44ad;">⚖️ น้ำหนัก (กก.)</label>
+          <input class="form-control number" type="number" id="vital-weight" step="0.1" placeholder="65.0">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="color:#8e44ad;">📏 ส่วนสูง (ซม.)</label>
+          <input class="form-control number" type="number" id="vital-height" step="0.1" placeholder="160.0">
+        </div>
+      </div>
       <div class="form-group" style="margin:10px 0 0;">
-        <label class="form-label">📌 อื่นๆ <span style="font-size:11px;color:var(--text3);font-weight:400;">(ระบุค่าที่ต้องการเพิ่มเติม เช่น น้ำหนัก 58kg, ปัสสาวะ 200ml, ไข้ 38.5°C)</span></label>
-        <input class="form-control" id="vital-other" placeholder="เช่น น้ำหนัก 58kg · ปัสสาวะ 300ml · ท้องผูก">
+        <label class="form-label">📌 อื่นๆ <span style="font-size:11px;color:var(--text3);font-weight:400;">(ปัสสาวะ, ท้องผูก ฯลฯ)</span></label>
+        <input class="form-control" id="vital-other" placeholder="เช่น ปัสสาวะ 300ml · ท้องผูก">
       </div>
       <div class="form-group" style="margin:8px 0 0;">
         <label class="form-label">หมายเหตุ / อาการสังเกต</label>
@@ -331,10 +343,14 @@
           <input class="form-control" type="date" id="nursing-date">
         </div>
         <div class="form-group">
-          <label class="form-label">กะ <span class="required">*</span></label>
+          <label class="form-label">เวลาที่บันทึก <span class="required">*</span></label>
+          <input class="form-control" type="time" id="nursing-time">
+        </div>
+        <div class="form-group" style="display:none;">
           <select class="form-control" id="nursing-shift">
-            <option value="เช้า">🌅 เช้า (07:00–19:00)</option>
-            <option value="ดึก">🌙 ดึก (19:00–07:00)</option>
+            <option value="เช้า">เช้า</option>
+            <option value="บ่าย">บ่าย</option>
+            <option value="ดึก">ดึก</option>
           </select>
         </div>
         <div class="form-group">
@@ -900,6 +916,14 @@
       <div class="form-group" style="margin:0;">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="belonging-note" placeholder="">
+      </div>
+      <div class="form-group">
+        <label class="form-label">📷 รูปถ่ายทรัพย์สิน</label>
+        <input class="form-control" type="file" id="belonging-photo-file" accept="image/*" onchange="previewBelongingPhoto(this)">
+        <div id="belonging-photo-preview" style="margin-top:8px;display:none;">
+          <img id="belonging-photo-img" style="max-width:100%;max-height:160px;border-radius:8px;border:1.5px solid var(--border);">
+        </div>
+        <input type="hidden" id="belonging-photo-url">
       </div>
     </div>
     <div class="modal-footer">

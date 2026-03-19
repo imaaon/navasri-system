@@ -10,69 +10,62 @@ const SHIFT_COLORS = {'เช้า':'#e67e22','ดึก':'#8e44ad'};
 function renderNursingTab(pid, patientId) {
   const notes = (db.nursingNotes[pid]||[]);
   const today = new Date().toISOString().split('T')[0];
-  const currentShift = getCurrentShift();
 
-  // Group by date
+  // Group by date, sort desc
   const byDate = {};
   notes.forEach(n => {
     if(!byDate[n.date]) byDate[n.date]=[];
     byDate[n.date].push(n);
   });
+  // Sort entries by time within each date
+  Object.values(byDate).forEach(arr => arr.sort((a,b)=>(a.time||'00:00').localeCompare(b.time||'00:00')));
 
-  const noteCards = Object.entries(byDate).slice(0,14).map(([date, dayNotes]) => {
-    const shiftCards = SHIFTS.map(shift => {
-      const note = dayNotes.find(n=>n.shift===shift);
-      const c = SHIFT_COLORS[shift];
-      if (!note) return `
-        <div style="border:1.5px dashed var(--border);border-radius:8px;padding:10px 14px;flex:1;min-width:200px;opacity:.6;">
-          <div style="font-size:11px;font-weight:700;color:${c};">กะ${shift} <span style="font-weight:400;color:var(--text3);">(${SHIFT_TIMES[shift]})</span></div>
-          <div style="font-size:12px;color:var(--text3);margin-top:6px;">ยังไม่มีบันทึก</div>
-          ${date===today?`<button class="btn btn-ghost btn-sm" style="margin-top:8px;font-size:11px;" onclick="openAddNursingModal('${patientId}','${date}','${shift}')">+ บันทึก</button>`:''}
-        </div>`;
-      return `
-        <div style="border:1.5px solid ${c}33;border-radius:8px;padding:10px 14px;flex:1;min-width:200px;background:${c}08;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <div style="font-size:11px;font-weight:700;color:${c};">กะ${shift} <span style="font-weight:400;color:var(--text3);">(${SHIFT_TIMES[shift]})</span></div>
-            <div style="display:flex;gap:4px;">
+  const noteCards = Object.entries(byDate)
+    .sort((a,b)=>b[0].localeCompare(a[0]))
+    .slice(0,30)
+    .map(([date, dayNotes]) => {
+      const isToday = date === today;
+      const dateLabel = isToday ? '📅 วันนี้' : '📅 '+date;
+      const entryRows = dayNotes.map(note => `
+        <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start;">
+          <div style="flex-shrink:0;min-width:48px;text-align:center;">
+            <div style="font-size:13px;font-weight:700;color:var(--accent);">${note.time||'--:--'}</div>
+          </div>
+          <div style="flex:1;font-size:13px;line-height:1.6;white-space:pre-wrap;">${note.content||note.general||note.condition||'-'}</div>
+          <div style="flex-shrink:0;font-size:11px;color:var(--text3);text-align:right;">
+            ${note.by||''}<br>
+            <div style="display:flex;gap:4px;margin-top:2px;">
               <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="editNursingNote('${patientId}','${pid}','${note.id}')">✏️</button>
-              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="deleteNursingNote('${patientId}','${pid}','${note.id}')">🗑️</button>
+              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:#e74c3c;" onclick="deleteNursingNote('${patientId}','${pid}','${note.id}')">🗑️</button>
             </div>
           </div>
-          <div style="font-size:12px;display:flex;flex-direction:column;gap:3px;">
-            ${note.generalCondition?`<div>🧍 <strong>อาการทั่วไป:</strong> ${note.generalCondition}</div>`:''}
-            ${note.consciousness?`<div>🧠 <strong>ความรู้สึกตัว:</strong> ${note.consciousness}</div>`:''}
-            ${note.pain?`<div>😣 <strong>อาการปวด:</strong> ${note.pain}</div>`:''}
-            ${note.eating?`<div>🍽️ <strong>การรับประทานอาหาร:</strong> ${note.eating}</div>`:''}
-            ${note.elimination?`<div>🚽 <strong>การขับถ่าย:</strong> ${note.elimination}</div>`:''}
-            ${note.sleep?`<div>😴 <strong>การนอนหลับ:</strong> ${note.sleep}</div>`:''}
-            ${note.activity?`<div>🏃 <strong>กิจกรรม:</strong> ${note.activity}</div>`:''}
-            ${note.wound?`<div>🩹 <strong>แผล/สาย:</strong> ${note.wound}</div>`:''}
-            ${note.iv?`<div>💉 <strong>IV/สาย:</strong> ${note.iv}</div>`:''}
-            ${note.o2?`<div>🫁 <strong>O₂:</strong> ${note.o2}</div>`:''}
+        </div>`).join('');
+
+      return `
+        <div style="border:1.5px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--surface2);">
+            <div style="font-size:12px;font-weight:700;color:${isToday?'var(--accent)':'var(--text2)'};">${dateLabel}</div>
+            <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="openAddNursingModal('${patientId}','${date}','')">+ เพิ่มบันทึก</button>
           </div>
-          ${note.handoverNote?`<div style="margin-top:8px;padding:6px 10px;background:${c}15;border-radius:5px;border-left:3px solid ${c};font-size:12px;"><strong>📢 ส่งเวร:</strong> ${note.handoverNote}</div>`:''}
-          <div style="font-size:11px;color:var(--text3);margin-top:6px;">บันทึกโดย: ${note.recordedBy||'-'}</div>
+          <div style="padding:0 14px;">${entryRows}</div>
         </div>`;
     }).join('');
-    return `
-      <div style="margin-bottom:16px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;">
-          📅 ${date} ${date===today?'<span style="background:#27ae60;color:white;border-radius:10px;font-size:10px;padding:1px 8px;">วันนี้</span>':''}
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">${shiftCards}</div>
-      </div>`;
-  }).join('');
 
-  return `
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title" style="font-size:13px;">📋 บันทึกทางการพยาบาล</div>
-        <button class="btn btn-primary btn-sm" onclick="openAddNursingModal('${patientId}','${today}','${currentShift}')">+ บันทึกกะนี้</button>
-      </div>
-      <div style="padding:16px;">
-        ${noteCards || `<div style="text-align:center;padding:32px;color:var(--text3);">ยังไม่มีบันทึก</div>`}
-      </div>
-    </div>`;
+  const addTodayBtn = !byDate[today] ? `
+    <div style="padding:16px;text-align:center;">
+      <button class="btn btn-primary" onclick="openAddNursingModal('${patientId}','${today}','')">+ บันทึกทางการพยาบาลวันนี้</button>
+    </div>` : '';
+
+  return `<div class="card">
+    <div class="card-header">
+      <div class="card-title" style="font-size:13px;">📝 บันทึกทางการพยาบาล (${notes.length} รายการ)</div>
+      <button class="btn btn-primary btn-sm" onclick="openAddNursingModal('${patientId}','${today}','')">+ บันทึกใหม่</button>
+    </div>
+    <div style="padding:12px 16px;">
+      ${addTodayBtn}
+      ${noteCards || '<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีบันทึก</div>'}
+    </div>
+  </div>`;
 }
 
 function getCurrentShift() {
@@ -86,6 +79,8 @@ function openAddNursingModal(patientId, date, shift, noteId=null) {
   document.getElementById('nursing-pat-id').value = patientId;
   document.getElementById('nursing-date').value = date || new Date().toISOString().split('T')[0];
   document.getElementById('nursing-shift').value = shift || getCurrentShift();
+  const nowTime = new Date().toTimeString().slice(0,5);
+  document.getElementById('nursing-time').value = time || nowTime;
   document.getElementById('nursing-by').value = currentUser?.displayName || currentUser?.username || '';
   // Clear all fields
   ['nursing-condition','nursing-consciousness','nursing-pain','nursing-eating',
@@ -124,9 +119,12 @@ async function saveNursingNote() {
   const patientId = document.getElementById('nursing-pat-id').value;
   const date  = document.getElementById('nursing-date').value;
   const shift = document.getElementById('nursing-shift').value;
-  if (!date || !shift) { toast('กรุณาระบุวันที่และกะ','warning'); return; }
+  const time  = document.getElementById('nursing-time')?.value || '';
+  if (!date) { toast('กรุณาระบุวันที่','warning'); return; }
+  const time_val = document.getElementById('nursing-time')?.value || '';
+  if (!time_val) { toast('กรุณาระบุเวลาที่บันทึก','warning'); return; }
   const data = {
-    patient_id: patientId, date, shift,
+    patient_id: patientId, date, shift, time,
     recorded_by:       document.getElementById('nursing-by').value.trim(),
     general_condition: document.getElementById('nursing-condition').value.trim(),
     consciousness:     document.getElementById('nursing-consciousness').value.trim(),

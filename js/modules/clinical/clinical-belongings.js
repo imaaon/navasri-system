@@ -1,3 +1,31 @@
+
+function previewBelongingPhoto(input) {
+  const preview = document.getElementById('belonging-photo-preview');
+  const img     = document.getElementById('belonging-photo-img');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      img.src = e.target.result;
+      preview.style.display = '';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function openEditBelongingModal(belongingId, patientId) {
+  const b = (db.belongings||[]).find(x=>x.id==belongingId);
+  if (!b) return;
+  document.getElementById('belonging-patient-id').value = patientId;
+  document.getElementById('belonging-item-name').value = b.itemName||'';
+  document.getElementById('belonging-description').value = b.description||'';
+  document.getElementById('belonging-qty').value = b.qty||1;
+  document.getElementById('belonging-condition').value = b.condition||'ดี';
+  document.getElementById('belonging-date-in').value = b.dateIn||'';
+  document.getElementById('belonging-received-by').value = b.receivedBy||'';
+  document.getElementById('belonging-note').value = b.note||'';
+  document.getElementById('belonging-patient-id').dataset.editId = belongingId;
+  openModal('modal-belonging');
+}
 // ===== CLINICAL BELONGINGS =====
 
 // ==========================================
@@ -23,6 +51,7 @@ function renderBelongingList(patientId) {
           <td style="font-size:12px;color:var(--text2);">${b.note||'-'}</td>
           <td style="white-space:nowrap;">
             ${b.status==='held'?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;" onclick="returnBelonging('${b.id}','${patientId}')">↩️ คืน</button>`:`<span style="font-size:11px;color:var(--text3);">คืนแล้ว ${b.dateOut||''}</span>`}
+            <button class="btn btn-ghost btn-sm" onclick="openEditBelongingModal('${b.id}','${patientId}')" title="แก้ไข">✏️</button>
             <button class="btn btn-ghost btn-sm" onclick="deleteBelonging('${b.id}','${patientId}')" style="font-size:11px;color:#e74c3c;">🗑️</button>
           </td>
         </tr>`).join('')}
@@ -50,6 +79,13 @@ async function saveBelonging() {
   const itemName = document.getElementById('belonging-item-name').value.trim();
   if(!itemName){toast('กรุณาระบุชื่อสิ่งของ','warning');return;}
   const actor = currentUser?.displayName || currentUser?.username || '';
+  // อัปโหลดรูปถ้ามี
+  let photoUrl = document.getElementById('belonging-photo-url')?.value || '';
+  const photoFile = document.getElementById('belonging-photo-file')?.files?.[0];
+  if (photoFile) {
+    try { photoUrl = await uploadPhotoToStorage(photoFile, 'belongings'); }
+    catch(e) { toast('อัปโหลดรูปไม่สำเร็จ: '+e.message,'warning'); }
+  }
   const row = {
     patient_id: _belongingEditPatId, patient_name: _belongingEditPatName,
     item_name: itemName,
@@ -60,11 +96,21 @@ async function saveBelonging() {
     received_by: document.getElementById('belonging-received-by').value.trim()||actor,
     status: 'held',
     note: document.getElementById('belonging-note').value.trim(),
+    photo: photoUrl||null,
   };
-  const {data:ins,error} = await supa.from('patient_belongings').insert(row).select().single();
+  const editId = document.getElementById('belonging-patient-id')?.dataset?.editId || '';
+  let ins, error;
+  if (editId) {
+    ({data: ins, error} = await supa.from('patient_belongings').update(row).eq('id', editId).select().single());
+    if(!error && ins) {
+      const idx = (db.belongings||[]).findIndex(b=>b.id==editId);
+      if(idx>=0) db.belongings[idx] = mapBelonging(ins);
+    }
+  } else {
+    ({data: ins, error} = await supa.from('patient_belongings').insert(row).select().single());
+    if(!error) { if(!db.belongings) db.belongings=[]; db.belongings.unshift(mapBelonging(ins)); }
+  }
   if(error){toast('บันทึกไม่สำเร็จ: '+error.message,'error');return;}
-  if(!db.belongings) db.belongings=[];
-  db.belongings.unshift(mapBelonging(ins));
   const el=document.getElementById('belonging-list-'+_belongingEditPatId);
   if(el) el.innerHTML=renderBelongingList(_belongingEditPatId);
   toast('บันทึกสิ่งของเรียบร้อย','success');

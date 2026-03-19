@@ -392,6 +392,7 @@ function mapVitalSign(r) {
     bp_sys: r.bp_sys, bp_dia: r.bp_dia,
     hr: r.hr, temp: r.temp, spo2: r.spo2,
     dtx: r.dtx, rr: r.rr,
+    weight: r.weight||null, height: r.height||null,
     otherFields: r.other_fields||'',
     note: r.note||''
   };
@@ -399,7 +400,7 @@ function mapVitalSign(r) {
 function mapNursingNote(r) {
   return {
     id: r.id, patientId: r.patient_id,
-    date: r.date, shift: r.shift||'เช้า',
+    date: r.date, shift: r.shift||'เช้า', time: r.time||'',
     recordedBy: r.recorded_by||'',
     generalCondition: r.general_condition||'',
     consciousness: r.consciousness||'',

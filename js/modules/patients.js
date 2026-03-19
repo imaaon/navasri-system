@@ -258,6 +258,17 @@ async function savePatient() {
     }
     const { error } = await supa.from('patients').update(row).eq('id', editId);
     if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+    // บันทึก status log ถ้า status เปลี่ยน
+    const oldPat = db.patients.find(p => p.id == editId);
+    if (oldPat && oldPat.status !== data.status) {
+      await supa.from('patient_status_logs').insert({
+        patient_id: editId,
+        old_status: oldPat.status,
+        new_status: data.status,
+        changed_by: currentUser?.displayName || currentUser?.username || '',
+        note: `เปลี่ยนจาก ${oldPat.status === 'active' ? 'พักอยู่' : oldPat.status === 'hospital' ? 'อยู่โรงพยาบาล' : 'ออกแล้ว'} เป็น ${data.status === 'active' ? 'พักอยู่' : data.status === 'hospital' ? 'อยู่โรงพยาบาล' : 'ออกแล้ว'}`,
+      });
+    }
     const idx = db.patients.findIndex(p => p.id == editId);
     if (idx >= 0) db.patients[idx] = { ...db.patients[idx], ...data };
     toast('แก้ไขข้อมูลเรียบร้อย','success');
