@@ -80,7 +80,7 @@ function openAddNursingModal(patientId, date, shift, noteId=null) {
   document.getElementById('nursing-date').value = date || new Date().toISOString().split('T')[0];
   document.getElementById('nursing-shift').value = shift || getCurrentShift();
   const nowTime = new Date().toTimeString().slice(0,5);
-  document.getElementById('nursing-time').value = time || nowTime;
+  document.getElementById('nursing-time').value = nowTime;
   document.getElementById('nursing-by').value = currentUser?.displayName || currentUser?.username || '';
   // Clear all fields
   ['nursing-condition','nursing-consciousness','nursing-pain','nursing-eating',
@@ -105,6 +105,7 @@ function openAddNursingModal(patientId, date, shift, noteId=null) {
       document.getElementById('nursing-o2').value           = note.o2||'';
       document.getElementById('nursing-handover').value     = note.handoverNote||'';
       document.getElementById('nursing-by').value           = note.recordedBy||'';
+      document.getElementById('nursing-time').value          = note.time||nowTime;
     }
   }
   document.getElementById('modal-nursing-title').textContent = noteId ? '✏️ แก้ไขบันทึกพยาบาล' : '📋 บันทึกทางการพยาบาล';
