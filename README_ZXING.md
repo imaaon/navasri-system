@@ -1,0 +1,82 @@
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div style="margin-bottom:10px;">
+        <img src="img/logo.png" alt="Navasri Logo" style="width:120px;height:auto;display:block;margin:0 auto;">
+      </div>
+      <div class="logo-sub" style="text-align:center;margin-top:4px;">Navasri Database System</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">หลัก</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <span class="icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('bi')">
+        <span class="icon">🔍</span> BI & วิเคราะห์กำไร
+      </div>
+      <div class="nav-section">ฐานข้อมูล</div>
+      <div class="nav-item" onclick="showPage('patients')">
+        <span class="icon">🏥</span> ผู้รับบริการ
+      </div>
+      <div class="nav-item" onclick="showPage('staff')">
+        <span class="icon">👤</span> พนักงาน
+      </div>
+      <div class="nav-item" onclick="showPage('healthreport')">
+        <span class="icon">📋</span> รายงานสุขภาพ
+      </div>
+      <div class="nav-section">คลังสต็อก</div>
+      <div class="nav-item" onclick="showPage('stock')">
+        <span class="icon">📦</span> คลังสต็อก
+      </div>
+      <div class="nav-item" onclick="showPage('items')">
+        <span class="icon">🗂️</span> รายการสินค้า
+      </div>
+      <div class="nav-item" onclick="showPage('requisition')">
+        <span class="icon">📋</span> เบิกสินค้า
+      </div>
+      <div class="nav-item" onclick="showPage('history')">
+        <span class="icon">🕐</span> ประวัติการเบิก
+      </div>
+      <div class="nav-item" onclick="showPage('report')">
+        <span class="icon">📈</span> รายงาน
+      </div>
+      <div class="nav-section">การดูแลผู้ป่วย</div>
+      <div class="nav-item" onclick="showPage('incident')">
+        <span class="icon">⚠️</span> อุบัติเหตุ & แผลกดทับ
+      </div>
+      <div class="nav-item" onclick="showPage('dietary')">
+        <span class="icon">🍽️</span> โภชนาการ & สายให้อาหาร
+      </div>
+      <div class="nav-section" id="nav-section-billing">บัญชี</div>
+      <div class="nav-item" onclick="showPage('billing')" id="nav-billing">
+        <span class="icon">💰</span> ระบบบัญชี
+      </div>
+      <div class="nav-item" onclick="showPage('deposits')">
+        <span class="icon">🏦</span> มัดจำ & เงินประกัน
+      </div>
+      <div class="nav-section">ระบบ</div>
+      <div class="nav-item" onclick="showPage('accounts')" id="nav-accounts">
+        <span class="icon">🔑</span> จัดการ Account
+      </div>
+      <div class="nav-item" onclick="showPage('supplierinvoices')">
+        <span class="icon">🧾</span> ใบแจ้งหนี้ผู้จำหน่าย
+      </div>
+      <div class="nav-item" onclick="showPage('suppliers')">
+        <span class="icon">🏭</span> ผู้จำหน่าย
+      </div>
+      <div class="nav-item" onclick="showPage('purchaserequests')">
+        <span class="icon">📋</span> คำขอซื้อ
+      </div>
+      <div class="nav-item" onclick="showPage('stockreport')">
+        <span class="icon">📊</span> รายงานสต็อก
+      </div>
+      <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
+        <span class="icon">💬</span> Line & ตั้งค่า
+        <span id="lineStatusDot" style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:#444;flex-shrink:0;"></span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div id="clock" class="number" style="font-size:13px;"></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
