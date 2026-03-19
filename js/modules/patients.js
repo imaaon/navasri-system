@@ -292,18 +292,33 @@ async function savePatient() {
       const oldStatus = oldPat?.status || 'active';
       const statusChanged = oldStatus !== newStatus;
 
-      // 1. Update ข้อมูลทั่วไป (ไม่รวม status)
-      if (statusChanged) {
-        // ถ้า status เปลี่ยน → update เฉพาะข้อมูลทั่วไปก่อน, status จะถูก update ผ่าน RPC
-        const { error } = await supa.from('patients').update(rowNoStatus).eq('id', editId);
-        if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
-      } else {
-        // status ไม่เปลี่ยน → update ทั้งหมดรวมถึง status
-        const { error } = await supa.from('patients').update({ ...rowNoStatus, status: newStatus }).eq('id', editId);
-        if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+      // ใช้ RPC update_patient_info (SECURITY DEFINER ข้าม RLS with_check)
+      // ถ้า status เปลี่ยน → ส่ง p_status=null เพื่อไม่เปลี่ยน status (รอ RPC change_patient_status)
+      const { data: rpcRes, error } = await supa.rpc('update_patient_info', {
+        p_id:                   editId,
+        p_name:                 data.name,
+        p_idcard:               data.idcard || null,
+        p_id_type:              data.idType || 'thai',
+        p_dob:                  data.dob || null,
+        p_birth_year:           data.birthYear ? parseInt(data.birthYear) : null,
+        p_dob_unknown:          data.dobUnknown || false,
+        p_admit_date:           data.admitDate || null,
+        p_end_date:             data.endDate || null,
+        p_status:               statusChanged ? null : newStatus,
+        p_phone:                data.phone || null,
+        p_emergency:            data.emergency || null,
+        p_address:              data.address || null,
+        p_note:                 data.note || null,
+        p_photo:                data.photo || null,
+        p_current_bed_id:       bedId ? parseInt(bedId) : null,
+        p_physio_rate_per_hour: data.physioRatePerHour || 0,
+        p_physio_hours_per_day: data.physioHoursPerDay || 0,
+      });
+      if (error || !rpcRes?.ok) {
+        toast('บันทึกไม่สำเร็จ: ' + (error?.message || rpcRes?.error), 'error'); return;
       }
 
-      // 2. จัดการ bed
+      // จัดการ bed
       if (oldPat?.currentBedId && oldPat.currentBedId != bedId) {
         await supa.from('beds').update({ status: 'available' }).eq('id', oldPat.currentBedId);
         const ob = db.beds.find(b => b.id == oldPat.currentBedId);
@@ -315,7 +330,7 @@ async function savePatient() {
         if (nb) nb.status = 'occupied';
       }
 
-      // 3. อัปเดต local cache (ยังคง status เดิมไว้ก่อน ถ้า status เปลี่ยน รอ RPC)
+      // อัปเดต local cache
       const idx = db.patients.findIndex(p => p.id == editId);
       if (idx >= 0) {
         db.patients[idx] = { ...db.patients[idx], ...data,
@@ -325,8 +340,6 @@ async function savePatient() {
       logAudit(AUDIT_MODULES.PATIENT, AUDIT_ACTIONS.UPDATE, editId, { name: data.name });
 
       if (statusChanged) {
-        // ปิด modal แก้ไขข้อมูล แล้วเปิด modal log สถานะ
-        // RPC จะ update patients.status + บันทึก log พร้อมกัน
         closeModal('modal-addPatient');
         showLoadingOverlay(false);
         openPatientStatusLogModal(editId, oldStatus, newStatus);
@@ -336,17 +349,37 @@ async function savePatient() {
       toast('แก้ไขข้อมูลเรียบร้อย', 'success');
 
     } else {
-      // เพิ่มผู้รับบริการใหม่
-      const { data: ins, error } = await supa.from('patients')
-        .insert({ ...rowNoStatus, status: newStatus }).select().single();
-      if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
-      db.patients.push({ ...data, id: ins.id, medicalLog: [], medsLog: [], allergies: [], contacts: [] });
+      // เพิ่มผู้รับบริการใหม่ — ใช้ RPC insert_patient
+      const { data: rpcRes, error } = await supa.rpc('insert_patient', {
+        p_name:                 data.name,
+        p_idcard:               data.idcard || null,
+        p_id_type:              data.idType || 'thai',
+        p_dob:                  data.dob || null,
+        p_birth_year:           data.birthYear ? parseInt(data.birthYear) : null,
+        p_dob_unknown:          data.dobUnknown || false,
+        p_admit_date:           data.admitDate || null,
+        p_end_date:             data.endDate || null,
+        p_status:               newStatus || 'active',
+        p_phone:                data.phone || null,
+        p_emergency:            data.emergency || null,
+        p_address:              data.address || null,
+        p_note:                 data.note || null,
+        p_photo:                data.photo || null,
+        p_current_bed_id:       bedId ? parseInt(bedId) : null,
+        p_physio_rate_per_hour: data.physioRatePerHour || 0,
+        p_physio_hours_per_day: data.physioHoursPerDay || 0,
+      });
+      if (error || !rpcRes?.ok) {
+        toast('บันทึกไม่สำเร็จ: ' + (error?.message || rpcRes?.error), 'error'); return;
+      }
+      const newId = rpcRes.id;
+      db.patients.push({ ...data, id: newId, medicalLog: [], medsLog: [], allergies: [], contacts: [] });
       if (bedId) {
         await supa.from('beds').update({ status: 'occupied' }).eq('id', bedId);
         const nb = db.beds.find(b => b.id == bedId);
         if (nb) nb.status = 'occupied';
       }
-      logAudit(AUDIT_MODULES.PATIENT, AUDIT_ACTIONS.CREATE, ins.id, { name: data.name });
+      logAudit(AUDIT_MODULES.PATIENT, AUDIT_ACTIONS.CREATE, newId, { name: data.name });
       toast('เพิ่มผู้รับบริการเรียบร้อย', 'success');
     }
   } finally {
