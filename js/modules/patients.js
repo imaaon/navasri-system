@@ -242,6 +242,16 @@ async function savePatient() {
     try { photoVal = await uploadPhotoToStorage(photoEl._pendingFile, 'patients'); }
     catch(e) { toast('อัปโหลดรูปไม่สำเร็จ: ' + e.message, 'error'); return; }
   } else if (photoVal === '__pending__') { photoVal = ''; }
+
+  // อ่านสถานะจาก dropdown (รองรับ other)
+  const newStatus = (() => {
+    const s = document.getElementById('pat-status').value;
+    if (s === 'other') {
+      return document.getElementById('pat-status-other')?.value.trim() || 'other';
+    }
+    return s;
+  })();
+
   const data = {
     name,
     idcard: document.getElementById('pat-id').value,
@@ -251,14 +261,7 @@ async function savePatient() {
     dobUnknown: document.getElementById('pat-dob-unknown').checked,
     admitDate: document.getElementById('pat-admit').value,
     endDate: document.getElementById('pat-enddate').value,
-    status: (() => {
-      const s = document.getElementById('pat-status').value;
-      if (s === 'other') {
-        const custom = document.getElementById('pat-status-other')?.value.trim();
-        return custom || 'other';
-      }
-      return s;
-    })(),
+    status: newStatus,
     phone:  document.getElementById('pat-phone').value,
     emergency: document.getElementById('pat-emergency').value,
     address: document.getElementById('pat-address').value,
@@ -268,56 +271,88 @@ async function savePatient() {
     physioRatePerHour: parseFloat(document.getElementById('pat-physio-rate')?.value) || 0,
     physioHoursPerDay: parseFloat(document.getElementById('pat-physio-hours')?.value) || 0,
   };
-  const row = {
+
+  // row สำหรับ DB — ไม่รวม status (จัดการแยกผ่าน RPC)
+  const rowNoStatus = {
     name: data.name, idcard: data.idcard||null, id_type: data.idType||'thai',
     dob: data.dob||null, birth_year: data.birthYear||null,
     dob_unknown: data.dobUnknown||false,
     admit_date: data.admitDate||null, end_date: data.endDate||null,
-    status: data.status||'active', phone: data.phone||null,
-    emergency: data.emergency||null, address: data.address||null,
-    note: data.note||null, photo: data.photo||null,
-    current_bed_id: data.currentBedId,
+    phone: data.phone||null, emergency: data.emergency||null,
+    address: data.address||null, note: data.note||null,
+    photo: data.photo||null, current_bed_id: data.currentBedId,
     physio_rate_per_hour: data.physioRatePerHour,
     physio_hours_per_day: data.physioHoursPerDay,
   };
-  if (editId) {
-    // If bed changed, update old bed back to available
-    const oldPatient = db.patients.find(p => p.id == editId);
-    if (oldPatient?.currentBedId && oldPatient.currentBedId != bedId) {
-      await supa.from('beds').update({ status: 'available' }).eq('id', oldPatient.currentBedId);
-      const ob = db.beds.find(b => b.id == oldPatient.currentBedId);
-      if (ob) ob.status = 'available';
+
+  showLoadingOverlay(true);
+  try {
+    if (editId) {
+      const oldPat = db.patients.find(p => p.id == editId);
+      const oldStatus = oldPat?.status || 'active';
+      const statusChanged = oldStatus !== newStatus;
+
+      // 1. Update ข้อมูลทั่วไป (ไม่รวม status)
+      if (statusChanged) {
+        // ถ้า status เปลี่ยน → update เฉพาะข้อมูลทั่วไปก่อน, status จะถูก update ผ่าน RPC
+        const { error } = await supa.from('patients').update(rowNoStatus).eq('id', editId);
+        if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+      } else {
+        // status ไม่เปลี่ยน → update ทั้งหมดรวมถึง status
+        const { error } = await supa.from('patients').update({ ...rowNoStatus, status: newStatus }).eq('id', editId);
+        if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+      }
+
+      // 2. จัดการ bed
+      if (oldPat?.currentBedId && oldPat.currentBedId != bedId) {
+        await supa.from('beds').update({ status: 'available' }).eq('id', oldPat.currentBedId);
+        const ob = db.beds.find(b => b.id == oldPat.currentBedId);
+        if (ob) ob.status = 'available';
+      }
+      if (bedId) {
+        await supa.from('beds').update({ status: 'occupied' }).eq('id', bedId);
+        const nb = db.beds.find(b => b.id == bedId);
+        if (nb) nb.status = 'occupied';
+      }
+
+      // 3. อัปเดต local cache (ยังคง status เดิมไว้ก่อน ถ้า status เปลี่ยน รอ RPC)
+      const idx = db.patients.findIndex(p => p.id == editId);
+      if (idx >= 0) {
+        db.patients[idx] = { ...db.patients[idx], ...data,
+          status: statusChanged ? oldStatus : newStatus };
+      }
+
+      logAudit(AUDIT_MODULES.PATIENT, AUDIT_ACTIONS.UPDATE, editId, { name: data.name });
+
+      if (statusChanged) {
+        // ปิด modal แก้ไขข้อมูล แล้วเปิด modal log สถานะ
+        // RPC จะ update patients.status + บันทึก log พร้อมกัน
+        closeModal('modal-addPatient');
+        showLoadingOverlay(false);
+        openPatientStatusLogModal(editId, oldStatus, newStatus);
+        return;
+      }
+
+      toast('แก้ไขข้อมูลเรียบร้อย', 'success');
+
+    } else {
+      // เพิ่มผู้รับบริการใหม่
+      const { data: ins, error } = await supa.from('patients')
+        .insert({ ...rowNoStatus, status: newStatus }).select().single();
+      if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+      db.patients.push({ ...data, id: ins.id, medicalLog: [], medsLog: [], allergies: [], contacts: [] });
+      if (bedId) {
+        await supa.from('beds').update({ status: 'occupied' }).eq('id', bedId);
+        const nb = db.beds.find(b => b.id == bedId);
+        if (nb) nb.status = 'occupied';
+      }
+      logAudit(AUDIT_MODULES.PATIENT, AUDIT_ACTIONS.CREATE, ins.id, { name: data.name });
+      toast('เพิ่มผู้รับบริการเรียบร้อย', 'success');
     }
-    const { error } = await supa.from('patients').update(row).eq('id', editId);
-    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
-    // ถ้า status เปลี่ยน → เปิด modal ให้เลือกวันและบันทึก log
-    const oldPat = db.patients.find(p => p.id == editId);
-    if (oldPat && oldPat.status !== data.status) {
-      // อัปเดต local cache ก่อน
-      const idx2 = db.patients.findIndex(p => p.id == editId);
-      if (idx2 >= 0) db.patients[idx2] = { ...db.patients[idx2], ...data };
-      closeModal('modal-addPatient');
-      openPatientStatusLogModal(editId, oldPat.status, data.status);
-      return;
-    }
-    const idx = db.patients.findIndex(p => p.id == editId);
-    if (idx >= 0) db.patients[idx] = { ...db.patients[idx], ...data };
-    toast('แก้ไขข้อมูลเรียบร้อย','success');
-  } else {
-    const { data: ins, error } = await supa.from('patients').insert(row).select().single();
-    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
-    db.patients.push({ ...data, id: ins.id, medicalLog: [], medsLog: [], allergies: [], contacts: [] });
-    toast('เพิ่มผู้รับบริการเรียบร้อย', 'success');
+  } finally {
+    showLoadingOverlay(false);
   }
-  // Mark bed as occupied
-  if (bedId) {
-    await supa.from('beds').update({ status: 'occupied' }).eq('id', bedId);
-    const nb = db.beds.find(b => b.id == bedId);
-    if (nb) nb.status = 'occupied';
-  }
-  logAudit(AUDIT_MODULES.PATIENT,
-    editId ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
-    editId || 'new', { name: data.name || data.first_name });
+
   closeModal('modal-addPatient');
   renderPatients();
 }
@@ -640,14 +675,27 @@ async function confirmPatientStatusChange() {
     toast(`✅ ${isEdit ? 'แก้ไข' : 'บันทึก'}การเปลี่ยนสถานะ ${pat?.name || ''} เรียบร้อย`, 'success');
     closeModal('modal-patient-status');
 
+    // refresh ทั้ง profile (ถ้าอยู่) และ patients list
     if (typeof openPatientProfile === 'function' && patientId) {
       setTimeout(() => openPatientProfile(patientId), 300);
-    } else {
-      renderPatients();
     }
+    if (typeof renderPatients === 'function') renderPatients();
+    if (typeof renderDashboard === 'function') renderDashboard();
   } catch(e) {
     toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
   } finally {
     showLoadingOverlay(false);
+  }
+}
+
+// เมื่อกด "ไม่เปลี่ยนสถานะ" — ปิด modal แต่ไม่เปลี่ยน status
+function cancelPatientStatusChange() {
+  closeModal('modal-patient-status');
+  // แจ้งให้รู้ว่าข้อมูลทั่วไปถูกบันทึกแล้ว แต่สถานะไม่เปลี่ยน
+  const logId = document.getElementById('psl-log-id')?.value;
+  if (!logId) {
+    // มาจาก savePatient (ไม่ใช่ edit log) → แสดง toast แจ้ง
+    toast('บันทึกข้อมูลทั่วไปแล้ว — สถานะไม่เปลี่ยน', 'info');
+    if (typeof renderPatients === 'function') renderPatients();
   }
 }
