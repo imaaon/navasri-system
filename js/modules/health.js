@@ -29,8 +29,8 @@ function renderMedLogTab(patId, type) {
           ${entry.by ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">บันทึกโดย: ${entry.by}</div>` : ''}
         </div>
         <div style="flex-shrink:0;display:flex;flex-direction:column;gap:4px;">
-          <button class="btn btn-ghost btn-sm" onclick="editMedLog(${patId},'${type}',${i})" title="แก้ไข">✏️</button>
-          <button class="btn btn-ghost btn-sm" onclick="deleteMedLog(${patId},'${type}',${i})" title="ลบ" style="color:#e74c3c;">🗑️</button>
+          <button class="btn btn-ghost btn-sm" onclick="editMedLog('${patId}','${type}',${i})" title="แก้ไข">✏️</button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteMedLog('${patId}','${type}',${i})" title="ลบ" style="color:#e74c3c;">🗑️</button>
         </div>
       </div>`).join('');
 
@@ -38,8 +38,8 @@ function renderMedLogTab(patId, type) {
     <div class="card-header">
       <div class="card-title" style="font-size:13px;">${icon} ${title} (${logs.length} รายการ)</div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        <button class="btn btn-ghost btn-sm" onclick="exportPatMedExcel(${patId},'${type}')" title="Export Excel" ${logs.length===0?'disabled':''}>📊 Excel</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportPatMedPDF(${patId},'${type}')" title="Export PDF" ${logs.length===0?'disabled':''}>📄 PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportPatMedExcel('${patId}','${type}')" title="Export Excel" ${logs.length===0?'disabled':''}>📊 Excel</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportPatMedPDF('${patId}','${type}')" title="Export PDF" ${logs.length===0?'disabled':''}>📄 PDF</button>
         <button class="btn btn-primary btn-sm" onclick="openAddMedLog('${patId}','${type}')">+ เพิ่มรายการ</button>
       </div>
     </div>
@@ -52,6 +52,7 @@ function openAddMedLog(patId, type) {
   document.getElementById('medlog-type').value   = type;
   document.getElementById('medlog-patid').value  = patId;
   document.getElementById('medlog-editidx').value = '';
+  document.getElementById('medlog-by').value = currentUser?.displayName || currentUser?.username || '';
   document.getElementById('medlog-date').value   = new Date().toISOString().slice(0,10);
   document.getElementById('medlog-detail').value = '';
   document.getElementById('medlog-title').textContent = isM ? '+ ประวัติการรักษา' : '+ ประวัติการให้ยา';
@@ -72,6 +73,7 @@ function editMedLog(patId, type, idx) {
   document.getElementById('medlog-editidx').value = realIdx;
   document.getElementById('medlog-date').value    = entry.date;
   document.getElementById('medlog-detail').value  = entry.detail;
+  document.getElementById('medlog-by').value = entry.by || '';
   document.getElementById('medlog-title').textContent = type === 'medical' ? '✏️ แก้ไขประวัติการรักษา' : '✏️ แก้ไขประวัติการให้ยา';
   openModal('modal-addMedLog');
 }
@@ -91,7 +93,8 @@ function saveMedLog() {
   const key = type === 'medical' ? 'medicalLog' : 'medsLog';
   if (!p[key]) p[key] = [];
 
-  const entry = { date, detail, by: currentUser?.displayName || '', savedAt: new Date().toISOString() };
+  const byUser = document.getElementById('medlog-by')?.value.trim() || currentUser?.displayName || currentUser?.username || '';
+  const entry = { date, detail, by: byUser, savedAt: new Date().toISOString() };
 
   if (editIdx !== '') {
     p[key][parseInt(editIdx)] = entry;
