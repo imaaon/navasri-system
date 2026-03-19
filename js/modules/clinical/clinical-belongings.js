@@ -142,6 +142,23 @@ async function deleteBelonging(id, patientId) {
 // ==========================================
 // ===== DNR & CONSENT ⚖️ ==================
 // ==========================================
+
+async function clearDnr(patientId, patientName) {
+  if (!confirm(`ล้างข้อมูล DNR & Consent ของ ${patientName}?\nข้อมูลทั้งหมดจะถูกลบถาวร`)) return;
+  const c = (db.patientConsents||[]).find(x=>String(x.patientId)===String(patientId));
+  if (c) {
+    const { error } = await supa.from('patient_consents').delete().eq('id', c.id);
+    if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
+    db.patientConsents = (db.patientConsents||[]).filter(x=>String(x.patientId)!==String(patientId));
+  }
+  toast('ล้างข้อมูล DNR & Consent เรียบร้อย','success');
+  const panel = document.getElementById('dnr-panel-'+patientId);
+  if (panel) {
+    const p = db.patients.find(x=>x.id==patientId);
+    if (p) panel.innerHTML = renderDnrPanel(p);
+  }
+}
+
 function renderDnrPanel(p) {
   const consent = (db.patientConsents||[]).find(c=>String(c.patientId)===String(p.id));
   const DNR_STYLES = {
@@ -158,7 +175,8 @@ function renderDnrPanel(p) {
         <div style="font-size:22px;font-weight:800;color:${style.border};">${style.icon} ${style.label}</div>
         ${consent?.dnrSignedDate?`<div style="font-size:12px;color:var(--text3);margin-top:4px;">ลงนาม: ${consent.dnrSignedDate} โดย ${consent.dnrSignedBy}</div>`:''}
       </div>
-      <button class="btn btn-primary btn-sm" onclick="openDnrModal('${p.id}','${p.name}')">✏️ แก้ไข DNR & Consent</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearDnr('${p.id}','${p.name}')" style="color:#e74c3c;border-color:#e74c3c;">🗑️ ล้างข้อมูล</button>
+          <button class="btn btn-primary btn-sm" onclick="openDnrModal('${p.id}','${p.name}')">✏️ แก้ไข DNR & Consent</button>
     </div>
     ${consent ? `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:16px;">
