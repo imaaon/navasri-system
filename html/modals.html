@@ -1065,10 +1065,11 @@
       <div class="form-group">
         <label class="form-label">เหตุผลการคืน <span class="required">*</span></label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-          ${['ญาติซื้อมาให้','ผู้รับบริการจำหน่าย','สินค้าเกินความต้องการ','สินค้าชำรุด/หมดอายุ','อื่นๆ'].map(r=>`
-            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;">
-              <input type="radio" name="return-reason-preset" value="${r}" onchange="toggleReturnOther()"> ${r}
-            </label>`).join('')}
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;"><input type="radio" name="return-reason-preset" value="ญาติซื้อมาให้" onchange="toggleReturnOther()"> ญาติซื้อมาให้</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;"><input type="radio" name="return-reason-preset" value="ผู้รับบริการจำหน่าย" onchange="toggleReturnOther()"> ผู้รับบริการจำหน่าย</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;"><input type="radio" name="return-reason-preset" value="สินค้าเกินความต้องการ" onchange="toggleReturnOther()"> สินค้าเกินความต้องการ</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;"><input type="radio" name="return-reason-preset" value="สินค้าชำรุด/หมดอายุ" onchange="toggleReturnOther()"> สินค้าชำรุด/หมดอายุ</label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;"><input type="radio" name="return-reason-preset" value="อื่นๆ" onchange="toggleReturnOther()"> อื่นๆ</label>
         </div>
         <div id="return-other-wrap" style="display:none;">
           <input class="form-control" id="return-reason-other" placeholder="ระบุเหตุผล...">
