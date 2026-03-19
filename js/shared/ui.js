@@ -78,7 +78,9 @@ async function sendLineNotify(event, messageText, data = {}) {
     forward_requisition: 'notifyForward',
     approved: 'notifyApproved',
     rejected: 'notifyRejected',
-    low_stock: 'notifyLowStock'
+    low_stock: 'notifyLowStock',
+    updated_requisition: 'notifyNewReq',    // ใช้ flag เดียวกับใบเบิกใหม่
+    cancelled_requisition: 'notifyNewReq',  // แจ้งเตือนเมื่อยกเลิก
   };
   if (eventMap[event] && !s[eventMap[event]]) return;
 
@@ -183,6 +185,10 @@ function buildLineMsg(event, data) {
   switch(event) {
     case 'new_requisition':
       return `📋 ใบเบิกใหม่รอตรวจสอบ\n━━━━━━━━━━━━━━\n🔖 ${data.refNo}\n👥 ผู้รับบริการ: ${data.patient}\n📦 ${data.itemCount} รายการ\n👤 เบิกโดย: ${data.staff}\n🕐 ${now}\n\n🔎 กรุณาตรวจสอบในระบบ`;
+    case 'updated_requisition':
+      return `✏️ แก้ไขใบเบิก — รออนุมัติใหม่\n━━━━━━━━━━━━━━\n🔖 ${data.refNo}\n👥 ผู้รับบริการ: ${data.patient}\n📦 ${data.itemCount} รายการ\n👤 แก้ไขโดย: ${data.staff}\n🕐 ${now}\n\n🔎 กรุณาตรวจสอบและอนุมัติใหม่อีกครั้ง`;
+    case 'cancelled_requisition':
+      return `🚫 ยกเลิกใบเบิก\n━━━━━━━━━━━━━━\n🔖 ${data.refNo}\n👥 ผู้รับบริการ: ${data.patient}\n👤 ยกเลิกโดย: ${data.staff}\n📝 เหตุผล: ${data.reason || 'ไม่ระบุ'}\n🕐 ${now}`;
     case 'forward_requisition':
       return `📤 ใบเบิกรออนุมัติ (ผ่านหัวหน้าแล้ว)\n━━━━━━━━━━━━━━\n🔖 ${data.refNo}\n👥 ผู้รับบริการ: ${data.patient}\n📦 ${data.itemCount} รายการ\n🕐 ${now}\n\n✅ กรุณาตรวจสอบสต็อกและอนุมัติในระบบ`;
     case 'approved':

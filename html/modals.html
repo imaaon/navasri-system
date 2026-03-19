@@ -1033,6 +1033,59 @@
   </div>
 </div>
 
+
+<!-- Edit Requisition Modal -->
+<div class="modal-overlay" id="modal-edit-req">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="modal-title">✏️ แก้ไขใบเบิกสินค้า</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-req')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-req-id">
+      <div id="edit-req-info" style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
+      <div style="background:#fef3e0;border:1px solid #f5c97a;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#b7600a;">
+        ⚠️ การแก้ไขจะส่งแจ้งเตือนไลน์ให้ผู้อนุมัติรับทราบอีกครั้ง
+      </div>
+      <div id="edit-req-items-wrap"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addEditReqItem()" style="margin-top:8px;">+ เพิ่มรายการ</button>
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">หมายเหตุ</label>
+        <textarea class="form-control" id="edit-req-note" rows="2" placeholder="หมายเหตุ (ถ้ามี)"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-req')">ปิด</button>
+      <button class="btn btn-primary" onclick="saveEditReq()">💾 บันทึกและแจ้งผู้อนุมัติ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Requisition Modal -->
+<div class="modal-overlay" id="modal-cancel-req">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <div class="modal-title">🗑️ ยกเลิกใบเบิก</div>
+      <button class="modal-close" onclick="closeModal('modal-cancel-req')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cancel-req-id">
+      <div id="cancel-req-summary" style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
+      <div style="background:#fdecea;border:1px solid #f09595;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#a32d2d;">
+        ⚠️ ใบเบิกที่ยกเลิกแล้วจะไม่สามารถกู้คืนได้ และจะไม่ถูกนำไปคำนวณในใบวางบิล
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label class="form-label">เหตุผลที่ยกเลิก (ถ้ามี)</label>
+        <textarea class="form-control" id="cancel-req-reason" rows="2" placeholder="เช่น เบิกผิดรายการ / ไม่ต้องการแล้ว"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cancel-req')">ปิด</button>
+      <button class="btn" style="background:#e74c3c;color:#fff;" onclick="confirmCancelReq()">🗑️ ยืนยันยกเลิกใบเบิก</button>
+    </div>
+  </div>
+</div>
+
 <!-- Return to Stock Modal -->
 <div class="modal-overlay" id="modal-return-item">
   <div class="modal" style="max-width:520px;">
