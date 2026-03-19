@@ -613,8 +613,8 @@ async function saveEditReq() {
       toast('❌ แก้ไขไม่สำเร็จ: ' + (rpcErr?.message || rpcRes?.error), 'error'); return;
     }
 
-    // อัปเดต local cache
-    const cached = db.requisitions.find(r => r.id == reqId);
+    // อัปเดต local cache และดึง patientName
+    const cached = db.requisitions?.find(r => r.id == reqId);
     if (cached) {
       cached.note  = note;
       cached.lines = validItems.map(ri => ({
@@ -627,7 +627,6 @@ async function saveEditReq() {
 
     // แจ้งเตือน Line — แจ้งผู้อนุมัติรับทราบ
     const refNo       = rpcRes.ref_no || ('REQ#' + reqId);
-    const cached      = db.requisitions?.find(r => r.id == reqId);
     const patientName = cached?.patientName || '';
     sendLineNotify('updated_requisition',
       buildLineMsg('updated_requisition', {
