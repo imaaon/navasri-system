@@ -31,7 +31,19 @@ function renderNursingTab(pid, patientId) {
           <div style="flex-shrink:0;min-width:48px;text-align:center;">
             <div style="font-size:13px;font-weight:700;color:var(--accent);">${note.time||'--:--'}</div>
           </div>
-          <div style="flex:1;font-size:13px;line-height:1.6;white-space:pre-wrap;">${note.content||note.general||note.condition||'-'}</div>
+          <div style="flex:1;font-size:13px;line-height:1.6;white-space:pre-wrap;">${[
+              note.generalCondition ? '🧍 อาการ: ' + note.generalCondition : '',
+              note.consciousness    ? '🧠 ความรู้สึกตัว: ' + note.consciousness : '',
+              note.pain             ? '😣 ปวด: ' + note.pain : '',
+              note.eating           ? '🍽️ อาหาร: ' + note.eating : '',
+              note.elimination      ? '🚽 ขับถ่าย: ' + note.elimination : '',
+              note.sleep            ? '😴 นอน: ' + note.sleep : '',
+              note.activity         ? '🏃 กิจกรรม: ' + note.activity : '',
+              note.wound            ? '🩹 แผล: ' + note.wound : '',
+              note.iv               ? '💉 IV: ' + note.iv : '',
+              note.o2               ? '🫁 O₂: ' + note.o2 : '',
+              note.handoverNote     ? '📋 ส่งเวร: ' + note.handoverNote : '',
+            ].filter(Boolean).join('\n') || '-'}</div>
           <div style="flex-shrink:0;font-size:11px;color:var(--text3);text-align:right;">
             ${note.by||''}<br>
             <div style="display:flex;gap:4px;margin-top:2px;">
