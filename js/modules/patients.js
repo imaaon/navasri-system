@@ -655,6 +655,8 @@ async function confirmPatientStatusChange() {
   if (!statusDate) { toast('กรุณาเลือกวันที่เปลี่ยนสถานะ', 'warning'); return; }
   if (!newStatus)  { toast('กรุณาเลือกสถานะ', 'warning'); return; }
 
+  const pat = db.patients?.find(p => p.id == patientId); // ประกาศก่อนใช้
+
   const noteText = noteExtra ||
     `เปลี่ยนจาก ${STATUS_LABEL_TH[oldStatus]||oldStatus} เป็น ${STATUS_LABEL_TH[newStatus]||newStatus}`;
 
@@ -693,9 +695,7 @@ async function confirmPatientStatusChange() {
     // อัปเดต local cache — คำนึงถึง return_date
     if (pat) {
       if (!isEdit) {
-        // ถ้ามี return_date และผ่านมาแล้ว → status กลับเป็น oldStatus
         const today = new Date().toISOString().split('T')[0];
-        const returnDate = document.getElementById('psl-return-date').value;
         if (returnDate && returnDate <= today) {
           pat.status = oldStatus;
         } else {
