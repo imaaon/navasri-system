@@ -361,7 +361,7 @@ async function approveReq(reqId) {
   try {
     // ใช้ RPC approve_requisition — ตัดสต็อก FEFO + audit แบบ atomic
     const { data: rpcResult, error: rpcErr } = await supa.rpc('approve_requisition', {
-      p_header_id:      reqId,
+      p_header_id:      parseInt(reqId),
       p_approved_by:    actor,
       p_approved_role:  actorRole,
     });
@@ -457,7 +457,7 @@ async function confirmRejectReq() {
 
   // ใช้ RPC reject_requisition — บันทึก audit ด้วย
   const { data: rpcRes, error: rpcErr } = await supa.rpc('reject_requisition', {
-    p_header_id:   reqId,
+    p_header_id:   parseInt(reqId),
     p_rejected_by: actor,
     p_reason:      reason,
   });
