@@ -626,7 +626,8 @@ async function saveEditReq() {
     }
 
     // แจ้งเตือน Line — แจ้งผู้อนุมัติรับทราบ
-    const refNo = rpcRes.ref_no || ('REQ#' + reqId);
+    const refNo       = rpcRes.ref_no || ('REQ#' + reqId);
+    const cached      = db.requisitions?.find(r => r.id == reqId);
     const patientName = cached?.patientName || '';
     sendLineNotify('updated_requisition',
       buildLineMsg('updated_requisition', {
@@ -651,13 +652,20 @@ async function saveEditReq() {
 // ── CANCEL REQUISITION (pending only) ────────────────
 // ─────────────────────────────────────────────────────
 
-function openCancelReqModal(reqId) {
-  const req = (db.requisitions || []).find(r => r.id == reqId);
-  if (!req) { toast('ไม่พบข้อมูลใบเบิก', 'error'); return; }
-  if (req.status !== 'pending') {
+async function openCancelReqModal(reqId) {
+  // โหลดจาก Supabase โดยตรง ไม่พึ่ง db.requisitions (เผื่อกรณีมาจาก dashboard)
+  const { data, error } = await supa
+    .from('requisition_headers')
+    .select('*, requisition_lines(*)')
+    .eq('id', reqId)
+    .single();
+
+  if (error || !data) { toast('ไม่พบข้อมูลใบเบิก', 'error'); return; }
+  if (data.status !== 'pending') {
     toast('ไม่สามารถยกเลิกได้ เนื่องจากใบเบิกนี้อนุมัติแล้ว', 'error'); return;
   }
 
+  const req = mapReq(data);
   const itemSummary = req.lines?.length > 0
     ? req.lines.map(l => `${l.itemName} (${l.qty} ${l.unit})`).join(', ')
     : `${req.itemName} (${req.qty} ${req.unit})`;
@@ -676,8 +684,7 @@ async function confirmCancelReq() {
   const reason = document.getElementById('cancel-req-reason').value.trim();
   const actor  = currentUser?.displayName || currentUser?.username || '';
 
-  const req = (db.requisitions || []).find(r => r.id == reqId);
-  if (!req) return;
+  if (!reqId || isNaN(parseInt(reqId))) { toast('ข้อมูลใบเบิกไม่ถูกต้อง', 'error'); return; }
 
   showLoadingOverlay(true);
   try {
@@ -691,23 +698,28 @@ async function confirmCancelReq() {
       toast('❌ ยกเลิกไม่สำเร็จ: ' + (rpcErr?.message || rpcRes?.error), 'error'); return;
     }
 
-    // อัปเดต local cache
-    req.status = 'cancelled';
+    // อัปเดต local cache ถ้ามี
+    const cached = db.requisitions?.find(r => r.id == reqId);
+    if (cached) cached.status = 'cancelled';
+
+    // ดึง refNo และ patientName จาก cache หรือ fallback
+    const refNo       = cached?.refNo       || ('REQ#' + reqId);
+    const patientName = cached?.patientName || '';
 
     // แจ้งเตือน Line
     sendLineNotify('cancelled_requisition',
       buildLineMsg('cancelled_requisition', {
-        refNo: req.refNo || ('REQ#'+reqId), patient: req.patientName,
-        staff: actor, reason
+        refNo, patient: patientName, staff: actor, reason
       }),
-      { patientName: req.patientName, reason }
+      { patientName, reason }
     );
 
-    toast(`🚫 ยกเลิกใบเบิก ${req.refNo || '#'+reqId} เรียบร้อยแล้ว`, 'success');
+    toast(`🚫 ยกเลิกใบเบิก ${refNo} เรียบร้อยแล้ว`, 'success');
     closeModal('modal-cancel-req');
-    renderApprovalPanel();
-    renderHistory();
-    updateApprovalBadge();
+    if (typeof renderApprovalPanel === 'function') renderApprovalPanel();
+    if (typeof renderHistory      === 'function') renderHistory();
+    if (typeof updateApprovalBadge=== 'function') updateApprovalBadge();
+    if (typeof renderDashboard    === 'function') renderDashboard();
   } catch(e) {
     toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
   } finally {
