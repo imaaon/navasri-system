@@ -159,11 +159,11 @@ async function openPatientProfile(id) {
                     <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
                       ${c.isPayer ? '<span class="badge badge-green">💰 ผู้จ่ายเงิน (Payer)</span>' : ''}
                       ${c.isDecisionMaker ? '<span class="badge" style="background:#e8e8f8;color:#3d3d9e;">🧠 ผู้ตัดสินใจ</span>' : ''}
-                      <span class="badge badge-gray">${c.role}</span>
+                      ${c.isPayer ? '' : (!c.isDecisionMaker ? '<span class="badge badge-gray">ผู้ติดต่อฉุกเฉิน</span>' : '')}
                     </div>
                     ${c.note ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">📝 ${c.note}</div>` : ''}
                   </div>
-                  <button class="btn btn-ghost btn-sm" onclick="deleteContact('${p.id}','${c.id}')">🗑️</button>
+                  <button class="btn btn-ghost btn-sm" onclick="openEditContactModal('${p.id}','${c.id}')" style="margin-right:4px;">✏️</button><button class="btn btn-ghost btn-sm" onclick="deleteContact('${p.id}','${c.id}')">🗑️</button>
                 </div>
               </div>`).join('')}
           </div>`}
