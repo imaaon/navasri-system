@@ -472,9 +472,28 @@ function mapStaff(r) {
     photo: r.photo, contractData: r.contract_data, contractName: r.contract_name };
 }
 function mapReq(r) {
-  return { id: r.id, date: r.date, patientId: r.patient_id, patientName: r.patient_name,
-    itemId: r.item_id, itemName: r.item_name, qty: r.qty, unit: r.unit,
-    staffId: r.staff_id, staffName: r.staff_name, status: r.status||'pending', note: r.note };
+  // รองรับทั้ง requisition_headers (ใหม่) และ requisitions (เก่า)
+  const lines = (r.requisition_lines || []).map(l => ({
+    id: l.id, itemId: l.item_id, itemName: l.item_name,
+    qty: l.qty_requested, qtyApproved: l.qty_approved,
+    unit: l.unit, unitPrice: l.unit_price||0
+  }));
+  // backward compat: ถ้าไม่มี lines ให้ใช้ item_id/item_name จาก record เดิม
+  const firstLine = lines[0] || {};
+  return {
+    id: r.id, refNo: r.ref_no||'', date: r.date,
+    patientId: r.patient_id, patientName: r.patient_name,
+    staffId: r.staff_id, staffName: r.staff_name,
+    status: r.status||'pending', note: r.note,
+    approvedBy: r.approved_by||'', approvedAt: r.approved_at||'',
+    createdBy: r.created_by||'',
+    lines,
+    // backward compat fields
+    itemId: r.item_id || firstLine.itemId,
+    itemName: r.item_name || firstLine.itemName,
+    qty: r.qty || firstLine.qty,
+    unit: r.unit || firstLine.unit,
+  };
 }
 function mapPurchase(r) {
   return { id: r.id, date: r.date, itemId: r.item_id, itemName: r.item_name,

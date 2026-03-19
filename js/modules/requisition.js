@@ -264,9 +264,24 @@ function updateApprovalBadge() {
   }
 }
 
-function renderApprovalPanel() {
+async function renderApprovalPanel() {
   const container = document.getElementById('approval-panel-content');
   if (!container) return;
+
+  // โหลดล่าสุดจาก requisition_headers
+  const { data: freshData } = await supa.from('requisition_headers')
+    .select('*, requisition_lines(*)')
+    .eq('status','pending')
+    .order('id', {ascending:false})
+    .limit(100);
+  if (freshData) {
+    freshData.forEach(r => {
+      const mapped = mapReq(r);
+      const idx = db.requisitions.findIndex(x=>x.id===mapped.id);
+      if (idx >= 0) db.requisitions[idx] = mapped;
+      else db.requisitions.unshift(mapped);
+    });
+  }
 
   const pending    = (db.requisitions||[]).filter(r => r.status === 'pending');
   const recentLogs = (db.approvalLogs||[]).slice(0,30);
@@ -613,7 +628,7 @@ async function renderHistory() {
   if(tb) tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text3);">⏳ กำลังโหลด...</td></tr>';
 
   // Build Supabase query with server-side filters
-  let q = supa.from('requisitions').select('*').order('id', {ascending:false}).limit(500);
+  let q = supa.from('requisition_headers').select('*, requisition_lines(*)').order('id', {ascending:false}).limit(500);
 
   if (monthFilter) {
     const [y,m] = monthFilter.split('-');
@@ -674,17 +689,24 @@ async function renderHistory() {
   if (reqs.length === 0) { tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบรายการ</td></tr>'; return; }
   const STATUS_COLOR = { pending:'#e67e22', forward:'#3498db', approved:'#27ae60', rejected:'#e74c3c' };
   const STATUS_LABEL = { pending:'รอธุรการ', forward:'รออนุมัติ L2', approved:'✅ อนุมัติ', rejected:'❌ ไม่อนุมัติ' };
-  tb.innerHTML = reqs.map(r => `<tr>
+  tb.innerHTML = reqs.map(r => {
+    const itemSummary = r.lines?.length > 0
+      ? r.lines.map(l => `${l.itemName} (${l.qty} ${l.unit})`).join(', ')
+      : `${r.itemName||'-'} (${r.qty||0} ${r.unit||''})`;
+    const qtySummary = r.lines?.length > 0
+      ? r.lines.reduce((s,l)=>s+(l.qty||0),0)
+      : (r.qty||0);
+    return `<tr>
     <td class="number" style="white-space:nowrap;">${r.date}</td>
+    <td>${r.refNo||'-'}</td>
     <td>${r.patientName}</td>
-    <td style="font-weight:500;">${r.itemName}</td>
-    <td class="number">${r.qty}</td>
-    <td>${r.unit}</td>
-    <td>${r.staffName}</td>
+    <td style="font-weight:500;font-size:12px;">${itemSummary}</td>
+    <td class="number">${qtySummary}</td>
+    <td>${r.staffName||'-'}</td>
     <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${STATUS_COLOR[r.status]||'#888'}22;color:${STATUS_COLOR[r.status]||'#888'};">${STATUS_LABEL[r.status]||r.status}</span></td>
     <td style="color:var(--text2);font-size:12px;">${r.note || '-'}</td>
     <td><button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')" title="ดูใบเบิก">🖨️</button></td>
-  </tr>`).join('');
+  </tr>`;}).join('');
 }
 
 // ===== REPORT =====
