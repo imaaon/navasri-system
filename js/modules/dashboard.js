@@ -3,17 +3,22 @@
 // ===== DASHBOARD =====
 function renderDashboard() {
   const role = currentUser?.role || 'staff';
-  // แสดง Dashboard ตาม Role
-  if (role === 'nurse' || role === 'caregiver') {
-    renderNurseDashboard();
+  // admin / manager / officer → full admin dashboard
+  if (['admin', 'manager', 'officer'].includes(role)) {
+    renderAdminDashboard();
     return;
   }
-  renderAdminDashboard();
+  // ทุก role อื่น → staff dashboard (nurse, caregiver, warehouse, accounting, supervisor, physical_therapist)
+  renderStaffDashboard();
 }
 
-function renderNurseDashboard() {
+// ===== STAFF DASHBOARD (nurse / caregiver / warehouse / accounting / supervisor / physical_therapist) =====
+async function renderStaffDashboard() {
+  const dashEl = document.getElementById('page-dashboard');
   const todayStr = new Date().toISOString().split('T')[0];
   const activePatients = db.patients.filter(p => p.status === 'active');
+  const userName = currentUser?.displayName || currentUser?.username || '';
+  const role = currentUser?.role || '';
 
   // นัดหมายสัปดาห์นี้
   const weekLater = new Date(); weekLater.setDate(weekLater.getDate() + 7);
@@ -34,24 +39,142 @@ function renderNurseDashboard() {
     });
   });
 
-  const dashEl = document.getElementById('page-dashboard');
+  // โหลดรายการเบิกของตัวเองจาก Supabase
+  const { data: myReqData } = await supa
+    .from('requisition_headers')
+    .select('*, requisition_lines(*)')
+    .order('id', { ascending: false })
+    .limit(100);
+
+  // กรองเฉพาะของตัวเอง เทียบจาก staff_name หรือ created_by
+  const allMyReqs = (myReqData || [])
+    .map(mapReq)
+    .filter(r => r.staffName === userName || r.createdBy === (currentUser?.username || ''));
+
+  const myPending  = allMyReqs.filter(r => r.status === 'pending');
+  const myApproved = allMyReqs.filter(r => r.status === 'approved');
+
+  // โหลดรายการรออนุมัติทั้งหมด (ทุก role เห็น)
+  const { data: pendingData } = await supa
+    .from('requisition_headers')
+    .select('*, requisition_lines(*)')
+    .eq('status', 'pending')
+    .order('id', { ascending: false })
+    .limit(20);
+  const allPending = (pendingData || []).map(mapReq);
+
+  const STATUS_BADGE = s => {
+    if (s === 'approved') return '<span style="font-size:11px;padding:2px 10px;border-radius:12px;background:#e8f5ee;color:#2a7a4f;">อนุมัติแล้ว</span>';
+    if (s === 'rejected') return '<span style="font-size:11px;padding:2px 10px;border-radius:12px;background:#fdecea;color:#c0392b;">ไม่อนุมัติ</span>';
+    return '<span style="font-size:11px;padding:2px 10px;border-radius:12px;background:#fef3e0;color:#d4760a;">รออนุมัติ</span>';
+  };
+
   dashEl.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:20px;">
-      <div class="card" style="padding:18px;text-align:center;">
-        <div style="font-size:28px;font-weight:800;color:var(--accent);">${activePatients.length}</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:4px;">👥 ผู้รับบริการปัจจุบัน</div>
-      </div>
-      <div class="card" style="padding:18px;text-align:center;">
-        <div style="font-size:28px;font-weight:800;color:#e67e22;">${upcomingAppts.length}</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:4px;">📅 นัดหมายสัปดาห์นี้</div>
-      </div>
-      <div class="card" style="padding:18px;text-align:center;">
-        <div style="font-size:28px;font-weight:800;color:#c0392b;">${missedMeds.length}</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:4px;">💊 ยาที่ยังไม่บันทึกวันนี้</div>
-      </div>
+    <div style="margin-bottom:20px;">
+      <div style="font-size:18px;font-weight:700;color:var(--text);">สวัสดี, ${userName} 👋</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:2px;">${todayStr} · ${role}</div>
     </div>
 
-    ${upcomingAppts.length > 0 ? `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:20px;">
+      <div class="card" style="padding:18px;text-align:center;">
+        <div style="font-size:28px;font-weight:800;color:var(--accent);">${activePatients.length}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px;">👥 ผู้รับบริการ</div>
+      </div>
+      <div class="card" style="padding:18px;text-align:center;cursor:pointer;" onclick="showPage('history')">
+        <div style="font-size:28px;font-weight:800;color:var(--accent);">${allMyReqs.length}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px;">📋 เบิกทั้งหมด (ของฉัน)</div>
+      </div>
+      <div class="card" style="padding:18px;text-align:center;border:${myPending.length > 0 ? '2px solid #e67e22' : '0.5px solid var(--border)'};">
+        <div style="font-size:28px;font-weight:800;color:#e67e22;">${myPending.length}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px;">⏳ ของฉัน รออนุมัติ</div>
+      </div>
+      <div class="card" style="padding:18px;text-align:center;">
+        <div style="font-size:28px;font-weight:800;color:#27ae60;">${myApproved.length}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px;">✅ อนุมัติแล้ว</div>
+      </div>
+      ${allPending.length > 0 ? `
+      <div class="card" style="padding:18px;text-align:center;border:2px solid #e74c3c;cursor:pointer;" onclick="showPage('history');setTimeout(()=>switchHistoryTab('approval'),300)">
+        <div style="font-size:28px;font-weight:800;color:#e74c3c;">${allPending.length}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px;">🔔 ใบเบิกรออนุมัติ (ทั้งหมด)</div>
+      </div>` : ''}
+    </div>
+
+    ${myPending.length > 0 ? `
+    <div style="background:#fef3e0;border:1px solid #f5c97a;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:18px;">⏳</span>
+      <div>
+        <div style="font-weight:600;color:#b7600a;font-size:13px;">มีใบเบิกของคุณ ${myPending.length} รายการ กำลังรออนุมัติจากธุรการ</div>
+        <div style="font-size:12px;color:#c97a20;margin-top:2px;">ระบบจะอัปเดตสถานะเมื่อธุรการดำเนินการ</div>
+      </div>
+    </div>` : ''}
+
+    ${allPending.length > 0 ? `
+    <div class="card" style="margin-bottom:16px;border:1.5px solid #e67e22;">
+      <div class="card-header" style="background:#fef3e0;">
+        <div class="card-title" style="color:#e67e22;">⏳ ใบเบิกรออนุมัติทั้งหมด (${allPending.length} รายการ)</div>
+        ${canApproveReq()
+          ? `<button class="btn btn-sm" style="background:#e67e22;color:#fff;font-size:11px;" onclick="showPage('history');setTimeout(()=>switchHistoryTab('approval'),300)">ไปหน้าอนุมัติ →</button>`
+          : `<button class="btn btn-ghost btn-sm" onclick="showPage('history');setTimeout(()=>switchHistoryTab('approval'),300)">ดูทั้งหมด</button>`}
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>วันที่</th><th>เลขที่</th><th>ผู้รับบริการ</th><th>รายการ</th><th>ผู้เบิก</th>${canApproveReq() ? '<th></th>' : ''}</tr></thead>
+          <tbody>
+            ${allPending.map(r => {
+              const itemSummary = r.lines?.length > 0
+                ? r.lines.map(l => `${l.itemName} (${l.qty} ${l.unit})`).join(', ')
+                : `${r.itemName||'-'} (${r.qty||0} ${r.unit||''})`;
+              const isMyReq = r.staffName === userName;
+              return `<tr style="${isMyReq ? 'background:#fffbf0;' : ''}">
+                <td style="font-size:12px;white-space:nowrap;">${r.date||'-'}${isMyReq ? ' <span style="font-size:10px;color:#e67e22;">(ของฉัน)</span>' : ''}</td>
+                <td style="font-family:monospace;font-size:12px;">${r.refNo||'#'+r.id}</td>
+                <td style="font-weight:600;">${r.patientName||'-'}</td>
+                <td style="font-size:12px;max-width:200px;">${itemSummary}</td>
+                <td style="font-size:12px;">${r.staffName||'-'}</td>
+                ${canApproveReq() ? `<td style="white-space:nowrap;">
+                  <button class="btn btn-primary btn-sm" onclick="approveReq('${r.id}');setTimeout(renderDashboard,800)" style="font-size:11px;">✅ อนุมัติ</button>
+                  <button class="btn btn-sm" style="background:#e74c3c22;color:#e74c3c;font-size:11px;" onclick="openRejectModal('${r.id}')">❌ ไม่อนุมัติ</button>
+                </td>` : ''}
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>` : `
+    <div class="card" style="padding:16px;text-align:center;color:#27ae60;margin-bottom:16px;">✅ ไม่มีใบเบิกรออนุมัติ</div>`}
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <div class="card-title">📦 ประวัติการเบิกของฉัน</div>
+        <button class="btn btn-ghost btn-sm" onclick="showPage('requisition')">+ เบิกสินค้าใหม่</button>
+      </div>
+      ${allMyReqs.length === 0
+        ? `<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีประวัติการเบิก</div>`
+        : `<div class="table-wrap"><table>
+            <thead><tr><th>วันที่</th><th>เลขที่</th><th>ผู้รับบริการ</th><th>รายการ</th><th>สถานะ</th><th></th></tr></thead>
+            <tbody>
+              ${allMyReqs.slice(0, 15).map(r => {
+                const itemSummary = r.lines?.length > 0
+                  ? r.lines.map(l => `${l.itemName} (${l.qty} ${l.unit})`).join(', ')
+                  : `${r.itemName||'-'} (${r.qty||0} ${r.unit||''})`;
+                return `<tr>
+                  <td style="font-size:12px;white-space:nowrap;">${r.date||'-'}</td>
+                  <td style="font-family:monospace;font-size:12px;">${r.refNo||'#'+r.id}</td>
+                  <td style="font-weight:600;">${r.patientName||'-'}</td>
+                  <td style="font-size:12px;max-width:220px;">${itemSummary}</td>
+                  <td>${STATUS_BADGE(r.status)}</td>
+                  <td><button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')">🖨️</button></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+          ${allMyReqs.length > 15 ? `<div style="padding:10px 16px;font-size:12px;color:var(--text3);text-align:right;">
+            แสดง 15 รายการล่าสุด · <a href="#" onclick="showPage('history');return false;" style="color:var(--accent);">ดูทั้งหมด ${allMyReqs.length} รายการ</a>
+          </div>` : ''}
+        </div>`}
+    </div>
+
+    ${['nurse','caregiver','supervisor'].includes(role) && upcomingAppts.length > 0 ? `
     <div class="card" style="margin-bottom:16px;">
       <div class="card-header"><div class="card-title">📅 นัดหมายสัปดาห์นี้</div></div>
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
@@ -60,15 +183,15 @@ function renderNurseDashboard() {
           <th style="padding:8px 12px;text-align:left;">ผู้รับบริการ</th>
           <th style="padding:8px 12px;text-align:left;">สถานที่/แพทย์</th>
         </tr></thead>
-        <tbody>${upcomingAppts.slice(0,10).map(a => `<tr style="border-top:1px solid var(--border);">
+        <tbody>${upcomingAppts.slice(0,8).map(a => `<tr style="border-top:1px solid var(--border);">
           <td style="padding:8px 12px;font-weight:600;color:var(--accent);">${a.apptDate}</td>
-          <td style="padding:8px 12px;">${a.patientName || '-'}</td>
-          <td style="padding:8px 12px;color:var(--text2);">${a.location || a.doctor || '-'}</td>
+          <td style="padding:8px 12px;">${a.patientName||'-'}</td>
+          <td style="padding:8px 12px;color:var(--text2);">${a.location||a.doctor||'-'}</td>
         </tr>`).join('')}</tbody>
       </table>
     </div>` : ''}
 
-    ${missedMeds.length > 0 ? `
+    ${['nurse','caregiver'].includes(role) ? (missedMeds.length > 0 ? `
     <div class="card">
       <div class="card-header"><div class="card-title" style="color:#c0392b;">💊 ยาที่ยังไม่บันทึกวันนี้</div></div>
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
@@ -81,7 +204,7 @@ function renderNurseDashboard() {
           <td style="padding:8px 12px;color:#c0392b;">💊 ${m.med}</td>
         </tr>`).join('')}</tbody>
       </table>
-    </div>` : `<div class="card" style="padding:20px;text-align:center;color:#27ae60;">✅ บันทึกการให้ยาครบทุกรายการแล้ววันนี้</div>`}
+    </div>` : `<div class="card" style="padding:20px;text-align:center;color:#27ae60;">✅ บันทึกการให้ยาครบทุกรายการแล้ววันนี้</div>`) : ''}
   `;
 }
 
@@ -193,6 +316,9 @@ function renderAdminDashboard() {
   if (el_recv)   el_recv.textContent   = (db.purchases||[]).filter(p=>(p.date||'').startsWith(monthStr)).length;
   if (el_prPend) el_prPend.textContent = (db.purchaseRequests||[]).filter(r=>['draft','submitted'].includes(r.status)).length;
 
+  // ── Pending Requisitions Widget ───────────────────────────
+  renderDashPendingReqs();
+
   // ── Executive Alerts ──────────────────────────────────────
   const alertSection = document.getElementById('exec-alerts-section');
   const alertBody    = document.getElementById('exec-alerts-body');
@@ -257,3 +383,57 @@ function renderAdminDashboard() {
     }
   }
 }  // end renderAdminDashboard
+
+// ── Pending Requisitions Dashboard Widget ─────────────────────
+async function renderDashPendingReqs() {
+  const card  = document.getElementById('dash-pending-req-card');
+  const tb    = document.getElementById('dash-pending-req-table');
+  const statEl= document.getElementById('stat-req-pending');
+  const statCard = document.getElementById('stat-card-req-pending');
+  if (!card || !tb) return;
+
+  // โหลดล่าสุดจาก Supabase เสมอ
+  const { data } = await supa
+    .from('requisition_headers')
+    .select('*, requisition_lines(*)')
+    .eq('status', 'pending')
+    .order('id', { ascending: false })
+    .limit(20);
+
+  const pending = (data || []).map(mapReq);
+
+  // อัปเดต stat card
+  if (statEl) statEl.textContent = pending.length;
+  if (statCard) {
+    statCard.style.display = canApproveReq() || pending.length > 0 ? '' : 'none';
+    statCard.style.opacity = pending.length === 0 ? '0.5' : '1';
+  }
+
+  if (pending.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = '';
+
+  tb.innerHTML = pending.map(r => {
+    // รวมชื่อรายการจาก lines ถ้ามี
+    const itemSummary = r.lines?.length > 0
+      ? r.lines.map(l => `${l.itemName} (${l.qty} ${l.unit})`).join(', ')
+      : `${r.itemName || '-'} (${r.qty || 0} ${r.unit || ''})`;
+
+    return `<tr>
+      <td style="font-size:12px;white-space:nowrap;">${r.date || '-'}</td>
+      <td style="font-family:monospace;font-size:12px;">${r.refNo || '#' + r.id}</td>
+      <td style="font-weight:600;">${r.patientName || '-'}</td>
+      <td style="font-size:12px;">${itemSummary}</td>
+      <td style="font-size:12px;">${r.staffName || '-'}</td>
+      <td style="white-space:nowrap;">
+        ${canApproveReq() ? `
+          <button class="btn btn-primary btn-sm" onclick="approveReq('${r.id}');setTimeout(renderDashPendingReqs,600)" style="font-size:11px;">✅ อนุมัติ</button>
+          <button class="btn btn-sm" style="background:#e74c3c22;color:#e74c3c;font-size:11px;" onclick="openRejectModal('${r.id}')">❌ ไม่อนุมัติ</button>
+        ` : `<button class="btn btn-ghost btn-sm" onclick="showPage('history');setTimeout(()=>switchHistoryTab('approval'),300)" style="font-size:11px;">ดูรายละเอียด</button>`}
+      </td>
+    </tr>`;
+  }).join('');
+}
