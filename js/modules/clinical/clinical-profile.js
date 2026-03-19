@@ -6,7 +6,11 @@ async function openPatientProfile(id) {
   if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ','error'); return; }
   document.getElementById('patprofile-breadcrumb').textContent = p.name;
   // Query all reqs for this patient directly (no time limit — full history per patient)
-  const { data: reqData } = await supa.from('requisitions').select('*').eq('patient_id', String(p.id)).order('id', {ascending:false});
+  const { data: reqData } = await supa
+    .from('requisition_headers')
+    .select('*, requisition_lines(*)')
+    .eq('patient_id', p.id)
+    .order('id', {ascending:false});
   const reqs = (reqData||[]).map(mapReq);
   const age  = p.dob ? calcAge(p.dob) : '-';
   const dur  = p.admitDate ? calcDuration(p.admitDate, p.endDate) : '-';
