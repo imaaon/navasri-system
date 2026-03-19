@@ -498,6 +498,12 @@ async function loadPatStatusLog(patId) {
       <td>${daysText}${returnText}</td>
       <td style="font-size:12px;color:var(--text2);">${l.note||'-'}</td>
       <td style="font-size:12px;color:var(--text3);">${l.changed_by||'-'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="editPatStatusLog('${l.id}','${patId}')"
+          title="แก้ไขรายการนี้" style="font-size:12px;">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="deletePatStatusLog('${l.id}','${patId}')"
+          title="ลบรายการนี้" style="color:#e74c3c;font-size:12px;">🗑️</button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -514,6 +520,7 @@ async function loadPatStatusLog(patId) {
             <th>จำนวนวัน</th>
             <th>หมายเหตุ</th>
             <th>บันทึกโดย</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -533,40 +540,43 @@ function quickChangeStatus(patientId, patientName, newStatus) {
     toast(`${patientName} อยู่ในสถานะนี้อยู่แล้ว`, 'warning'); return;
   }
 
-  // ถ้าเป็น other → ต้องกรอกข้อความก่อน เปิด modal พร้อม input
   if (newStatus === 'other') {
     _quickStatusOtherModal(patientId, patientName, oldStatus);
     return;
   }
 
-  // อัปเดต status ใน Supabase ก่อน แล้วเปิด modal เลือกวัน
-  showLoadingOverlay(true);
-  supa.from('patients').update({ status: newStatus, updated_at: new Date().toISOString() })
-    .eq('id', patientId)
-    .then(({ error }) => {
-      showLoadingOverlay(false);
-      if (error) { toast('เปลี่ยนสถานะไม่สำเร็จ: ' + error.message, 'error'); return; }
-      // อัปเดต local cache
-      if (pat) pat.status = newStatus;
-      // เปิด modal บันทึก log พร้อมเลือกวัน
-      openPatientStatusLogModal(patientId, oldStatus, newStatus);
-    });
+  // เปิด modal เลือกวัน — RPC จะ update + log พร้อมกัน
+  openPatientStatusLogModal(patientId, oldStatus, newStatus);
 }
 
 function _quickStatusOtherModal(patientId, patientName, oldStatus) {
-  // สร้าง inline prompt ด้วย modal ที่มีอยู่ แต่เพิ่ม input สำหรับ other
   const customStatus = prompt(`ระบุสถานะของ ${patientName}\nเช่น: ลาพักผ่อน / พักที่บ้านญาติ / ย้ายสถานดูแล`);
   if (!customStatus || !customStatus.trim()) return;
+  openPatientStatusLogModal(patientId, oldStatus, customStatus.trim());
+}
 
-  const newStatus = customStatus.trim();
-  showLoadingOverlay(true);
-  supa.from('patients').update({ status: newStatus })
-    .eq('id', patientId)
-    .then(({ error }) => {
-      showLoadingOverlay(false);
-      if (error) { toast('เปลี่ยนสถานะไม่สำเร็จ: ' + error.message, 'error'); return; }
-      const pat = db.patients.find(p => p.id == patientId);
-      if (pat) pat.status = newStatus;
-      openPatientStatusLogModal(patientId, oldStatus, newStatus);
-    });
+async function deletePatStatusLog(logId, patId) {
+  if (!confirm('ลบรายการนี้ออกจากประวัติ?')) return;
+  const { error } = await supa.from('patient_status_logs').delete().eq('id', logId);
+  if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  toast('ลบรายการเรียบร้อย', 'success');
+  loadPatStatusLog(patId);
+}
+
+async function editPatStatusLog(logId, patId) {
+  // โหลดข้อมูล log นั้นจาก Supabase
+  const { data, error } = await supa
+    .from('patient_status_logs')
+    .select('*')
+    .eq('id', logId)
+    .single();
+  if (error || !data) { toast('ไม่พบข้อมูล log', 'error'); return; }
+
+  // เปิด modal ในโหมดแก้ไข
+  openPatientStatusLogModal(patId, data.old_status, data.new_status, {
+    id:          data.id,
+    status_date: data.status_date,
+    return_date: data.return_date || '',
+    note:        data.note || '',
+  });
 }

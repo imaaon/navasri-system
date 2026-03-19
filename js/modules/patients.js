@@ -496,41 +496,63 @@ const STATUS_LABEL_TH = {
   active: 'พักอยู่', hospital: 'อยู่โรงพยาบาล', inactive: 'ออกแล้ว'
 };
 
-function openPatientStatusLogModal(patientId, oldStatus, newStatus) {
+// mode = 'create' หรือ 'edit' (แก้ไข log เดิม)
+function openPatientStatusLogModal(patientId, oldStatus, newStatus, logData = null) {
   const today = new Date().toISOString().split('T')[0];
-  document.getElementById('psl-patient-id').value = patientId;
-  document.getElementById('psl-old-status').value  = oldStatus;
-  document.getElementById('psl-new-status').value  = newStatus;
-  document.getElementById('psl-status-date').value = today;
-  document.getElementById('psl-return-date').value = '';
-  document.getElementById('psl-note').value         = '';
-  document.getElementById('psl-days-preview').style.display = 'none';
-
+  const isEdit = !!logData;
   const pat = db.patients.find(p => p.id == patientId);
   const patName = pat?.name || '';
 
-  // ชื่อ modal
-  const titleEl = document.getElementById('modal-patient-status-title');
-  const icon = newStatus === 'hospital' ? '🏥' : newStatus === 'active' ? '🏠' : '🚪';
-  titleEl.textContent = `${icon} เปลี่ยนสถานะ — ${patName}`;
+  document.getElementById('psl-patient-id').value = patientId;
+  document.getElementById('psl-old-status').value  = oldStatus;
+  document.getElementById('psl-log-id').value       = logData?.id || '';
+  document.getElementById('psl-status-date').value = logData?.status_date || today;
+  document.getElementById('psl-return-date').value = logData?.return_date || '';
+  document.getElementById('psl-note').value         = logData?.note || '';
+  document.getElementById('psl-days-preview').style.display = 'none';
 
-  // สรุปการเปลี่ยน
+  const knownStatuses = ['active','hospital','inactive'];
+  const statusSel  = document.getElementById('psl-new-status');
+  const customWrap = document.getElementById('psl-custom-status-wrap');
+  const customInput= document.getElementById('psl-custom-status');
+  if (knownStatuses.includes(newStatus)) {
+    statusSel.value = newStatus;
+    customWrap.style.display = 'none';
+    customInput.value = '';
+  } else {
+    statusSel.value = 'other';
+    customWrap.style.display = '';
+    customInput.value = newStatus;
+  }
+
+  const titleEl = document.getElementById('modal-patient-status-title');
+  const saveBtn = document.getElementById('psl-save-btn');
+  if (isEdit) {
+    titleEl.textContent = `✏️ แก้ไขประวัติสถานะ — ${patName}`;
+    saveBtn.textContent = '💾 บันทึกการแก้ไข';
+  } else {
+    const icon = newStatus === 'hospital' ? '🏥' : newStatus === 'active' ? '🏠' : '🚪';
+    titleEl.textContent = `${icon} เปลี่ยนสถานะ — ${patName}`;
+    saveBtn.textContent = '💾 บันทึกและเปลี่ยนสถานะ';
+  }
+
+  const fromLabel = STATUS_LABEL_TH[oldStatus] || oldStatus || '-';
+  const toLabel   = STATUS_LABEL_TH[newStatus] || newStatus;
   document.getElementById('psl-summary').innerHTML =
     `<div style="display:flex;align-items:center;gap:12px;font-size:13px;">
-      <span style="padding:3px 10px;border-radius:12px;background:#f0f0f0;">
-        ${STATUS_LABEL_TH[oldStatus] || oldStatus}
-      </span>
+      <span style="padding:3px 10px;border-radius:12px;background:#f0f0f0;">${fromLabel}</span>
       <span style="color:var(--text3);">→</span>
-      <span style="padding:3px 10px;border-radius:12px;background:${newStatus==='hospital'?'#EBF5FB':newStatus==='active'?'#e8f5ee':'#f5f5f5'}; color:${newStatus==='hospital'?'#1565C0':newStatus==='active'?'#2a7a4f':'#666'}; font-weight:600;">
-        ${STATUS_LABEL_TH[newStatus] || newStatus}
-      </span>
+      <span style="padding:3px 10px;border-radius:12px;background:${newStatus==='hospital'?'#EBF5FB':newStatus==='active'?'#e8f5ee':'#f5f5f5'};color:${newStatus==='hospital'?'#1565C0':newStatus==='active'?'#2a7a4f':'#666'};font-weight:600;">${toLabel}</span>
+      ${isEdit ? '<span style="font-size:11px;background:#fef3e0;color:#d4760a;padding:2px 8px;border-radius:8px;">แก้ไข</span>' : ''}
     </div>`;
 
-  // แสดง return_date เฉพาะตอนกลับจากโรงพยาบาล (hospital → active)
-  const showReturn = oldStatus === 'hospital' && newStatus === 'active';
-  document.getElementById('psl-return-date-wrap').style.display = showReturn ? '' : 'none';
-
+  onPslDateChange();
   openModal('modal-patient-status');
+}
+
+function onPslStatusChange() {
+  const sel = document.getElementById('psl-new-status');
+  document.getElementById('psl-custom-status-wrap').style.display = sel.value === 'other' ? '' : 'none';
 }
 
 function onPslDateChange() {
@@ -538,9 +560,7 @@ function onPslDateChange() {
   const returnDate = document.getElementById('psl-return-date').value;
   const preview    = document.getElementById('psl-days-preview');
   if (statusDate && returnDate && returnDate >= statusDate) {
-    const d1 = new Date(statusDate);
-    const d2 = new Date(returnDate);
-    const days = Math.round((d2 - d1) / 86400000);
+    const days = Math.round((new Date(returnDate) - new Date(statusDate)) / 86400000);
     preview.style.display = '';
     preview.innerHTML = `📅 ออกจากบ้านพัก <strong>${days} วัน</strong> (${statusDate} ถึง ${returnDate})`;
   } else {
@@ -551,43 +571,63 @@ function onPslDateChange() {
 async function confirmPatientStatusChange() {
   const patientId  = document.getElementById('psl-patient-id').value;
   const oldStatus  = document.getElementById('psl-old-status').value;
-  const newStatus  = document.getElementById('psl-new-status').value;
+  const logId      = document.getElementById('psl-log-id').value;
+  const isEdit     = !!logId;
   const statusDate = document.getElementById('psl-status-date').value;
   const returnDate = document.getElementById('psl-return-date').value;
   const noteExtra  = document.getElementById('psl-note').value.trim();
   const actor      = currentUser?.displayName || currentUser?.username || '';
 
-  if (!statusDate) { toast('กรุณาเลือกวันที่เปลี่ยนสถานะ', 'warning'); return; }
+  // อ่านสถานะจาก dropdown (รองรับ other)
+  const statusSel = document.getElementById('psl-new-status');
+  const newStatus = statusSel.value === 'other'
+    ? (document.getElementById('psl-custom-status')?.value.trim() || 'other')
+    : statusSel.value;
 
-  // คำนวณจำนวนวัน (ถ้ามี return_date)
-  let daysAway = null;
-  if (returnDate && returnDate >= statusDate) {
-    daysAway = Math.round((new Date(returnDate) - new Date(statusDate)) / 86400000);
-  }
+  if (!statusDate) { toast('กรุณาเลือกวันที่เปลี่ยนสถานะ', 'warning'); return; }
+  if (!newStatus)  { toast('กรุณาเลือกสถานะ', 'warning'); return; }
 
   const noteText = noteExtra ||
     `เปลี่ยนจาก ${STATUS_LABEL_TH[oldStatus]||oldStatus} เป็น ${STATUS_LABEL_TH[newStatus]||newStatus}`;
 
   showLoadingOverlay(true);
   try {
-    const { error } = await supa.from('patient_status_logs').insert({
-      patient_id:  patientId,
-      old_status:  oldStatus,
-      new_status:  newStatus,
-      status_date: statusDate,
-      return_date: returnDate || null,
-      days_away:   daysAway,
-      changed_by:  actor,
-      note:        noteText,
-    });
-    if (error) { toast('บันทึก log ไม่สำเร็จ: ' + error.message, 'error'); return; }
+    let rpcRes, error;
+
+    if (isEdit) {
+      // แก้ไข log เดิม
+      ({ data: rpcRes, error } = await supa.rpc('update_patient_status_log', {
+        p_log_id:      logId,
+        p_new_status:  newStatus,
+        p_old_status:  oldStatus,
+        p_status_date: statusDate,
+        p_return_date: returnDate || null,
+        p_note:        noteText,
+        p_changed_by:  actor,
+      }));
+    } else {
+      // สร้าง log ใหม่ + เปลี่ยนสถานะ
+      ({ data: rpcRes, error } = await supa.rpc('change_patient_status', {
+        p_patient_id:  patientId,
+        p_new_status:  newStatus,
+        p_old_status:  oldStatus,
+        p_status_date: statusDate,
+        p_return_date: returnDate || null,
+        p_note:        noteText,
+        p_changed_by:  actor,
+      }));
+    }
+
+    if (error || !rpcRes?.ok) {
+      toast('บันทึกไม่สำเร็จ: ' + (error?.message || rpcRes?.error), 'error'); return;
+    }
 
     const pat = db.patients.find(p => p.id == patientId);
-    const patName = pat?.name || '';
-    toast(`✅ บันทึกการเปลี่ยนสถานะ ${patName} เรียบร้อย`, 'success');
+    if (pat && !isEdit) pat.status = newStatus;
+
+    toast(`✅ ${isEdit ? 'แก้ไข' : 'บันทึก'}การเปลี่ยนสถานะ ${pat?.name || ''} เรียบร้อย`, 'success');
     closeModal('modal-patient-status');
 
-    // refresh หน้าถ้าอยู่ใน profile
     if (typeof openPatientProfile === 'function' && patientId) {
       setTimeout(() => openPatientProfile(patientId), 300);
     } else {

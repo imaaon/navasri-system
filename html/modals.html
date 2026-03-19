@@ -1064,7 +1064,7 @@
 
 <!-- Patient Status Change Modal -->
 <div class="modal-overlay" id="modal-patient-status">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal" style="max-width:500px;">
     <div class="modal-header">
       <div class="modal-title" id="modal-patient-status-title">🔄 เปลี่ยนสถานะผู้รับบริการ</div>
       <button class="modal-close" onclick="closeModal('modal-patient-status')">✕</button>
@@ -1072,32 +1072,50 @@
     <div class="modal-body">
       <input type="hidden" id="psl-patient-id">
       <input type="hidden" id="psl-old-status">
-      <input type="hidden" id="psl-new-status">
+      <input type="hidden" id="psl-log-id"><!-- ถ้ามีค่า = แก้ไข log เดิม -->
       <div id="psl-summary" style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
+
+      <!-- สถานะ (แก้ไขได้) -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">สถานะ <span class="required">*</span></label>
+          <select class="form-control" id="psl-new-status" onchange="onPslStatusChange()">
+            <option value="active">🏠 พักอยู่</option>
+            <option value="hospital">🏥 อยู่โรงพยาบาล</option>
+            <option value="inactive">🚪 ออกแล้ว</option>
+            <option value="other">✏️ อื่นๆ (ระบุเอง)</option>
+          </select>
+        </div>
+        <div class="form-group" id="psl-custom-status-wrap" style="display:none;">
+          <label class="form-label">ระบุสถานะ</label>
+          <input type="text" class="form-control" id="psl-custom-status"
+            placeholder="เช่น ลาพักผ่อน / พักที่บ้านญาติ">
+        </div>
+      </div>
 
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">วันที่เปลี่ยนสถานะ <span class="required">*</span></label>
           <input type="date" class="form-control" id="psl-status-date" onchange="onPslDateChange()">
-          <div style="font-size:11px;color:var(--text3);margin-top:3px;">ค่าเริ่มต้น = วันนี้ สามารถเลือกวันย้อนหลังได้</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;">เลือกวันย้อนหลังได้</div>
         </div>
-        <div class="form-group" id="psl-return-date-wrap" style="display:none;">
+        <div class="form-group" id="psl-return-date-wrap">
           <label class="form-label">วันที่กลับมา</label>
           <input type="date" class="form-control" id="psl-return-date" onchange="onPslDateChange()">
-          <div style="font-size:11px;color:var(--text3);margin-top:3px;">กรอกถ้ากลับมาแล้ว ระบบคำนวณจำนวนวันให้อัตโนมัติ</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;">ระบบคำนวณจำนวนวันให้อัตโนมัติ</div>
         </div>
       </div>
 
       <div id="psl-days-preview" style="display:none;background:#e8f5ee;border:1px solid #a8d5b5;border-radius:8px;padding:10px 14px;margin-top:4px;font-size:13px;color:#2a7a4f;"></div>
 
       <div class="form-group" style="margin-top:12px;">
-        <label class="form-label">หมายเหตุ (ถ้ามี)</label>
+        <label class="form-label">หมายเหตุ</label>
         <textarea class="form-control" id="psl-note" rows="2" placeholder="เช่น ส่งต่อรพ.สวรรค์ประชารักษ์ / ลาพักผ่อน"></textarea>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-patient-status')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="confirmPatientStatusChange()">💾 บันทึกและเปลี่ยนสถานะ</button>
+      <button class="btn btn-primary" id="psl-save-btn" onclick="confirmPatientStatusChange()">💾 บันทึก</button>
     </div>
   </div>
 </div>
