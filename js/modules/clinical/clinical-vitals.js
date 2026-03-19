@@ -1,19 +1,27 @@
 
 async function openEditVitalModal(patientId, pid, vitalId) {
-  const vitals = db.vitals[pid] || [];
+  const vitals = db.vitalSigns[pid] || [];
   const v = vitals.find(x => x.id == vitalId);
   if (!v) return;
   document.getElementById('vital-pat-id').value = patientId;
-  document.getElementById('vital-pid').value = pid;
-  document.getElementById('vital-bp').value = v.bp || '';
-  document.getElementById('vital-pulse').value = v.pulse || '';
+  document.getElementById('vital-pat-id').dataset.editId = vitalId;
+  document.getElementById('vital-pat-id').dataset.pid = pid;
+  // set datetime
+  const dt = v.recordedAt || new Date().toISOString();
+  document.getElementById('vital-time').value = dt.slice(0,16);
+  document.getElementById('vital-by').value = v.recordedBy || '';
+  // vital fields
+  document.getElementById('vital-bp-sys').value = v.bp_sys || '';
+  document.getElementById('vital-bp-dia').value = v.bp_dia || '';
+  document.getElementById('vital-hr').value = v.hr || '';
   document.getElementById('vital-temp').value = v.temp || '';
   document.getElementById('vital-spo2').value = v.spo2 || '';
+  document.getElementById('vital-dtx').value = v.dtx || '';
+  document.getElementById('vital-rr').value = v.rr || '';
   document.getElementById('vital-weight').value = v.weight || '';
+  document.getElementById('vital-height').value = v.height || '';
+  document.getElementById('vital-other').value = v.otherFields || '';
   document.getElementById('vital-note').value = v.note || '';
-  const dt = v.recordedAt || new Date().toISOString();
-  document.getElementById('vital-date').value = dt.split('T')[0];
-  document.getElementById('vital-pat-id').dataset.editId = vitalId;
   document.getElementById('modal-vital-title').textContent = '✏️ แก้ไข Vital Signs';
   openModal('modal-add-vital');
 }
