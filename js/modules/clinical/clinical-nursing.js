@@ -179,11 +179,16 @@ async function deleteNursingNote(patientId, pid, id) {
 
 // ===== DISCHARGE MANAGEMENT =====
 function onPatStatusChange(sel) {
+  // แสดง/ซ่อน input อื่นๆ
+  const otherInput = document.getElementById('pat-status-other');
+  if (otherInput) otherInput.style.display = sel.value === 'other' ? '' : 'none';
+
   const editId = document.getElementById('pat-edit-id')?.value;
   if (sel.value === 'inactive' && editId) {
     const p = db.patients.find(x => x.id == editId);
     if (p && p.status === 'active') {
       sel.value = 'active'; // reset ไว้ก่อน
+      if (otherInput) otherInput.style.display = 'none';
       openDischargeModal(editId);
     }
   }

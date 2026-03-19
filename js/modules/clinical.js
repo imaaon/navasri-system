@@ -88,7 +88,6 @@ async function openPatientProfile(id) {
     .eq('patient_id', p.id)
     .order('id', {ascending:false});
   const reqs = (reqData||[]).map(mapReq);
-  const reqs = (reqData||[]).map(mapReq);
   const age  = p.dob ? calcAge(p.dob) : '-';
   const dur  = p.admitDate ? calcDuration(p.admitDate, p.endDate) : '-';
   const isActive = p.status === 'active';
@@ -1175,11 +1174,15 @@ async function deleteNursingNote(patientId, pid, id) {
 
 // ===== DISCHARGE MANAGEMENT =====
 function onPatStatusChange(sel) {
+  const otherInput = document.getElementById('pat-status-other');
+  if (otherInput) otherInput.style.display = sel.value === 'other' ? '' : 'none';
+
   const editId = document.getElementById('pat-edit-id')?.value;
   if (sel.value === 'inactive' && editId) {
     const p = db.patients.find(x => x.id == editId);
     if (p && p.status === 'active') {
-      sel.value = 'active'; // reset ไว้ก่อน
+      sel.value = 'active';
+      if (otherInput) otherInput.style.display = 'none';
       openDischargeModal(editId);
     }
   }

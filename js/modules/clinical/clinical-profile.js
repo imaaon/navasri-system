@@ -94,6 +94,7 @@ async function openPatientProfile(id) {
         <div class="tab" onclick="switchPatTab('dnr')">⚖️ DNR & Consent</div>
         <div class="tab" onclick="switchPatTab('physio')">🤸 กายภาพบำบัด</div>
 <div class="tab" onclick="switchPatTab('dispense')">💊 เบิกสินค้า</div>
+        <div class="tab" onclick="switchPatTab('statuslog')">📅 ประวัติสถานะ</div>
       </div>
       <div id="patprofile-tab-history">
         <div class="card">
@@ -245,7 +246,7 @@ async function openPatientProfile(id) {
       </div>
 
       <div id="patprofile-tab-dispense" style="display:none;">
-        <div class="card">
+          <div class="card">
           <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
             <div class="card-title" style="font-size:13px;">💊 ประวัติการเบิกสินค้า</div>
             <button class="btn btn-primary btn-sm" onclick="openQuickDispenseModal()">⚡ เบิกด่วน</button>
@@ -259,13 +260,34 @@ async function openPatientProfile(id) {
           <div id="pat-unbilled-list-${p.id}"></div>
         </div>
       </div>
+
+      <div id="patprofile-tab-statuslog" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title" style="font-size:13px;">📅 ประวัติการเปลี่ยนสถานะ</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;"
+                onclick="quickChangeStatus('${p.id}','${p.name}','active')">🏠 พักอยู่</button>
+              <button class="btn btn-sm" style="background:#1565C0;color:#fff;font-size:11px;"
+                onclick="quickChangeStatus('${p.id}','${p.name}','hospital')">🏥 อยู่โรงพยาบาล</button>
+              <button class="btn btn-sm" style="background:#888;color:#fff;font-size:11px;"
+                onclick="quickChangeStatus('${p.id}','${p.name}','inactive')">🚪 ออกแล้ว</button>
+              <button class="btn btn-sm" style="background:#e67e22;color:#fff;font-size:11px;"
+                onclick="quickChangeStatus('${p.id}','${p.name}','other')">✏️ อื่นๆ</button>
+            </div>
+          </div>
+          <div id="pat-statuslog-${p.id}">
+            <div style="text-align:center;padding:24px;color:var(--text3);">กำลังโหลด...</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>`;
   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
 function switchPatTab(tab) {
-  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','nursing','appts','belongings','dnr','physio','dispense'];
+  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','nursing','appts','belongings','dnr','physio','dispense','statuslog'];
   tabs.forEach(t => {
     const el = document.getElementById('patprofile-tab-'+t);
     if(el) el.style.display = t===tab ? '' : 'none';
@@ -282,6 +304,11 @@ function switchPatTab(tab) {
     const el = document.querySelector('[id^="pat-dispense-list-"]');
     const patId = el?.id?.replace('pat-dispense-list-','');
     if (patId) loadPatDispense(patId);
+  }
+  if (tab === 'statuslog') {
+    const el = document.querySelector('[id^="pat-statuslog-"]');
+    const patId = el?.id?.replace('pat-statuslog-','');
+    if (patId) loadPatStatusLog(patId);
   }
 }
 
@@ -381,3 +408,157 @@ function openBillingFromPatient(patId) {
 }
 
 // ==========================================
+// ─────────────────────────────────────────────────────
+// ── PATIENT STATUS LOG TAB ────────────────────────────
+// ─────────────────────────────────────────────────────
+async function loadPatStatusLog(patId) {
+  const container = document.getElementById('pat-statuslog-' + patId);
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text3);">⏳ กำลังโหลด...</div>';
+
+  const { data, error } = await supa
+    .from('patient_status_logs')
+    .select('*')
+    .eq('patient_id', patId)
+    .order('status_date', { ascending: false })
+    .order('changed_at', { ascending: false });
+
+  if (error) {
+    container.innerHTML = `<div style="padding:16px;color:#e74c3c;">เกิดข้อผิดพลาด: ${error.message}</div>`;
+    return;
+  }
+
+  const logs = data || [];
+  const STATUS_LABEL = { active: '🏠 พักอยู่', hospital: '🏥 อยู่โรงพยาบาล', inactive: '🚪 ออกแล้ว' };
+  const STATUS_COLOR = { active: '#27ae60', hospital: '#1565C0', inactive: '#888' };
+  const STATUS_BG    = { active: '#e8f5ee', hospital: '#EBF5FB', inactive: '#f5f5f5' };
+
+  // สรุปรายเดือน — นับวันอยู่โรงพยาบาล
+  const hospitalLogs = logs.filter(l => l.new_status === 'hospital' || l.old_status === 'hospital');
+  const totalHospDays = logs.reduce((s, l) => s + (l.days_away || 0), 0);
+  const hospCount = logs.filter(l => l.new_status === 'hospital').length;
+
+  if (logs.length === 0) {
+    container.innerHTML = `
+      <div style="padding:24px;text-align:center;color:var(--text3);">
+        <div style="font-size:32px;margin-bottom:8px;">📋</div>
+        <div>ยังไม่มีประวัติการเปลี่ยนสถานะ</div>
+        <div style="font-size:12px;margin-top:4px;">เมื่อมีการเปลี่ยนสถานะ (พักอยู่ / อยู่โรงพยาบาล / ออกแล้ว) ระบบจะบันทึกไว้ที่นี่</div>
+      </div>`;
+    return;
+  }
+
+  // Summary strip
+  const summaryHtml = `
+    <div style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 16px;background:var(--surface2);border-bottom:0.5px solid var(--border);">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 14px;text-align:center;min-width:80px;">
+        <div style="font-size:20px;font-weight:700;color:var(--accent);">${logs.length}</div>
+        <div style="font-size:11px;color:var(--text2);">ครั้งที่เปลี่ยน</div>
+      </div>
+      <div style="background:#EBF5FB;border:1px solid #b3d7f0;border-radius:8px;padding:8px 14px;text-align:center;min-width:80px;">
+        <div style="font-size:20px;font-weight:700;color:#1565C0;">${hospCount}</div>
+        <div style="font-size:11px;color:#1565C0;">ครั้งที่ไป รพ.</div>
+      </div>
+      ${totalHospDays > 0 ? `
+      <div style="background:#EBF5FB;border:1px solid #b3d7f0;border-radius:8px;padding:8px 14px;text-align:center;min-width:80px;">
+        <div style="font-size:20px;font-weight:700;color:#1565C0;">${totalHospDays}</div>
+        <div style="font-size:11px;color:#1565C0;">วันรวมที่อยู่ รพ.</div>
+      </div>` : ''}
+    </div>`;
+
+  // Log rows
+  const rows = logs.map(l => {
+    const daysText = l.days_away != null
+      ? `<span style="background:#EBF5FB;color:#1565C0;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600;">🏥 ${l.days_away} วัน</span>`
+      : (l.new_status === 'hospital' && !l.return_date
+          ? `<span style="background:#fef3e0;color:#d4760a;border-radius:10px;padding:1px 8px;font-size:11px;">ยังไม่กลับ</span>`
+          : '');
+
+    const returnText = l.return_date
+      ? `<div style="font-size:11px;color:var(--text2);margin-top:2px;">📅 กลับมา: ${l.return_date}</div>`
+      : '';
+
+    return `<tr>
+      <td style="font-size:12px;white-space:nowrap;">${l.status_date || l.changed_at?.split('T')[0] || '-'}</td>
+      <td>
+        <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${STATUS_BG[l.old_status]||'#f0f0f0'};color:${STATUS_COLOR[l.old_status]||'#888'};">${STATUS_LABEL[l.old_status]||l.old_status||'-'}</span>
+      </td>
+      <td style="color:var(--text3);text-align:center;">→</td>
+      <td>
+        <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${STATUS_BG[l.new_status]||'#f0f0f0'};color:${STATUS_COLOR[l.new_status]||'#888'};font-weight:600;">${STATUS_LABEL[l.new_status]||l.new_status||'-'}</span>
+      </td>
+      <td>${daysText}${returnText}</td>
+      <td style="font-size:12px;color:var(--text2);">${l.note||'-'}</td>
+      <td style="font-size:12px;color:var(--text3);">${l.changed_by||'-'}</td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    ${summaryHtml}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>วันที่</th>
+            <th>จาก</th>
+            <th></th>
+            <th>เป็น</th>
+            <th>จำนวนวัน</th>
+            <th>หมายเหตุ</th>
+            <th>บันทึกโดย</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────
+// ── QUICK STATUS CHANGE (จาก tab ประวัติสถานะ) ────────
+// ─────────────────────────────────────────────────────
+function quickChangeStatus(patientId, patientName, newStatus) {
+  const pat = db.patients.find(p => p.id == patientId);
+  if (!pat) { toast('ไม่พบข้อมูลผู้รับบริการ', 'error'); return; }
+
+  const oldStatus = pat.status || 'active';
+  if (oldStatus === newStatus && newStatus !== 'other') {
+    toast(`${patientName} อยู่ในสถานะนี้อยู่แล้ว`, 'warning'); return;
+  }
+
+  // ถ้าเป็น other → ต้องกรอกข้อความก่อน เปิด modal พร้อม input
+  if (newStatus === 'other') {
+    _quickStatusOtherModal(patientId, patientName, oldStatus);
+    return;
+  }
+
+  // อัปเดต status ใน Supabase ก่อน แล้วเปิด modal เลือกวัน
+  showLoadingOverlay(true);
+  supa.from('patients').update({ status: newStatus, updated_at: new Date().toISOString() })
+    .eq('id', patientId)
+    .then(({ error }) => {
+      showLoadingOverlay(false);
+      if (error) { toast('เปลี่ยนสถานะไม่สำเร็จ: ' + error.message, 'error'); return; }
+      // อัปเดต local cache
+      if (pat) pat.status = newStatus;
+      // เปิด modal บันทึก log พร้อมเลือกวัน
+      openPatientStatusLogModal(patientId, oldStatus, newStatus);
+    });
+}
+
+function _quickStatusOtherModal(patientId, patientName, oldStatus) {
+  // สร้าง inline prompt ด้วย modal ที่มีอยู่ แต่เพิ่ม input สำหรับ other
+  const customStatus = prompt(`ระบุสถานะของ ${patientName}\nเช่น: ลาพักผ่อน / พักที่บ้านญาติ / ย้ายสถานดูแล`);
+  if (!customStatus || !customStatus.trim()) return;
+
+  const newStatus = customStatus.trim();
+  showLoadingOverlay(true);
+  supa.from('patients').update({ status: newStatus })
+    .eq('id', patientId)
+    .then(({ error }) => {
+      showLoadingOverlay(false);
+      if (error) { toast('เปลี่ยนสถานะไม่สำเร็จ: ' + error.message, 'error'); return; }
+      const pat = db.patients.find(p => p.id == patientId);
+      if (pat) pat.status = newStatus;
+      openPatientStatusLogModal(patientId, oldStatus, newStatus);
+    });
+}
