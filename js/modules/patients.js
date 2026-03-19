@@ -622,8 +622,20 @@ async function confirmPatientStatusChange() {
       toast('บันทึกไม่สำเร็จ: ' + (error?.message || rpcRes?.error), 'error'); return;
     }
 
-    const pat = db.patients.find(p => p.id == patientId);
-    if (pat && !isEdit) pat.status = newStatus;
+    // อัปเดต local cache — คำนึงถึง return_date
+    if (pat) {
+      if (!isEdit) {
+        // ถ้ามี return_date และผ่านมาแล้ว → status กลับเป็น oldStatus
+        const today = new Date().toISOString().split('T')[0];
+        const returnDate = document.getElementById('psl-return-date').value;
+        if (returnDate && returnDate <= today) {
+          pat.status = oldStatus;
+        } else {
+          pat.status = newStatus;
+        }
+      }
+      // isEdit → status อาจถูกอัปเดตจาก RPC แล้ว reload จาก DB ดีกว่า
+    }
 
     toast(`✅ ${isEdit ? 'แก้ไข' : 'บันทึก'}การเปลี่ยนสถานะ ${pat?.name || ''} เรียบร้อย`, 'success');
     closeModal('modal-patient-status');
