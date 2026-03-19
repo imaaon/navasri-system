@@ -15,7 +15,9 @@ function previewBelongingPhoto(input) {
 function openEditBelongingModal(belongingId, patientId) {
   const b = (db.belongings||[]).find(x=>x.id==belongingId);
   if (!b) return;
-  document.getElementById('belonging-patient-id').value = patientId;
+  _belongingEditPatId   = patientId;
+  _belongingEditPatName = b.patientName || '';
+  _belongingEditId      = belongingId;
   document.getElementById('belonging-item-name').value = b.itemName||'';
   document.getElementById('belonging-description').value = b.description||'';
   document.getElementById('belonging-qty').value = b.qty||1;
@@ -23,7 +25,6 @@ function openEditBelongingModal(belongingId, patientId) {
   document.getElementById('belonging-date-in').value = b.dateIn||'';
   document.getElementById('belonging-received-by').value = b.receivedBy||'';
   document.getElementById('belonging-note').value = b.note||'';
-  document.getElementById('belonging-patient-id').dataset.editId = belongingId;
   openModal('modal-belonging');
 }
 // ===== CLINICAL BELONGINGS =====
@@ -31,6 +32,7 @@ function openEditBelongingModal(belongingId, patientId) {
 // ==========================================
 // ===== BELONGINGS 🧳 ======================
 // ==========================================
+let _belongingEditId = '';
 function renderBelongingList(patientId) {
   const items = (db.belongings||[]).filter(b=>String(b.patientId)===String(patientId));
   if(!items.length) return `<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีสิ่งของบันทึกไว้</div>`;
@@ -98,7 +100,7 @@ async function saveBelonging() {
     note: document.getElementById('belonging-note').value.trim(),
     photo: photoUrl||null,
   };
-  const editId = document.getElementById('belonging-patient-id')?.dataset?.editId || '';
+  const editId = (typeof _belongingEditId !== 'undefined' && _belongingEditId) ? _belongingEditId : '';
   let ins, error;
   if (editId) {
     ({data: ins, error} = await supa.from('patient_belongings').update(row).eq('id', editId).select().single());
@@ -114,6 +116,7 @@ async function saveBelonging() {
   const el=document.getElementById('belonging-list-'+_belongingEditPatId);
   if(el) el.innerHTML=renderBelongingList(_belongingEditPatId);
   toast('บันทึกสิ่งของเรียบร้อย','success');
+  _belongingEditId = '';
   closeModal('modal-belonging');
 }
 
