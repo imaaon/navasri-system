@@ -368,7 +368,7 @@ async function renderDietaryPage() {
   // โหลดข้อมูลล่าสุดจาก Supabase
   if (supa) {
     const { data: dietData } = await supa.from('patient_diets').select('*').order('updated_at',{ascending:false});
-    if (dietData) db.diets = dietData.map(r=>({id:r.id,patientId:r.patient_id,patientName:r.patient_name,dietType:r.diet_type,calories:r.calories,protein:r.protein,restrictions:r.restrictions||[],note:r.note,recorder:r.recorder,date:r.date}));
+    if (dietData) db.diets = dietData.map(mapDiet);
     const { data: tubeData } = await supa.from('tube_feedings').select('*').order('date',{ascending:false});
     if (tubeData) db.tubeFeeds = tubeData.map(r=>({id:r.id,patientId:r.patient_id,patientName:r.patient_name,date:r.date,time:r.time,formula:r.formula,volumeMl:r.volume_ml,rateMlHr:r.rate_ml_hr,route:r.route,recorder:r.recorder,note:r.note}));
   }
