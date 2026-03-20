@@ -1033,118 +1033,6 @@
   </div>
 </div>
 
-
-<!-- Edit Requisition Modal -->
-<div class="modal-overlay" id="modal-edit-req">
-  <div class="modal" style="max-width:680px;">
-    <div class="modal-header">
-      <div class="modal-title">✏️ แก้ไขใบเบิกสินค้า</div>
-      <button class="modal-close" onclick="closeModal('modal-edit-req')">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="edit-req-id">
-      <div id="edit-req-info" style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
-      <div style="background:#fef3e0;border:1px solid #f5c97a;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#b7600a;">
-        ⚠️ การแก้ไขจะส่งแจ้งเตือนไลน์ให้ผู้อนุมัติรับทราบอีกครั้ง
-      </div>
-      <div id="edit-req-items-wrap"></div>
-      <button class="btn btn-ghost btn-sm" onclick="addEditReqItem()" style="margin-top:8px;">+ เพิ่มรายการ</button>
-      <div class="form-group" style="margin-top:14px;">
-        <label class="form-label">หมายเหตุ</label>
-        <textarea class="form-control" id="edit-req-note" rows="2" placeholder="หมายเหตุ (ถ้ามี)"></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-edit-req')">ปิด</button>
-      <button class="btn btn-primary" onclick="saveEditReq()">💾 บันทึกและแจ้งผู้อนุมัติ</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- Patient Status Change Modal -->
-<div class="modal-overlay" id="modal-patient-status">
-  <div class="modal" style="max-width:500px;">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-patient-status-title">🔄 เปลี่ยนสถานะผู้รับบริการ</div>
-      <button class="modal-close" onclick="closeModal('modal-patient-status')">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="psl-patient-id">
-      <input type="hidden" id="psl-old-status">
-      <input type="hidden" id="psl-log-id"><!-- ถ้ามีค่า = แก้ไข log เดิม -->
-      <div id="psl-summary" style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
-
-      <!-- สถานะ (แก้ไขได้) -->
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">สถานะ <span class="required">*</span></label>
-          <select class="form-control" id="psl-new-status" onchange="onPslStatusChange()">
-            <option value="active">🏠 พักอยู่</option>
-            <option value="hospital">🏥 อยู่โรงพยาบาล</option>
-            <option value="inactive">🚪 ออกแล้ว</option>
-            <option value="other">✏️ อื่นๆ (ระบุเอง)</option>
-          </select>
-        </div>
-        <div class="form-group" id="psl-custom-status-wrap" style="display:none;">
-          <label class="form-label">ระบุสถานะ</label>
-          <input type="text" class="form-control" id="psl-custom-status"
-            placeholder="เช่น ลาพักผ่อน / พักที่บ้านญาติ">
-        </div>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">วันที่เปลี่ยนสถานะ <span class="required">*</span></label>
-          <input type="date" class="form-control" id="psl-status-date" onchange="onPslDateChange()">
-          <div style="font-size:11px;color:var(--text3);margin-top:3px;">เลือกวันย้อนหลังได้</div>
-        </div>
-        <div class="form-group" id="psl-return-date-wrap">
-          <label class="form-label">วันที่กลับมา</label>
-          <input type="date" class="form-control" id="psl-return-date" onchange="onPslDateChange()">
-          <div style="font-size:11px;color:var(--text3);margin-top:3px;">ระบบคำนวณจำนวนวันให้อัตโนมัติ</div>
-        </div>
-      </div>
-
-      <div id="psl-days-preview" style="display:none;background:#e8f5ee;border:1px solid #a8d5b5;border-radius:8px;padding:10px 14px;margin-top:4px;font-size:13px;color:#2a7a4f;"></div>
-
-      <div class="form-group" style="margin-top:12px;">
-        <label class="form-label">หมายเหตุ</label>
-        <textarea class="form-control" id="psl-note" rows="2" placeholder="เช่น ส่งต่อรพ.สวรรค์ประชารักษ์ / ลาพักผ่อน"></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="cancelPatientStatusChange()">ไม่เปลี่ยนสถานะ</button>
-      <button class="btn btn-primary" id="psl-save-btn" onclick="confirmPatientStatusChange()">💾 บันทึก</button>
-    </div>
-  </div>
-</div>
-
-<!-- Cancel Requisition Modal -->
-<div class="modal-overlay" id="modal-cancel-req">
-  <div class="modal" style="max-width:440px;">
-    <div class="modal-header">
-      <div class="modal-title">🗑️ ยกเลิกใบเบิก</div>
-      <button class="modal-close" onclick="closeModal('modal-cancel-req')">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="cancel-req-id">
-      <div id="cancel-req-summary" style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
-      <div style="background:#fdecea;border:1px solid #f09595;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#a32d2d;">
-        ⚠️ ใบเบิกที่ยกเลิกแล้วจะไม่สามารถกู้คืนได้ และจะไม่ถูกนำไปคำนวณในใบวางบิล
-      </div>
-      <div class="form-group" style="margin:0;">
-        <label class="form-label">เหตุผลที่ยกเลิก (ถ้ามี)</label>
-        <textarea class="form-control" id="cancel-req-reason" rows="2" placeholder="เช่น เบิกผิดรายการ / ไม่ต้องการแล้ว"></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-cancel-req')">ปิด</button>
-      <button class="btn" style="background:#e74c3c;color:#fff;" onclick="confirmCancelReq()">🗑️ ยืนยันยกเลิกใบเบิก</button>
-    </div>
-  </div>
-</div>
-
 <!-- Return to Stock Modal -->
 <div class="modal-overlay" id="modal-return-item">
   <div class="modal" style="max-width:520px;">
@@ -1831,11 +1719,7 @@
           <option value="active">พักอยู่</option>
           <option value="hospital">อยู่โรงพยาบาล</option>
           <option value="inactive">ออกแล้ว</option>
-          <option value="other">อื่นๆ (ระบุเอง)</option>
         </select>
-        <input type="text" class="form-control" id="pat-status-other"
-          placeholder="ระบุสถานะ เช่น ลาพักร้อน / พักที่บ้านญาติ / ย้ายสถานดูแล..."
-          style="display:none;margin-top:6px;">
       </div>
       <hr class="divider">
       <!-- Contact -->

@@ -135,11 +135,12 @@ async function saveWound() {
   };
   const editId = document.getElementById('wound-edit-id').value;
   if (editId) {
-    if (supa) await supa.from('wound_care_logs').update(row).eq('id', editId);
+    if (supa) await supa.from('patient_wounds').update(woundRow).eq('id', editId);
     const idx = (db.wounds||[]).findIndex(x=>x.id==editId);
     if (idx>=0) db.wounds[idx] = {...db.wounds[idx], ...mapWound({id:editId,...row})};
   } else {
-    if (supa) { const {data} = await supa.from('wound_care_logs').insert(row).select().single(); if(data){if(!db.wounds)db.wounds=[];db.wounds.unshift(mapWound(data));} }
+    const woundRow = { patient_id: row.patient_id, patient_name: row.patient_name, wound_date: row.date, location: row.location, stage: row.stage, size_cm: `${row.width}x${row.length}x${row.depth}`, appearance: row.appearance, note: (row.treatment?'การรักษา: '+row.treatment+' ':'')+(row.trend?'แนวโน้ม: '+row.trend+' ':'')+(row.note||''), created_by: row.recorder||'' };
+    if (supa) { const {data} = await supa.from('patient_wounds').insert(woundRow).select().single(); if(data){if(!db.wounds)db.wounds=[];db.wounds.unshift(mapWound(data));} }
     else { if(!db.wounds)db.wounds=[]; db.wounds.unshift(mapWound({id:Date.now(),...row})); }
   }
   closeModal('modal-wound');
@@ -158,7 +159,14 @@ async function deleteWound(id) {
   renderIncidentPage(); toast('ลบแล้ว','success');
 }
 
-function renderIncidentPage() {
+async function renderIncidentPage() {
+  // โหลดข้อมูลล่าสุดจาก Supabase
+  if (supa) {
+    const { data: incData } = await supa.from('incident_reports').select('*').order('date',{ascending:false});
+    if (incData) db.incidents = incData.map(mapIncident);
+    const { data: woundData } = await supa.from('patient_wounds').select('*').order('wound_date',{ascending:false});
+    if (woundData) db.wounds = woundData.map(r=>({id:r.id,patientId:r.patient_id,patientName:r.patient_name,date:r.wound_date||r.date,location:r.location,stage:r.stage,width:(r.size_cm?.split('x')[0])||0,length:(r.size_cm?.split('x')[1])||0,depth:(r.size_cm?.split('x')[2])||0,appearance:r.appearance,treatment:'',recorder:r.created_by||'',trend:'',note:r.note}));
+  }
   const SEV = {เล็กน้อย:'badge-green',ปานกลาง:'badge-orange',รุนแรง:'badge-red'};
   const TREND = {ดีขึ้น:'📈',คงที่:'➡️',แย่ลง:'📉','ใหม่':'🆕'};
   const month = document.getElementById('incident-filter-month')?.value||'';
@@ -324,11 +332,11 @@ async function saveTubeFeed() {
   };
   const editId = document.getElementById('tubefeed-edit-id').value;
   if (editId) {
-    if (supa) await supa.from('tube_feeding_logs').update(row).eq('id', editId);
+    if (supa) await supa.from('tube_feedings').update(row).eq('id', editId);
     const idx = (db.tubeFeeds||[]).findIndex(x=>x.id==editId);
     if (idx>=0) db.tubeFeeds[idx] = mapTubeFeed({id:editId,...row});
   } else {
-    if (supa) { const {data} = await supa.from('tube_feeding_logs').insert(row).select().single(); if(data){if(!db.tubeFeeds)db.tubeFeeds=[];db.tubeFeeds.unshift(mapTubeFeed(data));} }
+    if (supa) { const {data} = await supa.from('tube_feedings').insert(row).select().single(); if(data){if(!db.tubeFeeds)db.tubeFeeds=[];db.tubeFeeds.unshift(mapTubeFeed(data));} }
     else { if(!db.tubeFeeds)db.tubeFeeds=[]; db.tubeFeeds.unshift(mapTubeFeed({id:Date.now(),...row})); }
   }
   closeModal('modal-tubefeed');
@@ -486,7 +494,12 @@ async function deleteDeposit(id) {
   renderDeposits(); toast('ลบแล้ว','success');
 }
 
-function renderDeposits() {
+async function renderDeposits() {
+  // โหลดข้อมูลล่าสุดจาก Supabase
+  if (supa) {
+    const { data } = await supa.from('patient_deposits').select('*').order('date_in',{ascending:false});
+    if (data) db.deposits = data.map(mapDeposit);
+  }
   const search = (document.getElementById('deposit-search')?.value||'').toLowerCase();
   const statusFilter = document.getElementById('deposit-filter-status')?.value||'';
   let deps = (db.deposits||[]).filter(d=>{
@@ -549,9 +562,9 @@ async function loadNewTables() {
   try {
     const [inc, wnd, diets, feeds, deps] = await Promise.all([
       supa.from('incident_reports').select('*').order('date',{ascending:false}),
-      supa.from('wound_care_logs').select('*').order('date',{ascending:false}),
+      supa.from('patient_wounds').select('*').order('wound_date',{ascending:false}),
       supa.from('patient_diets').select('*').order('updated_at',{ascending:false}),
-      supa.from('tube_feeding_logs').select('*').order('date',{ascending:false}),
+      supa.from('tube_feedings').select('*').order('date',{ascending:false}),
       supa.from('patient_deposits').select('*').order('date_in',{ascending:false}),
     ]);
     db.incidents = (inc.data||[]).map(mapIncident);

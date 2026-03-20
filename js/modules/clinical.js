@@ -82,11 +82,7 @@ async function openPatientProfile(id) {
   if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ','error'); return; }
   document.getElementById('patprofile-breadcrumb').textContent = p.name;
   // Query all reqs for this patient directly (no time limit — full history per patient)
-  const { data: reqData } = await supa
-    .from('requisition_headers')
-    .select('*, requisition_lines(*)')
-    .eq('patient_id', p.id)
-    .order('id', {ascending:false});
+  const { data: reqData } = await supa.from('requisitions').select('*').eq('patient_id', String(p.id)).order('id', {ascending:false});
   const reqs = (reqData||[]).map(mapReq);
   const age  = p.dob ? calcAge(p.dob) : '-';
   const dur  = p.admitDate ? calcDuration(p.admitDate, p.endDate) : '-';
@@ -94,13 +90,6 @@ async function openPatientProfile(id) {
   const idcard = p.idcard || p.idCard || '-';
   const totalReqs = reqs.length;
   const totalQty  = reqs.reduce((s,r) => s+(r.qty||0), 0);
-  const statusBadgeHtml = (() => {
-    const s = p.status;
-    if (s === 'active')   return `<span class="badge badge-green" style="font-size:13px;padding:4px 14px;">🏠 พักอยู่</span>`;
-    if (s === 'hospital') return `<span class="badge" style="font-size:13px;padding:4px 14px;background:#EBF5FB;color:#1565C0;border:1px solid #b3d7f0;">🏥 อยู่โรงพยาบาล</span>`;
-    if (s === 'inactive') return `<span class="badge badge-gray" style="font-size:13px;padding:4px 14px;">🚪 ออกแล้ว</span>`;
-    return `<span class="badge" style="font-size:13px;padding:4px 14px;background:#fef3e0;color:#d4760a;border:1px solid #f5c97a;">✏️ ${s}</span>`;
-  })();
   // Load clinical data lazily
   showPage('patprofile');
   await loadPatientClinical(id);
@@ -113,7 +102,7 @@ async function openPatientProfile(id) {
       <div class="card" style="text-align:center;padding:28px 20px;">
         ${(p.photo||"") ? `<img src="${p.photo}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--sage);margin:0 auto 12px;">` : `<div style="width:96px;height:96px;border-radius:50%;background:var(--sage-light);border:3px solid var(--sage);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:40px;">👤</div>`}
         <div style="font-size:17px;font-weight:700;margin-bottom:4px;">${p.name}</div>
-        ${statusBadgeHtml}
+        <span class="badge ${isActive ? 'badge-green' : 'badge-gray'}" style="font-size:13px;padding:4px 14px;">${isActive ? '🏠 พักอยู่' : '🚪 ออกแล้ว'}</span>
         <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;">
           <div style="background:var(--sage-light);border-radius:8px;padding:8px 14px;text-align:center;">
             <div style="font-size:22px;font-weight:700;color:var(--accent);">${totalReqs}</div>
@@ -1181,15 +1170,11 @@ async function deleteNursingNote(patientId, pid, id) {
 
 // ===== DISCHARGE MANAGEMENT =====
 function onPatStatusChange(sel) {
-  const otherInput = document.getElementById('pat-status-other');
-  if (otherInput) otherInput.style.display = sel.value === 'other' ? '' : 'none';
-
   const editId = document.getElementById('pat-edit-id')?.value;
   if (sel.value === 'inactive' && editId) {
     const p = db.patients.find(x => x.id == editId);
     if (p && p.status === 'active') {
-      sel.value = 'active';
-      if (otherInput) otherInput.style.display = 'none';
+      sel.value = 'active'; // reset ไว้ก่อน
       openDischargeModal(editId);
     }
   }

@@ -292,13 +292,17 @@ async function renderApprovalPanel() {
     return `<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${color}22;color:${color};">${label}</span>`;
   };
 
-  const reqRows = pending.map(r => `
+  const reqRows = pending.map(r => {
+    const itemSummary = r.lines?.length > 0
+      ? r.lines.map(l=>`${l.itemName} ×${l.qty} ${l.unit}`).join(', ')
+      : `${r.itemName||'-'} ×${r.qty||0} ${r.unit||''}`;
+    return `
     <tr>
       <td style="font-size:12px;">${r.date||'-'}</td>
+      <td style="font-size:11px;color:var(--text3);">${r.refNo||'-'}</td>
       <td style="font-weight:600;">${r.patientName}</td>
-      <td>${r.itemName}</td>
-      <td class="number">${r.qty} ${r.unit}</td>
-      <td style="font-size:12px;">${r.staffName}</td>
+      <td style="font-size:12px;">${itemSummary}</td>
+      <td style="font-size:12px;">${r.staffName||'-'}</td>
       <td>${STATUS_PILL(r.status)}</td>
       <td style="white-space:nowrap;">
         ${canApproveReq() ? `
@@ -306,10 +310,8 @@ async function renderApprovalPanel() {
           <button class="btn btn-sm" style="background:#e74c3c22;color:#e74c3c;font-size:11px;" onclick="openRejectModal('${r.id}')">❌ ไม่อนุมัติ</button>
         ` : '<span style="font-size:12px;color:var(--text3);">ไม่มีสิทธิ์</span>'}
         <button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')">🖨️</button>
-        <button class="btn btn-ghost btn-sm" onclick="openEditReqModal('${r.id}')" title="แก้ไขใบเบิก" style="color:#e67e22;">✏️</button>
-        <button class="btn btn-ghost btn-sm" onclick="openCancelReqModal('${r.id}')" title="ยกเลิกใบเบิก" style="color:#e74c3c;">🗑️</button>
       </td>
-    </tr>`).join('');
+    </tr>`;}).join('');
 
   container.innerHTML = `
     <div class="card" style="margin-bottom:16px;">
@@ -319,7 +321,7 @@ async function renderApprovalPanel() {
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>วันที่</th><th>ผู้รับบริการ</th><th>รายการ</th><th>จำนวน</th><th>ผู้เบิก</th><th>สถานะ</th><th></th></tr></thead>
+          <thead><tr><th>วันที่</th><th>เลขที่</th><th>ผู้รับบริการ</th><th>รายการ</th><th>ผู้เบิก</th><th>สถานะ</th><th></th></tr></thead>
           <tbody>${pending.length ? reqRows : '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3);">ไม่มีรายการรออนุมัติ</td></tr>'}</tbody>
         </table>
       </div>
@@ -459,7 +461,7 @@ async function confirmRejectReq() {
 
   // ใช้ RPC reject_requisition — บันทึก audit ด้วย
   const { data: rpcRes, error: rpcErr } = await supa.rpc('reject_requisition', {
-    p_header_id:   parseInt(reqId),
+    p_header_id:   reqId,
     p_rejected_by: actor,
     p_reason:      reason,
   });
@@ -481,251 +483,6 @@ async function confirmRejectReq() {
 }
 
 // ─────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────
-// ── EDIT REQUISITION (pending only) ──────────────────
-// ─────────────────────────────────────────────────────
-let editReqItems = []; // [{itemId, itemName, qty, unit}]
-
-async function openEditReqModal(reqId) {
-  // โหลดข้อมูลล่าสุดจาก Supabase
-  const { data, error } = await supa
-    .from('requisition_headers')
-    .select('*, requisition_lines(*)')
-    .eq('id', reqId)
-    .single();
-
-  if (error || !data) { toast('ไม่พบข้อมูลใบเบิก', 'error'); return; }
-  if (data.status !== 'pending') {
-    toast('ไม่สามารถแก้ไขได้ เนื่องจากใบเบิกนี้อนุมัติแล้ว', 'error'); return;
-  }
-
-  const req = mapReq(data);
-
-  // แสดงข้อมูลหัวใบเบิก
-  document.getElementById('edit-req-id').value = reqId;
-  document.getElementById('edit-req-info').innerHTML =
-    `<div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px;">
-      <span>📋 <strong>${req.refNo || '#'+reqId}</strong></span>
-      <span>👥 <strong>${req.patientName}</strong></span>
-      <span>📅 ${req.date}</span>
-      <span>👤 ${req.staffName}</span>
-    </div>`;
-
-  // โหลด lines ปัจจุบันเข้า editReqItems
-  editReqItems = (data.requisition_lines || []).map(l => ({
-    itemId: l.item_id,
-    itemName: l.item_name,
-    qty: l.qty_requested,
-    unit: l.unit,
-  }));
-
-  document.getElementById('edit-req-note').value = req.note || '';
-  renderEditReqItems();
-  openModal('modal-edit-req');
-}
-
-function renderEditReqItems() {
-  const UNITS = ['เม็ด','กล่อง','ขวด','ชิ้น','ชุด','Amp','Vial','ซอง','ถุง','ใบ','แผ่น','ม้วน','เส้น','หลอด','ห่อ','ก้อน','ก้าน'];
-  const container = document.getElementById('edit-req-items-wrap');
-  if (!container) return;
-  container.innerHTML = editReqItems.map((ri, idx) => {
-    const unitVal = ri.unit || '';
-    return `<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:8px;background:var(--bg);padding:10px 12px;border-radius:8px;border:1px solid var(--border);">
-      <div style="min-width:24px;text-align:center;font-size:12px;color:var(--text3);font-weight:600;">${idx+1}</div>
-      <div class="form-group" style="flex:4;margin:0;">
-        <label class="form-label" style="font-size:11px;">รายการสินค้า</label>
-        <select class="form-control" onchange="updateEditReqItem(${idx},'itemId',this.value)">
-          <option value="">-- เลือกรายการ --</option>
-          ${db.items.map(i => `<option value="${i.id}" ${ri.itemId == i.id ? 'selected' : ''}>${i.name} (คงเหลือ: ${i.qty} ${i.unit})</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group" style="flex:1;margin:0;min-width:72px;">
-        <label class="form-label" style="font-size:11px;">จำนวน</label>
-        <input class="form-control number" type="number" min="1" value="${ri.qty}" onchange="updateEditReqItem(${idx},'qty',this.value)" style="text-align:center;">
-      </div>
-      <div class="form-group" style="flex:1;margin:0;min-width:90px;">
-        <label class="form-label" style="font-size:11px;">หน่วยนับ</label>
-        <select class="form-control" onchange="updateEditReqItem(${idx},'unit',this.value)">
-          <option value="">-</option>
-          ${UNITS.map(u => `<option value="${u}" ${unitVal===u?'selected':''}>${u}</option>`).join('')}
-        </select>
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="removeEditReqItem(${idx})" style="padding:5px 8px;color:var(--text3);">✕</button>
-    </div>`;
-  }).join('');
-}
-
-function updateEditReqItem(idx, field, value) {
-  editReqItems[idx][field] = field === 'qty' ? parseInt(value) || 1 : value;
-  if (field === 'itemId') {
-    const item = db.items.find(i => i.id == value);
-    if (item) {
-      editReqItems[idx].itemName = item.name;
-      editReqItems[idx].unit    = item.unit;
-    }
-    renderEditReqItems();
-  }
-}
-
-function removeEditReqItem(idx) {
-  editReqItems.splice(idx, 1);
-  renderEditReqItems();
-}
-
-function addEditReqItem() {
-  editReqItems.push({ itemId: '', itemName: '', qty: 1, unit: '' });
-  renderEditReqItems();
-}
-
-async function saveEditReq() {
-  const reqId  = document.getElementById('edit-req-id').value;
-  const note   = document.getElementById('edit-req-note').value.trim();
-  const actor  = currentUser?.displayName || currentUser?.username || '';
-
-  const validItems = editReqItems.filter(ri => ri.itemId && ri.qty > 0);
-  if (validItems.length === 0) { toast('กรุณาเพิ่มรายการอย่างน้อย 1 รายการ', 'warning'); return; }
-
-  // ตรวจสต็อก
-  const errors = [];
-  validItems.forEach(ri => {
-    const item = db.items.find(i => i.id == ri.itemId);
-    if (item && item.qty < ri.qty) errors.push(`${item.name}: คงเหลือ ${item.qty} ${item.unit}`);
-  });
-  if (errors.length > 0) { toast('สินค้าไม่เพียงพอ: ' + errors.join(', '), 'error'); return; }
-
-  const lines = validItems.map(ri => ({
-    item_id:       ri.itemId,
-    item_name:     ri.itemName,
-    qty_requested: ri.qty,
-    unit:          ri.unit,
-  }));
-
-  showLoadingOverlay(true);
-  try {
-    const { data: rpcRes, error: rpcErr } = await supa.rpc('update_requisition', {
-      p_header_id:  parseInt(reqId),
-      p_note:       note,
-      p_updated_by: actor,
-      p_lines:      lines,
-    });
-
-    if (rpcErr || !rpcRes?.ok) {
-      toast('❌ แก้ไขไม่สำเร็จ: ' + (rpcErr?.message || rpcRes?.error), 'error'); return;
-    }
-
-    // อัปเดต local cache และดึง patientName
-    const cached = db.requisitions?.find(r => r.id == reqId);
-    if (cached) {
-      cached.note  = note;
-      cached.lines = validItems.map(ri => ({
-        itemId: ri.itemId, itemName: ri.itemName, qty: ri.qty, unit: ri.unit
-      }));
-      cached.itemName = validItems[0]?.itemName || cached.itemName;
-      cached.qty      = validItems[0]?.qty      || cached.qty;
-      cached.unit     = validItems[0]?.unit     || cached.unit;
-    }
-
-    // แจ้งเตือน Line — แจ้งผู้อนุมัติรับทราบ
-    const refNo       = rpcRes.ref_no || ('REQ#' + reqId);
-    const patientName = cached?.patientName || '';
-    sendLineNotify('updated_requisition',
-      buildLineMsg('updated_requisition', {
-        refNo, patient: patientName, itemCount: validItems.length, staff: actor
-      }),
-      { refNo, patientName, itemCount: validItems.length }
-    );
-
-    toast(`✅ แก้ไขใบเบิก ${refNo} เรียบร้อย — แจ้งเตือนผู้อนุมัติแล้ว`, 'success');
-    closeModal('modal-edit-req');
-    renderApprovalPanel();
-    renderHistory();
-    updateApprovalBadge();
-  } catch(e) {
-    toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
-  } finally {
-    showLoadingOverlay(false);
-  }
-}
-
-// ─────────────────────────────────────────────────────
-// ── CANCEL REQUISITION (pending only) ────────────────
-// ─────────────────────────────────────────────────────
-
-async function openCancelReqModal(reqId) {
-  // โหลดจาก Supabase โดยตรง ไม่พึ่ง db.requisitions (เผื่อกรณีมาจาก dashboard)
-  const { data, error } = await supa
-    .from('requisition_headers')
-    .select('*, requisition_lines(*)')
-    .eq('id', reqId)
-    .single();
-
-  if (error || !data) { toast('ไม่พบข้อมูลใบเบิก', 'error'); return; }
-  if (data.status !== 'pending') {
-    toast('ไม่สามารถยกเลิกได้ เนื่องจากใบเบิกนี้อนุมัติแล้ว', 'error'); return;
-  }
-
-  const req = mapReq(data);
-  const itemSummary = req.lines?.length > 0
-    ? req.lines.map(l => `${l.itemName} (${l.qty} ${l.unit})`).join(', ')
-    : `${req.itemName} (${req.qty} ${req.unit})`;
-
-  document.getElementById('cancel-req-id').value = reqId;
-  document.getElementById('cancel-req-summary').innerHTML =
-    `<div style="font-weight:600;margin-bottom:4px;">${req.patientName} — ${req.refNo || '#'+reqId}</div>
-     <div style="font-size:12px;color:var(--text2);">📦 ${itemSummary}</div>
-     <div style="font-size:12px;color:var(--text2);margin-top:2px;">📅 ${req.date} · 👤 ${req.staffName}</div>`;
-  document.getElementById('cancel-req-reason').value = '';
-  openModal('modal-cancel-req');
-}
-
-async function confirmCancelReq() {
-  const reqId  = document.getElementById('cancel-req-id').value;
-  const reason = document.getElementById('cancel-req-reason').value.trim();
-  const actor  = currentUser?.displayName || currentUser?.username || '';
-
-  if (!reqId || isNaN(parseInt(reqId))) { toast('ข้อมูลใบเบิกไม่ถูกต้อง', 'error'); return; }
-
-  showLoadingOverlay(true);
-  try {
-    const { data: rpcRes, error: rpcErr } = await supa.rpc('cancel_requisition', {
-      p_header_id:    parseInt(reqId),
-      p_cancelled_by: actor,
-      p_reason:       reason,
-    });
-
-    if (rpcErr || !rpcRes?.ok) {
-      toast('❌ ยกเลิกไม่สำเร็จ: ' + (rpcErr?.message || rpcRes?.error), 'error'); return;
-    }
-
-    // อัปเดต local cache ถ้ามี
-    const cached = db.requisitions?.find(r => r.id == reqId);
-    if (cached) cached.status = 'cancelled';
-
-    // ดึง refNo และ patientName จาก cache หรือ fallback
-    const refNo       = cached?.refNo       || ('REQ#' + reqId);
-    const patientName = cached?.patientName || '';
-
-    // แจ้งเตือน Line
-    sendLineNotify('cancelled_requisition',
-      buildLineMsg('cancelled_requisition', {
-        refNo, patient: patientName, staff: actor, reason
-      }),
-      { patientName, reason }
-    );
-
-    toast(`🚫 ยกเลิกใบเบิก ${refNo} เรียบร้อยแล้ว`, 'success');
-    closeModal('modal-cancel-req');
-    if (typeof renderApprovalPanel === 'function') renderApprovalPanel();
-    if (typeof renderHistory      === 'function') renderHistory();
-    if (typeof updateApprovalBadge=== 'function') updateApprovalBadge();
-    if (typeof renderDashboard    === 'function') renderDashboard();
-  } catch(e) {
-    toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
-  } finally {
-    showLoadingOverlay(false);
-  }
-}
-
 // ── RETURN TO STOCK ───────────────────────────────────
 // ─────────────────────────────────────────────────────
 function openReturnModal() {
@@ -934,8 +691,8 @@ async function renderHistory() {
 
   if (!tb) return;
   if (reqs.length === 0) { tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบรายการ</td></tr>'; return; }
-  const STATUS_COLOR = { pending:'#e67e22', forward:'#3498db', approved:'#27ae60', rejected:'#e74c3c', cancelled:'#888' };
-  const STATUS_LABEL = { pending:'รอธุรการ', forward:'รออนุมัติ L2', approved:'✅ อนุมัติ', rejected:'❌ ไม่อนุมัติ', cancelled:'🚫 ยกเลิกแล้ว' };
+  const STATUS_COLOR = { pending:'#e67e22', forward:'#3498db', approved:'#27ae60', rejected:'#e74c3c' };
+  const STATUS_LABEL = { pending:'รอธุรการ', forward:'รออนุมัติ L2', approved:'✅ อนุมัติ', rejected:'❌ ไม่อนุมัติ' };
   tb.innerHTML = reqs.map(r => {
     const itemSummary = r.lines?.length > 0
       ? r.lines.map(l => `${l.itemName} (${l.qty} ${l.unit})`).join(', ')
@@ -943,8 +700,7 @@ async function renderHistory() {
     const qtySummary = r.lines?.length > 0
       ? r.lines.reduce((s,l)=>s+(l.qty||0),0)
       : (r.qty||0);
-    const isPending = r.status === 'pending';
-    return `<tr style="${r.status==='cancelled'?'opacity:0.55;':''}">
+    return `<tr>
     <td class="number" style="white-space:nowrap;">${r.date}</td>
     <td>${r.refNo||'-'}</td>
     <td>${r.patientName}</td>
@@ -953,13 +709,7 @@ async function renderHistory() {
     <td>${r.staffName||'-'}</td>
     <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${STATUS_COLOR[r.status]||'#888'}22;color:${STATUS_COLOR[r.status]||'#888'};">${STATUS_LABEL[r.status]||r.status}</span></td>
     <td style="color:var(--text2);font-size:12px;">${r.note || '-'}</td>
-    <td style="white-space:nowrap;">
-      <button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')" title="ดูใบเบิก">🖨️</button>
-      ${isPending ? `
-        <button class="btn btn-ghost btn-sm" onclick="openEditReqModal('${r.id}')" title="แก้ไขใบเบิก" style="color:#e67e22;">✏️</button>
-        <button class="btn btn-ghost btn-sm" onclick="openCancelReqModal('${r.id}')" title="ยกเลิกใบเบิก" style="color:#e74c3c;">🗑️</button>
-      ` : ''}
-    </td>
+    <td><button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')" title="ดูใบเบิก">🖨️</button></td>
   </tr>`;}).join('');
 }
 
