@@ -135,9 +135,10 @@ async function saveWound() {
   };
   const editId = document.getElementById('wound-edit-id').value;
   if (editId) {
-    if (supa) await supa.from('patient_wounds').update(woundRow).eq('id', editId);
+    const woundRowEdit = { patient_id: row.patient_id, patient_name: row.patient_name, wound_date: row.date, location: row.location, stage: row.stage, size_cm: `${row.width}x${row.length}x${row.depth}`, appearance: row.appearance, note: (row.treatment?'การรักษา: '+row.treatment+' ':'')+(row.trend?'แนวโน้ม: '+row.trend+' ':'')+(row.note||''), created_by: row.recorder||'' };
+    if (supa) await supa.from('patient_wounds').update(woundRowEdit).eq('id', editId);
     const idx = (db.wounds||[]).findIndex(x=>x.id==editId);
-    if (idx>=0) db.wounds[idx] = {...db.wounds[idx], ...mapWound({id:editId,...row})};
+    if (idx>=0) db.wounds[idx] = {...db.wounds[idx], ...mapWound({id:editId,...woundRowEdit})};
   } else {
     const woundRow = { patient_id: row.patient_id, patient_name: row.patient_name, wound_date: row.date, location: row.location, stage: row.stage, size_cm: `${row.width}x${row.length}x${row.depth}`, appearance: row.appearance, note: (row.treatment?'การรักษา: '+row.treatment+' ':'')+(row.trend?'แนวโน้ม: '+row.trend+' ':'')+(row.note||''), created_by: row.recorder||'' };
     if (supa) { const {data} = await supa.from('patient_wounds').insert(woundRow).select().single(); if(data){if(!db.wounds)db.wounds=[];db.wounds.unshift(mapWound(data));} }
@@ -149,12 +150,16 @@ async function saveWound() {
 }
 
 function mapWound(r) {
-  return { id:r.id, patientId:r.patient_id, patientName:r.patient_name, date:r.date, location:r.location, stage:r.stage, width:r.width, length:r.length, depth:r.depth, appearance:r.appearance, treatment:r.treatment, trend:r.trend, recorder:r.recorder, note:r.note };
+  const size = (r.size_cm||'').split('x');
+  return { id:r.id, patientId:r.patient_id, patientName:r.patient_name,
+    date:r.wound_date||r.date, location:r.location, stage:r.stage,
+    width:parseFloat(size[0])||r.width||0, length:parseFloat(size[1])||r.length||0, depth:parseFloat(size[2])||r.depth||0,
+    appearance:r.appearance, treatment:r.dressing||r.treatment, trend:r.status||r.trend, recorder:r.created_by||r.recorder, note:r.note };
 }
 
 async function deleteWound(id) {
   if (!confirm('ลบบันทึกแผลนี้?')) return;
-  if (supa) await supa.from('wound_care_logs').delete().eq('id', id);
+  if (supa) await supa.from('patient_wounds').delete().eq('id', id);
   db.wounds = (db.wounds||[]).filter(x=>x.id!=id);
   renderIncidentPage(); toast('ลบแล้ว','success');
 }
@@ -350,12 +355,19 @@ function mapTubeFeed(r) {
 
 async function deleteTubeFeed(id) {
   if (!confirm('ลบบันทึกนี้?')) return;
-  if (supa) await supa.from('tube_feeding_logs').delete().eq('id', id);
+  if (supa) await supa.from('tube_feedings').delete().eq('id', id);
   db.tubeFeeds = (db.tubeFeeds||[]).filter(x=>x.id!=id);
   renderTubeFeedTable(); toast('ลบแล้ว','success');
 }
 
-function renderDietaryPage() {
+async function renderDietaryPage() {
+  // โหลดข้อมูลล่าสุดจาก Supabase
+  if (supa) {
+    const { data: dietData } = await supa.from('patient_diets').select('*').order('updated_at',{ascending:false});
+    if (dietData) db.diets = dietData.map(r=>({id:r.id,patientId:r.patient_id,patientName:r.patient_name,dietType:r.diet_type,calories:r.calories,protein:r.protein,restrictions:r.restrictions||[],note:r.note,recorder:r.recorder,date:r.date}));
+    const { data: tubeData } = await supa.from('tube_feedings').select('*').order('date',{ascending:false});
+    if (tubeData) db.tubeFeeds = tubeData.map(r=>({id:r.id,patientId:r.patient_id,patientName:r.patient_name,date:r.date,time:r.time,formula:r.formula,volumeMl:r.volume_ml,rateMlHr:r.rate_ml_hr,route:r.route,recorder:r.recorder,note:r.note}));
+  }
   // populate filter dropdown
   const sel = document.getElementById('tubefeed-filter-patient');
   if (sel) {
