@@ -278,7 +278,11 @@ async function saveDiet() {
 
 function mapDiet(r) {
   let restrictions = [];
-  try { restrictions = typeof r.restrictions==='string' ? JSON.parse(r.restrictions) : (r.restrictions||[]); } catch(e){}
+  try { 
+    if (Array.isArray(r.restrictions)) restrictions = r.restrictions;
+    else if (typeof r.restrictions==='string') restrictions = JSON.parse(r.restrictions||'[]');
+    else if (r.restrictions) restrictions = Object.values(r.restrictions);
+  } catch(e){ restrictions = []; }
   return { id:r.id, patientId:r.patient_id, patientName:r.patient_name, dietType:r.diet_type, meals:r.meals, restrictions, note:r.note, updatedAt:r.updated_at };
 }
 
@@ -380,7 +384,7 @@ async function renderDietaryPage() {
   if (tb) tb.innerHTML = diets.length ? diets.map(d=>`<tr>
     <td style="font-weight:600;">${d.patientName||''}</td>
     <td>${DIET_LABELS[d.dietType]||''} ${d.dietType||''}</td>
-    <td style="font-size:12px;">${(d.restrictions||[]).join(', ')||'—'}</td>
+    <td style="font-size:12px;">${(Array.isArray(d.restrictions) ? d.restrictions : (typeof d.restrictions==='string' ? JSON.parse(d.restrictions||'[]') : [])).join(', ')||'—'}</td>
     <td>${d.meals||'3 มื้อ'}</td>
     <td style="font-size:12px;">${d.note||'—'}</td>
     <td style="font-size:11px;color:var(--text2);">${(d.updatedAt||'').slice(0,10)}</td>
@@ -428,7 +432,7 @@ function printDietaryReport() {
   <h1>🍽️ ใบจัดอาหารประจำวัน — นวศรี เนอร์สซิ่งโฮม</h1>
   <h2>วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})}</h2>
   <table><thead><tr><th>#</th><th>ผู้ป่วย</th><th>ประเภทอาหาร</th><th>มื้อ</th><th>ข้อจำกัด</th><th>หมายเหตุ</th></tr></thead><tbody>
-  ${diets.map((d,i)=>`<tr><td style="text-align:center;">${i+1}</td><td style="font-weight:600;">${d.patientName||''}</td><td>${d.dietType||''}</td><td>${d.meals||'3 มื้อ'}</td><td>${(d.restrictions||[]).join(', ')||'—'}</td><td>${d.note||'—'}</td></tr>`).join('')}
+  ${diets.map((d,i)=>`<tr><td style="text-align:center;">${i+1}</td><td style="font-weight:600;">${d.patientName||''}</td><td>${d.dietType||''}</td><td>${d.meals||'3 มื้อ'}</td><td>${(Array.isArray(d.restrictions) ? d.restrictions : (typeof d.restrictions==='string' ? JSON.parse(d.restrictions||'[]') : [])).join(', ')||'—'}</td><td>${d.note||'—'}</td></tr>`).join('')}
   </tbody></table></body></html>`);
   w.document.close();
 }
