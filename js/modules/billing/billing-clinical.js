@@ -167,7 +167,7 @@ async function deleteWound(id) {
 async function renderIncidentPage() {
   // โหลดข้อมูลล่าสุดจาก Supabase
   if (supa) {
-    const { data: incData } = await supa.from('incident_reports').select('*').order('date',{ascending:false});
+    const { data: incData } = await supa.from('incident_reports').select('*').order('created_at',{ascending:false});
     if (incData) db.incidents = incData.map(mapIncident);
     const { data: woundData } = await supa.from('patient_wounds').select('*').order('wound_date',{ascending:false});
     if (woundData) db.wounds = woundData.map(r=>({id:r.id,patientId:r.patient_id,patientName:r.patient_name,date:r.wound_date||r.date,location:r.location,stage:r.stage,width:(r.size_cm?.split('x')[0])||0,length:(r.size_cm?.split('x')[1])||0,depth:(r.size_cm?.split('x')[2])||0,appearance:r.appearance,treatment:'',recorder:r.created_by||'',trend:'',note:r.note}));
