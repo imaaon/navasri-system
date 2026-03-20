@@ -283,7 +283,7 @@ function mapDiet(r) {
     else if (typeof r.restrictions==='string') restrictions = JSON.parse(r.restrictions||'[]');
     else if (r.restrictions) restrictions = Object.values(r.restrictions);
   } catch(e){ restrictions = []; }
-  return { id:r.id, patientId:r.patient_id, patientName:r.patient_name, dietType:r.diet_type, meals:r.meals, restrictions, note:r.note, updatedAt:r.updated_at };
+  return { id:r.id, patientId:r.patient_id, patientName:r.patient_name, dietType:r.diet_type, meals:r.meals||r.meal_count||'3 มื้อ', restrictions, note:r.note, updatedAt:r.updated_at, date:r.date, recorder:r.recorder, calories:r.calories, protein:r.protein };
 }
 
 async function deleteDiet(id) {
