@@ -140,6 +140,10 @@
             <div class="card-body" id="dash-pr-summary"></div>
           </div>
         </div>
+
+        <!-- Monthly Financial Summary (features.js) -->
+        <div id="dash-monthly-summary"></div>
+
       </div>
 
 
@@ -1229,6 +1233,32 @@
                 </div>
               </div>
 
+              <!-- Extra settings from features.js -->
+              <div id="line-extra-settings"></div>
+
+            </div>
+          </div>
+
+          <!-- Backup Section -->
+          <div class="card" style="margin-bottom:20px;">
+            <div class="card-header">
+              <div class="card-title" style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:22px;">💾</span>
+                <div>
+                  <div>สำรองข้อมูล (Backup)</div>
+                  <div style="font-size:11px;font-weight:400;color:var(--text2);margin-top:1px;">Export ข้อมูลทั้งหมดเป็นไฟล์ Excel</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body" style="padding:20px;">
+              <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">
+                ดาวน์โหลดข้อมูลทั้งหมดในระบบออกมาเป็นไฟล์ <strong>Excel (.xlsx)</strong> ครบทุก sheet ได้แก่
+                ผู้รับบริการ, พนักงาน, ห้องพัก/เตียง, สินค้า, Lot สินค้า, ใบแจ้งหนี้, การชำระเงิน, ค่าใช้จ่าย, การเบิกสินค้า, ผู้จำหน่าย และสรุปภาพรวม
+              </div>
+              <button class="btn btn-primary" onclick="backupAllData()" style="display:flex;align-items:center;gap:8px;">
+                💾 Backup ข้อมูลทั้งหมด
+              </button>
+              <div style="font-size:11px;color:var(--text3);margin-top:8px;">⚠️ อาจใช้เวลา 2-5 วินาที ขึ้นกับปริมาณข้อมูล</div>
             </div>
           </div>
 
@@ -1294,7 +1324,7 @@
             <div class="card-body" style="padding:0;">
               <div class="table-wrap"><table>
                 <thead><tr>
-                  <th>วันที่/เวลา</th><th>ผู้ป่วย</th><th>ประเภท</th><th>สถานที่</th><th>รายละเอียด</th><th>การปฐมพยาบาล</th><th>ผู้บันทึก</th><th>การจัดการ</th>
+                  <th>วันที่/เวลา</th><th>ผู้ป่วย</th><th>ประเภท</th><th>สถานที่</th><th>รายละเอียด</th><th>การปฐมพยาบาล</th><th>ผู้บันทึก</th><th>รูปภาพ</th><th>การจัดการ</th>
                 </tr></thead>
                 <tbody id="incident-table-body"><tr><td colspan="8" class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">ยังไม่มีรายงานอุบัติเหตุ</div></td></tr></tbody>
               </table></div>
@@ -1307,7 +1337,7 @@
             <div class="card-body" style="padding:0;">
               <div class="table-wrap"><table>
                 <thead><tr>
-                  <th>วันที่</th><th>ผู้ป่วย</th><th>ตำแหน่งแผล</th><th>Stage</th><th>ขนาด (ซม.)</th><th>ลักษณะ</th><th>การรักษา</th><th>ผู้บันทึก</th><th>จัดการ</th>
+                  <th>วันที่</th><th>ผู้ป่วย</th><th>ตำแหน่งแผล</th><th>Stage</th><th>ขนาด (ซม.)</th><th>ลักษณะ</th><th>การรักษา</th><th>ผู้บันทึก</th><th>รูปภาพ</th><th>จัดการ</th>
                 </tr></thead>
                 <tbody id="wound-table-body"><tr><td colspan="9" class="empty"><div class="empty-icon">🩹</div><div class="empty-text">ยังไม่มีบันทึกแผลกดทับ</div></td></tr></tbody>
               </table></div>

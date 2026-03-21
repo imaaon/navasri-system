@@ -22,7 +22,9 @@ function renderPatients() {
   let pats = [...db.patients];
   if (search) pats = pats.filter(p =>
     p.name.toLowerCase().includes(search) ||
-    (p.idcard||p.idCard||'').toLowerCase().includes(search)
+    (p.idcard||p.idCard||'').toLowerCase().includes(search) ||
+    (p.hn||'').toLowerCase().includes(search) ||
+    (p.phone||'').includes(search)
   );
   if (statusF) pats = pats.filter(p => p.status === statusF);
 
@@ -364,6 +366,7 @@ async function openEditContactModal(patId, contactId) {
   const c = (patient.contacts||[]).find(c => c.id == contactId);
   if (!c) return;
   document.getElementById('contact-pat-id').value = patId;
+  document.getElementById('contact-pat-id').dataset.editId = contactId;
   document.getElementById('contact-name').value = c.name || '';
   document.getElementById('contact-relation').value = c.relation || '';
   document.getElementById('contact-role').value = c.role || 'ญาติ';
@@ -372,8 +375,6 @@ async function openEditContactModal(patId, contactId) {
   document.getElementById('contact-is-payer').checked = c.isPayer || false;
   document.getElementById('contact-is-dm').checked = c.isDecisionMaker || false;
   document.getElementById('contact-note').value = c.note || '';
-  // เก็บ id สำหรับ update
-  document.getElementById('contact-pat-id').dataset.editId = contactId;
   openModal('modal-add-contact');
 }
 
@@ -429,23 +430,6 @@ async function saveContact() {
   toast(editId ? `แก้ไขผู้ติดต่อ "${name}" เรียบร้อย` : `เพิ่มผู้ติดต่อ "${name}" เรียบร้อย`, 'success');
   closeModal('modal-add-contact');
   openPatientProfile(patId);
-}
-async function openEditContactModal(patId, contactId) {
-  const patient = db.patients.find(p => p.id == patId);
-  if (!patient) return;
-  const c = (patient.contacts||[]).find(c => c.id == contactId);
-  if (!c) return;
-  document.getElementById('contact-pat-id').value = patId;
-  document.getElementById('contact-pat-id').dataset.editId = contactId;
-  document.getElementById('contact-name').value = c.name || '';
-  document.getElementById('contact-relation').value = c.relation || '';
-  document.getElementById('contact-role').value = c.role || 'ญาติ';
-  document.getElementById('contact-phone').value = c.phone || '';
-  document.getElementById('contact-email').value = c.email || '';
-  document.getElementById('contact-is-payer').checked = c.isPayer || false;
-  document.getElementById('contact-is-dm').checked = c.isDecisionMaker || false;
-  document.getElementById('contact-note').value = c.note || '';
-  openModal('modal-add-contact');
 }
 async function deleteContact(patId, contactId) {
   if (!confirm('ลบผู้ติดต่อนี้?')) return;

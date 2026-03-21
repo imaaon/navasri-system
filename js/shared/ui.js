@@ -11,7 +11,10 @@ function saveLineSettings() {
     notifyForward: document.getElementById('notifyForward')?.checked ?? true,
     notifyApproved: document.getElementById('notifyApproved')?.checked ?? true,
     notifyRejected: document.getElementById('notifyRejected')?.checked ?? true,
-    notifyLowStock: document.getElementById('notifyLowStock')?.checked ?? true
+    notifyLowStock: document.getElementById('notifyLowStock')?.checked ?? true,
+    // features.js extra toggles
+    notifyOverdueBills:  document.getElementById('ls-notify-overdue')?.checked ?? false,
+    notifyLowStockDaily: document.getElementById('ls-notify-stock')?.checked  ?? false,
   };
   saveDB();
   updateLineStatusDot();

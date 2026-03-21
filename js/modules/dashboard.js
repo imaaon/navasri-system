@@ -114,19 +114,23 @@ function renderAdminDashboard() {
 
   // Recent timeline
   const tl = document.getElementById('recentTimeline');
-  const recent = [...db.requisitions].sort((a,b) => b.id - a.id).slice(0, 8);
+  const recent = [...db.requisitions].sort((a,b) => (b.createdAt||b.date||'').localeCompare(a.createdAt||a.date||'')).slice(0, 8);
   if (recent.length === 0) {
     tl.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">ยังไม่มีการเบิก</div></div>';
   } else {
     tl.innerHTML = recent.map(r => {
       const catColors = { ยา:'#e05050', เวชภัณฑ์:'#e07040', ของใช้:'#4070c0', บริการ:'#9060c0' };
-      const item = db.items.find(i => i.id === r.itemId);
+      // รองรับทั้ง schema ใหม่ (lines[]) และเก่า (itemId/itemName)
+      const displayLines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName, qty: r.qty, unit: r.unit, itemId: r.itemId }];
+      const firstLine = displayLines[0] || {};
+      const item = db.items.find(i => i.id === (firstLine.itemId || r.itemId));
       const color = item ? (catColors[item.category] || '#888') : '#888';
+      const moreLines = displayLines.length > 1 ? ` <span style="font-size:11px;color:var(--text3);">+${displayLines.length-1} รายการ</span>` : '';
       return `<div class="tl-item">
         <div class="tl-dot" style="background:${color}20;color:${color};">📦</div>
         <div class="tl-content">
-          <div class="tl-title">${r.itemName} <span class="tag">${r.qty} ${r.unit}</span></div>
-          <div class="tl-meta">${r.patientName} · ${r.staffName} · ${r.date}</div>
+          <div class="tl-title">${firstLine.itemName||r.itemName||'-'} <span class="tag">${firstLine.qty||r.qty||0} ${firstLine.unit||r.unit||''}</span>${moreLines}</div>
+          <div class="tl-meta">${r.patientName||'-'} · ${r.staffName||'-'} · ${r.date||'-'}</div>
         </div>
       </div>`;
     }).join('');
@@ -230,10 +234,14 @@ function renderAdminDashboard() {
     const monthPurchases = (db.purchases||[]).filter(p=>(p.date||'').startsWith(monthStr));
     const totalCost = monthPurchases.reduce((s,p)=>s+(p.cost||0)*(p.qty||0),0);
     const monthReqs  = (db.requisitions||[]).filter(r=>(r.date||'').startsWith(monthStr)&&r.status==='approved');
-    const billableAmt = monthReqs.reduce((s,r)=>{
-      const item = db.items.find(i=>i.id==r.itemId);
-      return s + (item?.isBillable!==false ? (item?.price||item?.cost||0)*(r.qty||0) : 0);
-    },0);
+    const billableAmt = monthReqs.reduce((s, r) => {
+      // รองรับทั้ง schema ใหม่ (lines[]) และเก่า (itemId/qty)
+      const linesToCheck = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, qty: r.qty||0 }];
+      return s + linesToCheck.reduce((ls, line) => {
+        const item = db.items.find(i => i.id == line.itemId);
+        return ls + (item?.isBillable !== false ? (item?.price||item?.cost||0) * (line.qty||0) : 0);
+      }, 0);
+    }, 0);
     costEl.innerHTML =
       `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">` +
       `<div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;"><div style="font-size:11px;color:var(--text3);">รับสินค้า</div><div style="font-size:20px;font-weight:600;">฿${totalCost.toLocaleString()}</div></div>` +

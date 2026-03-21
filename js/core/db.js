@@ -35,7 +35,8 @@ let db = {
   lineSettings: {
     enabled: false, webhookUrl: '',
     notifyNewReq: true, notifyForward: true,
-    notifyApproved: true, notifyRejected: true, notifyLowStock: true
+    notifyApproved: true, notifyRejected: true, notifyLowStock: true,
+    notifyOverdueBills: false, notifyLowStockDaily: false,
   }
 };
 
@@ -140,9 +141,6 @@ async function loadDBSecondary() {
     db.roomHistory     = (roomHistoryRes?.data || []);
     db.invoiceResetLogs  = (invoiceResetLogsRes?.data || []);
     db.stockMovements    = (stockMovementsRes?.data || []).map(mapStockMovement);
-    db.suppliers         = (suppliersRes?.data || []).map(mapSupplier);
-    db.purchaseRequests  = (purchaseRequestsRes?.data || []).map(mapPurchaseRequest);
-    db.supplierInvoices  = (supplierInvoicesRes?.data || []).map(mapSupplierInvoice);
     db.suppliers         = (suppliersRes?.data || []).map(mapSupplier);
     db.purchaseRequests  = (purchaseRequestsRes?.data || []).map(mapPurchaseRequest);
     db.supplierInvoices  = (supplierInvoicesRes?.data || []).map(mapSupplierInvoice);

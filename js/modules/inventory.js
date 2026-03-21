@@ -70,7 +70,9 @@ function renderStock() {
   const statusFilter = document.getElementById('stockStatusFilter')?.value || '';
 
   let items = db.items.filter(item => {
-    if (search && !item.name.toLowerCase().includes(search)) return false;
+    if (search && !item.name.toLowerCase().includes(search) &&
+        !(item.barcode||'').toLowerCase().includes(search) &&
+        !(item.barcodeExternal||'').toLowerCase().includes(search)) return false;
     if (catFilter && item.category !== catFilter) return false;
     if (statusFilter === 'out' && item.qty > 0) return false;
     if (statusFilter === 'low' && (item.qty === 0 || item.qty > item.reorder)) return false;
@@ -605,13 +607,18 @@ function exportInventoryExcel() {
 
 function exportItemLotsExcel() {
   const rows = [
-    ['#', 'สินค้า', 'หน่วย', 'จำนวน', 'วันหมดอายุ', 'หมายเหตุ']
+    ['#', 'สินค้า', 'หน่วย', 'รับมาทั้งหมด', 'คงเหลือ', 'วันหมดอายุ', 'สถานะ']
   ];
   db.itemLots.forEach((lot, i) => {
     const item = db.items.find(x => x.id == lot.itemId);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const exp   = lot.expiryDate ? new Date(lot.expiryDate) : null;
+    const diff  = exp ? Math.ceil((exp - today) / 86400000) : null;
+    const status = !exp ? 'ไม่ระบุ' : diff < 0 ? 'หมดอายุแล้ว' : diff <= 30 ? `ใกล้หมด (${diff} วัน)` : 'ปกติ';
     rows.push([
       i+1, item?.name || '', item?.unit || '',
-      lot.qty || 0, lot.expiryDate || '', lot.note || ''
+      lot.qtyInLot || 0, lot.qtyRemaining || 0,
+      lot.expiryDate || '', status
     ]);
   });
   _xlsxDownload(rows, 'Lot สินค้า', 'navasri_item_lots_' + new Date().toISOString().slice(0,10));

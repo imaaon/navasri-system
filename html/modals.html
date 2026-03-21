@@ -573,6 +573,28 @@
           <option value="ไม่จำเป็น">— ไม่จำเป็น</option>
         </select>
       </div>
+
+      <!-- Photo Upload -->
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">📷 รูปถ่ายประกอบ</label>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div id="incident-photo-preview"
+               style="width:80px;height:80px;border-radius:8px;border:2px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;overflow:hidden;cursor:pointer;"
+               onclick="document.getElementById('incident-photo-input').click()" title="คลิกเพื่อเลือกรูป">📷</div>
+          <div style="flex:1;">
+            <input type="file" id="incident-photo-input" accept="image/*" capture="environment"
+                   style="display:none;" onchange="previewPhoto('incident')">
+            <input type="hidden" id="incident-photo-data">
+            <button type="button" class="btn btn-secondary btn-sm" style="margin-bottom:6px;"
+                    onclick="document.getElementById('incident-photo-input').click()">
+              📷 เลือกรูป / ถ่ายภาพ
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red);"
+                    onclick="clearIncidentPhoto()">✕ ลบรูป</button>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px;">รองรับ JPG, PNG ขนาดไม่เกิน 5MB</div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-incident')">ยกเลิก</button>
@@ -667,6 +689,28 @@
       <div class="form-group" style="margin:0;">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="wound-note" placeholder="">
+      </div>
+
+      <!-- Photo Upload -->
+      <div class="form-group" style="margin-top:14px;">
+        <label class="form-label">📷 รูปถ่ายแผล</label>
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div id="wound-photo-preview"
+               style="width:80px;height:80px;border-radius:8px;border:2px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;overflow:hidden;cursor:pointer;"
+               onclick="document.getElementById('wound-photo-input').click()" title="คลิกเพื่อเลือกรูป">📷</div>
+          <div style="flex:1;">
+            <input type="file" id="wound-photo-input" accept="image/*" capture="environment"
+                   style="display:none;" onchange="previewPhoto('wound')">
+            <input type="hidden" id="wound-photo-data">
+            <button type="button" class="btn btn-secondary btn-sm" style="margin-bottom:6px;"
+                    onclick="document.getElementById('wound-photo-input').click()">
+              📷 เลือกรูป / ถ่ายภาพ
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red);"
+                    onclick="clearWoundPhoto()">✕ ลบรูป</button>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px;">แนะนำถ่ายรูปแผลทุกครั้งเพื่อติดตามการรักษา</div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">

@@ -13,6 +13,9 @@ function openIncidentModal(id) {
   document.getElementById('incident-patient').innerHTML = patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   document.getElementById('incident-edit-id').value = id||'';
   document.getElementById('modal-incident-title').textContent = id ? '✏️ แก้ไขรายงานอุบัติเหตุ' : '⚠️ บันทึกอุบัติเหตุ / ความเสี่ยง';
+  // reset photo
+  document.getElementById('incident-photo-data').value = '';
+  document.getElementById('incident-photo-input').value = '';
   const today = new Date().toISOString().split('T')[0];
   const now = new Date().toTimeString().slice(0,5);
   if (id) {
@@ -28,6 +31,14 @@ function openIncidentModal(id) {
       document.getElementById('incident-severity').value = inc.severity||'เล็กน้อย';
       document.getElementById('incident-recorder').value = inc.recorder||'';
       document.getElementById('incident-notified').value = inc.notified||'ยังไม่แจ้ง';
+      // โหลดรูปเดิม
+      const prev = document.getElementById('incident-photo-preview');
+      if (inc.photoUrl) {
+        prev.innerHTML = `<img src="${inc.photoUrl}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;" onclick="showPhotoModal('${inc.photoUrl}')" title="คลิกเพื่อขยาย">`;
+        document.getElementById('incident-photo-data').value = inc.photoUrl;
+      } else {
+        prev.innerHTML = '📷';
+      }
     }
   } else {
     document.getElementById('incident-date').value = today;
@@ -35,7 +46,8 @@ function openIncidentModal(id) {
     document.getElementById('incident-detail').value = '';
     document.getElementById('incident-firstaid').value = '';
     document.getElementById('incident-location').value = '';
-    document.getElementById('incident-recorder').value = db.currentUser?.name||'';
+    document.getElementById('incident-recorder').value = currentUser?.displayName||currentUser?.username||'';
+    document.getElementById('incident-photo-preview').innerHTML = '📷';
   }
   openModal('modal-incident');
 }
@@ -45,6 +57,21 @@ async function saveIncident() {
   const detail = document.getElementById('incident-detail').value.trim();
   if (!patientId||!detail) { toast('กรุณากรอกข้อมูลที่จำเป็น','error'); return; }
   const patient = (db.patients||[]).find(p=>String(p.id)===String(patientId));
+
+  // upload รูปถ้ามี pending file
+  let photoUrl = document.getElementById('incident-photo-data').value || '';
+  const photoDataEl = document.getElementById('incident-photo-data');
+  if (photoDataEl._pendingFile) {
+    try {
+      photoUrl = await uploadPhotoToStorage(photoDataEl._pendingFile, 'incidents');
+      photoDataEl._pendingFile = null;
+    } catch(e) {
+      toast('อัปโหลดรูปไม่สำเร็จ: ' + e.message, 'warning');
+    }
+  } else if (photoUrl === '__pending__') {
+    photoUrl = '';
+  }
+
   const row = {
     patient_id: patientId, patient_name: patient?.name||'',
     type: document.getElementById('incident-type').value,
@@ -55,6 +82,7 @@ async function saveIncident() {
     severity: document.getElementById('incident-severity').value,
     recorder: document.getElementById('incident-recorder').value,
     notified: document.getElementById('incident-notified').value,
+    photo_url: photoUrl || null,
     created_at: new Date().toISOString()
   };
   const editId = document.getElementById('incident-edit-id').value;
@@ -72,7 +100,13 @@ async function saveIncident() {
 }
 
 function mapIncident(r) {
-  return { id:r.id, patientId:r.patient_id, patientName:r.patient_name, type:r.type, date:r.date, time:r.time, location:r.location, detail:r.detail, firstAid:r.first_aid, severity:r.severity, recorder:r.recorder, notified:r.notified };
+  return {
+    id: r.id, patientId: r.patient_id, patientName: r.patient_name,
+    type: r.type, date: r.date, time: r.time,
+    location: r.location, detail: r.detail, firstAid: r.first_aid,
+    severity: r.severity, recorder: r.recorder, notified: r.notified,
+    photoUrl: r.photo_url || null,
+  };
 }
 
 async function deleteIncident(id) {
@@ -87,6 +121,9 @@ function openWoundModal(id) {
   document.getElementById('wound-patient').innerHTML = patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   document.getElementById('wound-edit-id').value = id||'';
   document.getElementById('modal-wound-title').textContent = id ? '✏️ แก้ไขบันทึกแผล' : '🩹 บันทึกการทำแผล / แผลกดทับ';
+  // reset photo
+  document.getElementById('wound-photo-data').value = '';
+  document.getElementById('wound-photo-input').value = '';
   if (id) {
     const w = (db.wounds||[]).find(x=>x.id==id);
     if (w) {
@@ -102,14 +139,23 @@ function openWoundModal(id) {
       document.getElementById('wound-trend').value = w.trend||'คงที่';
       document.getElementById('wound-recorder').value = w.recorder||'';
       document.getElementById('wound-note').value = w.note||'';
+      // โหลดรูปเดิม
+      const prev = document.getElementById('wound-photo-preview');
+      if (w.photoUrl) {
+        prev.innerHTML = `<img src="${w.photoUrl}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;" onclick="showPhotoModal('${w.photoUrl}')" title="คลิกเพื่อขยาย">`;
+        document.getElementById('wound-photo-data').value = w.photoUrl;
+      } else {
+        prev.innerHTML = '📷';
+      }
     }
   } else {
     document.getElementById('wound-date').value = new Date().toISOString().split('T')[0];
-    ['width','length','depth'].forEach(f=>document.getElementById('wound-'+f).value='');
-    document.getElementById('wound-appearance').value='';
-    document.getElementById('wound-treatment').value='';
-    document.getElementById('wound-note').value='';
-    document.getElementById('wound-recorder').value = db.currentUser?.name||'';
+    ['width','length','depth'].forEach(f => document.getElementById('wound-'+f).value = '');
+    document.getElementById('wound-appearance').value = '';
+    document.getElementById('wound-treatment').value = '';
+    document.getElementById('wound-note').value = '';
+    document.getElementById('wound-recorder').value = currentUser?.displayName||currentUser?.username||'';
+    document.getElementById('wound-photo-preview').innerHTML = '📷';
   }
   openModal('modal-wound');
 }
@@ -119,6 +165,21 @@ async function saveWound() {
   const location = document.getElementById('wound-location').value;
   if (!patientId||!location) { toast('กรุณาเลือกผู้ป่วยและตำแหน่งแผล','error'); return; }
   const patient = (db.patients||[]).find(p=>String(p.id)===String(patientId));
+
+  // upload รูปถ้ามี pending file
+  let photoUrl = document.getElementById('wound-photo-data').value || '';
+  const photoDataEl = document.getElementById('wound-photo-data');
+  if (photoDataEl._pendingFile) {
+    try {
+      photoUrl = await uploadPhotoToStorage(photoDataEl._pendingFile, 'wounds');
+      photoDataEl._pendingFile = null;
+    } catch(e) {
+      toast('อัปโหลดรูปไม่สำเร็จ: ' + e.message, 'warning');
+    }
+  } else if (photoUrl === '__pending__') {
+    photoUrl = '';
+  }
+
   const row = {
     patient_id: patientId, patient_name: patient?.name||'',
     date: document.getElementById('wound-date').value,
@@ -131,18 +192,34 @@ async function saveWound() {
     trend: document.getElementById('wound-trend').value,
     recorder: document.getElementById('wound-recorder').value,
     note: document.getElementById('wound-note').value,
+    photo_url: photoUrl || null,
     created_at: new Date().toISOString()
   };
   const editId = document.getElementById('wound-edit-id').value;
+  // สร้าง woundRow ที่ map กับ DB schema
+  const woundRow = {
+    patient_id: row.patient_id, patient_name: row.patient_name,
+    wound_date: row.date, location: row.location, stage: row.stage,
+    size_cm: `${row.width}x${row.length}x${row.depth}`,
+    appearance: row.appearance,
+    note: (row.treatment ? 'การรักษา: ' + row.treatment + ' ' : '') +
+          (row.trend ? 'แนวโน้ม: ' + row.trend + ' ' : '') +
+          (row.note||''),
+    created_by: row.recorder||'',
+    photo_url: row.photo_url,
+  };
   if (editId) {
-    const woundRowEdit = { patient_id: row.patient_id, patient_name: row.patient_name, wound_date: row.date, location: row.location, stage: row.stage, size_cm: `${row.width}x${row.length}x${row.depth}`, appearance: row.appearance, note: (row.treatment?'การรักษา: '+row.treatment+' ':'')+(row.trend?'แนวโน้ม: '+row.trend+' ':'')+(row.note||''), created_by: row.recorder||'' };
-    if (supa) await supa.from('patient_wounds').update(woundRowEdit).eq('id', editId);
+    if (supa) await supa.from('patient_wounds').update(woundRow).eq('id', editId);
     const idx = (db.wounds||[]).findIndex(x=>x.id==editId);
-    if (idx>=0) db.wounds[idx] = {...db.wounds[idx], ...mapWound({id:editId,...woundRowEdit})};
+    if (idx>=0) db.wounds[idx] = {...db.wounds[idx], ...mapWound({id:editId,...woundRow})};
   } else {
-    const woundRow = { patient_id: row.patient_id, patient_name: row.patient_name, wound_date: row.date, location: row.location, stage: row.stage, size_cm: `${row.width}x${row.length}x${row.depth}`, appearance: row.appearance, note: (row.treatment?'การรักษา: '+row.treatment+' ':'')+(row.trend?'แนวโน้ม: '+row.trend+' ':'')+(row.note||''), created_by: row.recorder||'' };
-    if (supa) { const {data} = await supa.from('patient_wounds').insert(woundRow).select().single(); if(data){if(!db.wounds)db.wounds=[];db.wounds.unshift(mapWound(data));} }
-    else { if(!db.wounds)db.wounds=[]; db.wounds.unshift(mapWound({id:Date.now(),...row})); }
+    if (supa) {
+      const {data} = await supa.from('patient_wounds').insert(woundRow).select().single();
+      if(data) { if(!db.wounds) db.wounds=[]; db.wounds.unshift(mapWound(data)); }
+    } else {
+      if(!db.wounds) db.wounds=[];
+      db.wounds.unshift(mapWound({id:Date.now(),...row}));
+    }
   }
   closeModal('modal-wound');
   renderIncidentPage();
@@ -151,10 +228,54 @@ async function saveWound() {
 
 function mapWound(r) {
   const size = (r.size_cm||'').split('x');
-  return { id:r.id, patientId:r.patient_id, patientName:r.patient_name,
-    date:r.wound_date||r.date, location:r.location, stage:r.stage,
-    width:parseFloat(size[0])||r.width||0, length:parseFloat(size[1])||r.length||0, depth:parseFloat(size[2])||r.depth||0,
-    appearance:r.appearance, treatment:r.dressing||r.treatment, trend:r.status||r.trend, recorder:r.created_by||r.recorder, note:r.note };
+  return {
+    id: r.id, patientId: r.patient_id, patientName: r.patient_name,
+    date: r.wound_date||r.date, location: r.location, stage: r.stage,
+    width: parseFloat(size[0])||r.width||0,
+    length: parseFloat(size[1])||r.length||0,
+    depth: parseFloat(size[2])||r.depth||0,
+    appearance: r.appearance,
+    treatment: r.dressing||r.treatment,
+    trend: r.status||r.trend,
+    recorder: r.created_by||r.recorder,
+    note: r.note,
+    photoUrl: r.photo_url || null,
+  };
+}
+
+// ── Clear photo helpers ───────────────────────────────────
+function clearIncidentPhoto() {
+  document.getElementById('incident-photo-data').value = '';
+  document.getElementById('incident-photo-data')._pendingFile = null;
+  document.getElementById('incident-photo-preview').innerHTML = '📷';
+  document.getElementById('incident-photo-input').value = '';
+}
+
+function clearWoundPhoto() {
+  document.getElementById('wound-photo-data').value = '';
+  document.getElementById('wound-photo-data')._pendingFile = null;
+  document.getElementById('wound-photo-preview').innerHTML = '📷';
+  document.getElementById('wound-photo-input').value = '';
+}
+
+// ── ขยายรูปแบบ lightbox ──────────────────────────────────
+function showPhotoModal(url) {
+  // ใช้ modal ที่มีอยู่แล้ว หรือสร้าง overlay ชั่วคราว
+  const existing = document.getElementById('_photo_lightbox');
+  if (existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = '_photo_lightbox';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+  overlay.innerHTML = `
+    <div style="position:relative;max-width:92vw;max-height:90vh;">
+      <img src="${url}" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6);">
+      <button onclick="document.getElementById('_photo_lightbox').remove()"
+        style="position:absolute;top:-14px;right:-14px;width:30px;height:30px;border-radius:50%;background:#fff;border:none;font-size:16px;cursor:pointer;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.3);">✕</button>
+      <a href="${url}" target="_blank" download
+        style="position:absolute;bottom:-40px;left:50%;transform:translateX(-50%);color:#fff;font-size:12px;opacity:.8;">⬇️ ดาวน์โหลดรูป</a>
+    </div>`;
+  overlay.onclick = e => { if(e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
 }
 
 async function deleteWound(id) {
@@ -170,7 +291,7 @@ async function renderIncidentPage() {
     const { data: incData } = await supa.from('incident_reports').select('*').order('created_at',{ascending:false});
     if (incData) db.incidents = incData.map(mapIncident);
     const { data: woundData } = await supa.from('patient_wounds').select('*').order('wound_date',{ascending:false});
-    if (woundData) db.wounds = woundData.map(r=>({id:r.id,patientId:r.patient_id,patientName:r.patient_name,date:r.wound_date||r.date,location:r.location,stage:r.stage,width:(r.size_cm?.split('x')[0])||0,length:(r.size_cm?.split('x')[1])||0,depth:(r.size_cm?.split('x')[2])||0,appearance:r.appearance,treatment:'',recorder:r.created_by||'',trend:'',note:r.note}));
+    if (woundData) db.wounds = woundData.map(mapWound);
   }
   const SEV = {เล็กน้อย:'badge-green',ปานกลาง:'badge-orange',รุนแรง:'badge-red'};
   const TREND = {ดีขึ้น:'📈',คงที่:'➡️',แย่ลง:'📉','ใหม่':'🆕'};
@@ -178,36 +299,50 @@ async function renderIncidentPage() {
   const incidents = (db.incidents||[]).filter(x=>!month||x.date?.startsWith(month));
   const wounds = (db.wounds||[]).filter(x=>!month||x.date?.startsWith(month));
 
+  // ── Incident table ────────────────────────────────────────
   const incTb = document.getElementById('incident-table-body');
-  if (incTb) incTb.innerHTML = incidents.length ? incidents.map(x=>`<tr>
-    <td><div style="font-weight:600;">${x.date||''}</div><div style="font-size:11px;color:var(--text2);">${x.time||''}</div></td>
-    <td>${x.patientName||''}</td>
-    <td><span class="badge badge-orange">${x.type||''}</span></td>
-    <td style="font-size:12px;">${x.location||'-'}</td>
-    <td style="font-size:12px;max-width:200px;">${x.detail||''}</td>
-    <td style="font-size:12px;max-width:150px;">${x.firstAid||'-'}</td>
-    <td style="font-size:12px;">${x.recorder||'-'}</td>
-    <td style="white-space:nowrap;">
-      <button class="btn btn-ghost btn-sm" onclick="openIncidentModal('${x.id}')">✏️</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteIncident('${x.id}')">🗑️</button>
-    </td>
-  </tr>`).join('') : `<tr><td colspan="8"><div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">ยังไม่มีรายงานอุบัติเหตุ</div></div></td></tr>`;
+  if (incTb) incTb.innerHTML = incidents.length ? incidents.map(x => {
+    const photoThumb = x.photoUrl
+      ? `<img src="${x.photoUrl}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid var(--border);" onclick="showPhotoModal('${x.photoUrl}')" title="คลิกเพื่อขยาย">`
+      : '<span style="font-size:18px;color:var(--text3);">—</span>';
+    return `<tr>
+      <td><div style="font-weight:600;">${x.date||''}</div><div style="font-size:11px;color:var(--text2);">${x.time||''}</div></td>
+      <td>${x.patientName||''}</td>
+      <td><span class="badge badge-orange">${x.type||''}</span></td>
+      <td style="font-size:12px;">${x.location||'-'}</td>
+      <td style="font-size:12px;max-width:200px;">${x.detail||''}</td>
+      <td style="font-size:12px;max-width:150px;">${x.firstAid||'-'}</td>
+      <td style="font-size:12px;">${x.recorder||'-'}</td>
+      <td style="text-align:center;">${photoThumb}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-ghost btn-sm" onclick="openIncidentModal('${x.id}')">✏️</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteIncident('${x.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">ยังไม่มีรายงานอุบัติเหตุ</div></div></td></tr>`;
 
+  // ── Wound table ───────────────────────────────────────────
   const woundTb = document.getElementById('wound-table-body');
-  if (woundTb) woundTb.innerHTML = wounds.length ? wounds.map(x=>`<tr>
-    <td>${x.date||''}</td>
-    <td>${x.patientName||''}</td>
-    <td>${x.location||''}</td>
-    <td><span class="badge ${x.stage?.includes('4')?'badge-red':x.stage?.includes('3')?'badge-orange':'badge-blue'}">${x.stage||''}</span></td>
-    <td style="font-size:12px;">${x.width||0}×${x.length||0}×${x.depth||0}</td>
-    <td style="font-size:12px;">${x.appearance||'-'}</td>
-    <td style="font-size:12px;max-width:160px;">${x.treatment||'-'}</td>
-    <td style="font-size:12px;">${x.recorder||'-'} ${TREND[x.trend]||''}</td>
-    <td style="white-space:nowrap;">
-      <button class="btn btn-ghost btn-sm" onclick="openWoundModal('${x.id}')">✏️</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteWound('${x.id}')">🗑️</button>
-    </td>
-  </tr>`).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🩹</div><div class="empty-text">ยังไม่มีบันทึกแผลกดทับ</div></div></td></tr>`;
+  if (woundTb) woundTb.innerHTML = wounds.length ? wounds.map(x => {
+    const photoThumb = x.photoUrl
+      ? `<img src="${x.photoUrl}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid var(--border);" onclick="showPhotoModal('${x.photoUrl}')" title="คลิกเพื่อขยาย">`
+      : '<span style="font-size:18px;color:var(--text3);">—</span>';
+    return `<tr>
+      <td>${x.date||''}</td>
+      <td>${x.patientName||''}</td>
+      <td>${x.location||''}</td>
+      <td><span class="badge ${x.stage?.includes('4')?'badge-red':x.stage?.includes('3')?'badge-orange':'badge-blue'}">${x.stage||''}</span></td>
+      <td style="font-size:12px;">${x.width||0}×${x.length||0}×${x.depth||0}</td>
+      <td style="font-size:12px;">${x.appearance||'-'}</td>
+      <td style="font-size:12px;max-width:160px;">${x.treatment||'-'}</td>
+      <td style="font-size:12px;">${x.recorder||'-'} ${TREND[x.trend]||''}</td>
+      <td style="text-align:center;">${photoThumb}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-ghost btn-sm" onclick="openWoundModal('${x.id}')">✏️</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteWound('${x.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="10"><div class="empty"><div class="empty-icon">🩹</div><div class="empty-text">ยังไม่มีบันทึกแผลกดทับ</div></div></td></tr>`;
 }
 
 // =======================================================
