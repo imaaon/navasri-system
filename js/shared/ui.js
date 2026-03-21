@@ -19,7 +19,6 @@ function saveLineSettings() {
   saveDB();
   updateLineStatusDot();
 }
-
 function loadLineSettingsUI() {
   const s = db.lineSettings;
   const el = id => document.getElementById(id);
@@ -37,14 +36,13 @@ function updateLineStatusDot() {
   try {
     if (typeof db === 'undefined' || !db || !db.lineSettings) return;
     const s = db.lineSettings;
-    const emoji = s.enabled && s.webhookUrl ? '🟢' : s.enabled ? '🟡' : '⚪';
-    const title = s.enabled && s.webhookUrl ? 'Line: เชื่อมต่อแล้ว' : s.enabled ? 'Line: ยังไม่ตั้ง URL' : 'Line: ปิดอยู่';
-    // topbar icon (index.html)
+    // Edge Function จัดการทุกอย่าง — ถ้าเปิดใช้งานถือว่าเชื่อมต่อแล้ว
+    const emoji = s.enabled ? '🟢' : '⚪';
+    const title = s.enabled ? 'Line: เชื่อมต่อแล้ว (Edge Function)' : 'Line: ปิดอยู่';
     const topbar = document.getElementById('line-status-dot');
     if (topbar) { topbar.textContent = emoji; topbar.title = title; }
-    // sidebar dot (sidebar.html)
     const sidebar = document.getElementById('lineStatusDot');
-    if (sidebar) { sidebar.title = title; sidebar.style.background = s.enabled && s.webhookUrl ? '#1D9E75' : s.enabled ? '#EF9F27' : '#B4B2A9'; }
+    if (sidebar) { sidebar.title = title; sidebar.style.background = s.enabled ? '#1D9E75' : '#B4B2A9'; }
   } catch(e) { /* ยังไม่พร้อม */ }
 }
 
@@ -52,19 +50,12 @@ function updateLineBanner() {
   const banner = document.getElementById('lineBanner');
   if (!banner) return;
   const s = db.lineSettings;
-  if (s.enabled && s.webhookUrl) {
+  if (s.enabled) {
     banner.style.display = '';
     banner.innerHTML = `<div style="background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
       <span style="font-size:20px;">✅</span>
       <div><div style="font-weight:700;color:#166534;font-size:13.5px;">Line Notification เปิดใช้งานแล้ว</div>
-      <div style="font-size:12px;color:#15803d;margin-top:1px;">Webhook: ${s.webhookUrl.substring(0,50)}...</div></div>
-    </div>`;
-  } else if (s.enabled && !s.webhookUrl) {
-    banner.style.display = '';
-    banner.innerHTML = `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:20px;">⚠️</span>
-      <div><div style="font-weight:700;color:#92400e;font-size:13.5px;">กรุณากรอก Webhook URL</div>
-      <div style="font-size:12px;color:#b45309;margin-top:1px;">เปิดใช้งานแล้วแต่ยังไม่มี URL — การแจ้งเตือนยังไม่ส่ง</div></div>
+      <div style="font-size:12px;color:#15803d;margin-top:1px;">ส่งผ่าน Supabase Edge Function — ปลอดภัย ไม่มี CORS</div></div>
     </div>`;
   } else {
     banner.style.display = 'none';
@@ -167,21 +158,13 @@ function renderLineLog() {
 }
 
 async function testWebhook() {
-  const url = document.getElementById('webhookUrl')?.value?.trim();
-  if (!url) { toast('กรุณากรอก Webhook URL ก่อน', 'warning'); return; }
   const btn = document.getElementById('testBtn');
-  btn.textContent = '⏳ กำลังส่ง...';
-  btn.disabled = true;
-
-  // บันทึก URL ก่อนทดสอบ
-  if (!db.lineSettings) db.lineSettings = {};
-  db.lineSettings.webhookUrl = url;
-  saveDB();
+  if (btn) { btn.textContent = '⏳ กำลังส่ง...'; btn.disabled = true; }
 
   const EDGE_URL = 'https://umueucsxowjaurlaubwa.supabase.co/functions/v1/line-notify';
   const testPayload = {
     event: 'test',
-    message: '🧪 ทดสอบการเชื่อมต่อ\n🏥 นวศรี เนอร์สซิ่งโฮม\n✅ ระบบบริหารสต็อกเชื่อมต่อสำเร็จ',
+    message: '🧪 ทดสอบการเชื่อมต่อ\n🏥 นวศรี เนอร์สซิ่งโฮม\n✅ ระบบเชื่อมต่อ LINE สำเร็จ',
     data: { test: true, timestamp: new Date().toISOString() }
   };
 
@@ -190,43 +173,29 @@ async function testWebhook() {
   renderLineLog();
 
   try {
-    // ลองส่งผ่าน Edge Function ก่อน
     const res = await fetch(EDGE_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': window._supabaseKey || '' },
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': window._supabaseKey || '',
+      },
       body: JSON.stringify(testPayload),
     });
+    const result = await res.json().catch(() => ({}));
     if (res.ok) {
-      logEntry.status = '✅ สำเร็จ (Edge Function)';
-      toast('✅ เชื่อมต่อสำเร็จผ่าน Edge Function! ตรวจสอบ Line Group', 'success');
+      logEntry.status = '✅ ส่งสำเร็จ';
+      toast('✅ ส่ง LINE สำเร็จ! ตรวจสอบ LINE OA Navasri Nursing Home', 'success');
     } else {
-      // fallback ส่งตรง
-      throw new Error('Edge Function returned ' + res.status);
+      logEntry.status = `❌ ผิดพลาด (${res.status}): ${JSON.stringify(result)}`;
+      toast('❌ ส่งไม่สำเร็จ: ' + JSON.stringify(result), 'warning');
     }
   } catch(e) {
-    // Fallback: ส่งตรงไป webhook
-    try {
-      const res2 = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(testPayload),
-      });
-      logEntry.status = res2.ok ? '✅ สำเร็จ (direct)' : '❌ ' + res2.status;
-      toast(res2.ok ? '✅ เชื่อมต่อ Webhook สำเร็จ! ตรวจสอบ Line Group' : '❌ Webhook ตอบกลับ error: ' + res2.status, res2.ok ? 'success' : 'warning');
-    } catch(e2) {
-      if (e2.message?.includes('Failed to fetch')) {
-        logEntry.status = '⚠️ CORS — Webhook น่าจะได้รับแล้ว';
-        toast('📨 ส่งข้อมูลไปแล้ว (Browser CORS ปกติ) — ตรวจสอบ n8n/Make ว่าได้รับหรือไม่', 'success');
-      } else {
-        logEntry.status = '❌ ' + e2.message;
-        toast('❌ ไม่สามารถเชื่อมต่อ: ' + e2.message, 'warning');
-      }
-    }
+    logEntry.status = '❌ ' + e.message;
+    toast('❌ ไม่สามารถเชื่อมต่อ Edge Function: ' + e.message, 'warning');
   }
 
   renderLineLog();
-  btn.textContent = '🧪 ทดสอบ';
-  btn.disabled = false;
+  if (btn) { btn.textContent = '🧪 ทดสอบ'; btn.disabled = false; }
 }
 
 function clearLog() {
