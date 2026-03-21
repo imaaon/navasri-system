@@ -3,15 +3,29 @@
 // ===== STAFF =====
 function renderStaff() {
   const search = (document.getElementById('staffSearch')?.value || '').toLowerCase();
-  const posF   = document.getElementById('staffPosFilter')?.value || '';
-  const posBadges = { พยาบาล:'badge-blue', PN:'badge-blue', หมอ:'badge-red',
-    ธุรการ:'badge-gray', บัญชี:'badge-orange', โภชนากร:'badge-green',
-    นักกายภาพ:'badge-purple', ผู้บริหาร:'badge-purple', บริบาล:'badge-blue',
-    แม่บ้าน:'badge-gray', พ่อบ้าน:'badge-gray', แม่ครัว:'badge-orange', พ่อครัว:'badge-orange' };
+  const posFilterEl = document.getElementById('staffPosFilter');
+  const posF = posFilterEl?.value || '';
 
-  let staffList = [...db.staff];
+  // สร้าง dropdown ตำแหน่งจากข้อมูลจริงใน db.staff
+  if (posFilterEl) {
+    const allPositions = [...new Set((db.staff||[]).map(s => s.position).filter(Boolean))].sort();
+    const currentVal = posFilterEl.value;
+    posFilterEl.innerHTML = '<option value="">ทั้งหมด</option>' +
+      allPositions.map(pos => `<option value="${pos}"${pos === currentVal ? ' selected' : ''}>${pos}</option>`).join('');
+  }
+
+  const posBadges = {
+    'พยาบาลวิชาชีพ':'badge-blue', 'พยาบาลพาร์ทไทม์':'badge-blue',
+    'ผู้ช่วยพยาบาล':'badge-blue', 'พนักงานผู้ช่วยเหลือคนไข้':'badge-blue',
+    'นักกายภาพบำบัด':'badge-purple', 'นักโภชนาการ':'badge-green',
+    'หมอ':'badge-red', 'ธุรการ':'badge-gray', 'บัญชี':'badge-orange',
+    'แม่บ้าน':'badge-gray', 'พ่อบ้าน':'badge-gray',
+    'แม่ครัว':'badge-orange', 'พ่อครัว':'badge-orange',
+  };
+
+  let staffList = [...(db.staff||[])];
   if (search) staffList = staffList.filter(s =>
-    s.name.toLowerCase().includes(search) ||
+    (s.name||'').toLowerCase().includes(search) ||
     (s.nickname||'').toLowerCase().includes(search) ||
     (s.position||'').toLowerCase().includes(search)
   );
