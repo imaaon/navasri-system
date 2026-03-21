@@ -331,164 +331,280 @@ function exportMonthlyExcel(monthStr) {
 // SECTION 4: BACKUP ข้อมูลทั้งหมด
 // ─────────────────────────────────────────────────────────────
 
+// ── Backup helpers ────────────────────────────────────────────
+function _xlsxARGB(hex) { return 'FF' + hex.replace('#','').toUpperCase(); }
+
+function _xlsxCellStyle(bgHex, fontHex, bold, sz, wrapText, hAlign) {
+  return {
+    fill: { patternType: 'solid', fgColor: { rgb: _xlsxARGB(bgHex) } },
+    font: { name: 'Arial', sz: sz||9, bold: !!bold, color: { rgb: _xlsxARGB(fontHex||'1A1A1A') } },
+    alignment: { horizontal: hAlign||'left', vertical: 'center', wrapText: !!wrapText },
+    border: {
+      top:    { style:'thin', color:{ rgb:'FFCCCCCC' } },
+      bottom: { style:'thin', color:{ rgb:'FFCCCCCC' } },
+      left:   { style:'thin', color:{ rgb:'FFCCCCCC' } },
+      right:  { style:'thin', color:{ rgb:'FFCCCCCC' } },
+    },
+  };
+}
+
+function _xlsxApplySheet(wb, sheetName, headers, dataRows, theme) {
+  // theme: { dark, mid, light, tab, title }
+  const { dark, mid, light, tab, title } = theme;
+  const ncols = headers.length;
+  const today_th = (() => {
+    const d = new Date();
+    const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
+  })();
+
+  const aoa = [];
+
+  // row 1: Title banner
+  const titleRow = [title + `  ·  นวศรี เนอร์สซิ่งโฮม  ·  ${today_th}`];
+  while (titleRow.length < ncols) titleRow.push('');
+  aoa.push(titleRow);
+
+  // row 2: subtitle
+  const subRow = [`ข้อมูล ณ วันที่ ${today_th}  |  จำนวน ${dataRows.length} รายการ`];
+  while (subRow.length < ncols) subRow.push('');
+  aoa.push(subRow);
+
+  // row 3: header
+  aoa.push([...headers]);
+
+  // data rows
+  dataRows.forEach(row => aoa.push([...row]));
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // ── Merge title & subtitle across all columns ─────────────
+  if (!ws['!merges']) ws['!merges'] = [];
+  ws['!merges'].push({ s:{r:0,c:0}, e:{r:0,c:ncols-1} });
+  ws['!merges'].push({ s:{r:1,c:0}, e:{r:1,c:ncols-1} });
+
+  // ── Apply styles ─────────────────────────────────────────
+  const colLetters = Array.from({length: ncols}, (_,i) => XLSX.utils.encode_col(i));
+  const totalRows = aoa.length;
+
+  for (let r = 0; r < totalRows; r++) {
+    for (let c = 0; c < ncols; c++) {
+      const addr = XLSX.utils.encode_cell({r, c});
+      if (!ws[addr]) ws[addr] = { v: '', t: 's' };
+
+      if (r === 0) {
+        // Title row
+        ws[addr].s = _xlsxCellStyle(dark, 'FFFFFF', true, 13, false, 'center');
+      } else if (r === 1) {
+        // Subtitle row
+        ws[addr].s = _xlsxCellStyle(mid, 'FFFFFF', false, 9, false, 'center');
+      } else if (r === 2) {
+        // Header row
+        ws[addr].s = _xlsxCellStyle(dark, 'FFFFFF', true, 10, true, 'center');
+      } else {
+        // Data rows — สลับสี
+        const bg = (r % 2 === 1) ? light : 'FFFFFF';
+        ws[addr].s = _xlsxCellStyle(bg, '1A1A1A', false, 9, true, 'left');
+      }
+    }
+  }
+
+  // ── Column widths ─────────────────────────────────────────
+  const colWidths = headers.map((h, ci) => {
+    let maxLen = h ? h.length * 1.5 : 6;
+    dataRows.forEach(row => {
+      const v = row[ci] ? String(row[ci]) : '';
+      const w = v.split('').reduce((s,ch) => s + (ch.charCodeAt(0)>127?2:1), 0);
+      maxLen = Math.max(maxLen, w);
+    });
+    return { wch: Math.min(38, Math.max(7, maxLen * 0.85 + 2)) };
+  });
+  ws['!cols'] = colWidths;
+
+  // ── Row heights ───────────────────────────────────────────
+  ws['!rows'] = [{ hpt: 28 }, { hpt: 16 }, { hpt: 22 }];
+  for (let r = 3; r < totalRows; r++) ws['!rows'].push({ hpt: 17 });
+
+  // ── Freeze pane below header ──────────────────────────────
+  ws['!freeze'] = { xSplit: 0, ySplit: 3 };
+
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+  // ── Tab color ─────────────────────────────────────────────
+  const sheetIdx = wb.SheetNames.indexOf(sheetName);
+  if (!wb.Workbook) wb.Workbook = { Sheets: [] };
+  while (wb.Workbook.Sheets.length <= sheetIdx) wb.Workbook.Sheets.push({});
+  wb.Workbook.Sheets[sheetIdx].TabColor = { rgb: _xlsxARGB(tab) };
+}
+
+// ── สีประจำแต่ละ sheet ────────────────────────────────────────
+const BACKUP_THEMES = {
+  'สรุป':          { dark:'1B4F72', mid:'2E86C1', light:'D6EAF8', tab:'1B4F72', title:'📊 สรุปภาพรวม' },
+  'ผู้รับบริการ':  { dark:'145A32', mid:'1E8449', light:'D5F5E3', tab:'145A32', title:'🏥 ผู้รับบริการ' },
+  'พนักงาน':       { dark:'4A235A', mid:'7D3C98', light:'E8DAEF', tab:'4A235A', title:'👤 พนักงาน' },
+  'ห้องพัก':       { dark:'7E5109', mid:'B7770D', light:'FDEBD0', tab:'7E5109', title:'🛏️ ห้องพัก' },
+  'เตียง':         { dark:'1A5276', mid:'2471A3', light:'D6EAF8', tab:'1A5276', title:'🛏️ เตียง' },
+  'สินค้า':        { dark:'0E6655', mid:'17A589', light:'D1F2EB', tab:'0E6655', title:'📦 สินค้า' },
+  'Lot สินค้า':    { dark:'117A65', mid:'148F77', light:'D1F2EB', tab:'117A65', title:'📦 Lot สินค้า' },
+  'ใบแจ้งหนี้':    { dark:'7B241C', mid:'C0392B', light:'FADBD8', tab:'7B241C', title:'💰 ใบแจ้งหนี้' },
+  'การชำระเงิน':   { dark:'186A3B', mid:'239B56', light:'D5F5E3', tab:'186A3B', title:'💳 การชำระเงิน' },
+  'ค่าใช้จ่าย':    { dark:'6E2F1A', mid:'CA6F1E', light:'FAE5D3', tab:'6E2F1A', title:'💸 ค่าใช้จ่าย' },
+  'การเบิกสินค้า': { dark:'154360', mid:'1F618D', light:'D6EAF8', tab:'154360', title:'📋 การเบิกสินค้า' },
+  'อุบัติเหตุ':    { dark:'515A5A', mid:'717D7E', light:'EAECEE', tab:'515A5A', title:'⚠️ อุบัติเหตุ' },
+  'ผู้จำหน่าย':    { dark:'212F3D', mid:'566573', light:'EAECEE', tab:'212F3D', title:'🏭 ผู้จำหน่าย' },
+};
+
 async function backupAllData() {
   if (!confirm('ต้องการสำรองข้อมูลทั้งหมดออกเป็นไฟล์ Excel หรือไม่?\n\nอาจใช้เวลาสักครู่...')) return;
 
   if (typeof XLSX === 'undefined') { toast('ไม่พบ SheetJS', 'error'); return; }
 
   toast('⏳ กำลังสร้างไฟล์ Backup...', 'info');
-
-  await new Promise(r => setTimeout(r, 100)); // ให้ toast ขึ้นก่อน
+  await new Promise(r => setTimeout(r, 100));
 
   const wb = XLSX.utils.book_new();
   const today = new Date().toISOString().slice(0,10);
 
-  // ── Sheet: ผู้รับบริการ ──────────────────────────────────
-  const patRows = [['#','ชื่อ-นามสกุล','HN','ประเภทบัตร','เลขบัตร',
-    'วันเกิด','อายุ','เพศ','วันรับบริการ','วันสิ้นสุด',
-    'ระยะเวลา','สถานะ','โทรศัพท์','ผู้ติดต่อฉุกเฉิน','ที่อยู่','หมายเหตุ']];
-  (db.patients||[]).forEach((p,i) => {
+  // ── Sheet: ผู้รับบริการ (พร้อมข้อมูลห้อง/เตียง/ประเภท/โซน) ──
+  const patHeaders = ['#','ชื่อ-นามสกุล','HN','ประเภทบัตร','เลขบัตร',
+    'วันเกิด','อายุ','เพศ','วันรับบริการ','วันสิ้นสุด','ระยะเวลา','สถานะ',
+    'ห้องปัจจุบัน','ประเภทห้อง','โซน','เตียง',
+    'โทรศัพท์','ผู้ติดต่อฉุกเฉิน','ที่อยู่','หมายเหตุ'];
+  const patData = (db.patients||[]).map((p,i) => {
     const statusLabel = {active:'พักอยู่',hospital:'อยู่โรงพยาบาล',inactive:'ออกแล้ว'}[p.status]||p.status||'';
     const age = p.dob ? Math.floor((new Date()-new Date(p.dob))/(365.25*24*3600*1000))+'ปี' : '-';
-    const bed = (db.beds||[]).find(b=>b.id===p.currentBedId);
+    const bed  = (db.beds||[]).find(b=>b.id===p.currentBedId);
     const room = bed ? (db.rooms||[]).find(r=>r.id===bed.roomId) : null;
-    patRows.push([i+1,p.name||'',p.hn||'',p.idType||'',p.idcard||p.idCard||'',
+    return [i+1,p.name||'',p.hn||'',p.idType||'',p.idcard||p.idCard||'',
       p.dob||'',age,p.gender||'',p.admitDate||'',p.endDate||'',
       p.admitDate ? _calcDuration(p.admitDate, p.endDate) : '-',
-      statusLabel,p.phone||'',p.emergency||'',p.address||'',p.note||'']);
+      statusLabel,
+      room?.name||'-', room?.roomType||'-', room?.zone||'-', bed?.bedCode||'-',
+      p.phone||'',p.emergency||'',p.address||'',p.note||''];
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(patRows), 'ผู้รับบริการ');
+  _xlsxApplySheet(wb, 'ผู้รับบริการ', patHeaders, patData, BACKUP_THEMES['ผู้รับบริการ']);
 
   // ── Sheet: พนักงาน ────────────────────────────────────────
-  const staffRows = [['#','ชื่อ-นามสกุล','ตำแหน่ง','แผนก','เบอร์โทร','อีเมล','วันเริ่มงาน','สถานะ']];
-  (db.staff||[]).forEach((s,i) => {
+  const staffHeaders = ['#','ชื่อ-นามสกุล','ตำแหน่ง','แผนก','เบอร์โทร','อีเมล','วันเริ่มงาน','สถานะ'];
+  const staffData = (db.staff||[]).map((s,i) => {
     const active = !s.endDate || s.endDate > today;
-    staffRows.push([i+1,s.name||s.displayName||'',s.position||'',s.department||'',
-      s.phone||'',s.email||'',s.startDate||'',active?'ทำงานอยู่':'ออกแล้ว']);
+    return [i+1,s.name||s.displayName||'',s.position||'',s.department||'',
+      s.phone||'',s.email||'',s.startDate||'',active?'ทำงานอยู่':'ออกแล้ว'];
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(staffRows), 'พนักงาน');
+  _xlsxApplySheet(wb, 'พนักงาน', staffHeaders, staffData, BACKUP_THEMES['พนักงาน']);
 
-  // ── Sheet: ห้องพัก/เตียง ──────────────────────────────────
-  const roomRows = [['#','ชื่อห้อง','ประเภท','ราคารายเดือน','ราคารายวัน','สถานะ']];
-  (db.rooms||[]).forEach((r,i) => {
-    roomRows.push([i+1,r.name||'',r.roomType||'',r.monthlyRate||0,r.dailyRate||0,r.status||'']);
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(roomRows), 'ห้องพัก');
+  // ── Sheet: ห้องพัก ────────────────────────────────────────
+  const roomHeaders = ['#','ชื่อห้อง','ประเภท','โซน','ราคารายเดือน','ราคารายวัน','สถานะ'];
+  const roomData = (db.rooms||[]).map((r,i) =>
+    [i+1,r.name||'',r.roomType||'',r.zone||'-',r.monthlyRate||0,r.dailyRate||0,r.status||'']);
+  _xlsxApplySheet(wb, 'ห้องพัก', roomHeaders, roomData, BACKUP_THEMES['ห้องพัก']);
 
-  const bedRows = [['#','รหัสเตียง','ห้อง','สถานะ','ผู้รับบริการปัจจุบัน']];
-  (db.beds||[]).forEach((b,i) => {
+  // ── Sheet: เตียง ──────────────────────────────────────────
+  const bedHeaders = ['#','รหัสเตียง','ห้อง','ประเภทห้อง','โซน','สถานะ','ผู้รับบริการปัจจุบัน'];
+  const bedData = (db.beds||[]).map((b,i) => {
     const room = (db.rooms||[]).find(r=>r.id===b.roomId);
     const pat  = (db.patients||[]).find(p=>p.currentBedId===b.id&&p.status==='active');
-    bedRows.push([i+1,b.bedCode||'',room?.name||'',b.status||'',pat?.name||'ว่าง']);
+    return [i+1,b.bedCode||'',room?.name||'',room?.roomType||'-',room?.zone||'-',b.status||'',pat?.name||'ว่าง'];
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(bedRows), 'เตียง');
+  _xlsxApplySheet(wb, 'เตียง', bedHeaders, bedData, BACKUP_THEMES['เตียง']);
 
-  // ── Sheet: สินค้า/คลังสต็อก ──────────────────────────────
-  const itemRows = [['#','ชื่อสินค้า','ประเภท','บาร์โค้ด','คงเหลือ','หน่วยจ่าย',
-    'จุดสั่งซื้อ','ราคาทุน','ราคาขาย','Billable','สถานะ']];
-  (db.items||[]).forEach((item,i) => {
+  // ── Sheet: สินค้า ─────────────────────────────────────────
+  const itemHeaders = ['#','ชื่อสินค้า','ประเภท','บาร์โค้ด','คงเหลือ','หน่วยจ่าย',
+    'จุดสั่งซื้อ','ราคาทุน','ราคาขาย','Billable','สถานะ'];
+  const itemData = (db.items||[]).map((item,i) => {
     const status = item.qty<=0?'หมด':item.qty<=item.reorder?'ใกล้หมด':'ปกติ';
-    itemRows.push([i+1,item.name||'',item.category||'',item.barcode||'',
+    return [i+1,item.name||'',item.category||'',item.barcode||'',
       item.qty||0,item.unit||'',item.reorder||0,item.cost||0,item.price||0,
-      item.isBillable!==false?'ใช่':'ไม่',status]);
+      item.isBillable!==false?'ใช่':'ไม่',status];
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(itemRows), 'สินค้า');
+  _xlsxApplySheet(wb, 'สินค้า', itemHeaders, itemData, BACKUP_THEMES['สินค้า']);
 
   // ── Sheet: Lot สินค้า ────────────────────────────────────
-  const lotRows = [['#','สินค้า','Lot Number','วันรับ','วันหมดอายุ','จำนวนรับ','คงเหลือ','ราคาทุน/หน่วย','สถานะ']];
-  (db.itemLots||[]).forEach((lot,i) => {
+  const lotHeaders = ['#','สินค้า','Lot Number','วันรับ','วันหมดอายุ','จำนวนรับ','คงเหลือ','ราคาทุน/หน่วย','สถานะ'];
+  const lotData = (db.itemLots||[]).map((lot,i) => {
     const item = (db.items||[]).find(x=>x.id==lot.itemId);
     const today2 = new Date(); today2.setHours(0,0,0,0);
     const exp = lot.expiryDate ? new Date(lot.expiryDate) : null;
     const diff = exp ? Math.ceil((exp-today2)/86400000) : null;
-    const status = !exp ? 'ไม่ระบุ' : diff<0?'หมดอายุแล้ว':diff<=30?`อีก ${diff} วัน`:`${lot.expiryDate}`;
-    lotRows.push([i+1,item?.name||'-',lot.lotNumber||'-',lot.receivedDate||'-',
-      lot.expiryDate||'-',lot.qty||0,lot.qtyRemaining||0,lot.cost||0,status]);
+    const status = !exp ? 'ไม่ระบุ' : diff<0?'หมดอายุแล้ว':diff<=30?`อีก ${diff} วัน`:lot.expiryDate;
+    return [i+1,item?.name||'-',lot.lotNumber||'-',lot.receivedDate||'-',
+      lot.expiryDate||'-',lot.qtyInLot||0,lot.qtyRemaining||0,lot.cost||0,status];
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(lotRows), 'Lot สินค้า');
+  _xlsxApplySheet(wb, 'Lot สินค้า', lotHeaders, lotData, BACKUP_THEMES['Lot สินค้า']);
 
   // ── Sheet: ใบแจ้งหนี้ ────────────────────────────────────
-  const invRows = [['#','เลขที่','ประเภท','ผู้รับบริการ','วันที่','ครบกำหนด',
-    'ยอดรวม','ชำระแล้ว','คงค้าง','สถานะ']];
-  (db.invoices||[]).forEach((inv,i) => {
+  const invHeaders = ['#','เลขที่','ประเภท','ผู้รับบริการ','วันที่','ครบกำหนด','ยอดรวม','ชำระแล้ว','คงค้าง','สถานะ'];
+  const invData = (db.invoices||[]).map((inv,i) => {
     const paid = typeof getInvoicePaidAmount==='function' ? getInvoicePaidAmount(inv.id) : 0;
     const status = typeof getInvoicePaymentStatus==='function' ? getInvoicePaymentStatus(inv) : inv.status;
     const statusLabel = {draft:'ร่าง',sent:'รอชำระ',partial:'ชำระบางส่วน',paid:'ชำระครบ',cancelled:'ยกเลิก'}[status]||status;
-    invRows.push([i+1,inv.docNo||'-',inv.type||'-',inv.patientName||'-',
+    return [i+1,inv.docNo||'-',inv.type||'-',inv.patientName||'-',
       inv.date||'-',inv.dueDate||'-',inv.grandTotal||0,paid,
-      Math.max(0,(inv.grandTotal||0)-paid),statusLabel]);
+      Math.max(0,(inv.grandTotal||0)-paid),statusLabel];
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(invRows), 'ใบแจ้งหนี้');
+  _xlsxApplySheet(wb, 'ใบแจ้งหนี้', invHeaders, invData, BACKUP_THEMES['ใบแจ้งหนี้']);
 
   // ── Sheet: การชำระเงิน ───────────────────────────────────
-  const payRows = [['#','วันที่','เลขใบเสร็จ','ผู้รับบริการ','จำนวนเงิน','วิธีชำระ','ผู้รับเงิน','หมายเหตุ']];
-  (db.payments||[]).forEach((p,i) => {
-    payRows.push([i+1,p.paymentDate||'-',p.receiptNo||'-',p.patientName||'-',
+  const payHeaders = ['#','วันที่','เลขใบเสร็จ','ผู้รับบริการ','จำนวนเงิน','วิธีชำระ','ผู้รับเงิน','หมายเหตุ'];
+  const payData = (db.payments||[]).map((p,i) =>
+    [i+1,p.paymentDate||'-',p.receiptNo||'-',p.patientName||'-',
       p.amount||0,p.method||'-',p.receivedBy||'-',p.note||'']);
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(payRows), 'การชำระเงิน');
+  _xlsxApplySheet(wb, 'การชำระเงิน', payHeaders, payData, BACKUP_THEMES['การชำระเงิน']);
 
   // ── Sheet: ค่าใช้จ่าย ────────────────────────────────────
-  const expRows = [['#','วันที่','เลขเอกสาร','รายการ','จำนวนเงิน','ผู้จัดทำ','หมายเหตุ']];
-  (db.expenses||[]).forEach((e,i) => {
-    expRows.push([i+1,e.date||'-',e.docNo||'-',e.vendorName||e.job||'-',
-      e.net||0,e.createdBy||'-',e.note||'']);
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(expRows), 'ค่าใช้จ่าย');
+  const expHeaders = ['#','วันที่','เลขเอกสาร','รายการ','จำนวนเงิน','ผู้จัดทำ','หมายเหตุ'];
+  const expData = (db.expenses||[]).map((e,i) =>
+    [i+1,e.date||'-',e.docNo||'-',e.vendorName||e.job||'-',e.net||0,e.createdBy||'-',e.note||'']);
+  _xlsxApplySheet(wb, 'ค่าใช้จ่าย', expHeaders, expData, BACKUP_THEMES['ค่าใช้จ่าย']);
 
   // ── Sheet: การเบิกสินค้า ─────────────────────────────────
-  const reqRows = [['#','เลขที่ใบเบิก','วันที่','ผู้รับบริการ','ผู้เบิก','รายการ','จำนวน','หน่วย','สถานะ']];
+  const reqHeaders = ['#','เลขที่ใบเบิก','วันที่','ผู้รับบริการ','ผู้เบิก','รายการ','จำนวน','หน่วย','สถานะ'];
+  const reqData = [];
   (db.requisitions||[]).forEach((r,i) => {
     const statusLabel = {pending:'รออนุมัติ',approved:'อนุมัติแล้ว',rejected:'ไม่อนุมัติ'}[r.status]||r.status||'';
-    (r.items||[{name:r.itemName,qty:r.qty,unit:r.unit}]).forEach((it, j) => {
-      reqRows.push([j===0?i+1:'',j===0?r.refNo||r.id||'-':'',j===0?r.date||'-':'',
-        j===0?r.patientName||'-':'',j===0?r.staffName||'-':'',
-        it.name||'-',it.qty||0,it.unit||'-',j===0?statusLabel:'']);
+    (r.lines?.length ? r.lines : [{itemName:r.itemName,qty:r.qty,unit:r.unit}]).forEach((it, j) => {
+      reqData.push([j===0?i+1:'', j===0?r.refNo||r.id||'-':'', j===0?r.date||'-':'',
+        j===0?r.patientName||'-':'', j===0?r.staffName||'-':'',
+        it.itemName||it.name||'-', it.qty||0, it.unit||'-', j===0?statusLabel:'']);
     });
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(reqRows), 'การเบิกสินค้า');
+  _xlsxApplySheet(wb, 'การเบิกสินค้า', reqHeaders, reqData, BACKUP_THEMES['การเบิกสินค้า']);
 
-  // ── Sheet: รายงานอุบัติเหตุ ──────────────────────────────
-  const incRows = [['#','วันที่','ผู้รับบริการ','ประเภทเหตุการณ์','รายละเอียด','การจัดการ','บันทึกโดย']];
-  (db.incidentReports||[]).forEach((r,i) => {
-    incRows.push([i+1,r.date||'-',r.patientName||'-',r.incidentType||'-',
-      r.description||'-',r.action||'-',r.recordedBy||'-']);
-  });
-  if ((db.incidentReports||[]).length > 0)
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(incRows), 'อุบัติเหตุ');
+  // ── Sheet: อุบัติเหตุ (ถ้ามีข้อมูล) ─────────────────────
+  const incHeaders = ['#','วันที่','เวลา','ผู้รับบริการ','ประเภท','สถานที่','รายละเอียด','การปฐมพยาบาล','ความรุนแรง','บันทึกโดย'];
+  const incData = (db.incidents||[]).map((r,i) =>
+    [i+1,r.date||'-',r.time||'-',r.patientName||'-',r.type||'-',
+      r.location||'-',r.detail||'-',r.firstAid||'-',r.severity||'-',r.recorder||'-']);
+  if (incData.length > 0)
+    _xlsxApplySheet(wb, 'อุบัติเหตุ', incHeaders, incData, BACKUP_THEMES['อุบัติเหตุ']);
 
   // ── Sheet: ผู้จำหน่าย ────────────────────────────────────
-  const supRows = [['#','รหัส','ชื่อบริษัท','ผู้ติดต่อ','เบอร์โทร','อีเมล','เลขภาษี','สถานะ']];
-  (db.suppliers||[]).forEach((s,i) => {
-    supRows.push([i+1,s.code||'',s.name||'',s.contactName||'',
-      s.phone||'',s.email||'',s.taxId||'',s.status||'active']);
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(supRows), 'ผู้จำหน่าย');
+  const supHeaders = ['#','รหัส','ชื่อบริษัท','ผู้ติดต่อ','เบอร์โทร','อีเมล','เลขภาษี','สถานะ'];
+  const supData = (db.suppliers||[]).map((s,i) =>
+    [i+1,s.code||'',s.name||'',s.contactName||'',s.phone||'',s.email||'',s.taxId||'',s.status||'active']);
+  _xlsxApplySheet(wb, 'ผู้จำหน่าย', supHeaders, supData, BACKUP_THEMES['ผู้จำหน่าย']);
 
-  // ── Sheet: Summary (สรุปภาพรวม) ─────────────────────────
-  const sumRows = [
-    ['📊 สรุปข้อมูล นวศรี เนอร์สซิ่งโฮม'],
-    ['วันที่สำรองข้อมูล', today],
-    [''],
-    ['หมวดหมู่', 'จำนวน'],
-    ['ผู้รับบริการทั้งหมด', (db.patients||[]).length],
-    ['ผู้รับบริการปัจจุบัน', (db.patients||[]).filter(p=>p.status==='active').length],
-    ['พนักงาน', (db.staff||[]).length],
-    ['ห้องพัก', (db.rooms||[]).length],
-    ['เตียง', (db.beds||[]).length],
-    ['สินค้าในระบบ', (db.items||[]).length],
-    ['สินค้าใกล้หมด/หมดแล้ว', (db.items||[]).filter(i=>i.qty<=i.reorder).length],
-    ['ใบแจ้งหนี้ทั้งหมด', (db.invoices||[]).length],
-    ['บิลค้างชำระ', (db.invoices||[]).filter(i=>{
-      const s = typeof getInvoicePaymentStatus==='function' ? getInvoicePaymentStatus(i) : i.status;
+  // ── Sheet: สรุป (ขึ้นหน้าแรก) ────────────────────────────
+  const sumHeaders = ['หมวดหมู่', 'จำนวน'];
+  const sumData = [
+    ['👥 ผู้รับบริการทั้งหมด',     (db.patients||[]).length],
+    ['✅ ผู้รับบริการปัจจุบัน',     (db.patients||[]).filter(p=>p.status==='active').length],
+    ['👤 พนักงาน',                  (db.staff||[]).length],
+    ['🛏️ ห้องพัก',                 (db.rooms||[]).length],
+    ['🛏️ เตียง',                   (db.beds||[]).length],
+    ['📦 สินค้าในระบบ',             (db.items||[]).length],
+    ['⚠️ สินค้าใกล้หมด/หมดแล้ว',   (db.items||[]).filter(i=>i.qty<=i.reorder).length],
+    ['💰 ใบแจ้งหนี้ทั้งหมด',        (db.invoices||[]).length],
+    ['⏰ บิลค้างชำระ',               (db.invoices||[]).filter(inv=>{
+      const s = typeof getInvoicePaymentStatus==='function' ? getInvoicePaymentStatus(inv) : inv.status;
       return s !== 'paid' && s !== 'cancelled';
     }).length],
-    ['รายการเบิกสินค้า', (db.requisitions||[]).length],
-    ['ผู้จำหน่าย', (db.suppliers||[]).length],
+    ['📋 รายการเบิกสินค้า',         (db.requisitions||[]).length],
+    ['🏭 ผู้จำหน่าย',               (db.suppliers||[]).length],
   ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sumRows), 'สรุป');
+  _xlsxApplySheet(wb, 'สรุป', sumHeaders, sumData, BACKUP_THEMES['สรุป']);
 
-  // ส่ง Sheet สรุปไปหน้าแรก
+  // ย้าย สรุป ไปหน้าแรก
   wb.SheetNames.unshift(wb.SheetNames.pop());
 
   XLSX.writeFile(wb, `navasri_backup_${today}.xlsx`);
