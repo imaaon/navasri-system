@@ -73,7 +73,10 @@ function updateLineBanner() {
 
 async function sendLineNotify(event, messageText, data = {}) {
   const s = db.lineSettings;
-  if (!s.enabled || !s.webhookUrl) return;
+  if (!s.enabled) return;
+  // ถ้ามี webhookUrl ใน settings → ใช้ Edge Function เป็น proxy (ปลอดภัย ไม่มี CORS)
+  // Edge Function URL: https://umueucsxowjaurlaubwa.supabase.co/functions/v1/line-notify
+  const EDGE_URL = 'https://umueucsxowjaurlaubwa.supabase.co/functions/v1/line-notify';
 
   // Check if this event type is enabled
   const eventMap = {
@@ -81,7 +84,7 @@ async function sendLineNotify(event, messageText, data = {}) {
     forward_requisition: 'notifyForward',
     approved: 'notifyApproved',
     rejected: 'notifyRejected',
-    low_stock: 'notifyLowStock'
+    low_stock: 'notifyLowStock',
   };
   if (eventMap[event] && !s[eventMap[event]]) return;
 
@@ -91,29 +94,61 @@ async function sendLineNotify(event, messageText, data = {}) {
   renderLineLog();
 
   try {
-    const res = await fetch(s.webhookUrl, {
+    // ส่งผ่าน Edge Function (Webhook URL เก็บใน Supabase Secret ฝั่ง server)
+    const res = await fetch(EDGE_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': window._supabaseKey || '',
+      },
+      body: JSON.stringify(payload),
     });
+
     if (res.ok) {
-      logEntry.status = '✅ สำเร็จ (' + res.status + ')';
+      logEntry.status = '✅ ส่งสำเร็จ';
       toast('📨 ส่ง Line แจ้งเตือนสำเร็จ', 'success');
     } else {
-      logEntry.status = '❌ ผิดพลาด (' + res.status + ')';
-      toast('⚠️ ส่ง Line ไม่สำเร็จ: ' + res.status, 'warning');
+      const err = await res.json().catch(() => ({}));
+      logEntry.status = `❌ ผิดพลาด (${res.status})`;
+      // fallback: ถ้า Edge Function ยังไม่ได้ deploy → ลองส่งตรง
+      if (s.webhookUrl) await _sendLineDirectFallback(payload, logEntry);
     }
   } catch(e) {
-    logEntry.status = '❌ ไม่สามารถเชื่อมต่อได้';
-    // CORS is expected when calling external webhooks from browser — show helpful message
-    if (e.message && e.message.includes('Failed to fetch')) {
-      logEntry.status = '⚠️ CORS (ปกติสำหรับ browser) — Webhook ได้รับแล้ว';
-      toast('📨 ส่ง Line แล้ว (CORS ไม่ส่งผลต่อ webhook)', 'success');
+    // fallback ถ้า Edge Function ยังไม่ deploy
+    if (s.webhookUrl) {
+      await _sendLineDirectFallback(payload, logEntry);
     } else {
+      logEntry.status = '❌ ' + e.message;
       toast('❌ Line: ' + e.message, 'warning');
     }
   }
   renderLineLog();
+}
+
+// Fallback: ส่งตรง (ใช้ระหว่างรอ deploy Edge Function)
+async function _sendLineDirectFallback(payload, logEntry) {
+  const s = db.lineSettings;
+  if (!s.webhookUrl) return;
+  try {
+    const res = await fetch(s.webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      logEntry.status = '✅ ส่งสำเร็จ (direct)';
+      toast('📨 ส่ง Line สำเร็จ', 'success');
+    } else {
+      logEntry.status = '❌ ผิดพลาด (' + res.status + ')';
+    }
+  } catch(e) {
+    if (e.message?.includes('Failed to fetch')) {
+      logEntry.status = '⚠️ CORS (ปกติสำหรับ browser) — Webhook ได้รับแล้ว';
+      toast('📨 ส่ง Line แล้ว (CORS ไม่ส่งผลต่อ webhook)', 'success');
+    } else {
+      logEntry.status = '❌ ' + e.message;
+    }
+  }
 }
 
 function renderLineLog() {
@@ -138,6 +173,12 @@ async function testWebhook() {
   btn.textContent = '⏳ กำลังส่ง...';
   btn.disabled = true;
 
+  // บันทึก URL ก่อนทดสอบ
+  if (!db.lineSettings) db.lineSettings = {};
+  db.lineSettings.webhookUrl = url;
+  saveDB();
+
+  const EDGE_URL = 'https://umueucsxowjaurlaubwa.supabase.co/functions/v1/line-notify';
   const testPayload = {
     event: 'test',
     message: '🧪 ทดสอบการเชื่อมต่อ\n🏥 นวศรี เนอร์สซิ่งโฮม\n✅ ระบบบริหารสต็อกเชื่อมต่อสำเร็จ',
@@ -149,20 +190,37 @@ async function testWebhook() {
   renderLineLog();
 
   try {
-    const res = await fetch(url, {
+    // ลองส่งผ่าน Edge Function ก่อน
+    const res = await fetch(EDGE_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(testPayload)
+      headers: { 'Content-Type': 'application/json', 'apikey': window._supabaseKey || '' },
+      body: JSON.stringify(testPayload),
     });
-    logEntry.status = res.ok ? '✅ สำเร็จ (' + res.status + ')' : '❌ ' + res.status;
-    toast(res.ok ? '✅ เชื่อมต่อ Webhook สำเร็จ! ตรวจสอบ Line Group' : '❌ Webhook ตอบกลับ error: ' + res.status, res.ok ? 'success' : 'warning');
-  } catch(e) {
-    if (e.message && e.message.includes('Failed to fetch')) {
-      logEntry.status = '⚠️ CORS — Webhook น่าจะได้รับแล้ว';
-      toast('📨 ส่งข้อมูลไปแล้ว (Browser CORS ปกติ) — ตรวจสอบ n8n/Make ว่าได้รับหรือไม่', 'success');
+    if (res.ok) {
+      logEntry.status = '✅ สำเร็จ (Edge Function)';
+      toast('✅ เชื่อมต่อสำเร็จผ่าน Edge Function! ตรวจสอบ Line Group', 'success');
     } else {
-      logEntry.status = '❌ ' + e.message;
-      toast('❌ ไม่สามารถเชื่อมต่อ: ' + e.message, 'warning');
+      // fallback ส่งตรง
+      throw new Error('Edge Function returned ' + res.status);
+    }
+  } catch(e) {
+    // Fallback: ส่งตรงไป webhook
+    try {
+      const res2 = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testPayload),
+      });
+      logEntry.status = res2.ok ? '✅ สำเร็จ (direct)' : '❌ ' + res2.status;
+      toast(res2.ok ? '✅ เชื่อมต่อ Webhook สำเร็จ! ตรวจสอบ Line Group' : '❌ Webhook ตอบกลับ error: ' + res2.status, res2.ok ? 'success' : 'warning');
+    } catch(e2) {
+      if (e2.message?.includes('Failed to fetch')) {
+        logEntry.status = '⚠️ CORS — Webhook น่าจะได้รับแล้ว';
+        toast('📨 ส่งข้อมูลไปแล้ว (Browser CORS ปกติ) — ตรวจสอบ n8n/Make ว่าได้รับหรือไม่', 'success');
+      } else {
+        logEntry.status = '❌ ' + e2.message;
+        toast('❌ ไม่สามารถเชื่อมต่อ: ' + e2.message, 'warning');
+      }
     }
   }
 
