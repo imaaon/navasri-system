@@ -328,287 +328,269 @@ function exportMonthlyExcel(monthStr) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// SECTION 4: BACKUP ข้อมูลทั้งหมด
+// SECTION 4: BACKUP ข้อมูลทั้งหมด (ใช้ ExcelJS สำหรับ styling เต็มรูปแบบ)
 // ─────────────────────────────────────────────────────────────
 
-// ── Backup helpers ────────────────────────────────────────────
-function _xlsxARGB(hex) { return 'FF' + hex.replace('#','').toUpperCase(); }
+// สีประจำแต่ละ sheet
+const BACKUP_THEMES = {
+  'สรุป':          { dark:'1B4F72', mid:'2E86C1', light:'D6EAF8', title:'📊 สรุปภาพรวม' },
+  'ผู้รับบริการ':  { dark:'145A32', mid:'1E8449', light:'D5F5E3', title:'🏥 ผู้รับบริการ' },
+  'พนักงาน':       { dark:'4A235A', mid:'7D3C98', light:'E8DAEF', title:'👤 พนักงาน' },
+  'ห้องพัก':       { dark:'7E5109', mid:'B7770D', light:'FDEBD0', title:'🛏️ ห้องพัก' },
+  'เตียง':         { dark:'1A5276', mid:'2471A3', light:'D6EAF8', title:'🛏️ เตียง' },
+  'สินค้า':        { dark:'0E6655', mid:'17A589', light:'D1F2EB', title:'📦 สินค้า' },
+  'Lot สินค้า':    { dark:'117A65', mid:'148F77', light:'D1F2EB', title:'📦 Lot สินค้า' },
+  'ใบแจ้งหนี้':    { dark:'7B241C', mid:'C0392B', light:'FADBD8', title:'💰 ใบแจ้งหนี้' },
+  'การชำระเงิน':   { dark:'186A3B', mid:'239B56', light:'D5F5E3', title:'💳 การชำระเงิน' },
+  'ค่าใช้จ่าย':    { dark:'6E2F1A', mid:'CA6F1E', light:'FAE5D3', title:'💸 ค่าใช้จ่าย' },
+  'การเบิกสินค้า': { dark:'154360', mid:'1F618D', light:'D6EAF8', title:'📋 การเบิกสินค้า' },
+  'อุบัติเหตุ':    { dark:'515A5A', mid:'717D7E', light:'EAECEE', title:'⚠️ อุบัติเหตุ' },
+  'ผู้จำหน่าย':    { dark:'212F3D', mid:'566573', light:'EAECEE', title:'🏭 ผู้จำหน่าย' },
+};
 
-function _xlsxCellStyle(bgHex, fontHex, bold, sz, wrapText, hAlign) {
-  return {
-    fill: { patternType: 'solid', fgColor: { rgb: _xlsxARGB(bgHex) } },
-    font: { name: 'Arial', sz: sz||9, bold: !!bold, color: { rgb: _xlsxARGB(fontHex||'1A1A1A') } },
-    alignment: { horizontal: hAlign||'left', vertical: 'center', wrapText: !!wrapText },
-    border: {
-      top:    { style:'thin', color:{ rgb:'FFCCCCCC' } },
-      bottom: { style:'thin', color:{ rgb:'FFCCCCCC' } },
-      left:   { style:'thin', color:{ rgb:'FFCCCCCC' } },
-      right:  { style:'thin', color:{ rgb:'FFCCCCCC' } },
-    },
-  };
+function _exjsColor(hex) {
+  return { argb: 'FF' + hex.replace('#','').toUpperCase() };
 }
 
-function _xlsxApplySheet(wb, sheetName, headers, dataRows, theme) {
-  // theme: { dark, mid, light, tab, title }
-  const { dark, mid, light, tab, title } = theme;
-  const ncols = headers.length;
+function _exjsThinBorder() {
+  const s = { style: 'thin', color: { argb: 'FFCCCCCC' } };
+  return { top: s, bottom: s, left: s, right: s };
+}
+
+function _exjsApplySheet(wb, sheetName, headers, dataRows, theme) {
+  const { dark, mid, light, title } = theme;
+  const ws = wb.addWorksheet(sheetName, {
+    properties: { tabColor: { argb: 'FF' + dark } },
+    views: [{ state: 'frozen', ySplit: 3 }],
+  });
   const today_th = (() => {
     const d = new Date();
-    const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-    return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
+    const M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()+543}`;
   })();
+  const ncols = headers.length;
 
-  const aoa = [];
+  // Row 1: Title
+  const r1 = ws.addRow([`นวศรี เนอร์สซิ่งโฮม  ·  ${title}  ·  ${today_th}`]);
+  r1.height = 28;
+  ws.mergeCells(1, 1, 1, ncols);
+  const c1 = r1.getCell(1);
+  c1.fill = { type:'pattern', pattern:'solid', fgColor: _exjsColor(dark) };
+  c1.font = { name:'Arial', size:13, bold:true, color:{ argb:'FFFFFFFF' } };
+  c1.alignment = { horizontal:'center', vertical:'middle' };
 
-  // row 1: Title banner
-  const titleRow = [title + `  ·  นวศรี เนอร์สซิ่งโฮม  ·  ${today_th}`];
-  while (titleRow.length < ncols) titleRow.push('');
-  aoa.push(titleRow);
+  // Row 2: Subtitle
+  const r2 = ws.addRow([`ข้อมูล ณ วันที่ ${today_th}  |  จำนวน ${dataRows.length} รายการ`]);
+  r2.height = 16;
+  ws.mergeCells(2, 1, 2, ncols);
+  const c2 = r2.getCell(1);
+  c2.fill = { type:'pattern', pattern:'solid', fgColor: _exjsColor(mid) };
+  c2.font = { name:'Arial', size:9, italic:true, color:{ argb:'FFFFFFFF' } };
+  c2.alignment = { horizontal:'center', vertical:'middle' };
 
-  // row 2: subtitle
-  const subRow = [`ข้อมูล ณ วันที่ ${today_th}  |  จำนวน ${dataRows.length} รายการ`];
-  while (subRow.length < ncols) subRow.push('');
-  aoa.push(subRow);
+  // Row 3: Header
+  const r3 = ws.addRow(headers);
+  r3.height = 22;
+  r3.eachCell(cell => {
+    cell.fill = { type:'pattern', pattern:'solid', fgColor: _exjsColor(dark) };
+    cell.font = { name:'Arial', size:10, bold:true, color:{ argb:'FFFFFFFF' } };
+    cell.alignment = { horizontal:'center', vertical:'middle', wrapText:true };
+    cell.border = _exjsThinBorder();
+  });
 
-  // row 3: header
-  aoa.push([...headers]);
+  // Data rows
+  dataRows.forEach((row, i) => {
+    const dr = ws.addRow(row);
+    dr.height = 17;
+    const bg = i % 2 === 0 ? light : 'FFFFFF';
+    dr.eachCell({ includeEmpty: true }, cell => {
+      cell.fill = { type:'pattern', pattern:'solid', fgColor: _exjsColor(bg) };
+      cell.font = { name:'Arial', size:9 };
+      cell.alignment = { horizontal:'left', vertical:'middle', wrapText:true };
+      cell.border = _exjsThinBorder();
+    });
+  });
 
-  // data rows
-  dataRows.forEach(row => aoa.push([...row]));
-
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-  // ── Merge title & subtitle across all columns ─────────────
-  if (!ws['!merges']) ws['!merges'] = [];
-  ws['!merges'].push({ s:{r:0,c:0}, e:{r:0,c:ncols-1} });
-  ws['!merges'].push({ s:{r:1,c:0}, e:{r:1,c:ncols-1} });
-
-  // ── Apply styles ─────────────────────────────────────────
-  const colLetters = Array.from({length: ncols}, (_,i) => XLSX.utils.encode_col(i));
-  const totalRows = aoa.length;
-
-  for (let r = 0; r < totalRows; r++) {
-    for (let c = 0; c < ncols; c++) {
-      const addr = XLSX.utils.encode_cell({r, c});
-      if (!ws[addr]) ws[addr] = { v: '', t: 's' };
-
-      if (r === 0) {
-        // Title row
-        ws[addr].s = _xlsxCellStyle(dark, 'FFFFFF', true, 13, false, 'center');
-      } else if (r === 1) {
-        // Subtitle row
-        ws[addr].s = _xlsxCellStyle(mid, 'FFFFFF', false, 9, false, 'center');
-      } else if (r === 2) {
-        // Header row
-        ws[addr].s = _xlsxCellStyle(dark, 'FFFFFF', true, 10, true, 'center');
-      } else {
-        // Data rows — สลับสี
-        const bg = (r % 2 === 1) ? light : 'FFFFFF';
-        ws[addr].s = _xlsxCellStyle(bg, '1A1A1A', false, 9, true, 'left');
-      }
-    }
-  }
-
-  // ── Column widths ─────────────────────────────────────────
-  const colWidths = headers.map((h, ci) => {
+  // Column widths
+  headers.forEach((h, i) => {
     let maxLen = h ? h.length * 1.5 : 6;
     dataRows.forEach(row => {
-      const v = row[ci] ? String(row[ci]) : '';
-      const w = v.split('').reduce((s,ch) => s + (ch.charCodeAt(0)>127?2:1), 0);
+      const v = row[i] ? String(row[i]) : '';
+      const w = [...v].reduce((s,c) => s + (c.charCodeAt(0) > 127 ? 2 : 1), 0);
       maxLen = Math.max(maxLen, w);
     });
-    return { wch: Math.min(38, Math.max(7, maxLen * 0.85 + 2)) };
+    ws.getColumn(i + 1).width = Math.min(40, Math.max(7, maxLen * 0.85 + 2));
   });
-  ws['!cols'] = colWidths;
-
-  // ── Row heights ───────────────────────────────────────────
-  ws['!rows'] = [{ hpt: 28 }, { hpt: 16 }, { hpt: 22 }];
-  for (let r = 3; r < totalRows; r++) ws['!rows'].push({ hpt: 17 });
-
-  // ── Freeze pane below header ──────────────────────────────
-  ws['!freeze'] = { xSplit: 0, ySplit: 3 };
-
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-
-  // ── Tab color ─────────────────────────────────────────────
-  const sheetIdx = wb.SheetNames.indexOf(sheetName);
-  if (!wb.Workbook) wb.Workbook = { Sheets: [] };
-  while (wb.Workbook.Sheets.length <= sheetIdx) wb.Workbook.Sheets.push({});
-  wb.Workbook.Sheets[sheetIdx].TabColor = { rgb: _xlsxARGB(tab) };
 }
-
-// ── สีประจำแต่ละ sheet ────────────────────────────────────────
-const BACKUP_THEMES = {
-  'สรุป':          { dark:'1B4F72', mid:'2E86C1', light:'D6EAF8', tab:'1B4F72', title:'📊 สรุปภาพรวม' },
-  'ผู้รับบริการ':  { dark:'145A32', mid:'1E8449', light:'D5F5E3', tab:'145A32', title:'🏥 ผู้รับบริการ' },
-  'พนักงาน':       { dark:'4A235A', mid:'7D3C98', light:'E8DAEF', tab:'4A235A', title:'👤 พนักงาน' },
-  'ห้องพัก':       { dark:'7E5109', mid:'B7770D', light:'FDEBD0', tab:'7E5109', title:'🛏️ ห้องพัก' },
-  'เตียง':         { dark:'1A5276', mid:'2471A3', light:'D6EAF8', tab:'1A5276', title:'🛏️ เตียง' },
-  'สินค้า':        { dark:'0E6655', mid:'17A589', light:'D1F2EB', tab:'0E6655', title:'📦 สินค้า' },
-  'Lot สินค้า':    { dark:'117A65', mid:'148F77', light:'D1F2EB', tab:'117A65', title:'📦 Lot สินค้า' },
-  'ใบแจ้งหนี้':    { dark:'7B241C', mid:'C0392B', light:'FADBD8', tab:'7B241C', title:'💰 ใบแจ้งหนี้' },
-  'การชำระเงิน':   { dark:'186A3B', mid:'239B56', light:'D5F5E3', tab:'186A3B', title:'💳 การชำระเงิน' },
-  'ค่าใช้จ่าย':    { dark:'6E2F1A', mid:'CA6F1E', light:'FAE5D3', tab:'6E2F1A', title:'💸 ค่าใช้จ่าย' },
-  'การเบิกสินค้า': { dark:'154360', mid:'1F618D', light:'D6EAF8', tab:'154360', title:'📋 การเบิกสินค้า' },
-  'อุบัติเหตุ':    { dark:'515A5A', mid:'717D7E', light:'EAECEE', tab:'515A5A', title:'⚠️ อุบัติเหตุ' },
-  'ผู้จำหน่าย':    { dark:'212F3D', mid:'566573', light:'EAECEE', tab:'212F3D', title:'🏭 ผู้จำหน่าย' },
-};
 
 async function backupAllData() {
   if (!confirm('ต้องการสำรองข้อมูลทั้งหมดออกเป็นไฟล์ Excel หรือไม่?\n\nอาจใช้เวลาสักครู่...')) return;
-
-  if (typeof XLSX === 'undefined') { toast('ไม่พบ SheetJS', 'error'); return; }
-
+  if (typeof ExcelJS === 'undefined') {
+    toast('ไม่พบ ExcelJS กรุณา refresh หน้าเว็บแล้วลองใหม่', 'error'); return;
+  }
   toast('⏳ กำลังสร้างไฟล์ Backup...', 'info');
   await new Promise(r => setTimeout(r, 100));
 
-  const wb = XLSX.utils.book_new();
+  const wb   = new ExcelJS.Workbook();
+  wb.creator = 'นวศรี เนอร์สซิ่งโฮม';
+  wb.created = new Date();
   const today = new Date().toISOString().slice(0,10);
 
-  // ── Sheet: ผู้รับบริการ (พร้อมข้อมูลห้อง/เตียง/ประเภท/โซน) ──
-  const patHeaders = ['#','ชื่อ-นามสกุล','HN','ประเภทบัตร','เลขบัตร',
-    'วันเกิด','อายุ','เพศ','วันรับบริการ','วันสิ้นสุด','ระยะเวลา','สถานะ',
-    'ห้องปัจจุบัน','ประเภทห้อง','โซน','เตียง',
-    'โทรศัพท์','ผู้ติดต่อฉุกเฉิน','ที่อยู่','หมายเหตุ'];
+  // สรุป
+  const sumData = [
+    ['👥 ผู้รับบริการทั้งหมด',   (db.patients||[]).length],
+    ['✅ ผู้รับบริการปัจจุบัน',   (db.patients||[]).filter(p=>p.status==='active').length],
+    ['👤 พนักงาน',                (db.staff||[]).length],
+    ['🛏️ ห้องพัก',               (db.rooms||[]).length],
+    ['🛏️ เตียง',                 (db.beds||[]).length],
+    ['📦 สินค้าในระบบ',           (db.items||[]).length],
+    ['⚠️ สินค้าใกล้หมด/หมดแล้ว', (db.items||[]).filter(i=>i.qty<=i.reorder).length],
+    ['💰 ใบแจ้งหนี้ทั้งหมด',      (db.invoices||[]).length],
+    ['⏰ บิลค้างชำระ',             (db.invoices||[]).filter(inv=>{
+      const s = typeof getInvoicePaymentStatus==='function' ? getInvoicePaymentStatus(inv) : inv.status;
+      return s !== 'paid' && s !== 'cancelled';
+    }).length],
+    ['📋 รายการเบิกสินค้า',       (db.requisitions||[]).length],
+    ['🏭 ผู้จำหน่าย',             (db.suppliers||[]).length],
+  ];
+  _exjsApplySheet(wb, 'สรุป', ['หมวดหมู่','จำนวน'], sumData, BACKUP_THEMES['สรุป']);
+
+  // ผู้รับบริการ (พร้อมห้อง/เตียง/ประเภท/โซน)
   const patData = (db.patients||[]).map((p,i) => {
-    const statusLabel = {active:'พักอยู่',hospital:'อยู่โรงพยาบาล',inactive:'ออกแล้ว'}[p.status]||p.status||'';
+    const sl  = {active:'พักอยู่',hospital:'อยู่โรงพยาบาล',inactive:'ออกแล้ว'}[p.status]||p.status||'';
     const age = p.dob ? Math.floor((new Date()-new Date(p.dob))/(365.25*24*3600*1000))+'ปี' : '-';
-    const bed  = (db.beds||[]).find(b=>b.id===p.currentBedId);
-    const room = bed ? (db.rooms||[]).find(r=>r.id===bed.roomId) : null;
+    const bed = (db.beds||[]).find(b=>b.id===p.currentBedId);
+    const rm  = bed ? (db.rooms||[]).find(r=>r.id===bed.roomId) : null;
     return [i+1,p.name||'',p.hn||'',p.idType||'',p.idcard||p.idCard||'',
       p.dob||'',age,p.gender||'',p.admitDate||'',p.endDate||'',
-      p.admitDate ? _calcDuration(p.admitDate, p.endDate) : '-',
-      statusLabel,
-      room?.name||'-', room?.roomType||'-', room?.zone||'-', bed?.bedCode||'-',
+      p.admitDate ? _calcDuration(p.admitDate,p.endDate) : '-', sl,
+      rm?.name||'-', rm?.roomType||'-', rm?.zone||'-', bed?.bedCode||'-',
       p.phone||'',p.emergency||'',p.address||'',p.note||''];
   });
-  _xlsxApplySheet(wb, 'ผู้รับบริการ', patHeaders, patData, BACKUP_THEMES['ผู้รับบริการ']);
+  _exjsApplySheet(wb, 'ผู้รับบริการ',
+    ['#','ชื่อ-นามสกุล','HN','ประเภทบัตร','เลขบัตร','วันเกิด','อายุ','เพศ',
+     'วันรับบริการ','วันสิ้นสุด','ระยะเวลา','สถานะ',
+     'ห้องปัจจุบัน','ประเภทห้อง','โซน','เตียง',
+     'โทรศัพท์','ผู้ติดต่อฉุกเฉิน','ที่อยู่','หมายเหตุ'],
+    patData, BACKUP_THEMES['ผู้รับบริการ']);
 
-  // ── Sheet: พนักงาน ────────────────────────────────────────
-  const staffHeaders = ['#','ชื่อ-นามสกุล','ตำแหน่ง','แผนก','เบอร์โทร','อีเมล','วันเริ่มงาน','สถานะ'];
+  // พนักงาน
   const staffData = (db.staff||[]).map((s,i) => {
     const active = !s.endDate || s.endDate > today;
     return [i+1,s.name||s.displayName||'',s.position||'',s.department||'',
       s.phone||'',s.email||'',s.startDate||'',active?'ทำงานอยู่':'ออกแล้ว'];
   });
-  _xlsxApplySheet(wb, 'พนักงาน', staffHeaders, staffData, BACKUP_THEMES['พนักงาน']);
+  _exjsApplySheet(wb, 'พนักงาน',
+    ['#','ชื่อ-นามสกุล','ตำแหน่ง','แผนก','เบอร์โทร','อีเมล','วันเริ่มงาน','สถานะ'],
+    staffData, BACKUP_THEMES['พนักงาน']);
 
-  // ── Sheet: ห้องพัก ────────────────────────────────────────
-  const roomHeaders = ['#','ชื่อห้อง','ประเภท','โซน','ราคารายเดือน','ราคารายวัน','สถานะ'];
+  // ห้องพัก
   const roomData = (db.rooms||[]).map((r,i) =>
     [i+1,r.name||'',r.roomType||'',r.zone||'-',r.monthlyRate||0,r.dailyRate||0,r.status||'']);
-  _xlsxApplySheet(wb, 'ห้องพัก', roomHeaders, roomData, BACKUP_THEMES['ห้องพัก']);
+  _exjsApplySheet(wb, 'ห้องพัก',
+    ['#','ชื่อห้อง','ประเภท','โซน','ราคารายเดือน','ราคารายวัน','สถานะ'],
+    roomData, BACKUP_THEMES['ห้องพัก']);
 
-  // ── Sheet: เตียง ──────────────────────────────────────────
-  const bedHeaders = ['#','รหัสเตียง','ห้อง','ประเภทห้อง','โซน','สถานะ','ผู้รับบริการปัจจุบัน'];
+  // เตียง
   const bedData = (db.beds||[]).map((b,i) => {
-    const room = (db.rooms||[]).find(r=>r.id===b.roomId);
-    const pat  = (db.patients||[]).find(p=>p.currentBedId===b.id&&p.status==='active');
-    return [i+1,b.bedCode||'',room?.name||'',room?.roomType||'-',room?.zone||'-',b.status||'',pat?.name||'ว่าง'];
+    const rm  = (db.rooms||[]).find(r=>r.id===b.roomId);
+    const pat = (db.patients||[]).find(p=>p.currentBedId===b.id&&p.status==='active');
+    return [i+1,b.bedCode||'',rm?.name||'',rm?.roomType||'-',rm?.zone||'-',b.status||'',pat?.name||'ว่าง'];
   });
-  _xlsxApplySheet(wb, 'เตียง', bedHeaders, bedData, BACKUP_THEMES['เตียง']);
+  _exjsApplySheet(wb, 'เตียง',
+    ['#','รหัสเตียง','ห้อง','ประเภทห้อง','โซน','สถานะ','ผู้รับบริการปัจจุบัน'],
+    bedData, BACKUP_THEMES['เตียง']);
 
-  // ── Sheet: สินค้า ─────────────────────────────────────────
-  const itemHeaders = ['#','ชื่อสินค้า','ประเภท','บาร์โค้ด','คงเหลือ','หน่วยจ่าย',
-    'จุดสั่งซื้อ','ราคาทุน','ราคาขาย','Billable','สถานะ'];
+  // สินค้า
   const itemData = (db.items||[]).map((item,i) => {
-    const status = item.qty<=0?'หมด':item.qty<=item.reorder?'ใกล้หมด':'ปกติ';
+    const st = item.qty<=0?'หมด':item.qty<=item.reorder?'ใกล้หมด':'ปกติ';
     return [i+1,item.name||'',item.category||'',item.barcode||'',
       item.qty||0,item.unit||'',item.reorder||0,item.cost||0,item.price||0,
-      item.isBillable!==false?'ใช่':'ไม่',status];
+      item.isBillable!==false?'ใช่':'ไม่',st];
   });
-  _xlsxApplySheet(wb, 'สินค้า', itemHeaders, itemData, BACKUP_THEMES['สินค้า']);
+  _exjsApplySheet(wb, 'สินค้า',
+    ['#','ชื่อสินค้า','ประเภท','บาร์โค้ด','คงเหลือ','หน่วยจ่าย','จุดสั่งซื้อ','ราคาทุน','ราคาขาย','Billable','สถานะ'],
+    itemData, BACKUP_THEMES['สินค้า']);
 
-  // ── Sheet: Lot สินค้า ────────────────────────────────────
-  const lotHeaders = ['#','สินค้า','Lot Number','วันรับ','วันหมดอายุ','จำนวนรับ','คงเหลือ','ราคาทุน/หน่วย','สถานะ'];
+  // Lot สินค้า
   const lotData = (db.itemLots||[]).map((lot,i) => {
     const item = (db.items||[]).find(x=>x.id==lot.itemId);
-    const today2 = new Date(); today2.setHours(0,0,0,0);
-    const exp = lot.expiryDate ? new Date(lot.expiryDate) : null;
-    const diff = exp ? Math.ceil((exp-today2)/86400000) : null;
-    const status = !exp ? 'ไม่ระบุ' : diff<0?'หมดอายุแล้ว':diff<=30?`อีก ${diff} วัน`:lot.expiryDate;
+    const now  = new Date(); now.setHours(0,0,0,0);
+    const exp  = lot.expiryDate ? new Date(lot.expiryDate) : null;
+    const diff = exp ? Math.ceil((exp-now)/86400000) : null;
+    const st   = !exp?'ไม่ระบุ':diff<0?'หมดอายุแล้ว':diff<=30?`อีก ${diff} วัน`:lot.expiryDate;
     return [i+1,item?.name||'-',lot.lotNumber||'-',lot.receivedDate||'-',
-      lot.expiryDate||'-',lot.qtyInLot||0,lot.qtyRemaining||0,lot.cost||0,status];
+      lot.expiryDate||'-',lot.qtyInLot||0,lot.qtyRemaining||0,lot.cost||0,st];
   });
-  _xlsxApplySheet(wb, 'Lot สินค้า', lotHeaders, lotData, BACKUP_THEMES['Lot สินค้า']);
+  _exjsApplySheet(wb, 'Lot สินค้า',
+    ['#','สินค้า','Lot Number','วันรับ','วันหมดอายุ','จำนวนรับ','คงเหลือ','ราคาทุน/หน่วย','สถานะ'],
+    lotData, BACKUP_THEMES['Lot สินค้า']);
 
-  // ── Sheet: ใบแจ้งหนี้ ────────────────────────────────────
-  const invHeaders = ['#','เลขที่','ประเภท','ผู้รับบริการ','วันที่','ครบกำหนด','ยอดรวม','ชำระแล้ว','คงค้าง','สถานะ'];
+  // ใบแจ้งหนี้
   const invData = (db.invoices||[]).map((inv,i) => {
     const paid = typeof getInvoicePaidAmount==='function' ? getInvoicePaidAmount(inv.id) : 0;
-    const status = typeof getInvoicePaymentStatus==='function' ? getInvoicePaymentStatus(inv) : inv.status;
-    const statusLabel = {draft:'ร่าง',sent:'รอชำระ',partial:'ชำระบางส่วน',paid:'ชำระครบ',cancelled:'ยกเลิก'}[status]||status;
+    const st   = typeof getInvoicePaymentStatus==='function' ? getInvoicePaymentStatus(inv) : inv.status;
+    const lbl  = {draft:'ร่าง',sent:'รอชำระ',partial:'ชำระบางส่วน',paid:'ชำระครบ',cancelled:'ยกเลิก'}[st]||st;
     return [i+1,inv.docNo||'-',inv.type||'-',inv.patientName||'-',
-      inv.date||'-',inv.dueDate||'-',inv.grandTotal||0,paid,
-      Math.max(0,(inv.grandTotal||0)-paid),statusLabel];
+      inv.date||'-',inv.dueDate||'-',inv.grandTotal||0,paid,Math.max(0,(inv.grandTotal||0)-paid),lbl];
   });
-  _xlsxApplySheet(wb, 'ใบแจ้งหนี้', invHeaders, invData, BACKUP_THEMES['ใบแจ้งหนี้']);
+  _exjsApplySheet(wb, 'ใบแจ้งหนี้',
+    ['#','เลขที่','ประเภท','ผู้รับบริการ','วันที่','ครบกำหนด','ยอดรวม','ชำระแล้ว','คงค้าง','สถานะ'],
+    invData, BACKUP_THEMES['ใบแจ้งหนี้']);
 
-  // ── Sheet: การชำระเงิน ───────────────────────────────────
-  const payHeaders = ['#','วันที่','เลขใบเสร็จ','ผู้รับบริการ','จำนวนเงิน','วิธีชำระ','ผู้รับเงิน','หมายเหตุ'];
+  // การชำระเงิน
   const payData = (db.payments||[]).map((p,i) =>
     [i+1,p.paymentDate||'-',p.receiptNo||'-',p.patientName||'-',
       p.amount||0,p.method||'-',p.receivedBy||'-',p.note||'']);
-  _xlsxApplySheet(wb, 'การชำระเงิน', payHeaders, payData, BACKUP_THEMES['การชำระเงิน']);
+  _exjsApplySheet(wb, 'การชำระเงิน',
+    ['#','วันที่','เลขใบเสร็จ','ผู้รับบริการ','จำนวนเงิน','วิธีชำระ','ผู้รับเงิน','หมายเหตุ'],
+    payData, BACKUP_THEMES['การชำระเงิน']);
 
-  // ── Sheet: ค่าใช้จ่าย ────────────────────────────────────
-  const expHeaders = ['#','วันที่','เลขเอกสาร','รายการ','จำนวนเงิน','ผู้จัดทำ','หมายเหตุ'];
+  // ค่าใช้จ่าย
   const expData = (db.expenses||[]).map((e,i) =>
     [i+1,e.date||'-',e.docNo||'-',e.vendorName||e.job||'-',e.net||0,e.createdBy||'-',e.note||'']);
-  _xlsxApplySheet(wb, 'ค่าใช้จ่าย', expHeaders, expData, BACKUP_THEMES['ค่าใช้จ่าย']);
+  _exjsApplySheet(wb, 'ค่าใช้จ่าย',
+    ['#','วันที่','เลขเอกสาร','รายการ','จำนวนเงิน','ผู้จัดทำ','หมายเหตุ'],
+    expData, BACKUP_THEMES['ค่าใช้จ่าย']);
 
-  // ── Sheet: การเบิกสินค้า ─────────────────────────────────
-  const reqHeaders = ['#','เลขที่ใบเบิก','วันที่','ผู้รับบริการ','ผู้เบิก','รายการ','จำนวน','หน่วย','สถานะ'];
+  // การเบิกสินค้า
   const reqData = [];
   (db.requisitions||[]).forEach((r,i) => {
-    const statusLabel = {pending:'รออนุมัติ',approved:'อนุมัติแล้ว',rejected:'ไม่อนุมัติ'}[r.status]||r.status||'';
-    (r.lines?.length ? r.lines : [{itemName:r.itemName,qty:r.qty,unit:r.unit}]).forEach((it, j) => {
-      reqData.push([j===0?i+1:'', j===0?r.refNo||r.id||'-':'', j===0?r.date||'-':'',
-        j===0?r.patientName||'-':'', j===0?r.staffName||'-':'',
-        it.itemName||it.name||'-', it.qty||0, it.unit||'-', j===0?statusLabel:'']);
-    });
+    const lbl   = {pending:'รออนุมัติ',approved:'อนุมัติแล้ว',rejected:'ไม่อนุมัติ'}[r.status]||r.status||'';
+    const lines = r.lines?.length ? r.lines : [{itemName:r.itemName,qty:r.qty,unit:r.unit}];
+    lines.forEach((it,j) => reqData.push([
+      j===0?i+1:'', j===0?r.refNo||r.id||'-':'', j===0?r.date||'-':'',
+      j===0?r.patientName||'-':'', j===0?r.staffName||'-':'',
+      it.itemName||it.name||'-', it.qty||0, it.unit||'-', j===0?lbl:'']));
   });
-  _xlsxApplySheet(wb, 'การเบิกสินค้า', reqHeaders, reqData, BACKUP_THEMES['การเบิกสินค้า']);
+  _exjsApplySheet(wb, 'การเบิกสินค้า',
+    ['#','เลขที่ใบเบิก','วันที่','ผู้รับบริการ','ผู้เบิก','รายการ','จำนวน','หน่วย','สถานะ'],
+    reqData, BACKUP_THEMES['การเบิกสินค้า']);
 
-  // ── Sheet: อุบัติเหตุ (ถ้ามีข้อมูล) ─────────────────────
-  const incHeaders = ['#','วันที่','เวลา','ผู้รับบริการ','ประเภท','สถานที่','รายละเอียด','การปฐมพยาบาล','ความรุนแรง','บันทึกโดย'];
+  // อุบัติเหตุ (ถ้ามี)
   const incData = (db.incidents||[]).map((r,i) =>
     [i+1,r.date||'-',r.time||'-',r.patientName||'-',r.type||'-',
       r.location||'-',r.detail||'-',r.firstAid||'-',r.severity||'-',r.recorder||'-']);
   if (incData.length > 0)
-    _xlsxApplySheet(wb, 'อุบัติเหตุ', incHeaders, incData, BACKUP_THEMES['อุบัติเหตุ']);
+    _exjsApplySheet(wb, 'อุบัติเหตุ',
+      ['#','วันที่','เวลา','ผู้รับบริการ','ประเภท','สถานที่','รายละเอียด','การปฐมพยาบาล','ความรุนแรง','บันทึกโดย'],
+      incData, BACKUP_THEMES['อุบัติเหตุ']);
 
-  // ── Sheet: ผู้จำหน่าย ────────────────────────────────────
-  const supHeaders = ['#','รหัส','ชื่อบริษัท','ผู้ติดต่อ','เบอร์โทร','อีเมล','เลขภาษี','สถานะ'];
+  // ผู้จำหน่าย
   const supData = (db.suppliers||[]).map((s,i) =>
     [i+1,s.code||'',s.name||'',s.contactName||'',s.phone||'',s.email||'',s.taxId||'',s.status||'active']);
-  _xlsxApplySheet(wb, 'ผู้จำหน่าย', supHeaders, supData, BACKUP_THEMES['ผู้จำหน่าย']);
+  _exjsApplySheet(wb, 'ผู้จำหน่าย',
+    ['#','รหัส','ชื่อบริษัท','ผู้ติดต่อ','เบอร์โทร','อีเมล','เลขภาษี','สถานะ'],
+    supData, BACKUP_THEMES['ผู้จำหน่าย']);
 
-  // ── Sheet: สรุป (ขึ้นหน้าแรก) ────────────────────────────
-  const sumHeaders = ['หมวดหมู่', 'จำนวน'];
-  const sumData = [
-    ['👥 ผู้รับบริการทั้งหมด',     (db.patients||[]).length],
-    ['✅ ผู้รับบริการปัจจุบัน',     (db.patients||[]).filter(p=>p.status==='active').length],
-    ['👤 พนักงาน',                  (db.staff||[]).length],
-    ['🛏️ ห้องพัก',                 (db.rooms||[]).length],
-    ['🛏️ เตียง',                   (db.beds||[]).length],
-    ['📦 สินค้าในระบบ',             (db.items||[]).length],
-    ['⚠️ สินค้าใกล้หมด/หมดแล้ว',   (db.items||[]).filter(i=>i.qty<=i.reorder).length],
-    ['💰 ใบแจ้งหนี้ทั้งหมด',        (db.invoices||[]).length],
-    ['⏰ บิลค้างชำระ',               (db.invoices||[]).filter(inv=>{
-      const s = typeof getInvoicePaymentStatus==='function' ? getInvoicePaymentStatus(inv) : inv.status;
-      return s !== 'paid' && s !== 'cancelled';
-    }).length],
-    ['📋 รายการเบิกสินค้า',         (db.requisitions||[]).length],
-    ['🏭 ผู้จำหน่าย',               (db.suppliers||[]).length],
-  ];
-  _xlsxApplySheet(wb, 'สรุป', sumHeaders, sumData, BACKUP_THEMES['สรุป']);
-
-  // ย้าย สรุป ไปหน้าแรก
-  wb.SheetNames.unshift(wb.SheetNames.pop());
-
-  XLSX.writeFile(wb, `navasri_backup_${today}.xlsx`);
-  toast(`✅ Backup สำเร็จ! ดาวน์โหลดแล้ว (${wb.SheetNames.length} sheets)`, 'success');
+  // Export
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob   = new Blob([buffer], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url    = URL.createObjectURL(blob);
+  const a      = document.createElement('a');
+  a.href = url; a.download = `navasri_backup_${today}.xlsx`; a.click();
+  URL.revokeObjectURL(url);
+  toast(`✅ Backup สำเร็จ! ดาวน์โหลดแล้ว (${wb.worksheets.length} sheets)`, 'success');
 }
 
 function _calcDuration(startDate, endDate) {
