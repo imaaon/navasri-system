@@ -133,21 +133,24 @@ async function submitReq() {
       return { item_id: item.id, item_name: item.name, qty_requested: ri.qty, unit: ri.unit || item.unit };
     });
 
+    // สร้าง ref_no ก่อน
+    const { data: seqData } = await supa.rpc('next_doc_number', { p_type: 'requisition' });
+    const refNo = seqData || ('REQ-' + Date.now());
+
     const { data: rpcResult, error: rpcErr } = await supa.rpc('submit_requisition', {
+      p_ref_no:       refNo,
       p_patient_id:   patId,
       p_patient_name: patient.name,
       p_staff_id:     staffId,
       p_staff_name:   staff.name,
-      p_date:         date,
       p_note:         note || '',
-      p_created_by:   currentUser?.username || '',
       p_lines:        lines,
     });
 
     if (rpcErr) { toast('บันทึกไม่สำเร็จ: ' + rpcErr.message, 'error'); return; }
+    if (rpcResult && rpcResult.ok === false) { toast('บันทึกไม่สำเร็จ: ' + (rpcResult.error || 'unknown'), 'error'); return; }
 
-    const refNo    = rpcResult.ref_no;
-    const headerId = rpcResult.header_id;
+    const headerId = rpcResult?.header_id;
 
     // อัปเดต local cache (db.requisitions) เพื่อให้ approval panel เห็นทันที
     validItems.forEach(ri => {
