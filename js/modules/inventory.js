@@ -34,7 +34,18 @@ function printItemBarcode() {
   const code = document.getElementById('item-barcode').value.trim();
   const name = document.getElementById('item-name').value.trim();
   if (!code) { toast('ไม่มีรหัสบาร์โค้ด', 'warning'); return; }
-  // สร้าง barcode SVG จาก JsBarcode ที่โหลดแล้วใน index.html (ไม่ต้องพึ่ง CDN อีกครั้ง)
+  _doPrintBarcode(code, name);
+}
+
+// พิมพ์บาร์โค้ดจากตารางสินค้าโดยตรง (ไม่ต้องเปิด modal)
+function printBarcodeById(itemId) {
+  const item = db.items.find(i => i.id == itemId);
+  if (!item || !item.barcode) { toast('ไม่มีรหัสบาร์โค้ด', 'warning'); return; }
+  _doPrintBarcode(item.barcode, item.name);
+}
+
+// ฟังก์ชันกลางสำหรับพิมพ์บาร์โค้ด
+function _doPrintBarcode(code, name) {
   const tmpSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   document.body.appendChild(tmpSvg);
   try {
@@ -122,11 +133,26 @@ function renderStock() {
       ? '<span style="font-size:10px;color:#27ae60;font-weight:600;">💰 Billable</span>'
       : '<span style="font-size:10px;color:#95a5a6;">🏥 Non-Bill</span>';
 
+    // Barcode SVG แบบขีดๆ (สร้างจาก JsBarcode)
+    let barcodeSvg = '';
+    if (item.barcode && typeof JsBarcode !== 'undefined') {
+      try {
+        const tmpSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        document.body.appendChild(tmpSvg);
+        JsBarcode(tmpSvg, item.barcode, { format:'CODE128', width:1.2, height:28, displayValue:false, margin:2 });
+        barcodeSvg = tmpSvg.outerHTML;
+        document.body.removeChild(tmpSvg);
+      } catch(e) { barcodeSvg = ''; }
+    }
+
     return `<tr class="${rowClass}">
       <td style="color:var(--text3);font-size:12px;" class="number">${i+1}</td>
       <td style="padding:6px 8px;">${photoEl}</td>
       <td style="font-weight:600;">${item.name}<br>${billableBadge}</td>
-      <td><span style="font-family:monospace;font-size:11px;color:var(--text3);">${item.barcode||'—'}</span></td>
+      <td>
+        ${barcodeSvg ? `<div style="line-height:0;">${barcodeSvg}</div>` : ''}
+        <span style="font-family:monospace;font-size:10px;color:var(--text3);">${item.barcode||'—'}</span>
+      </td>
       <td><span class="badge ${catBadges[item.category]||'badge-gray'}">${item.category}</span></td>
       <td>
         <div class="number" style="font-weight:600;">${item.qty}</div>
@@ -137,9 +163,10 @@ function renderStock() {
       <td class="number" style="font-size:12px;color:var(--text2);">${item.cost > 0 ? item.cost.toLocaleString('th-TH',{minimumFractionDigits:2}) : '-'}</td>
       <td class="number" style="font-size:12px;color:var(--text2);">${item.price > 0 ? item.price.toLocaleString('th-TH',{minimumFractionDigits:2}) : '-'}</td>
       <td>${statusBadge}${lotBadge ? '<br>'+lotBadge : ''}</td>
-      <td>
-        <button class="btn btn-ghost btn-sm" onclick="editItem('${item.id}')" style="margin-right:4px;">✏️</button>
-        <button class="btn btn-ghost btn-sm" onclick="deleteItem('${item.id}')">🗑️</button>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-ghost btn-sm" onclick="editItem('${item.id}')" style="margin-right:4px;" title="แก้ไข">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="printBarcodeById('${item.id}')" style="margin-right:4px;" title="พิมพ์บาร์โค้ด">🖨️</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteItem('${item.id}')" title="ลบ">🗑️</button>
       </td>
     </tr>`;
   }).join('');
