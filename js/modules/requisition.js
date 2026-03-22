@@ -712,6 +712,12 @@ async function renderHistory() {
     const qtySummary = r.lines?.length > 0
       ? r.lines.reduce((s,l)=>s+(l.qty||0),0)
       : (r.qty||0);
+    // แสดงปุ่มลบเฉพาะ pending และมีสิทธิ์
+    const canDel = r.status === 'pending' && (
+      canApproveReq() ||
+      [currentUser?.displayName, currentUser?.username].filter(Boolean)
+        .some(n => n.toLowerCase() === (r.createdBy||r.staffName||'').toLowerCase())
+    );
     return `<tr>
     <td class="number" style="white-space:nowrap;">${r.date}</td>
     <td>${r.refNo||'-'}</td>
@@ -721,8 +727,39 @@ async function renderHistory() {
     <td>${r.staffName||'-'}</td>
     <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${STATUS_COLOR[r.status]||'#888'}22;color:${STATUS_COLOR[r.status]||'#888'};">${STATUS_LABEL[r.status]||r.status}</span></td>
     <td style="color:var(--text2);font-size:12px;">${r.note || '-'}</td>
-    <td><button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')" title="ดูใบเบิก">🖨️</button></td>
+    <td style="white-space:nowrap;">
+      <button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')" title="ดูใบเบิก">🖨️</button>
+      ${canDel ? `<button class="btn btn-sm" onclick="deleteReq('${r.id}')" style="background:#e74c3c22;color:#e74c3c;font-size:11px;" title="ยกเลิกใบเบิก">🗑️</button>` : ''}
+    </td>
   </tr>`;}).join('');
+}
+
+// ลบใบเบิก (เฉพาะ pending เท่านั้น)
+async function deleteReq(reqId) {
+  const req = (db.requisitions||[]).find(r => r.id == reqId);
+  if (!req) return;
+  if (req.status !== 'pending') { toast('ลบได้เฉพาะใบเบิกที่ยังไม่อนุมัติเท่านั้น', 'warning'); return; }
+  if (!confirm(`ยืนยันยกเลิกใบเบิก ${req.refNo||reqId}?`)) return;
+
+  showLoadingOverlay(true);
+  try {
+    // ลบ lines ก่อน แล้วค่อยลบ header
+    const { error: lineErr } = await supa.from('requisition_lines').delete().eq('header_id', reqId);
+    if (lineErr) { toast('ลบไม่สำเร็จ: ' + lineErr.message, 'error'); return; }
+
+    const { error: headErr } = await supa.from('requisition_headers').delete().eq('id', reqId);
+    if (headErr) { toast('ลบไม่สำเร็จ: ' + headErr.message, 'error'); return; }
+
+    // อัปเดต local cache
+    db.requisitions = (db.requisitions||[]).filter(r => r.id != reqId);
+    toast(`🗑️ ยกเลิกใบเบิก ${req.refNo||reqId} แล้ว`, 'success');
+    updateApprovalBadge();
+    renderHistory();
+  } catch(e) {
+    toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+  } finally {
+    showLoadingOverlay(false);
+  }
 }
 
 // ===== REPORT =====
