@@ -87,7 +87,10 @@ async function loadDB() {
     db.beds         = (bedsRes.data || []).map(mapBed);
     db.users = {};
     const ls = (settingsRes.data || []).find(s => s.key === 'lineSettings');
-    if (ls) db.lineSettings = { ...db.lineSettings, ...ls.value };
+    if (ls) {
+      const parsed = typeof ls.value === 'string' ? JSON.parse(ls.value) : ls.value;
+      db.lineSettings = { ...db.lineSettings, ...parsed };
+    }
     if (typeof loadBillingFromSettings === 'function') {
       loadBillingFromSettings(settingsRes.data || []);
     }
