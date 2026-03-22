@@ -14,12 +14,14 @@ function onReqPatientChange() {
   }
   const patient = db.patients.find(p => p.id == patId);
   if (!patient) return;
+  // Allergy alert
   if (patient.allergies?.length) {
     alertDiv.innerHTML = renderAllergyBanner(patient, false);
     alertDiv.style.display = 'block';
   } else {
     alertDiv.style.display = 'none';
   }
+  // Bed info
   const bed = getPatientBed(patient);
   if (bed) {
     const room = getPatientRoom(patient);
@@ -31,6 +33,7 @@ function onReqPatientChange() {
 }
 
 function initReq() {
+  // Populate selects
   const patSel = document.getElementById('req-patient');
   patSel.innerHTML = '<option value="">-- เลือกผู้รับบริการ --</option>' +
     db.patients.filter(p => p.status === 'active').map(p => `<option value="${p.id}">${p.name}</option>`).join('');
@@ -57,6 +60,7 @@ function renderReqItems() {
   const UNITS = ['เม็ด','กล่อง','ขวด','ชิ้น','ชุด','Amp','Vial','ซอง','ถุง','ใบ','แผ่น','ม้วน','เส้น','หลอด','ห่อ','ก้อน','ก้าน'];
   container.innerHTML = reqItems.map((ri, idx) => {
     const item = ri.itemId ? db.items.find(i => i.id == ri.itemId) : null;
+    // Auto-fill unit from item if not set
     const unitVal = ri.unit || (item ? item.unit : '');
     return `<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:8px;background:var(--bg);padding:10px 12px;border-radius:8px;border:1px solid var(--border);">
       <div style="min-width:24px;text-align:center;padding-bottom:8px;font-size:12px;color:var(--text3);font-weight:600;">${idx+1}</div>
@@ -86,6 +90,7 @@ function renderReqItems() {
 function updateReqItem(idx, field, value) {
   reqItems[idx][field] = field === 'qty' ? parseInt(value) : value;
   if (field === 'itemId') {
+    // Auto-fill unit from selected item
     const item = db.items.find(i => i.id == value);
     if (item) reqItems[idx].unit = item.unit;
     renderReqItems();
@@ -112,6 +117,7 @@ async function submitReq() {
   const patient = db.patients.find(p => p.id == patId);
   const staff   = db.staff.find(s => s.id == staffId);
 
+  // เช็คสต็อกก่อน
   const errors = [];
   validItems.forEach(ri => {
     const item = db.items.find(i => i.id == ri.itemId);
@@ -121,12 +127,13 @@ async function submitReq() {
 
   showLoadingOverlay(true);
   try {
+    // ใช้ RPC submit_requisition — บันทึก header + lines แบบ atomic
     const lines = validItems.map(ri => {
       const item = db.items.find(i => i.id == ri.itemId);
       return { item_id: item.id, item_name: item.name, qty_requested: ri.qty, unit: ri.unit || item.unit };
     });
 
-    // สร้าง ref_no ก่อนด้วย next_doc_number
+    // สร้าง ref_no ก่อน
     const { data: seqData } = await supa.rpc('next_doc_number', { p_type: 'requisition' });
     const refNo = seqData || ('REQ-' + Date.now());
 
@@ -138,6 +145,7 @@ async function submitReq() {
       p_staff_name:   staff.name,
       p_note:         note || '',
       p_lines:        lines,
+      p_created_by:   currentUser?.displayName || currentUser?.username || '',
     });
 
     if (rpcErr) { toast('บันทึกไม่สำเร็จ: ' + rpcErr.message, 'error'); return; }
@@ -145,6 +153,7 @@ async function submitReq() {
 
     const headerId = rpcResult?.header_id;
 
+    // อัปเดต local cache (db.requisitions) เพื่อให้ approval panel เห็นทันที
     validItems.forEach(ri => {
       const item = db.items.find(i => i.id == ri.itemId);
       if (!item) return;
@@ -159,10 +168,12 @@ async function submitReq() {
 
     toast(`บันทึกการเบิก ${validItems.length} รายการเรียบร้อย (${refNo})`, 'success');
 
+    // Line notification
     sendLineNotify('new_requisition', buildLineMsg('new_requisition', {
       refNo, patient: patient.name, itemCount: validItems.length, staff: staff.name
     }), { patientName: patient.name, itemCount: validItems.length });
 
+    // Low stock check
     validItems.forEach(ri => {
       const item = db.items.find(i => i.id == ri.itemId);
       if (item && item.qty <= item.reorder) {
@@ -173,7 +184,6 @@ async function submitReq() {
     });
 
     clearReq();
-    renderHistory();
   } catch(e) {
     toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
   } finally {
@@ -212,6 +222,9 @@ function resetHistFilters() {
   renderHistory();
 }
 
+// ─────────────────────────────────────────────────────
+// ── HISTORY TABS ─────────────────────────────────────
+// ─────────────────────────────────────────────────────
 function switchHistoryTab(tab) {
   ['list','approval','returns'].forEach(t => {
     const panel = document.getElementById('history-tab-'+t);
@@ -227,6 +240,14 @@ function switchHistoryTab(tab) {
   if (tab === 'approval') renderApprovalPanel();
   if (tab === 'returns')  renderReturnsTab();
 }
+
+// ─────────────────────────────────────────────────────
+// ── APPROVAL WORKFLOW ─────────────────────────────────
+// ─────────────────────────────────────────────────────
+// Single-level approval: only 'officer' (ธุรการ) can approve/reject
+// pending → approved (stock cut on approval)
+
+
 
 function getPendingForMe() {
   if (canApproveReq()) {
@@ -251,6 +272,7 @@ async function renderApprovalPanel() {
   const container = document.getElementById('approval-panel-content');
   if (!container) return;
 
+  // โหลดล่าสุดจาก requisition_headers
   const { data: freshData } = await supa.from('requisition_headers')
     .select('*, requisition_lines(*)')
     .eq('status','pending')
@@ -345,6 +367,7 @@ async function approveReq(reqId) {
 
   showLoadingOverlay(true);
   try {
+    // ใช้ RPC approve_requisition — ตัดสต็อก FEFO + audit แบบ atomic
     const { data: rpcResult, error: rpcErr } = await supa.rpc('approve_requisition', {
       p_header_id:      parseInt(reqId),
       p_approved_by:    actor,
@@ -356,11 +379,14 @@ async function approveReq(reqId) {
       return;
     }
 
+    // อัปเดต local cache
     req.status = 'approved';
     const item = db.items.find(i => i.id == req.itemId);
     if (item) {
+      // sync item qty จาก Supabase
       const { data: updItem } = await supa.from('items').select('qty').eq('id', item.id).single();
       if (updItem) item.qty = updItem.qty;
+      // sync lots
       const { data: lotsData } = await supa.from('item_lots').select('*').eq('item_id', item.id);
       if (lotsData) {
         db.itemLots = db.itemLots.filter(l => l.itemId != item.id);
@@ -376,6 +402,7 @@ async function approveReq(reqId) {
       refNo: req.refNo||('REQ#'+reqId), patient: req.patientName, itemCount: 1
     }), { patientName: req.patientName, itemCount: 1 });
 
+    // บันทึก stock_movements (issue) เพื่อ traceability
     if (typeof mapStockMovement === 'function') {
       const beforeQty = item ? (item.qty + req.qty) : 0;
       const afterQty  = item ? item.qty : 0;
@@ -436,6 +463,7 @@ async function confirmRejectReq() {
   if (!req) return;
   const actor = currentUser?.displayName || currentUser?.username || '';
 
+  // ใช้ RPC reject_requisition — บันทึก audit ด้วย
   const { data: rpcRes, error: rpcErr } = await supa.rpc('reject_requisition', {
     p_header_id:   reqId,
     p_rejected_by: actor,
@@ -446,6 +474,7 @@ async function confirmRejectReq() {
   }
   req.status = 'rejected';
 
+  // Send Line notification
   sendLineNotify('rejected', buildLineMsg('rejected', {
     refNo: req.refNo||('REQ#'+reqId), patient: req.patientName, reason
   }), { patientName: req.patientName, reason });
@@ -457,7 +486,11 @@ async function confirmRejectReq() {
   renderHistory();
 }
 
+// ─────────────────────────────────────────────────────
+// ── RETURN TO STOCK ───────────────────────────────────
+// ─────────────────────────────────────────────────────
 function openReturnModal() {
+  // Populate req select — only approved reqs
   const sel = document.getElementById('return-req-id');
   const approved = (db.requisitions||[]).filter(r=>r.status==='approved');
   sel.innerHTML = '<option value="">-- เลือกใบเบิกต้นฉบับ --</option>' +
@@ -515,6 +548,7 @@ async function saveReturnItem() {
   const item = db.items.find(i=>i.id==req.itemId);
   const refNo = 'RET-'+Date.now().toString().slice(-6);
 
+  // Restore stock — ใช้ RPC เพื่อป้องกัน Race Condition (Atomic)
   if (item) {
     const { data: rpcResult, error: rpcErr } = await supa.rpc('return_stock', {
       p_item_id: item.id,
@@ -528,6 +562,7 @@ async function saveReturnItem() {
     }
   }
 
+  // Save return record
   const returnData = {
     req_id: reqId, ref_no: refNo,
     patient_id: req.patientId, patient_name: req.patientName,
@@ -548,6 +583,7 @@ async function saveReturnItem() {
   closeModal('modal-return-item');
   renderReturnsTab();
 }
+
 
 function renderReturnsTab() {
   const container = document.getElementById('returns-list');
@@ -599,6 +635,7 @@ async function renderHistory() {
   const title = document.getElementById('histTableTitle');
   if(tb) tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text3);">⏳ กำลังโหลด...</td></tr>';
 
+  // Build Supabase query with server-side filters
   let q = supa.from('requisition_headers').select('*, requisition_lines(*)').order('id', {ascending:false}).limit(500);
 
   if (monthFilter) {
@@ -607,6 +644,7 @@ async function renderHistory() {
     const lastDay  = new Date(parseInt(y), parseInt(m), 0).toISOString().split('T')[0];
     q = q.gte('date', firstDay).lte('date', lastDay);
   } else {
+    // Default: last 90 days
     const cutoff = new Date(Date.now()-90*86400000).toISOString().split('T')[0];
     q = q.gte('date', cutoff);
   }
@@ -618,16 +656,27 @@ async function renderHistory() {
   if (error) { if(tb) tb.innerHTML=`<tr><td colspan="9" style="text-align:center;color:#e74c3c;">เกิดข้อผิดพลาด: ${error.message}</td></tr>`; return; }
 
   let reqs = (data||[]).map(mapReq);
+  // caregiver / staff role sees only their own records
+  // match ด้วยหลายวิธีเพราะ staff ที่เลือกใน dropdown อาจไม่ตรงกับ displayName ของ user
   if (!canSeeAllHistory() && currentUser) {
-    reqs = reqs.filter(r => r.staffName === currentUser.displayName);
+    const myNames = [
+      currentUser.displayName,
+      currentUser.username,
+    ].filter(Boolean).map(n => n.toLowerCase());
+    reqs = reqs.filter(r =>
+      myNames.includes((r.staffName||'').toLowerCase()) ||
+      myNames.includes((r.createdBy||'').toLowerCase())
+    );
   }
   if (search) reqs = reqs.filter(r =>
     r.itemName.toLowerCase().includes(search) ||
     r.patientName.toLowerCase().includes(search) ||
     r.staffName.toLowerCase().includes(search));
 
+  // Sync recent records back to db.requisitions (for approval panel etc.)
   reqs.forEach(r => { if(!db.requisitions.find(x=>x.id===r.id)) db.requisitions.unshift(r); });
 
+  // Summary strip
   if (reqs.length > 0) {
     const totalQty = reqs.reduce((s,r) => s + (r.qty||0), 0);
     const uniqueItems = new Set(reqs.map(r => r.itemName)).size;
@@ -714,7 +763,13 @@ async function getFilteredReqs() {
 
   const {data} = await q;
   let reqs = (data||[]).map(mapReq);
-  if (!canSeeAllHistory() && currentUser) reqs = reqs.filter(r => r.staffName === currentUser.displayName);
+  if (!canSeeAllHistory() && currentUser) {
+    const myNames = [currentUser.displayName, currentUser.username].filter(Boolean).map(n => n.toLowerCase());
+    reqs = reqs.filter(r =>
+      myNames.includes((r.staffName||'').toLowerCase()) ||
+      myNames.includes((r.createdBy||'').toLowerCase())
+    );
+  }
   return reqs;
 }
 
@@ -736,6 +791,7 @@ function switchReportTab(tab) {
 
 async function renderReport() {
   populateReportFilters();
+  // Show loading
   ['summary','bypatient','byitem','bystaff'].forEach(t => {
     const el = document.getElementById('report-'+t);
     if(el && el.style.display!=='none') el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3);">⏳ กำลังโหลด...</div>';
@@ -745,6 +801,7 @@ async function renderReport() {
   const patFilter   = document.getElementById('reportPatient')?.value || '';
   const staffFilter = document.getElementById('reportStaff')?.value   || '';
 
+  // Summary strip
   const strip = document.getElementById('reportSummaryStrip');
   if (strip && reqs.length > 0) {
     const totalQty    = reqs.reduce((s,r) => s + (r.qty||0), 0);
@@ -837,8 +894,11 @@ async function renderReport() {
 }
 
 // ===== REQUISITION FORM (printable) =====
+
+// Render a single requisition as a printable form and navigate to it
 function openReqForm(reqId) {
   const group = db.reqGroups ? db.reqGroups.find(g => g.id === reqId) : null;
+  // Fallback: build from individual requisitions with same id
   const reqs = group
     ? group.items.map(ri => ({ ...ri, patientName: group.patientName, staffName: group.staffName, date: group.date, note: group.note, status: group.status, refNo: group.refNo }))
     : db.requisitions.filter(r => r.groupId === reqId || r.id === reqId);
@@ -865,12 +925,15 @@ function renderReqForm({ reqs, first, group }) {
   const approvedDate = group?.approvedAt  ? group.approvedAt.split('T')[0]  : (first.approvedAt ? first.approvedAt.split('T')[0] : '');
   const printDate = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
 
+  // Format Thai date
   const thDate = (d) => {
     if (!d) return '...............';
-    try { return new Date(d).toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }); }
-    catch(e) { return d; }
+    try {
+      return new Date(d).toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+    } catch(e) { return d; }
   };
 
+  // Workflow step states
   const wfMap = { pending:1, forward:2, approved:3, rejected:3 };
   const currentStep = wfMap[status] || 1;
   const wfSteps = [
@@ -883,6 +946,7 @@ function renderReqForm({ reqs, first, group }) {
   const padRows = Math.max(0, minRows - reqs.length);
 
   document.getElementById('reqFormContent').innerHTML = `
+    <!-- == HEADER == -->
     <div class="rq-print-header">
       <div style="display:flex;align-items:center;gap:14px;">
         <img src="img/logo.png" alt="Navasri Logo" style="width:70px;height:70px;object-fit:contain;border-radius:8px;background:#e8f4ee;padding:6px;flex-shrink:0;border:1px solid #cce8d8;">
@@ -899,21 +963,33 @@ function renderReqForm({ reqs, first, group }) {
         <div style="font-size:10px;color:#888;margin-top:5px;">พิมพ์: ${printDate}</div>
       </div>
     </div>
+
+    <!-- == DOC INFO == -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #ccc;border-radius:4px;margin:10px 0;font-size:12.5px;overflow:hidden;">
-      <div style="padding:7px 12px;border-right:1px solid #ccc;border-bottom:1px solid #ccc;"><span style="color:#666;">เลขที่ใบเบิก:</span> <strong style="font-family:monospace;">${refNo}</strong></div>
-      <div style="padding:7px 12px;border-bottom:1px solid #ccc;"><span style="color:#666;">วันที่:</span> <strong>${thDate(date)}</strong></div>
-      <div style="padding:7px 12px;border-right:1px solid #ccc;"><span style="color:#666;">ผู้รับบริการ:</span> <strong>${patient}</strong></div>
-      <div style="padding:7px 12px;"><span style="color:#666;">ผู้เบิก:</span> <strong>${staffName}</strong></div>
+      <div style="padding:7px 12px;border-right:1px solid #ccc;border-bottom:1px solid #ccc;">
+        <span style="color:#666;">เลขที่ใบเบิก:</span> <strong style="font-family:monospace;">${refNo}</strong>
+      </div>
+      <div style="padding:7px 12px;border-bottom:1px solid #ccc;">
+        <span style="color:#666;">วันที่:</span> <strong>${thDate(date)}</strong>
+      </div>
+      <div style="padding:7px 12px;border-right:1px solid #ccc;">
+        <span style="color:#666;">ผู้รับบริการ:</span> <strong>${patient}</strong>
+      </div>
+      <div style="padding:7px 12px;">
+        <span style="color:#666;">ผู้เบิก:</span> <strong>${staffName}</strong>
+      </div>
     </div>
+
+    <!-- == WORKFLOW TIMELINE == -->
     <div style="border:1px solid #e0e0e0;border-radius:4px;padding:10px 16px;margin:10px 0;background:#fafafa;">
       <div style="font-size:10px;color:#888;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">สถานะ Workflow</div>
       <div class="rq-timeline">
         ${wfSteps.map((s,i) => {
-          const done = i+1 < currentStep;
+          const done   = i+1 < currentStep;
           const active = i+1 === currentStep;
-          const rej = status === 'rejected' && i+1 === currentStep;
+          const rej    = status === 'rejected' && i+1 === currentStep;
           const circleClass = rej ? 'active' : done ? 'done' : active ? 'active' : '';
-          const circleText = done ? '✓' : rej ? '✕' : (i+1);
+          const circleText  = done ? '✓' : rej ? '✕' : (i+1);
           return `<div class="rq-tl-step">
             <div style="display:flex;flex-direction:column;align-items:center;">
               <div class="rq-tl-circle ${circleClass}" style="${rej?'background:#c0392b;border-color:#c0392b;':''}">${circleText}</div>
@@ -924,16 +1000,20 @@ function renderReqForm({ reqs, first, group }) {
         }).join('')}
       </div>
     </div>
+
+    <!-- == ITEMS TABLE == -->
     <table class="rq-table">
-      <thead><tr>
-        <th style="width:34px;">ลำดับ</th>
-        <th style="text-align:left;">รายการสินค้า / ยา / เวชภัณฑ์</th>
-        <th style="width:72px;">จำนวนขอ</th>
-        <th style="width:52px;">หน่วย</th>
-        <th style="width:72px;">จำนวนจ่าย</th>
-        <th style="width:52px;">หน่วย</th>
-        <th style="width:80px;">หมายเหตุ</th>
-      </tr></thead>
+      <thead>
+        <tr>
+          <th style="width:34px;">ลำดับ</th>
+          <th style="text-align:left;">รายการสินค้า / ยา / เวชภัณฑ์</th>
+          <th style="width:72px;">จำนวนขอ</th>
+          <th style="width:52px;">หน่วย</th>
+          <th style="width:72px;">จำนวนจ่าย</th>
+          <th style="width:52px;">หน่วย</th>
+          <th style="width:80px;">หมายเหตุ</th>
+        </tr>
+      </thead>
       <tbody>
         ${reqs.map((r,i) => `<tr>
           <td class="center" style="color:#555;">${i+1}</td>
@@ -950,10 +1030,14 @@ function renderReqForm({ reqs, first, group }) {
         </tr>`).join('')}
       </tbody>
     </table>
+
+    <!-- == NOTE == -->
     <div style="margin-top:8px;font-size:12px;">
       <strong>หมายเหตุ / Note:</strong>
       <div class="rq-note-box">${note || '&nbsp;'}</div>
     </div>
+
+    <!-- == SIGNATURES == -->
     <div class="rq-sign-row" style="margin-top:20px;">
       <div class="rq-sign-box">
         <div class="rq-sign-line"></div>
@@ -978,6 +1062,8 @@ function renderReqForm({ reqs, first, group }) {
         </div>
       </div>
     </div>
+
+    <!-- == FOOTER == -->
     <div style="margin-top:18px;padding-top:8px;border-top:1px dashed #ccc;display:flex;justify-content:space-between;font-size:10px;color:#aaa;">
       <span>เอกสารสร้างโดยระบบบริหารสต็อก นวศรี เนอร์สซิ่งโฮม</span>
       <span>${refNo} · ${new Date().toLocaleString('th-TH')}</span>
@@ -989,10 +1075,16 @@ function printReqForm() {
   const content = document.getElementById('reqFormContent').innerHTML;
   const printWin = window.open('', '_blank', 'width=900,height=700');
   printWin.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"><title>ใบเบิกสินค้า</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'IBM Plex Sans Thai', sans-serif; background: white; padding: 18mm; } ${getReqPrintCSS()}</style>
-  </head><body>${content}</body></html>`);
+    <meta charset="UTF-8">
+    <title>ใบเบิกสินค้า</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'IBM Plex Sans Thai', sans-serif; background: white; padding: 18mm; }
+      ${getReqPrintCSS()}
+    </style>
+  </head><body>${content}
+</body></html>`);
   printWin.document.close();
   printWin.onload = () => { printWin.focus(); printWin.print(); };
 }
@@ -1002,24 +1094,39 @@ async function exportReqPDF() {
   const spinner = document.getElementById('pdfSpinner');
   btn.disabled = true;
   spinner.style.display = 'inline';
+
   try {
     const el = document.getElementById('reqFormContent');
+    // Temporarily fix width for capture
     const origStyle = el.style.cssText;
-    el.style.width = '794px';
+    el.style.width = '794px'; // A4 width at 96dpi
     el.style.maxWidth = '794px';
-    const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 900 });
+
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: 900,
+    });
+
     el.style.cssText = origStyle;
+
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
     const margin = 10;
     const imgW = pageW - margin * 2;
     const imgH = (canvas.height * imgW) / canvas.width;
+
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
     if (imgH <= pageH - margin * 2) {
       pdf.addImage(imgData, 'JPEG', margin, margin, imgW, imgH);
     } else {
+      // Multi-page: slice canvas
       const pageImgH = pageH - margin * 2;
       const canvasPageH = (pageImgH * canvas.width) / imgW;
       let y = 0;
@@ -1027,7 +1134,8 @@ async function exportReqPDF() {
         if (y > 0) pdf.addPage();
         const sliceH = Math.min(canvasPageH, canvas.height - y);
         const sliceCanvas = document.createElement('canvas');
-        sliceCanvas.width = canvas.width; sliceCanvas.height = sliceH;
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceH;
         sliceCanvas.getContext('2d').drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
         const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
         const sliceImgH = (sliceH * imgW) / canvas.width;
@@ -1035,18 +1143,23 @@ async function exportReqPDF() {
         y += canvasPageH;
       }
     }
+
+    // Get refNo for filename
     const refEl = document.getElementById('reqFormPageTitle');
     const refNo = refEl ? refEl.textContent.replace('ใบเบิกสินค้า — ', '').trim() : 'REQ';
     pdf.save(`ใบเบิก_${refNo}_${new Date().toISOString().split('T')[0]}.pdf`);
     toast('✅ Export PDF สำเร็จ', 'success');
   } catch(e) {
+    console.error(e);
     toast('❌ Export PDF ผิดพลาด: ' + e.message, 'error');
   }
+
   btn.disabled = false;
   spinner.style.display = 'none';
 }
 
 function getReqPrintCSS() {
+  // Extract .rq-* CSS from the main stylesheet for the print window
   const sheets = Array.from(document.styleSheets);
   let css = '';
   try {
@@ -1087,15 +1200,22 @@ function getReqPrintCSS() {
 }
 
 function exportRequisitionExcel() {
-  const rows = [['#', 'วันที่', 'เลขอ้างอิง', 'ผู้รับบริการ', 'สินค้า', 'จำนวน', 'หน่วย', 'ผู้เบิก', 'สถานะ', 'หมายเหตุ']];
+  const rows = [
+    ['#', 'วันที่', 'เลขอ้างอิง', 'ผู้รับบริการ', 'สินค้า', 'จำนวน', 'หน่วย', 'ผู้เบิก', 'สถานะ', 'หมายเหตุ']
+  ];
   db.requisitions.forEach((r, i) => {
     const statusLabel = r.status === 'approved' ? 'อนุมัติแล้ว' : r.status === 'rejected' ? 'ไม่อนุมัติ' : 'รออนุมัติ';
-    rows.push([i+1, r.date || '', r.refNo || r.id || '', r.patientName || '', r.itemName || '', r.qty || 0, r.unit || '', r.staffName || '', statusLabel, r.note || '']);
+    rows.push([
+      i+1, r.date || '', r.refNo || r.id || '',
+      r.patientName || '', r.itemName || '',
+      r.qty || 0, r.unit || '',
+      r.staffName || '', statusLabel, r.note || ''
+    ]);
   });
   _xlsxDownload(rows, 'ใบเบิกสินค้า', 'navasri_requisitions_' + new Date().toISOString().slice(0,10));
 }
 
-// ===== BARCODE SCAN =====
+// ===== BARCODE SCAN FOR REQUISITION =====
 function onReqBarcodeScan() {
   const el = document.getElementById('req-barcode-scan');
   if (!el) return;
@@ -1116,6 +1236,7 @@ function onReqBarcodeScan() {
 }
 
 function addReqItemByBarcode(item) {
+  // ตรวจว่ามีในรายการแล้วไหม
   const existing = reqItems.find(r => r.itemId === item.id);
   if (existing) {
     existing.qty = (existing.qty || 1) + 1;
@@ -1128,7 +1249,7 @@ function addReqItemByBarcode(item) {
   toast(`เพิ่ม ${item.name} ✅`, 'success');
 }
 
-// ===== COST ANALYSIS REPORT =====
+// ===== COST ANALYSIS REPORT (Phase 4) =====
 function renderCostReport() {
   const monthFilter = document.getElementById('reportMonth')?.value || '';
   const reqs = (db.requisitions || []).filter(r => {
@@ -1137,6 +1258,7 @@ function renderCostReport() {
     return true;
   });
 
+  // ── Cost by patient ──────────────────────────────────────
   const byPatEl = document.getElementById('cost-bypatient');
   if (byPatEl) {
     const patMap = {};
@@ -1150,14 +1272,21 @@ function renderCostReport() {
       else          patMap[r.patientId].nonBill += amt;
     });
     const sorted = Object.entries(patMap).sort((a,b) => (b[1].bill+b[1].nonBill) - (a[1].bill+a[1].nonBill));
-    byPatEl.innerHTML = sorted.length === 0
-      ? '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text3);">ไม่มีข้อมูล</td></tr>'
-      : sorted.map(([, d]) => {
-          const total = d.bill + d.nonBill;
-          return `<tr><td style="font-weight:500;">${d.name}</td><td style="text-align:right;color:var(--green);">฿${d.bill.toLocaleString()}</td><td style="text-align:right;color:var(--text2);">฿${d.nonBill.toLocaleString()}</td><td style="text-align:right;font-weight:600;">฿${total.toLocaleString()}</td></tr>`;
-        }).join('');
+    if (sorted.length === 0) {
+      byPatEl.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text3);">ไม่มีข้อมูล</td></tr>';
+    } else {
+      byPatEl.innerHTML = sorted.map(([, d]) => {
+        const total = d.bill + d.nonBill;
+        return '<tr>' +
+          '<td style="font-weight:500;">' + d.name + '</td>' +
+          '<td style="text-align:right;color:var(--green);">฿' + d.bill.toLocaleString() + '</td>' +
+          '<td style="text-align:right;color:var(--text2);">฿' + d.nonBill.toLocaleString() + '</td>' +
+          '<td style="text-align:right;font-weight:600;">฿' + total.toLocaleString() + '</td></tr>';
+      }).join('');
+    }
   }
 
+  // ── Top items ────────────────────────────────────────────
   const topEl = document.getElementById('cost-topitems');
   if (topEl) {
     const itemMap = {};
@@ -1169,11 +1298,18 @@ function renderCostReport() {
       itemMap[r.itemId].value += (r.qty || 0) * price;
     });
     const sorted = Object.entries(itemMap).sort((a,b) => b[1].value - a[1].value).slice(0, 10);
-    topEl.innerHTML = sorted.length === 0
-      ? '<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--text3);">ไม่มีข้อมูล</td></tr>'
-      : sorted.map(([, d]) => `<tr><td style="font-weight:500;">${d.name}</td><td style="text-align:right;">${d.qty.toLocaleString()}</td><td style="text-align:right;font-weight:600;">฿${d.value.toLocaleString()}</td></tr>`).join('');
+    if (sorted.length === 0) {
+      topEl.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:16px;color:var(--text3);">ไม่มีข้อมูล</td></tr>';
+    } else {
+      topEl.innerHTML = sorted.map(([, d]) =>
+        '<tr><td style="font-weight:500;">' + d.name + '</td>' +
+        '<td style="text-align:right;">' + d.qty.toLocaleString() + '</td>' +
+        '<td style="text-align:right;font-weight:600;">฿' + d.value.toLocaleString() + '</td></tr>'
+      ).join('');
+    }
   }
 
+  // ── Billable vs Non-billable summary ─────────────────────
   const billEl = document.getElementById('cost-billable-summary');
   if (billEl) {
     let billAmt = 0, nonBillAmt = 0;
@@ -1185,11 +1321,25 @@ function renderCostReport() {
       else nonBillAmt += amt;
     });
     const total = billAmt + nonBillAmt;
-    const billPct = total > 0 ? Math.round(billAmt / total * 100) : 0;
-    billEl.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
-      <div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;"><div style="font-size:11px;color:var(--text3);">💰 Billable</div><div style="font-size:22px;font-weight:600;color:var(--green);">฿${billAmt.toLocaleString()}</div><div style="font-size:12px;color:var(--text2);">${billPct}%</div></div>
-      <div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;"><div style="font-size:11px;color:var(--text3);">🏥 Non-Billable</div><div style="font-size:22px;font-weight:600;color:var(--text2);">฿${nonBillAmt.toLocaleString()}</div><div style="font-size:12px;color:var(--text2);">${100-billPct}%</div></div>
-      <div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;"><div style="font-size:11px;color:var(--text3);">รวมทั้งหมด</div><div style="font-size:22px;font-weight:600;">฿${total.toLocaleString()}</div><div style="font-size:12px;color:var(--text2);">${reqs.length} รายการ</div></div>
-    </div>`;
+    const billPct    = total > 0 ? Math.round(billAmt / total * 100) : 0;
+    const nonBillPct = 100 - billPct;
+    billEl.innerHTML =
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">' +
+        '<div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;">' +
+          '<div style="font-size:11px;color:var(--text3);">💰 Billable</div>' +
+          '<div style="font-size:22px;font-weight:600;color:var(--green);">฿' + billAmt.toLocaleString() + '</div>' +
+          '<div style="font-size:12px;color:var(--text2);">' + billPct + '%</div>' +
+        '</div>' +
+        '<div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;">' +
+          '<div style="font-size:11px;color:var(--text3);">🏥 Non-Billable</div>' +
+          '<div style="font-size:22px;font-weight:600;color:var(--text2);">฿' + nonBillAmt.toLocaleString() + '</div>' +
+          '<div style="font-size:12px;color:var(--text2);">' + nonBillPct + '%</div>' +
+        '</div>' +
+        '<div style="background:var(--surface2);border-radius:8px;padding:14px;text-align:center;">' +
+          '<div style="font-size:11px;color:var(--text3);">รวมทั้งหมด</div>' +
+          '<div style="font-size:22px;font-weight:600;">฿' + total.toLocaleString() + '</div>' +
+          '<div style="font-size:12px;color:var(--text2);">' + reqs.length + ' รายการ</div>' +
+        '</div>' +
+      '</div>';
   }
 }

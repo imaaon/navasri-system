@@ -83,7 +83,8 @@ async function saveAppt() {
     created_by: actor,
   };
   if (_apptEditId) {
-    await supa.from('patient_appointments').update(row).eq('id',_apptEditId);
+    const { error } = await supa.from('patient_appointments').update(row).eq('id',_apptEditId);
+    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
     const idx = db.appointments.findIndex(a=>a.id==_apptEditId);
     if(idx>=0) db.appointments[idx] = mapAppointment({id:_apptEditId,...Object.fromEntries(Object.entries(row).map(([k,v])=>[k,v]))});
     toast('บันทึกนัดหมายเรียบร้อย','success');
@@ -105,7 +106,8 @@ async function saveAppt() {
 }
 
 async function markApptDone(id) {
-  await supa.from('patient_appointments').update({status:'done'}).eq('id',id);
+  const { error } = await supa.from('patient_appointments').update({status:'done'}).eq('id',id);
+  if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
   const a = db.appointments.find(x=>x.id==id);
   if(a) { a.status='done'; const el=document.getElementById('appt-list-'+a.patientId); if(el) el.innerHTML=renderApptList(a.patientId); }
   toast('✅ บันทึกเสร็จสิ้นแล้ว','success');
@@ -114,7 +116,8 @@ async function markApptDone(id) {
 
 async function deleteAppt(id, patientId) {
   if(!confirm('ลบนัดหมายนี้?')) return;
-  await supa.from('patient_appointments').delete().eq('id',id);
+  const { error } = await supa.from('patient_appointments').delete().eq('id',id);
+  if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.appointments = db.appointments.filter(a=>a.id!=id);
   const el=document.getElementById('appt-list-'+patientId); if(el) el.innerHTML=renderApptList(patientId);
   toast('ลบนัดหมายแล้ว','success');

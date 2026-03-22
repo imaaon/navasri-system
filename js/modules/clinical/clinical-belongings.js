@@ -123,7 +123,8 @@ async function saveBelonging() {
 async function returnBelonging(id, patientId) {
   const returnedBy = currentUser?.displayName || currentUser?.username || '';
   const dateOut = new Date().toISOString().split('T')[0];
-  await supa.from('patient_belongings').update({status:'returned', date_out:dateOut, returned_by:returnedBy}).eq('id',id);
+  const { error } = await supa.from('patient_belongings').update({status:'returned', date_out:dateOut, returned_by:returnedBy}).eq('id',id);
+  if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
   const b = db.belongings.find(x=>x.id==id);
   if(b){b.status='returned';b.dateOut=dateOut;b.returnedBy=returnedBy;}
   const el=document.getElementById('belonging-list-'+patientId);
@@ -133,7 +134,8 @@ async function returnBelonging(id, patientId) {
 
 async function deleteBelonging(id, patientId) {
   if(!confirm('ลบรายการนี้?')) return;
-  await supa.from('patient_belongings').delete().eq('id',id);
+  const { error } = await supa.from('patient_belongings').delete().eq('id',id);
+  if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.belongings = db.belongings.filter(b=>b.id!=id);
   const el=document.getElementById('belonging-list-'+patientId); if(el) el.innerHTML=renderBelongingList(patientId);
   toast('ลบแล้ว','success');

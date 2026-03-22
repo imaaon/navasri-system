@@ -63,13 +63,13 @@ function updateLineBanner() {
 }
 
 async function sendLineNotify(event, messageText, data = {}) {
+  // Guard: ต้องมี lineSettings และ enabled
+  if (!db?.lineSettings?.enabled) return;
   const s = db.lineSettings;
-  if (!s.enabled) return;
-  // ถ้ามี webhookUrl ใน settings → ใช้ Edge Function เป็น proxy (ปลอดภัย ไม่มี CORS)
-  // Edge Function URL: https://umueucsxowjaurlaubwa.supabase.co/functions/v1/line-notify
+
   const EDGE_URL = 'https://umueucsxowjaurlaubwa.supabase.co/functions/v1/line-notify';
 
-  // Check if this event type is enabled
+  // เช็ค event-level flag
   const eventMap = {
     new_requisition: 'notifyNewReq',
     forward_requisition: 'notifyForward',
@@ -80,12 +80,11 @@ async function sendLineNotify(event, messageText, data = {}) {
   if (eventMap[event] && !s[eventMap[event]]) return;
 
   const payload = { event, message: messageText, data, timestamp: new Date().toISOString() };
-  const logEntry = { time: new Date().toLocaleTimeString('th-TH'), event, status: 'กำลังส่ง...', msg: messageText.split('\n')[0] };
+  const logEntry = { time: new Date().toLocaleTimeString('th-TH'), event, status: 'กำลังส่ง...', msg: (messageText||'').split('\n')[0] };
   lineLog.unshift(logEntry);
   renderLineLog();
 
   try {
-    // ส่งผ่าน Edge Function (Webhook URL เก็บใน Supabase Secret ฝั่ง server)
     const res = await fetch(EDGE_URL, {
       method: 'POST',
       headers: {
@@ -96,50 +95,24 @@ async function sendLineNotify(event, messageText, data = {}) {
     });
 
     if (res.ok) {
-      logEntry.status = '✅ ส่งสำเร็จ';
-      toast('📨 ส่ง Line แจ้งเตือนสำเร็จ', 'success');
+      const result = await res.json().catch(() => ({}));
+      // เช็ค LINE API response จาก Edge Function
+      if (result.push_status && result.push_status !== 200) {
+        logEntry.status = `⚠️ Edge OK แต่ LINE ตอบ ${result.push_status}: ${result.push_response||''}`;
+        console.warn('[LINE] Edge Function OK but LINE API returned:', result);
+      } else {
+        logEntry.status = '✅ ส่งสำเร็จ';
+      }
     } else {
-      const err = await res.json().catch(() => ({}));
-      logEntry.status = `❌ ผิดพลาด (${res.status})`;
-      // fallback: ถ้า Edge Function ยังไม่ได้ deploy → ลองส่งตรง
-      if (s.webhookUrl) await _sendLineDirectFallback(payload, logEntry);
+      const errBody = await res.json().catch(() => ({}));
+      logEntry.status = `❌ Edge Function ตอบ ${res.status}: ${errBody.error||''}`;
+      console.error('[LINE] Edge Function error:', res.status, errBody);
     }
   } catch(e) {
-    // fallback ถ้า Edge Function ยังไม่ deploy
-    if (s.webhookUrl) {
-      await _sendLineDirectFallback(payload, logEntry);
-    } else {
-      logEntry.status = '❌ ' + e.message;
-      toast('❌ Line: ' + e.message, 'warning');
-    }
+    logEntry.status = '❌ Network error: ' + e.message;
+    console.error('[LINE] fetch failed:', e);
   }
   renderLineLog();
-}
-
-// Fallback: ส่งตรง (ใช้ระหว่างรอ deploy Edge Function)
-async function _sendLineDirectFallback(payload, logEntry) {
-  const s = db.lineSettings;
-  if (!s.webhookUrl) return;
-  try {
-    const res = await fetch(s.webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
-      logEntry.status = '✅ ส่งสำเร็จ (direct)';
-      toast('📨 ส่ง Line สำเร็จ', 'success');
-    } else {
-      logEntry.status = '❌ ผิดพลาด (' + res.status + ')';
-    }
-  } catch(e) {
-    if (e.message?.includes('Failed to fetch')) {
-      logEntry.status = '⚠️ CORS (ปกติสำหรับ browser) — Webhook ได้รับแล้ว';
-      toast('📨 ส่ง Line แล้ว (CORS ไม่ส่งผลต่อ webhook)', 'success');
-    } else {
-      logEntry.status = '❌ ' + e.message;
-    }
-  }
 }
 
 function renderLineLog() {

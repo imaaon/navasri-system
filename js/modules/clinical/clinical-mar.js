@@ -175,7 +175,8 @@ async function saveMAREntry() {
 
 async function deleteMAREntry(pid, patientId, id) {
   if(!confirm('ลบรายการนี้?')) return;
-  await supa.from('mar_records').delete().eq('id', id);
+  const { error } = await supa.from('mar_records').delete().eq('id', id);
+  if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.marRecords[pid] = (db.marRecords[pid]||[]).filter(r=>r.id!=id);
   toast('ลบแล้ว');
   document.getElementById('patprofile-tab-mar').innerHTML = renderMARTab(pid, patientId);

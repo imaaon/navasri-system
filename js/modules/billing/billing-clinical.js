@@ -87,12 +87,14 @@ async function saveIncident() {
   };
   const editId = document.getElementById('incident-edit-id').value;
   if (editId) {
-    if (supa) await supa.from('incident_reports').update(row).eq('id', editId);
+    const { error } = await supa.from('incident_reports').update(row).eq('id', editId);
+    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
     const idx = (db.incidents||[]).findIndex(x=>x.id==editId);
     if (idx>=0) db.incidents[idx] = {...db.incidents[idx], ...mapIncident({id:editId,...row})};
   } else {
-    if (supa) { const {data} = await supa.from('incident_reports').insert(row).select().single(); if(data){if(!db.incidents)db.incidents=[];db.incidents.unshift(mapIncident(data));} }
-    else { if(!db.incidents)db.incidents=[]; db.incidents.unshift(mapIncident({id:Date.now(),...row})); }
+    const { data, error } = await supa.from('incident_reports').insert(row).select().single();
+    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+    if (data) { if(!db.incidents) db.incidents=[]; db.incidents.unshift(mapIncident(data)); }
   }
   closeModal('modal-incident');
   renderIncidentPage();
@@ -111,7 +113,8 @@ function mapIncident(r) {
 
 async function deleteIncident(id) {
   if (!confirm('ลบรายงานอุบัติเหตุนี้?')) return;
-  if (supa) await supa.from('incident_reports').delete().eq('id', id);
+  const { error } = await supa.from('incident_reports').delete().eq('id', id);
+  if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.incidents = (db.incidents||[]).filter(x=>x.id!=id);
   renderIncidentPage(); toast('ลบแล้ว','success');
 }
@@ -209,17 +212,14 @@ async function saveWound() {
     photo_url: row.photo_url,
   };
   if (editId) {
-    if (supa) await supa.from('patient_wounds').update(woundRow).eq('id', editId);
+    const { error } = await supa.from('patient_wounds').update(woundRow).eq('id', editId);
+    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
     const idx = (db.wounds||[]).findIndex(x=>x.id==editId);
     if (idx>=0) db.wounds[idx] = {...db.wounds[idx], ...mapWound({id:editId,...woundRow})};
   } else {
-    if (supa) {
-      const {data} = await supa.from('patient_wounds').insert(woundRow).select().single();
-      if(data) { if(!db.wounds) db.wounds=[]; db.wounds.unshift(mapWound(data)); }
-    } else {
-      if(!db.wounds) db.wounds=[];
-      db.wounds.unshift(mapWound({id:Date.now(),...row}));
-    }
+    const { data, error } = await supa.from('patient_wounds').insert(woundRow).select().single();
+    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+    if (data) { if(!db.wounds) db.wounds=[]; db.wounds.unshift(mapWound(data)); }
   }
   closeModal('modal-wound');
   renderIncidentPage();
@@ -280,7 +280,8 @@ function showPhotoModal(url) {
 
 async function deleteWound(id) {
   if (!confirm('ลบบันทึกแผลนี้?')) return;
-  if (supa) await supa.from('patient_wounds').delete().eq('id', id);
+  const { error } = await supa.from('patient_wounds').delete().eq('id', id);
+  if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.wounds = (db.wounds||[]).filter(x=>x.id!=id);
   renderIncidentPage(); toast('ลบแล้ว','success');
 }
@@ -398,13 +399,15 @@ async function saveDiet() {
   };
   const editId = document.getElementById('diet-edit-id').value;
   if (editId) {
-    if (supa) await supa.from('patient_diets').update(row).eq('id', editId);
+    const { error } = await supa.from('patient_diets').update(row).eq('id', editId);
+    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
     const idx = (db.diets||[]).findIndex(x=>x.id==editId);
     if (idx>=0) db.diets[idx] = mapDiet({id:editId,...row});
   } else {
     row.created_at = new Date().toISOString();
-    if (supa) { const {data} = await supa.from('patient_diets').insert(row).select().single(); if(data){if(!db.diets)db.diets=[];db.diets.unshift(mapDiet(data));} }
-    else { if(!db.diets)db.diets=[]; db.diets.unshift(mapDiet({id:Date.now(),...row})); }
+    const { data, error } = await supa.from('patient_diets').insert(row).select().single();
+    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+    if (data) { if(!db.diets) db.diets=[]; db.diets.unshift(mapDiet(data)); }
   }
   closeModal('modal-diet');
   renderDietaryPage();
@@ -423,7 +426,8 @@ function mapDiet(r) {
 
 async function deleteDiet(id) {
   if (!confirm('ลบแผนอาหารนี้?')) return;
-  if (supa) await supa.from('patient_diets').delete().eq('id', id);
+  const { error } = await supa.from('patient_diets').delete().eq('id', id);
+  if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.diets = (db.diets||[]).filter(x=>x.id!=id);
   renderDietaryPage(); toast('ลบแล้ว','success');
 }
@@ -476,12 +480,14 @@ async function saveTubeFeed() {
   };
   const editId = document.getElementById('tubefeed-edit-id').value;
   if (editId) {
-    if (supa) await supa.from('tube_feedings').update(row).eq('id', editId);
+    const { error } = await supa.from('tube_feedings').update(row).eq('id', editId);
+    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
     const idx = (db.tubeFeeds||[]).findIndex(x=>x.id==editId);
     if (idx>=0) db.tubeFeeds[idx] = mapTubeFeed({id:editId,...row});
   } else {
-    if (supa) { const {data} = await supa.from('tube_feedings').insert(row).select().single(); if(data){if(!db.tubeFeeds)db.tubeFeeds=[];db.tubeFeeds.unshift(mapTubeFeed(data));} }
-    else { if(!db.tubeFeeds)db.tubeFeeds=[]; db.tubeFeeds.unshift(mapTubeFeed({id:Date.now(),...row})); }
+    const { data, error } = await supa.from('tube_feedings').insert(row).select().single();
+    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+    if (data) { if(!db.tubeFeeds) db.tubeFeeds=[]; db.tubeFeeds.unshift(mapTubeFeed(data)); }
   }
   closeModal('modal-tubefeed');
   renderTubeFeedTable();
@@ -494,7 +500,8 @@ function mapTubeFeed(r) {
 
 async function deleteTubeFeed(id) {
   if (!confirm('ลบบันทึกนี้?')) return;
-  if (supa) await supa.from('tube_feedings').delete().eq('id', id);
+  const { error } = await supa.from('tube_feedings').delete().eq('id', id);
+  if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.tubeFeeds = (db.tubeFeeds||[]).filter(x=>x.id!=id);
   renderTubeFeedTable(); toast('ลบแล้ว','success');
 }
@@ -622,12 +629,14 @@ async function saveDeposit() {
   };
   const editId = document.getElementById('deposit-edit-id').value;
   if (editId) {
-    if (supa) await supa.from('patient_deposits').update(row).eq('id', editId);
+    const { error } = await supa.from('patient_deposits').update(row).eq('id', editId);
+    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
     const idx = (db.deposits||[]).findIndex(x=>x.id==editId);
     if (idx>=0) db.deposits[idx] = mapDeposit({id:editId,...row});
   } else {
-    if (supa) { const {data} = await supa.from('patient_deposits').insert(row).select().single(); if(data){if(!db.deposits)db.deposits=[];db.deposits.unshift(mapDeposit(data));} }
-    else { if(!db.deposits)db.deposits=[]; db.deposits.unshift(mapDeposit({id:Date.now(),...row})); }
+    const { data, error } = await supa.from('patient_deposits').insert(row).select().single();
+    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+    if (data) { if(!db.deposits) db.deposits=[]; db.deposits.unshift(mapDeposit(data)); }
   }
   closeModal('modal-deposit');
   renderDeposits();
@@ -640,7 +649,8 @@ function mapDeposit(r) {
 
 async function deleteDeposit(id) {
   if (!confirm('ลบรายการมัดจำนี้?')) return;
-  if (supa) await supa.from('patient_deposits').delete().eq('id', id);
+  const { error } = await supa.from('patient_deposits').delete().eq('id', id);
+  if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.deposits = (db.deposits||[]).filter(x=>x.id!=id);
   renderDeposits(); toast('ลบแล้ว','success');
 }
