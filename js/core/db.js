@@ -341,7 +341,10 @@ function mapAppointment(r) {
     apptDate: r.appt_date||'', apptTime: r.appt_time||'',
     hospital: r.hospital||'', department: r.department||'', doctor: r.doctor||'',
     purpose: r.purpose||'', preparation: r.preparation||'',
+    preparations: Array.isArray(r.preparations) ? r.preparations : [],
     transport: r.transport||'รถคลินิก', transportNote: r.transport_note||'',
+    companion: r.companion||'', departTime: r.depart_time||'',
+    cardPhotoUrl: r.card_photo_url||'',
     status: r.status||'upcoming', note: r.note||'',
     createdBy: r.created_by||'', createdAt: r.created_at||''
   };

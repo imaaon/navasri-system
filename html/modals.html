@@ -429,26 +429,32 @@
 
 <!-- Appointment Modal -->
 <div class="modal-overlay" id="modal-appt">
-  <div class="modal" style="max-width:580px;">
+  <div class="modal" style="max-width:620px;">
     <div class="modal-header">
       <div class="modal-title" id="modal-appt-title">+ เพิ่มนัดหมาย</div>
       <button class="modal-close" onclick="closeModal('modal-appt')">✕</button>
     </div>
     <div class="modal-body">
+
+      <!-- วันที่ / เวลา -->
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">วันที่นัด <span class="required">*</span></label>
           <input class="form-control" type="date" id="appt-date">
         </div>
         <div class="form-group">
-          <label class="form-label">เวลา</label>
+          <label class="form-label">เวลานัด</label>
           <input class="form-control" type="time" id="appt-time">
         </div>
       </div>
+
+      <!-- โรงพยาบาล -->
       <div class="form-group">
         <label class="form-label">โรงพยาบาล <span class="required">*</span></label>
         <input class="form-control" id="appt-hospital" placeholder="เช่น โรงพยาบาลรามาธิบดี">
       </div>
+
+      <!-- แผนก / แพทย์ -->
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">แผนก</label>
@@ -459,14 +465,25 @@
           <input class="form-control" id="appt-doctor" placeholder="นพ./พญ. ...">
         </div>
       </div>
+
+      <!-- วัตถุประสงค์ -->
       <div class="form-group">
         <label class="form-label">วัตถุประสงค์การนัด</label>
         <input class="form-control" id="appt-purpose" placeholder="เช่น Follow-up เบาหวาน, ตรวจ Lab 3 เดือน">
       </div>
+
+      <!-- สิ่งที่ต้องเตรียม (multi-select + เพิ่มเองได้) -->
       <div class="form-group">
         <label class="form-label">📋 สิ่งที่ต้องเตรียม</label>
-        <textarea class="form-control" id="appt-preparation" rows="2" placeholder="เช่น งดน้ำงดอาหาร 6 ชม., เอาผล Lab เดิมไปด้วย, ใส่ Diaper"></textarea>
+        <div id="appt-prep-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addApptPrep('เจาะเลือด')">+ เจาะเลือด</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addApptPrep('งดน้ำงดอาหารหลัง 24.00 น.')">+ งดน้ำงดอาหาร</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addApptPrepCustom()">+ อื่นๆ</button>
+        </div>
       </div>
+
+      <!-- การเดินทาง / คนพาไป -->
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">การเดินทาง</label>
@@ -478,23 +495,53 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">สถานะ</label>
-          <select class="form-control" id="appt-status">
-            <option value="upcoming">🔵 กำลังจะถึง</option>
-            <option value="done">✅ เสร็จแล้ว</option>
-            <option value="postponed">⏸ เลื่อน</option>
-            <option value="cancelled">❌ ยกเลิก</option>
-          </select>
+          <label class="form-label">คนพาไป (ผู้ติดตาม)</label>
+          <input class="form-control" id="appt-companion" placeholder="ชื่อผู้ติดตาม">
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
-        <label class="form-label">หมายเหตุการเดินทาง / รายละเอียดเพิ่มเติม</label>
-        <input class="form-control" id="appt-transport-note" placeholder="">
+
+      <!-- เวลาออกจากศูนย์ / หมายเหตุการเดินทาง -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">⏰ เวลาออกจากศูนย์</label>
+          <input class="form-control" type="time" id="appt-depart-time">
+        </div>
+        <div class="form-group">
+          <label class="form-label">หมายเหตุการเดินทาง</label>
+          <input class="form-control" id="appt-transport-note" placeholder="">
+        </div>
       </div>
-      <div class="form-group" style="margin:0;margin-top:10px;">
+
+      <!-- แนบรูปบัตรนัด -->
+      <div class="form-group">
+        <label class="form-label">📎 แนบรูปบัตรนัดพบแพทย์</label>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <label style="cursor:pointer;background:var(--surface2);border:1px dashed var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">
+            📷 เลือกรูป
+            <input type="file" accept="image/*" id="appt-card-input" style="display:none;" onchange="previewApptCard(this)">
+          </label>
+          <div id="appt-card-preview" style="font-size:12px;color:var(--text3);">ยังไม่มีรูป</div>
+        </div>
+        <input type="hidden" id="appt-card-photo-url">
+      </div>
+
+      <!-- สถานะ -->
+      <div class="form-group">
+        <label class="form-label">สถานะ</label>
+        <select class="form-control" id="appt-status">
+          <option value="upcoming">🔵 กำลังจะถึง</option>
+          <option value="done">✅ เสร็จแล้ว</option>
+          <option value="postponed">⏸ เลื่อน</option>
+          <option value="cancelled">❌ ยกเลิก</option>
+        </select>
+      </div>
+
+      <!-- หมายเหตุ -->
+      <div class="form-group" style="margin:0;">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="appt-note" placeholder="">
       </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-appt')">ยกเลิก</button>
