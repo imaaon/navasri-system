@@ -167,23 +167,43 @@ async function saveAppt() {
     if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
     const idx = db.appointments.findIndex(a=>a.id==_apptEditId);
     if(idx>=0) db.appointments[idx] = mapAppointment({id:_apptEditId,...row});
-    // แจ้งเตือนกรณียกเลิกนัด
+
     if (nowCancelled) {
+      // ยกเลิกนัด → ลบออกจาก Calendar + แจ้ง LINE/Email
       const cancelMsg = `❌ ยกเลิกนัด วันที่ ${apptDate}\n━━━━━━━━━━━━━━\n👤 ${_apptPatName}\n🏥 ${hospital} ${row.appt_time||''}\n🎯 ${row.purpose||'-'}`;
-      sendLineNotify('appt_cancelled', cancelMsg, { patientName: _apptPatName });
+      sendLineNotify('appt_cancelled', cancelMsg, { appt_id: _apptEditId });
+    } else {
+      // แก้ไขนัด → อัปเดต Calendar
+      _syncCalendar('appt_update', { ...row, appt_id: _apptEditId, patient_name: _apptPatName, preparations: window._apptPreps||[] });
     }
     toast('บันทึกนัดหมายเรียบร้อย','success');
   } else {
     const {data:ins,error} = await supa.from('patient_appointments').insert(row).select().single();
     if(error){toast('บันทึกไม่สำเร็จ: '+error.message,'error');return;}
     db.appointments.push(mapAppointment(ins));
-    // ไม่แจ้งเตือนทันที — ระบบ Cron จะแจ้ง 3 วัน และ 1 วัน ก่อนวันนัด
+    // บันทึกนัดใหม่ → เพิ่มใน Calendar ทันที (ไม่แจ้ง LINE — Cron จะแจ้ง 3/1 วัน)
+    _syncCalendar('appt_save', { ...row, appt_id: ins.id, patient_name: _apptPatName, preparations: window._apptPreps||[] });
     toast('เพิ่มนัดหมายเรียบร้อย','success');
   }
   closeModal('modal-appt');
   const listEl = document.getElementById('appt-list-'+_apptPatId);
   if(listEl) listEl.innerHTML = renderApptList(_apptPatId);
   renderUpcomingAppts();
+}
+
+// ส่ง event ไป Edge Function สำหรับ Google Calendar (ไม่แจ้ง LINE/Email)
+async function _syncCalendar(event, data) {
+  const EDGE_URL = 'https://umueucsxowjaurlaubwa.supabase.co/functions/v1/line-notify';
+  try {
+    await fetch(EDGE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': window._supabaseKey || '' },
+      body: JSON.stringify({ event, data }),
+    });
+    console.log('[Calendar] sync:', event, data.appt_id);
+  } catch(e) {
+    console.warn('[Calendar] sync failed:', e.message);
+  }
 }
 
 async function markApptDone(id) {
@@ -200,6 +220,8 @@ async function deleteAppt(id, patientId) {
   const { error } = await supa.from('patient_appointments').delete().eq('id',id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.appointments = db.appointments.filter(a=>a.id!=id);
+  // ลบออกจาก Google Calendar ด้วย
+  _syncCalendar('appt_delete', { appt_id: id });
   const el=document.getElementById('appt-list-'+patientId); if(el) el.innerHTML=renderApptList(patientId);
   toast('ลบนัดหมายแล้ว','success');
   renderUpcomingAppts();
