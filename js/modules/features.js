@@ -367,7 +367,7 @@ function _exjsApplySheet(wb, sheetName, headers, dataRows, theme) {
     const d = new Date();
     const M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
     return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()+543}`;
-  })();
+  
   const ncols = headers.length;
 
   // Row 1: Title
@@ -747,5 +747,5 @@ async function updateLineSetting(key, value) {
       setTimeout(extendLineSettingsUI, 300);
     }
   };
-})();
+
 
