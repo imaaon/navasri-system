@@ -459,11 +459,6 @@ async function backupAllData() {
     toast('❌ Backup ล้มเหลว: ' + e.message, 'error');
   }
 }
-} catch(e) {
-    console.error('Backup error:', e);
-    toast('❌ Backup ล้มเหลว: ' + e.message, 'error');
-  }
-}
 
 function _calcDuration(startDate, endDate) {
   if (!startDate) return '-';
