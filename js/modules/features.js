@@ -424,9 +424,9 @@ function _exjsApplySheet(wb, sheetName, headers, dataRows, theme) {
 }
 
 async function backupAllData() {
-  if (!confirm('ต้องการสำรองข้อมูลทั้งหมดออกเป็นไฟล์ JSON หรือไม่?\n\nจะดาวน์โหลดข้อมูลทุกตาราง 47 ตาราง รวมถึง\nวันนัดหมาย, vital signs, ยาประจำ, แพ้อาหาร, ทรัพย์สิน,\nกายภาพบำบัด, บันทึกพยาบาล, รายการการเงิน และอื่นๆ')) return;
+  if (!confirm('ต้องการสำรองข้อมูลทั้งหมดออกเป็นไฟล์ Excel หรือไม่?\n\nจะดาวน์โหลดข้อมูลทุกตาราง 30+ ตาราง รวมถึง\nวันนัดหมาย, vital signs, ยาประจำ, แพ้อาหาร, ทรัพย์สิน,\nกายภาพบำบัด, บันทึกพยาบาล, MAR, อุบัติเหตุ, แผล และอื่นๆ')) return;
 
-  toast('⏳ กำลังดึงข้อมูลจาก server (47 ตาราง)...', 'info');
+  toast('⏳ กำลังสร้างไฟล์ Excel (อาจใช้เวลา 10-20 วินาที)...', 'info');
 
   try {
     const key = window._supabaseKey || window.SUPABASE_ANON_KEY ||
@@ -447,14 +447,19 @@ async function backupAllData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'navasri_backup_full_' + new Date().toISOString().slice(0,10) + '.json';
+    a.download = 'navasri_backup_' + new Date().toISOString().slice(0,10) + '.xlsx';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    toast('✅ Backup สำเร็จ! (47 ตาราง ครบทุกข้อมูล)', 'success');
+    toast('✅ Backup สำเร็จ! ดาวน์โหลด Excel แล้ว (ครบทุกตาราง)', 'success');
   } catch(e) {
+    console.error('Backup error:', e);
+    toast('❌ Backup ล้มเหลว: ' + e.message, 'error');
+  }
+}
+} catch(e) {
     console.error('Backup error:', e);
     toast('❌ Backup ล้มเหลว: ' + e.message, 'error');
   }
