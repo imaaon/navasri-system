@@ -424,37 +424,102 @@ function _exjsApplySheet(wb, sheetName, headers, dataRows, theme) {
 }
 
 async function backupAllData() {
-  if (!confirm('ต้องการสำรองข้อมูลทั้งหมดออกเป็นไฟล์ Excel หรือไม่?\n\nอาจใช้เวลาสักครู่...')) return;
-  if (typeof ExcelJS === 'undefined') {
-    toast('ไม่พบ ExcelJS กรุณา refresh หน้าเว็บแล้วลองใหม่', 'error'); return;
+  if (!confirm('ต้องการสำรองข้อมูลทั้งหมดออกเป็นไฟล์ JSON หรือไม่?\n\nจะดาวน์โหลดข้อมูลทุกตาราง 47 ตาราง รวมถึง\nวันนัดหมาย, vital signs, ยาประจำ, แพ้อาหาร, ทรัพย์สิน,\nกายภาพบำบัด, บันทึกพยาบาล, รายการการเงิน และอื่นๆ')) return;
+
+  toast('⏳ กำลังดึงข้อมูลจาก server (47 ตาราง)...', 'info');
+
+  try {
+    const key = window._supabaseKey || window.SUPABASE_ANON_KEY ||
+      (typeof supa !== 'undefined' && supa.supabaseKey) || '';
+
+    const res = await fetch(
+      'https://umueucsxowjaurlaubwa.supabase.co/functions/v1/backup',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': key },
+        body: JSON.stringify({})
+      }
+    );
+
+    if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + await res.text());
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'navasri_backup_full_' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast('✅ Backup สำเร็จ! (47 ตาราง ครบทุกข้อมูล)', 'success');
+  } catch(e) {
+    console.error('Backup error:', e);
+    toast('❌ Backup ล้มเหลว: ' + e.message, 'error');
   }
-  toast('⏳ กำลังสร้างไฟล์ Backup...', 'info');
-  await new Promise(r => setTimeout(r, 100));
+}
 
-  const wb   = new ExcelJS.Workbook();
-  wb.creator = 'นวศรี เนอร์สซิ่งโฮม';
-  wb.created = new Date();
-  const today = new Date().toISOString().slice(0,10);
+function _calcDuration(startDate, endDate) {
+  if (!startDate) return '-';
+  const start = new Date(startDate);
+  const end   = endDate ? new Date(endDate) : new Date();
+  const days  = Math.floor((end - start) / (1000*60*60*24));
+  if (days < 0) return '-';
+  const years  = Math.floor(days / 365);
+  const months = Math.floor((days % 365) / 30);
+  const rem    = days % 30;
+  if (years > 0)  return years + ' ปี ' + months + ' เดือน';
+  if (months > 0) return months + ' เดือน ' + rem + ' วัน';
+  return days + ' วัน';
+}
 
-  // สรุป
-  const sumData = [
-    ['👥 ผู้รับบริการทั้งหมด',   (db.patients||[]).length],
-    ['✅ ผู้รับบริการปัจจุบัน',   (db.patients||[]).filter(p=>p.status==='active').length],
-    ['👤 พนักงาน',                (db.staff||[]).length],
-    ['🛏️ ห้องพัก',               (db.rooms||[]).length],
-    ['🛏️ เตียง',                 (db.beds||[]).length],
-    ['📦 สินค้าในระบบ',           (db.items||[]).length],
-    ['⚠️ สินค้าใกล้หมด/หมดแล้ว', (db.items||[]).filter(i=>i.qty<=i.reorder).length],
-    ['💰 ใบแจ้งหนี้ทั้งหมด',      (db.invoices||[]).length],
-    ['⏰ บิลค้างชำระ',             (db.invoices||[]).filter(inv=>{
-      const s = typeof getInvoicePaymentStatus==='function' ? getInvoicePaymentStatus(inv) : inv.status;
-      return s !== 'paid' && s !== 'cancelled';
-    }).length],
-    ['📋 รายการเบิกสินค้า',       (db.requisitions||[]).length],
-    ['🏭 ผู้จำหน่าย',             (db.suppliers||[]).length],
-  ];
-  _exjsApplySheet(wb, 'สรุป', ['หมวดหมู่','จำนวน'], sumData, BACKUP_THEMES['สรุป']);
+function extendLineSettingsUI() {
+  const container = document.getElementById('line-extra-settings');
+  if (!container) return;
+  const ls = db.lineSettings || {};
+  container.innerHTML = `
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;">🔔 การแจ้งเตือนเพิ่มเติม</div>
+      <label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;">
+        <input type="checkbox" id="ls-notify-overdue" ${ls.notifyOverdueBills?'checked':''}
+          onchange="updateLineSetting('notifyOverdueBills', this.checked)" style="width:16px;height:16px;">
+        <span style="font-size:13px;">⏰ แจ้งเตือนบิลค้างชำระรายวัน</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px;">
+        <input type="checkbox" id="ls-notify-stock" ${ls.notifyLowStock?'checked':''}
+          onchange="updateLineSetting('notifyLowStock', this.checked)" style="width:16px;height:16px;">
+        <span style="font-size:13px;">📦 แจ้งเตือนสต็อกสินค้าใกล้หมด/หมดอายุ</span>
+      </label>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <button class="btn btn-sm" onclick="manualNotifyOverdueBills()" style="background:#e67e2222;color:#e67e22;border:1px solid #e67e22;">
+          ⏰ ทดสอบส่งแจ้งบิลค้าง
+        </button>
+        <button class="btn btn-sm" onclick="manualNotifyLowStock()" style="background:#3498db22;color:#3498db;border:1px solid #3498db;">
+          📦 ทดสอบส่งแจ้งสต็อก
+        </button>
+      </div>
+    </div>`;
+}
 
+async function updateLineSetting(key, value) {
+  db.lineSettings = db.lineSettings || {};
+  db.lineSettings[key] = value;
+  await supa.from('settings').upsert({ key: 'lineSettings', value: db.lineSettings });
+}
+
+const _origRenderPageExtra = typeof renderPageExtra === 'function' ? renderPageExtra : null;
+function renderPageExtra(page) {
+  if (_origRenderPageExtra) _origRenderPageExtra(page);
+  if (page === 'dashboard') {
+    const dashEl = document.getElementById('dash-monthly-summary');
+    if (dashEl) renderMonthlySummaryCard('dash-monthly-summary');
+    setTimeout(runDailyLineNotifications, 3000);
+  }
+  if (page === 'settings') {
+    setTimeout(extendLineSettingsUI, 200);
+  }
+}
   // ผู้รับบริการ (พร้อมห้อง/เตียง/ประเภท/โซน)
   const patData = (db.patients||[]).map((p,i) => {
     const sl  = {active:'พักอยู่',hospital:'อยู่โรงพยาบาล',inactive:'ออกแล้ว'}[p.status]||p.status||'';
