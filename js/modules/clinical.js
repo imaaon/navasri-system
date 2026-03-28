@@ -189,7 +189,7 @@ async function openPatientProfile(id) {
         ${renderMedLogTab(p.id, 'medical')}
       </div>
       <div id="patprofile-tab-meds" style="display:none;">
-        ${renderMedLogTab(p.id, 'meds')}
+        ${''}
       </div>
       <!-- ALLERGY TAB -->
       <div id="patprofile-tab-allergy" style="display:none;">
