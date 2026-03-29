@@ -261,15 +261,12 @@ async function openPatientProfile(id) {
   // render meds tab: ชื่อยา, หมายเหตุ, ผู้กรอก
   (function(){
     const _meds = (db.medications[pid]||[]).filter(m => m.isActive !== false);
-    const _el = document.getElementById('patprofile-tab-meds');
-    if (!_el) return;
-    if (!_meds.length) {
-      _el.innerHTML = '<div class="card"><div class="card-header"><div class="card-title" style="font-size:13px;">&#128138; &#3618;&#3634;&#3611;&#3619;&#3632;&#3592;&#3635;</div><button class="btn btn-primary btn-sm" onclick="openAddMedModal(\''+pid+'\')">+ &#3648;&#3614;&#3636;&#3656;&#3617;&#3618;&#3634;</button></div><div style="padding:32px;text-align:center;color:var(--text3);">&#3618;&#3633;&#3591;&#3652;&#3617;&#3656;&#3617;&#3637;&#3619;&#3634;&#3618;&#3585;&#3634;&#3619;</div></div>';
-      return;
-    }
-    const _rows = _meds.map(m => '<tr><td style="font-weight:600;">' + m.name + '</td><td style="font-size:12px;color:var(--text2);">' + (m.note||'-') + '</td><td style="font-size:12px;">' + (m.createdBy || '-') + '</td><td><button class="btn btn-ghost btn-sm" onclick="deleteMedication(\''+pid+'\',\''+m.id+'\')">&#128465;&#65039;</button></td></tr>').join('');
-    _el.innerHTML = '<div class="card"><div class="card-header"><div class="card-title" style="font-size:13px;">&#128138; &#3618;&#3634;&#3611;&#3619;&#3632;&#3592;&#3635; ('+_meds.length+' &#3619;&#3634;&#3618;&#3585;&#3634;&#3619;)</div><button class="btn btn-primary btn-sm" onclick="openAddMedModal(\''+pid+'\')">+ &#3648;&#3614;&#3636;&#3656;&#3617;&#3618;&#3634;</button></div><div class="table-wrap"><table><thead><tr><th>&#3594;&#3639;&#3656;&#3629;&#3618;&#3634;</th><th>&#3627;&#3617;&#3634;&#3618;&#3648;&#3627;&#3605;&#3640;</th><th>&#3612;&#3641;&#3585;&#3619;&#3629;&#3585;</th><th></th></tr></thead><tbody>' + _rows + '</tbody></table></div></div>';
-  })();
+    const _el = document.getElementById('patprofile-tab-meds').innerHTML = (function(){
+    var meds2 = (db.medications[pid]||[]).filter(function(m){ return m.isActive !== false; });
+    if (!meds2.length) return '<div class="card"><div class="card-header"><div class="card-title" style="font-size:13px;">💊 ยาประจำ</div><button class="btn btn-primary btn-sm" onclick="openAddMedModal(\''+pid+'\')">+ เพิ่มยา</button></div><div style="padding:32px;text-align:center;color:var(--text3);">ยังไม่มีรายการยาประจำ</div></div>';
+    var rows2 = meds2.map(function(m){ return '<tr><td style="font-weight:600;">'+m.name+'</td><td style="font-size:12px;color:var(--text2);">'+(m.note||'-')+'</td><td style="font-size:12px;">'+(m.createdBy||'-')+'</td><td><button class="btn btn-ghost btn-sm" onclick="deleteMedication(\''+pid+'\',\''+m.id+'\')">&#128465;</button></td></tr>'; }).join('');
+    return '<div class="card"><div class="card-header"><div class="card-title" style="font-size:13px;">💊 ยาประจำ ('+meds2.length+' รายการ)</div><button class="btn btn-primary btn-sm" onclick="openAddMedModal(\''+pid+'\')">+ เพิ่มยา</button></div><div class="table-wrap"><table><thead><tr><th>ชื่อยา</th><th>หมายเหตุ</th><th>ผู้กรอก</th><th></th></tr></thead><tbody>'+rows2+'</tbody></table></div></div>';
+  })()
   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
