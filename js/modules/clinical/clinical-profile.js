@@ -258,7 +258,7 @@ async function openPatientProfile(id) {
     </div>
   </div>`;
   document.getElementById('patprofile-tab-meds').innerHTML = renderMARTab(pid, p.id);
-  } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
+  document.getElementById('patprofile-tab-meds').innerHTML = renderMedLogTab(p.id, 'meds');   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
 function switchPatTab(tab) {
