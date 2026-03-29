@@ -257,7 +257,11 @@ async function openPatientProfile(id) {
       </div>
     </div>
   </div>`;
-  document.getElementById('patprofile-tab-meds').innerHTML = renderMARTab(pid, p.id);
+  document.getElementById('patprofile-tab-meds').innerHTML = (function(){
+    const meds = (db.medications[pid]||[]).filter(m => m.isActive !== false);
+    if (!meds.length) return '<div class="card"><div class="card-header"><div class="card-title" style="font-size:13px;">💊 ยาประจำ</div><button class="btn btn-primary btn-sm" onclick="openAddMedModal(\''+pid+'\')">+ เพิ่มยา</button></div><div style="padding:32px;text-align:center;color:var(--text3);">ยังไม่มีรายการยาประจำ</div></div>';
+    return '<div class="card"><div class="card-header"><div class="card-title" style="font-size:13px;">💊 ยาประจำ ('+meds.length+' รายการ)</div><button class="btn btn-primary btn-sm" onclick="openAddMedModal(\''+pid+'\')">+ เพิ่มยา</button></div><div class="table-wrap"><table><thead><tr><th>ชื่อยา</th><th>ขนาด/หน่วย</th><th>วิธีใช้</th><th>มื้อ/เวลา</th><th>วันเริ่ม</th><th></th></tr></thead><tbody>'+meds.map(m=>'<tr><td style="font-weight:600;">'+m.name+'</td><td style="font-size:12px;">'+(m.dose||'')+' '+(m.unit||'')+'</td><td style="font-size:12px;">'+(m.route||'-')+'</td><td style="font-size:12px;">'+((m.timings||[]).join(', ')||'-')+'</td><td style="font-size:12px;">'+(m.startDate||'-')+'</td><td style="display:flex;gap:4px;"><button class="btn btn-ghost btn-sm" onclick="openEditMedModal(\''+pid+'\',\''+pid+'\',\''+m.id+'\')">✏️</button><button class="btn btn-ghost btn-sm" onclick="deleteMedication(\''+pid+'\',\''+m.id+'\')" >🗑️</button></td></tr>').join('')+'</tbody></table></div></div>';
+  })();
   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
