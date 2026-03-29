@@ -115,7 +115,7 @@ async function openPatientProfile(id) {
         ${renderMedLogTab(p.id, 'medical')}
       </div>
       <div id="patprofile-tab-meds" style="display:none;">
-        ${''}
+        ${(function(){ setTimeout(function(){ if(typeof _renderMedNotesTab==='function') _renderMedNotesTab(null,String(p.id)); },200); return ''; })()}
       </div>
       <!-- ALLERGY TAB -->
       <div id="patprofile-tab-allergy" style="display:none;">
