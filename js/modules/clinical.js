@@ -296,6 +296,7 @@ async function openPatientProfile(id) {
       </div>
     </div>
   </div>`;
+  document.getElementById('patprofile-tab-meds').innerHTML = renderMARTab(pid, p.id);
   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
