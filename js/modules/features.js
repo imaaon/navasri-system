@@ -192,7 +192,7 @@ function _thb(n) {
 // หมายเหตุ: ใช้ sendLineNotify(event, message, data) จาก ui.js
 // ─────────────────────────────────────────────────────────────
 
-function checkAndNotifyOverdueBills() {
+async function checkAndNotifyOverdueBills() {
   const ls = db.lineSettings || {};
   if (!ls.enabled || !ls.webhookUrl || !ls.notifyOverdueBills) return;
 
@@ -218,7 +218,7 @@ function checkAndNotifyOverdueBills() {
   await sendLineNotify('overdue_bills', msg, { count: overdueList.length });
 }
 
-function checkAndNotifyLowStockDaily() {
+async function checkAndNotifyLowStockDaily() {
   const ls = db.lineSettings || {};
   if (!ls.enabled || !ls.webhookUrl || !ls.notifyLowStockDaily) return;
 
@@ -245,7 +245,7 @@ function checkAndNotifyLowStockDaily() {
 }
 
 // เรียกอัตโนมัติตอนเปิดระบบ วันละครั้ง
-function runDailyLineNotifications() {
+async function runDailyLineNotifications() {
   const today = new Date().toISOString().split('T')[0];
   const lastRun = localStorage.getItem('_navasri_line_notify_date');
   if (lastRun === today) return;
@@ -257,7 +257,7 @@ function runDailyLineNotifications() {
 }
 
 // ปุ่มส่งแจ้งเตือนด้วยตนเอง
-function manualNotifyLowStock() {
+async function manualNotifyLowStock() {
   const ls = db.lineSettings || {};
   if (!ls.enabled || !ls.webhookUrl) {
     toast('ยังไม่ได้ตั้งค่า LINE Webhook', 'warning'); return;
@@ -273,7 +273,7 @@ function manualNotifyLowStock() {
   if (lowItems.length > 5) toast(`ส่งแจ้งเตือนสินค้า 5/${lowItems.length} รายการแล้ว`, 'success');
 }
 
-function manualNotifyOverdueBills() {
+async function manualNotifyOverdueBills() {
   const ls = db.lineSettings || {};
   if (!ls.enabled || !ls.webhookUrl) {
     toast('ยังไม่ได้ตั้งค่า LINE Webhook', 'warning'); return;
@@ -502,7 +502,7 @@ function extendLineSettingsUI() {
     </div>`;
 }
 
-function updateLineSetting(key, value) {
+async function updateLineSetting(key, value) {
   db.lineSettings = db.lineSettings || {};
   db.lineSettings[key] = value;
   await supa.from('settings').upsert({ key: 'lineSettings', value: db.lineSettings });
@@ -705,7 +705,7 @@ function extendLineSettingsUI() {
     </div>`;
 }
 
-function updateLineSetting(key, value) {
+async function updateLineSetting(key, value) {
   db.lineSettings = db.lineSettings || {};
   db.lineSettings[key] = value;
   // บันทึกลง Supabase settings
