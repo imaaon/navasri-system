@@ -188,13 +188,18 @@ async function renderPhysioTab(patientId) {
     </div>`;
 
   // ── List ──
+  const p = db.patients.find(x => String(x.id) === String(patientId));
+  const addBtn = canManagePhysio()
+    ? `<button class="btn btn-primary btn-sm physio-add-btn" data-pid="${patientId}" style="margin-bottom:12px;">+ บันทึก Session</button>`
+    : '';
+
   if (!sessions || sessions.length === 0) {
-    listEl.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text3);">ยังไม่มีบันทึกกายภาพในเดือนนี้</div>';
+    listEl.innerHTML = addBtn + '<div style="text-align:center;padding:32px;color:var(--text3);">ยังไม่มีบันทึกกายภาพในเดือนนี้</div>';
+    _bindPhysioButtons(listEl, patientId, p);
     return;
   }
 
-  const p = db.patients.find(x => String(x.id) === String(patientId));
-  listEl.innerHTML = `
+  listEl.innerHTML = addBtn + `
     <div class="table-wrap">
       <table>
         <thead>
@@ -219,8 +224,8 @@ async function renderPhysioTab(patientId) {
               ? '<span style="background:#d5f5e3;color:#1e8449;font-size:11px;padding:2px 8px;border-radius:10px;">รวมบิลแล้ว</span>'
               : '<span style="background:#fef9e7;color:#d68910;font-size:11px;padding:2px 8px;border-radius:10px;">ยังไม่รวมบิล</span>';
             const editBtn = !s.billed
-              ? `<button class="btn btn-ghost btn-xs" onclick="openPhysioSessionModal('${patientId}','${p?.name||''}','${s.id}')">✏️</button>
-                 <button class="btn btn-ghost btn-xs" style="color:#c0392b;" onclick="deletePhysioSession('${s.id}','${patientId}')">🗑️</button>`
+              ? `<button class="btn btn-ghost btn-xs physio-edit-btn" data-pid="${patientId}" data-sid="${s.id}">✏️</button>
+                 <button class="btn btn-ghost btn-xs physio-del-btn" style="color:#c0392b;" data-sid="${s.id}" data-pid="${patientId}">🗑️</button>`
               : '<span style="color:var(--text3);font-size:11px;">ล็อค</span>';
             return `<tr>
               <td class="number" style="white-space:nowrap;">${s.session_date}</td>
@@ -234,7 +239,27 @@ async function renderPhysioTab(patientId) {
           }).join('')}
         </tbody>
       </table>
-    </div>`;
+    </div>\`;
+  _bindPhysioButtons(listEl, patientId, p);
+}
+
+function _bindPhysioButtons(container, patientId, p) {
+  const patName = p ? p.name : '';
+  // ปุ่ม + เพิ่ม
+  container.querySelectorAll('.physio-add-btn').forEach(btn => {
+    btn.onclick = () => openPhysioSessionModal(patientId, patName);
+  });
+  // ปุ่ม ✏️ แก้ไข
+  container.querySelectorAll('.physio-edit-btn').forEach(btn => {
+    const sid = btn.dataset.sid;
+    btn.onclick = () => openPhysioSessionModal(patientId, patName, sid);
+  });
+  // ปุ่ม 🗑️ ลบ
+  container.querySelectorAll('.physio-del-btn').forEach(btn => {
+    const sid = btn.dataset.sid;
+    const pid = btn.dataset.pid;
+    btn.onclick = () => deletePhysioSession(sid, pid);
+  });
 }
 
 // ── Delete ────────────────────────────────────────────────────
