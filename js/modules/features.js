@@ -192,7 +192,7 @@ function _thb(n) {
 // หมายเหตุ: ใช้ sendLineNotify(event, message, data) จาก ui.js
 // ─────────────────────────────────────────────────────────────
 
-async function checkAndNotifyOverdueBills() {
+function checkAndNotifyOverdueBills() {
   const ls = db.lineSettings || {};
   if (!ls.enabled || !ls.webhookUrl || !ls.notifyOverdueBills) return;
 
@@ -218,7 +218,7 @@ async function checkAndNotifyOverdueBills() {
   await sendLineNotify('overdue_bills', msg, { count: overdueList.length });
 }
 
-async function checkAndNotifyLowStockDaily() {
+function checkAndNotifyLowStockDaily() {
   const ls = db.lineSettings || {};
   if (!ls.enabled || !ls.webhookUrl || !ls.notifyLowStockDaily) return;
 
@@ -245,7 +245,7 @@ async function checkAndNotifyLowStockDaily() {
 }
 
 // เรียกอัตโนมัติตอนเปิดระบบ วันละครั้ง
-async function runDailyLineNotifications() {
+function runDailyLineNotifications() {
   const today = new Date().toISOString().split('T')[0];
   const lastRun = localStorage.getItem('_navasri_line_notify_date');
   if (lastRun === today) return;
@@ -257,7 +257,7 @@ async function runDailyLineNotifications() {
 }
 
 // ปุ่มส่งแจ้งเตือนด้วยตนเอง
-async function manualNotifyLowStock() {
+function manualNotifyLowStock() {
   const ls = db.lineSettings || {};
   if (!ls.enabled || !ls.webhookUrl) {
     toast('ยังไม่ได้ตั้งค่า LINE Webhook', 'warning'); return;
@@ -273,7 +273,7 @@ async function manualNotifyLowStock() {
   if (lowItems.length > 5) toast(`ส่งแจ้งเตือนสินค้า 5/${lowItems.length} รายการแล้ว`, 'success');
 }
 
-async function manualNotifyOverdueBills() {
+function manualNotifyOverdueBills() {
   const ls = db.lineSettings || {};
   if (!ls.enabled || !ls.webhookUrl) {
     toast('ยังไม่ได้ตั้งค่า LINE Webhook', 'warning'); return;
@@ -423,7 +423,7 @@ function _exjsApplySheet(wb, sheetName, headers, dataRows, theme) {
   });
 }
 
-async function backupAllData() {
+function backupAllData() {
   if (!confirm('ต้องการสำรองข้อมูลทั้งหมดออกเป็นไฟล์ Excel หรือไม่?\n\nจะดาวน์โหลดข้อมูลทุกตาราง 30+ ตาราง รวมถึง\nวันนัดหมาย, vital signs, ยาประจำ, แพ้อาหาร, ทรัพย์สิน,\nกายภาพบำบัด, บันทึกพยาบาล, MAR, อุบัติเหตุ, แผล และอื่นๆ')) return;
 
   toast('⏳ กำลังสร้างไฟล์ Excel (อาจใช้เวลา 10-20 วินาที)...', 'info');
@@ -502,7 +502,7 @@ function extendLineSettingsUI() {
     </div>`;
 }
 
-async function updateLineSetting(key, value) {
+function updateLineSetting(key, value) {
   db.lineSettings = db.lineSettings || {};
   db.lineSettings[key] = value;
   await supa.from('settings').upsert({ key: 'lineSettings', value: db.lineSettings });
@@ -705,7 +705,7 @@ function extendLineSettingsUI() {
     </div>`;
 }
 
-async function updateLineSetting(key, value) {
+function updateLineSetting(key, value) {
   db.lineSettings = db.lineSettings || {};
   db.lineSettings[key] = value;
   // บันทึกลง Supabase settings
