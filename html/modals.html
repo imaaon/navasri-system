@@ -8,7 +8,7 @@
     <div class="modal-body">
       <input type="hidden" id="editItemIdx">
       <!-- Photo upload -->
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16pxh;">
         <div id="item-photo-preview" style="width:80px;height:80px;border-radius:8px;background:var(--surface2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;overflow:hidden;flex-shrink:0;" onclick="document.getElementById('item-photo-input').click()">📷</div>
         <div>
           <div style="font-size:13px;font-weight:600;margin-bottom:6px;">รูปภาพสินค้า</div>
@@ -1741,8 +1741,7 @@
             <input type="checkbox" id="pat-dob-unknown" onchange="onPatDobUnknownChange()">
             <span style="color:var(--text2);">ไม่ทราบวันเดือนปีเกิด</span>
           </label>
-        </div>
-        <div class="form-group">
+<option value="active">🏠 พักอยู่</option>option><option value="hospital">🏥 อยู่โรงพยาบาล</option>option><option value="inactive">🚪 ออกแล้ว</option>option>        <div class="form-group">
           <label class="form-label">อายุ</label>
           <input class="form-control" id="pat-age-display" readonly placeholder="-" style="background:var(--surface2);cursor:default;">
         </div>
@@ -1763,6 +1762,8 @@
           <option value="active">พักอยู่</option>
           <option value="hospital">อยู่โรงพยาบาล</option>
           <option value="inactive">ออกแล้ว</option>
+                        <option value="transferred">ย้ายศูนย์</option>option>
+                        <option value="other">อื่นๆ (ระบุในหมายเหตุ)</option>option>
         </select>
       </div>
       <hr class="divider">

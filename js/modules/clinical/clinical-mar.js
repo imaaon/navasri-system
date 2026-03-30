@@ -245,6 +245,7 @@ async function deleteMedication(patientId, medId) {
   const m = (db.medications[pid]||[]).find(x=>x.id==medId);
   if(m) m.isActive=false;
   toast('หยุดใช้ยาแล้ว');
+  document.getElementById('patprofile-tab-meds').innerHTML = renderMARTab(pid, patientId);
   document.getElementById('patprofile-tab-mar').innerHTML = renderMARTab(pid, patientId);
 }
 
