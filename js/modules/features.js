@@ -192,7 +192,7 @@ function _thb(n) {
 // หมายเหตุ: ใช้ sendLineNotify(event, message, data) จาก ui.js
 // ─────────────────────────────────────────────────────────────
 
-function checkAndNotifyOverdueBills() {
+async function checkAndNotifyOverdueBills() {
   const ls = db.lineSettings || {};
   if (!ls.enabled || !ls.webhookUrl || !ls.notifyOverdueBills) return;
 
