@@ -270,9 +270,11 @@ function switchPatTab(tab) {
     el.classList.toggle('active', tabs[i] === tab);
   });
   if (tab === 'physio') {
-    const btn = document.querySelector('#patprofile-tab-physio button');
-    const pid = btn?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
-    if (pid) renderPhysioTab(pid);
+    const listEl = document.querySelector('[id^="physio-list-"]');
+    if (listEl) {
+      const pid = listEl.id.replace('physio-list-', '');
+      if (pid && typeof renderPhysioTab === 'function') renderPhysioTab(pid);
+    }
   }
   if (tab === 'dispense') {
     const el = document.querySelector('[id^="pat-dispense-list-"]');
