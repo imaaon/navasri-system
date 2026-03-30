@@ -115,7 +115,7 @@ async function openPatientProfile(id) {
         ${renderMedLogTab(p.id, 'medical')}
       </div>
       <div id="patprofile-tab-meds" style="display:none;">
-        ${(function(){ setTimeout(function(){ if(typeof _renderMedNotesTab==='function') _renderMedNotesTab(null,String(p.id)); },200); return ''; })()}
+        ${renderMedLogTab(p.id, 'meds')}
       </div>
       <!-- ALLERGY TAB -->
       <div id="patprofile-tab-allergy" style="display:none;">
@@ -257,8 +257,7 @@ async function openPatientProfile(id) {
       </div>
     </div>
   </div>`;
-  document.getElementById('patprofile-tab-meds').innerHTML = renderMARTab(pid, p.id);
-  document.getElementById('patprofile-tab-meds').innerHTML = renderMedLogTab(p.id, 'meds');   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
+  } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
 function switchPatTab(tab) {

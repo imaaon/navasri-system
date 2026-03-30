@@ -66,11 +66,12 @@ function editMedLog(patId, type, idx) {
   const logs = (p[key] || []).slice().sort((a,b) => b.date.localeCompare(a.date));
   const entry = logs[idx];
   if (!entry) return;
-  // find real index in original array
   const realIdx = p[key].findIndex(e => e.date === entry.date && e.detail === entry.detail);
   document.getElementById('medlog-type').value    = type;
   document.getElementById('medlog-patid').value   = patId;
   document.getElementById('medlog-editidx').value = realIdx;
+  // เก็บ _supaId ไว้ใน dataset เพื่อใช้ตอน update
+  document.getElementById('medlog-editidx').dataset.supaId = entry._supaId || '';
   document.getElementById('medlog-date').value    = entry.date;
   document.getElementById('medlog-detail').value  = entry.detail;
   document.getElementById('medlog-by').value = entry.by || '';
@@ -78,13 +79,14 @@ function editMedLog(patId, type, idx) {
   openModal('modal-addMedLog');
 }
 
-function saveMedLog() {
+async function saveMedLog() {
   if (!canManageVitals()) { toast('ไม่มีสิทธิ์บันทึกข้อมูลสุขภาพ','error'); return; }
-  const type   = document.getElementById('medlog-type').value;
-  const patId  = document.getElementById('medlog-patid').value;
+  const type    = document.getElementById('medlog-type').value;
+  const patId   = document.getElementById('medlog-patid').value;
   const editIdx = document.getElementById('medlog-editidx').value;
-  const date   = document.getElementById('medlog-date').value;
-  const detail = document.getElementById('medlog-detail').value.trim();
+  const editId  = document.getElementById('medlog-editidx').dataset?.supaId || '';
+  const date    = document.getElementById('medlog-date').value;
+  const detail  = document.getElementById('medlog-detail').value.trim();
   if (!date)   { toast('กรุณาระบุวันที่','warning'); return; }
   if (!detail) { toast('กรุณากรอกรายละเอียด','warning'); return; }
 
@@ -92,36 +94,47 @@ function saveMedLog() {
   if (!p) return;
   const key = type === 'medical' ? 'medicalLog' : 'medsLog';
   if (!p[key]) p[key] = [];
-
   const byUser = document.getElementById('medlog-by')?.value.trim() || currentUser?.displayName || currentUser?.username || '';
-  const entry = { date, detail, by: byUser, savedAt: new Date().toISOString() };
 
-  if (editIdx !== '') {
-    p[key][parseInt(editIdx)] = entry;
-    toast('แก้ไขเรียบร้อย','success');
+  if (editId) {
+    // แก้ไขใน Supabase
+    const { error } = await supa.from('medical_logs').update({
+      date, detail, by_user: byUser, log_type: type
+    }).eq('id', editId);
+    if (error) { toast('แก้ไขไม่สำเร็จ: ' + error.message, 'error'); return; }
+    // อัปเดต in-memory
+    const idx = p[key].findIndex(e => String(e._supaId) === String(editId));
+    if (idx >= 0) p[key][idx] = { date, detail, by: byUser, savedAt: new Date().toISOString(), _supaId: editId };
+    toast('แก้ไขเรียบร้อย', 'success');
   } else {
-    p[key].push(entry);
-    toast('เพิ่มรายการเรียบร้อย','success');
+    // เพิ่มใหม่ใน Supabase
+    const { data: ins, error } = await supa.from('medical_logs').insert({
+      patient_id: patId, log_type: type, date, detail, by_user: byUser
+    }).select().single();
+    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+    p[key].push({ date, detail, by: byUser, savedAt: new Date().toISOString(), _supaId: ins.id });
+    toast('เพิ่มรายการเรียบร้อย', 'success');
   }
 
-  saveDB();
   closeModal('modal-addMedLog');
-  // Refresh the profile tab in place
   const tabEl = document.getElementById(`patprofile-tab-${type}`);
   if (tabEl) tabEl.innerHTML = renderMedLogTab(patId, type);
 }
 
-function deleteMedLog(patId, type, idx) {
+async function deleteMedLog(patId, type, idx) {
   if (!confirm('ลบรายการนี้?')) return;
   const p = db.patients.find(x => x.id == patId);
   if (!p) return;
   const key  = type === 'medical' ? 'medicalLog' : 'medsLog';
   const logs = (p[key] || []).slice().sort((a,b) => b.date.localeCompare(a.date));
   const entry = logs[idx];
+  if (entry._supaId) {
+    const { error } = await supa.from('medical_logs').delete().eq('id', entry._supaId);
+    if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  }
   const realIdx = p[key].findIndex(e => e.date === entry.date && e.detail === entry.detail);
   if (realIdx >= 0) p[key].splice(realIdx, 1);
-  saveDB();
-  toast('ลบรายการเรียบร้อย','success');
+  toast('ลบรายการเรียบร้อย', 'success');
   const tabEl = document.getElementById(`patprofile-tab-${type}`);
   if (tabEl) tabEl.innerHTML = renderMedLogTab(patId, type);
 }

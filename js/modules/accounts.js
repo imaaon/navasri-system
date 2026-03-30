@@ -19,6 +19,10 @@ const ROLE_BADGE = {
   supervisor:'badge-purple', warehouse:'badge-orange',
 };
 
+// BUILTIN_ACCOUNTS: ถ้าระบบมี built-in accounts ให้เพิ่มที่นี่
+// format: { username: { displayName, role, position } }
+const BUILTIN_ACCOUNTS = {};
+
 function renderAccounts() {
   if (!db.users) db.users = {};
   const allAccounts = [

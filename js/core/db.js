@@ -68,7 +68,7 @@ async function loadDB() {
       settingsRes, itemLotsRes, roomsRes, bedsRes
     ] = await Promise.all([
       supa.from('items').select('*').order('id'),
-      supa.from('patients').select('*, patient_contacts(*), patient_allergies(*)').order('id'),
+      supa.from('patients').select('*, patient_contacts(*)').order('id'),
       supa.from('staff').select('*').order('id'),
       supa.from('requisitions').select('*').order('id', {ascending: false}).limit(500),
       supa.from('purchases').select('*').order('created_at', {ascending: false}).limit(500),
@@ -421,16 +421,27 @@ function mapNursingNote(r) {
 // Lazy load clinical data for a patient
 async function loadPatientClinical(patientId) {
   const pid = String(patientId);
-  const [meds, mar, vitals, notes] = await Promise.all([
+  const [meds, mar, vitals, notes, medlogs] = await Promise.all([
     supa.from('patient_medications').select('*').eq('patient_id', patientId).order('name'),
     supa.from('mar_records').select('*').eq('patient_id', patientId).order('date', {ascending: false}),
     supa.from('vital_signs').select('*').eq('patient_id', patientId).order('recorded_at', {ascending: false}).limit(90),
     supa.from('nursing_notes').select('*').eq('patient_id', patientId).order('date', {ascending: false}).order('shift'),
+    supa.from('medical_logs').select('*').eq('patient_id', patientId).order('date', {ascending: false}),
   ]);
   db.medications[pid]  = (meds.data  ||[]).map(mapMedication);
   db.marRecords[pid]   = (mar.data   ||[]).map(mapMarRecord);
   db.vitalSigns[pid]   = (vitals.data||[]).map(mapVitalSign);
   db.nursingNotes[pid] = (notes.data ||[]).map(mapNursingNote);
+  // อัปเดต medicalLog และ medsLog ใน patient object
+  const p = db.patients.find(x => String(x.id) === pid);
+  if (p && medlogs.data) {
+    p.medicalLog = medlogs.data.filter(l => l.log_type === 'medical').map(l => ({
+      date: l.date, detail: l.detail, by: l.by_user, savedAt: l.created_at, _supaId: l.id
+    }));
+    p.medsLog = medlogs.data.filter(l => l.log_type === 'meds').map(l => ({
+      date: l.date, detail: l.detail, by: l.by_user, savedAt: l.created_at, _supaId: l.id
+    }));
+  }
 }
 // helpers
 function getPatientBed(patient) {

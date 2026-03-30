@@ -283,25 +283,8 @@ async function savePatient() {
         old_status: oldPat.status,
         new_status: data.status,
         changed_by: currentUser?.displayName || currentUser?.username || '',
-        status_date: new Date().toISOString().slice(0,10),
-        note: data.note || '',
+        note: `เปลี่ยนจาก ${oldPat.status === 'active' ? 'พักอยู่' : oldPat.status === 'hospital' ? 'อยู่โรงพยาบาล' : 'ออกแล้ว'} เป็น ${data.status === 'active' ? 'พักอยู่' : data.status === 'hospital' ? 'อยู่โรงพยาบาล' : 'ออกแล้ว'}`,
       });
-        }
-        if (oldPat && oldPat.currentBedId && oldPat.currentBedId != bedId) {
-          const oldBed = db.beds.find(b => b.id == oldPat.currentBedId);
-          const newBed = bedId ? db.beds.find(b => b.id == bedId) : null;
-          const oldRoom = oldBed ? db.rooms.find(r => r.id == oldBed.roomId) : null;
-          const newRoom = newBed ? db.rooms.find(r => r.id == newBed.roomId) : null;
-          await supa.from('patient_room_history').insert({
-            patient_id: editId,
-            patient_name: oldPat.name,
-            from_bed_id: oldPat.currentBedId, from_bed: oldBed?.bedCode || '',
-            from_room_id: oldBed?.roomId || null, from_room: oldRoom?.name || '',
-            to_bed_id: bedId || null, to_bed: newBed?.bedCode || '',
-            to_room_id: newBed?.roomId || null, to_room: newRoom?.name || '',
-            transfer_date: new Date().toISOString().slice(0,10),
-            created_by: currentUser?.displayName || currentUser?.username || '',
-          })
     }
     const idx = db.patients.findIndex(p => p.id == editId);
     if (idx >= 0) db.patients[idx] = { ...db.patients[idx], ...data };
