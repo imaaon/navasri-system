@@ -1,28 +1,28 @@
 // ===== NAVASRI FEATURES MODULE =====
-// 1. Dashboard à¸ªà¸£à¸¸à¸à¸£à¸²à¸¢à¹à¸à¹/à¸£à¸²à¸¢à¸à¹à¸²à¸¢à¸£à¸²à¸¢à¹à¸à¸·à¸­à¸
-// 2. à¹à¸à¹à¸à¹à¸à¸·à¸­à¸ LINE à¹à¸¡à¸·à¹à¸­à¸à¸´à¸¥à¸à¸£à¸à¸à¸³à¸«à¸à¸
-// 3. à¹à¸à¹à¸à¹à¸à¸·à¸­à¸à¸ªà¸à¹à¸­à¸à¹à¸à¸¥à¹à¸«à¸¡à¸
-// 4. Export à¸£à¸²à¸¢à¸à¸²à¸à¹à¸à¹à¸ Excel
-// 5. Backup à¸à¹à¸­à¸¡à¸¹à¸¥à¸à¸±à¹à¸à¸«à¸¡à¸
+// 1. Dashboard สรุปรายได้/รายจ่ายรายเดือน
+// 2. แจ้งเตือน LINE เมื่อบิลครบกำหนด
+// 3. แจ้งเตือนสต็อกใกล้หมด
+// 4. Export รายงานเป็น Excel
+// 5. Backup ข้อมูลทั้งหมด
 
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// SECTION 1: DASHBOARD à¸ªà¸£à¸¸à¸à¸£à¸²à¸¢à¹à¸à¹/à¸£à¸²à¸¢à¸à¹à¸²à¸¢à¸£à¸²à¸¢à¹à¸à¸·à¸­à¸
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─────────────────────────────────────────────────────────────
+// SECTION 1: DASHBOARD สรุปรายได้/รายจ่ายรายเดือน
+// ─────────────────────────────────────────────────────────────
 
 function renderMonthlySummaryCard(targetElementId, monthStr) {
   const el = document.getElementById(targetElementId);
   if (!el) return;
 
-  // à¹à¸à¹à¹à¸à¸·à¸­à¸à¸à¸±à¸à¸à¸¸à¸à¸±à¸à¸à¹à¸²à¹à¸¡à¹à¸£à¸°à¸à¸¸
+  // ใช้เดือนปัจจุบันถ้าไม่ระบุ
   const month = monthStr || new Date().toISOString().slice(0, 7);
 
-  // à¸£à¸²à¸¢à¹à¸à¹: à¸à¸²à¸ invoices à¸à¸µà¹ paid à¹à¸à¹à¸à¸·à¸­à¸à¸à¸µà¹ + payments à¸à¸µà¹à¸£à¸±à¸à¹à¸à¹à¸à¸·à¸­à¸à¸à¸µà¹
+  // รายได้: จาก invoices ที่ paid ในเดือนนี้ + payments ที่รับในเดือนนี้
   const paidPayments = (db.payments || []).filter(p =>
     (p.paymentDate || '').startsWith(month)
   );
   const totalRevenue = paidPayments.reduce((s, p) => s + (p.amount || 0), 0);
 
-  // à¸£à¸²à¸¢à¸à¹à¸²à¸¢: expenses + supplier invoices à¸à¸µà¹à¸à¹à¸²à¸¢à¹à¸¥à¹à¸§à¹à¸à¹à¸à¸·à¸­à¸à¸à¸µà¹
+  // รายจ่าย: expenses + supplier invoices ที่จ่ายแล้วในเดือนนี้
   const monthExpenses = (db.expenses || []).filter(e =>
     (e.date || '').startsWith(month)
   );
@@ -36,7 +36,7 @@ function renderMonthlySummaryCard(targetElementId, monthStr) {
   const totalExpense = expenseTotal + supInvTotal;
   const netProfit    = totalRevenue - totalExpense;
 
-  // à¸à¸´à¸¥à¸à¹à¸²à¸à¸à¸³à¸£à¸°à¹à¸à¹à¸à¸·à¸­à¸à¸à¸µà¹
+  // บิลค้างชำระในเดือนนี้
   const overdueInvoices = (db.invoices || []).filter(inv => {
     if (!inv.dueDate) return false;
     const today = new Date().toISOString().split('T')[0];
@@ -48,63 +48,63 @@ function renderMonthlySummaryCard(targetElementId, monthStr) {
     return s + Math.max(0, (inv.grandTotal || 0) - paid);
   }, 0);
 
-  // à¸ªà¸£à¹à¸²à¸ bar chart 6 à¹à¸à¸·à¸­à¸à¸¢à¹à¸­à¸à¸«à¸¥à¸±à¸
+  // สร้าง bar chart 6 เดือนย้อนหลัง
   const chartData = _buildMonthlyChartData(6);
 
   const profitColor = netProfit >= 0 ? '#27ae60' : '#e74c3c';
-  const profitIcon  = netProfit >= 0 ? 'ð' : 'ð';
+  const profitIcon  = netProfit >= 0 ? '📈' : '📉';
 
   el.innerHTML = `
     <div class="card" style="margin-bottom:16px;">
       <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-        <div class="card-title">ð° à¸ªà¸£à¸¸à¸à¸à¸²à¸£à¹à¸à¸´à¸à¹à¸à¸·à¸­à¸ ${_thaiMonth(month)}</div>
+        <div class="card-title">💰 สรุปการเงินเดือน ${_thaiMonth(month)}</div>
         <div style="display:flex;gap:8px;align-items:center;">
           <input type="month" value="${month}" onchange="renderMonthlySummaryCard('${targetElementId}', this.value)"
             style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;background:var(--surface2);color:var(--text1);">
-          <button class="btn btn-ghost btn-sm" onclick="exportMonthlyExcel('${month}')" title="Export Excel">ð¥ Export</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportMonthlyExcel('${month}')" title="Export Excel">📥 Export</button>
         </div>
       </div>
 
       <!-- Summary Cards -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px;">
         <div style="background:#eafaf1;border:1px solid #a9dfbf;border-radius:10px;padding:14px;text-align:center;">
-          <div style="font-size:11px;color:#27ae60;font-weight:600;margin-bottom:4px;">ðµ à¸£à¸²à¸¢à¹à¸à¹à¸£à¸§à¸¡</div>
+          <div style="font-size:11px;color:#27ae60;font-weight:600;margin-bottom:4px;">💵 รายได้รวม</div>
           <div style="font-size:20px;font-weight:800;color:#27ae60;">${_thb(totalRevenue)}</div>
-          <div style="font-size:10px;color:#7dcea0;margin-top:2px;">${paidPayments.length} à¸£à¸²à¸¢à¸à¸²à¸£</div>
+          <div style="font-size:10px;color:#7dcea0;margin-top:2px;">${paidPayments.length} รายการ</div>
         </div>
         <div style="background:#fdedec;border:1px solid #f1948a;border-radius:10px;padding:14px;text-align:center;">
-          <div style="font-size:11px;color:#e74c3c;font-weight:600;margin-bottom:4px;">ð¸ à¸£à¸²à¸¢à¸à¹à¸²à¸¢à¸£à¸§à¸¡</div>
+          <div style="font-size:11px;color:#e74c3c;font-weight:600;margin-bottom:4px;">💸 รายจ่ายรวม</div>
           <div style="font-size:20px;font-weight:800;color:#e74c3c;">${_thb(totalExpense)}</div>
-          <div style="font-size:10px;color:#f1948a;margin-top:2px;">à¸à¹à¸²à¹à¸à¹à¸à¹à¸²à¸¢ + à¸à¸±à¸à¸à¸·à¹à¸­</div>
+          <div style="font-size:10px;color:#f1948a;margin-top:2px;">ค่าใช้จ่าย + จัดซื้อ</div>
         </div>
         <div style="background:${netProfit>=0?'#eafaf1':'#fdedec'};border:1px solid ${netProfit>=0?'#a9dfbf':'#f1948a'};border-radius:10px;padding:14px;text-align:center;">
-          <div style="font-size:11px;color:${profitColor};font-weight:600;margin-bottom:4px;">${profitIcon} à¸à¸³à¹à¸£à¸ªà¸¸à¸à¸à¸´</div>
+          <div style="font-size:11px;color:${profitColor};font-weight:600;margin-bottom:4px;">${profitIcon} กำไรสุทธิ</div>
           <div style="font-size:20px;font-weight:800;color:${profitColor};">${_thb(netProfit)}</div>
-          <div style="font-size:10px;color:${profitColor}99;margin-top:2px;">${netProfit>=0?'à¸à¸³à¹à¸£':'à¸à¸²à¸à¸à¸¸à¸'}</div>
+          <div style="font-size:10px;color:${profitColor}99;margin-top:2px;">${netProfit>=0?'กำไร':'ขาดทุน'}</div>
         </div>
         ${overdueTotal > 0 ? `
         <div style="background:#fef9e7;border:1px solid #f9e79f;border-radius:10px;padding:14px;text-align:center;cursor:pointer;" onclick="showPage('billing')">
-          <div style="font-size:11px;color:#e67e22;font-weight:600;margin-bottom:4px;">â° à¸à¹à¸²à¸à¸à¸³à¸£à¸°</div>
+          <div style="font-size:11px;color:#e67e22;font-weight:600;margin-bottom:4px;">⏰ ค้างชำระ</div>
           <div style="font-size:20px;font-weight:800;color:#e67e22;">${_thb(overdueTotal)}</div>
-          <div style="font-size:10px;color:#f0b27a;margin-top:2px;">${overdueInvoices.length} à¸à¸´à¸¥</div>
+          <div style="font-size:10px;color:#f0b27a;margin-top:2px;">${overdueInvoices.length} บิล</div>
         </div>` : ''}
       </div>
 
-      <!-- Bar Chart 6 à¹à¸à¸·à¸­à¸ -->
+      <!-- Bar Chart 6 เดือน -->
       <div style="margin-bottom:8px;">
-        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;">ð à¸£à¸²à¸¢à¹à¸à¹-à¸£à¸²à¸¢à¸à¹à¸²à¸¢ 6 à¹à¸à¸·à¸­à¸à¸¥à¹à¸²à¸ªà¸¸à¸</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;">📊 รายได้-รายจ่าย 6 เดือนล่าสุด</div>
         ${_renderBarChart(chartData)}
       </div>
 
       <!-- Expense Breakdown -->
       ${monthExpenses.length > 0 ? `
       <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;">
-        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">ð à¸£à¸²à¸¢à¸à¹à¸²à¸¢à¸à¸£à¸°à¸à¸³à¹à¸à¸·à¸­à¸</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">📋 รายจ่ายประจำเดือน</div>
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
           <thead><tr style="background:var(--surface2);">
-            <th style="text-align:left;padding:6px 10px;">à¸£à¸²à¸¢à¸à¸²à¸£</th>
-            <th style="text-align:right;padding:6px 10px;">à¸à¸³à¸à¸§à¸</th>
-            <th style="text-align:left;padding:6px 10px;color:var(--text3);">à¸§à¸±à¸à¸à¸µà¹</th>
+            <th style="text-align:left;padding:6px 10px;">รายการ</th>
+            <th style="text-align:right;padding:6px 10px;">จำนวน</th>
+            <th style="text-align:left;padding:6px 10px;color:var(--text3);">วันที่</th>
           </tr></thead>
           <tbody>
             ${monthExpenses.slice(0,10).map(e => `
@@ -137,7 +137,7 @@ function _buildMonthlyChartData(months) {
 }
 
 function _renderBarChart(data) {
-  if (!data || data.length === 0) return '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px;">à¹à¸¡à¹à¸¡à¸µà¸à¹à¸­à¸¡à¸¹à¸¥</div>';
+  if (!data || data.length === 0) return '<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px;">ไม่มีข้อมูล</div>';
   const maxVal = Math.max(...data.map(d => Math.max(d.revenue, d.expense)), 1);
   const barH   = 80;
   const colW   = Math.floor(560 / data.length);
@@ -150,8 +150,8 @@ function _renderBarChart(data) {
     return `
       <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">
         <div style="display:flex;align-items:flex-end;gap:2px;height:${barH}px;">
-          <div title="à¸£à¸²à¸¢à¹à¸à¹ ${_thb(d.revenue)}" style="width:${bW}px;background:#27ae60;border-radius:3px 3px 0 0;height:${rH}px;min-height:${d.revenue>0?2:0}px;transition:height .3s;"></div>
-          <div title="à¸£à¸²à¸¢à¸à¹à¸²à¸¢ ${_thb(d.expense)}" style="width:${bW}px;background:#e74c3c;border-radius:3px 3px 0 0;height:${eH}px;min-height:${d.expense>0?2:0}px;transition:height .3s;"></div>
+          <div title="รายได้ ${_thb(d.revenue)}" style="width:${bW}px;background:#27ae60;border-radius:3px 3px 0 0;height:${rH}px;min-height:${d.revenue>0?2:0}px;transition:height .3s;"></div>
+          <div title="รายจ่าย ${_thb(d.expense)}" style="width:${bW}px;background:#e74c3c;border-radius:3px 3px 0 0;height:${eH}px;min-height:${d.expense>0?2:0}px;transition:height .3s;"></div>
         </div>
         <div style="font-size:10px;color:var(--text3);margin-top:4px;text-align:center;">${d.label}</div>
       </div>`;
@@ -160,8 +160,8 @@ function _renderBarChart(data) {
   return `
     <div>
       <div style="display:flex;gap:12px;margin-bottom:6px;">
-        <span style="font-size:11px;color:#27ae60;">â  à¸£à¸²à¸¢à¹à¸à¹</span>
-        <span style="font-size:11px;color:#e74c3c;">â  à¸£à¸²à¸¢à¸à¹à¸²à¸¢</span>
+        <span style="font-size:11px;color:#27ae60;">■ รายได้</span>
+        <span style="font-size:11px;color:#e74c3c;">■ รายจ่าย</span>
       </div>
       <div style="display:flex;align-items:flex-end;gap:4px;padding:0 4px;border-bottom:1px solid var(--border);">
         ${bars}
@@ -171,26 +171,26 @@ function _renderBarChart(data) {
 
 function _thaiMonth(monthStr) {
   if (!monthStr) return '';
-  const MONTHS = ['','à¸¡.à¸.','à¸.à¸.','à¸¡à¸µ.à¸.','à¹à¸¡.à¸¢.','à¸.à¸.','à¸¡à¸´.à¸¢.','à¸.à¸.','à¸ª.à¸.','à¸.à¸¢.','à¸.à¸.','à¸.à¸¢.','à¸.à¸.'];
+  const MONTHS = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const [y, m] = monthStr.split('-');
   return `${MONTHS[parseInt(m)]} ${parseInt(y)+543}`;
 }
 
 function _shortMonth(monthStr) {
   if (!monthStr) return '';
-  const MONTHS = ['','à¸¡.à¸.','à¸.à¸.','à¸¡à¸µ.à¸.','à¹à¸¡.à¸¢.','à¸.à¸.','à¸¡à¸´.à¸¢.','à¸.à¸.','à¸ª.à¸.','à¸.à¸¢.','à¸.à¸.','à¸.à¸¢.','à¸.à¸.'];
+  const MONTHS = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const [, m] = monthStr.split('-');
   return MONTHS[parseInt(m)];
 }
 
 function _thb(n) {
-  return (n||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' à¸¿';
+  return (n||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' ฿';
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// SECTION 2: à¹à¸à¹à¸à¹à¸à¸·à¸­à¸ LINE à¹à¸¡à¸·à¹à¸­à¸à¸´à¸¥à¸à¸£à¸à¸à¸³à¸«à¸à¸ + à¸ªà¸à¹à¸­à¸à¹à¸à¸¥à¹à¸«à¸¡à¸
-// à¸«à¸¡à¸²à¸¢à¹à¸«à¸à¸¸: à¹à¸à¹ sendLineNotify(event, message, data) à¸à¸²à¸ ui.js
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─────────────────────────────────────────────────────────────
+// SECTION 2: แจ้งเตือน LINE เมื่อบิลครบกำหนด + สต็อกใกล้หมด
+// หมายเหตุ: ใช้ sendLineNotify(event, message, data) จาก ui.js
+// ─────────────────────────────────────────────────────────────
 
 async function checkAndNotifyOverdueBills() {
   const ls = db.lineSettings || {};
@@ -210,10 +210,10 @@ async function checkAndNotifyOverdueBills() {
     const balance = typeof getInvoicePaidAmount === 'function'
       ? (inv.grandTotal||0) - getInvoicePaidAmount(inv.id)
       : (inv.grandTotal||0);
-    return `â¢ ${inv.patientName} (${inv.docNo}) à¸à¹à¸²à¸ ${_thb(balance)} à¸à¸£à¸ ${inv.dueDate}`;
+    return `• ${inv.patientName} (${inv.docNo}) ค้าง ${_thb(balance)} ครบ ${inv.dueDate}`;
   });
 
-  const msg = `â° à¹à¸à¹à¸à¹à¸à¸·à¸­à¸à¸à¸´à¸¥à¸à¹à¸²à¸à¸à¸³à¸£à¸° ${overdueList.length} à¸£à¸²à¸¢à¸à¸²à¸£\nââââââââââââââ\n${lines.join('\n')}${overdueList.length > 10 ? `\n...à¹à¸¥à¸°à¸­à¸µà¸ ${overdueList.length-10} à¸£à¸²à¸¢à¸à¸²à¸£` : ''}\n\nð à¸à¸£à¸¸à¸à¸²à¸à¸£à¸§à¸à¸ªà¸­à¸à¹à¸à¸£à¸°à¸à¸à¸à¸±à¸à¸à¸µ`;
+  const msg = `⏰ แจ้งเตือนบิลค้างชำระ ${overdueList.length} รายการ\n━━━━━━━━━━━━━━\n${lines.join('\n')}${overdueList.length > 10 ? `\n...และอีก ${overdueList.length-10} รายการ` : ''}\n\n🔗 กรุณาตรวจสอบในระบบบัญชี`;
 
   await sendLineNotify('overdue_bills', msg, { count: overdueList.length });
 }
@@ -228,23 +228,23 @@ async function checkAndNotifyLowStockDaily() {
   const outItems  = lowItems.filter(i => i.qty <= 0);
   const nearItems = lowItems.filter(i => i.qty > 0);
 
-  let msg = `ð¦ à¹à¸à¹à¸à¹à¸à¸·à¸­à¸à¸ªà¸à¹à¸­à¸à¸ªà¸´à¸à¸à¹à¸²à¸à¸£à¸°à¸à¸³à¸§à¸±à¸\nââââââââââââââ`;
+  let msg = `📦 แจ้งเตือนสต็อกสินค้าประจำวัน\n━━━━━━━━━━━━━━`;
   if (outItems.length > 0) {
-    msg += `\nð´ à¸«à¸¡à¸à¸ªà¸à¹à¸­à¸ ${outItems.length} à¸£à¸²à¸¢à¸à¸²à¸£:\n` +
-      outItems.slice(0,5).map(i => `â¢ ${i.name} (à¹à¸«à¸¥à¸·à¸­ 0 ${i.unit})`).join('\n');
-    if (outItems.length > 5) msg += `\n  ...à¹à¸¥à¸°à¸­à¸µà¸ ${outItems.length-5} à¸£à¸²à¸¢à¸à¸²à¸£`;
+    msg += `\n🔴 หมดสต็อก ${outItems.length} รายการ:\n` +
+      outItems.slice(0,5).map(i => `• ${i.name} (เหลือ 0 ${i.unit})`).join('\n');
+    if (outItems.length > 5) msg += `\n  ...และอีก ${outItems.length-5} รายการ`;
   }
   if (nearItems.length > 0) {
-    msg += `\nð¡ à¹à¸à¸¥à¹à¸«à¸¡à¸ ${nearItems.length} à¸£à¸²à¸¢à¸à¸²à¸£:\n` +
-      nearItems.slice(0,5).map(i => `â¢ ${i.name} (à¹à¸«à¸¥à¸·à¸­ ${i.qty}/${i.reorder} ${i.unit})`).join('\n');
-    if (nearItems.length > 5) msg += `\n  ...à¹à¸¥à¸°à¸­à¸µà¸ ${nearItems.length-5} à¸£à¸²à¸¢à¸à¸²à¸£`;
+    msg += `\n🟡 ใกล้หมด ${nearItems.length} รายการ:\n` +
+      nearItems.slice(0,5).map(i => `• ${i.name} (เหลือ ${i.qty}/${i.reorder} ${i.unit})`).join('\n');
+    if (nearItems.length > 5) msg += `\n  ...และอีก ${nearItems.length-5} รายการ`;
   }
-  msg += `\n\nð à¸à¸£à¸¸à¸à¸²à¸ªà¸±à¹à¸à¸à¸·à¹à¸­à¹à¸à¸´à¹à¸¡à¹à¸à¸£à¸°à¸à¸`;
+  msg += `\n\n🛒 กรุณาสั่งซื้อเพิ่มในระบบ`;
 
   await sendLineNotify('low_stock_daily', msg, { outCount: outItems.length, nearCount: nearItems.length });
 }
 
-// à¹à¸£à¸µà¸¢à¸à¸­à¸±à¸à¹à¸à¸¡à¸±à¸à¸´à¸à¸­à¸à¹à¸à¸´à¸à¸£à¸°à¸à¸ à¸§à¸±à¸à¸¥à¸°à¸à¸£à¸±à¹à¸
+// เรียกอัตโนมัติตอนเปิดระบบ วันละครั้ง
 async function runDailyLineNotifications() {
   const today = new Date().toISOString().split('T')[0];
   const lastRun = localStorage.getItem('_navasri_line_notify_date');
@@ -256,27 +256,27 @@ async function runDailyLineNotifications() {
   localStorage.setItem('_navasri_line_notify_date', today);
 }
 
-// à¸à¸¸à¹à¸¡à¸ªà¹à¸à¹à¸à¹à¸à¹à¸à¸·à¸­à¸à¸à¹à¸§à¸¢à¸à¸à¹à¸­à¸
+// ปุ่มส่งแจ้งเตือนด้วยตนเอง
 async function manualNotifyLowStock() {
   const ls = db.lineSettings || {};
   if (!ls.enabled || !ls.webhookUrl) {
-    toast('à¸¢à¸±à¸à¹à¸¡à¹à¹à¸à¹à¸à¸±à¹à¸à¸à¹à¸² LINE Webhook', 'warning'); return;
+    toast('ยังไม่ได้ตั้งค่า LINE Webhook', 'warning'); return;
   }
-  // à¹à¸à¹ low_stock event à¸à¸µà¹à¸¡à¸µà¸­à¸¢à¸¹à¹à¹à¸¥à¹à¸§à¹à¸ buildLineMsg
+  // ใช้ low_stock event ที่มีอยู่แล้วใน buildLineMsg
   const lowItems = (db.items || []).filter(i => i.qty <= i.reorder);
-  if (lowItems.length === 0) { toast('à¹à¸¡à¹à¸¡à¸µà¸ªà¸´à¸à¸à¹à¸²à¹à¸à¸¥à¹à¸«à¸¡à¸à¹à¸à¸à¸à¸°à¸à¸µà¹', 'info'); return; }
+  if (lowItems.length === 0) { toast('ไม่มีสินค้าใกล้หมดในขณะนี้', 'info'); return; }
   for (const i of lowItems.slice(0, 5)) {
     await sendLineNotify('low_stock', buildLineMsg('low_stock', {
       itemName: i.name, qty: i.qty, unit: i.unit, reorder: i.reorder
     }), { itemId: i.id });
   }
-  if (lowItems.length > 5) toast(`à¸ªà¹à¸à¹à¸à¹à¸à¹à¸à¸·à¸­à¸à¸ªà¸´à¸à¸à¹à¸² 5/${lowItems.length} à¸£à¸²à¸¢à¸à¸²à¸£à¹à¸¥à¹à¸§`, 'success');
+  if (lowItems.length > 5) toast(`ส่งแจ้งเตือนสินค้า 5/${lowItems.length} รายการแล้ว`, 'success');
 }
 
 async function manualNotifyOverdueBills() {
   const ls = db.lineSettings || {};
   if (!ls.enabled || !ls.webhookUrl) {
-    toast('à¸¢à¸±à¸à¹à¸¡à¹à¹à¸à¹à¸à¸±à¹à¸à¸à¹à¸² LINE Webhook', 'warning'); return;
+    toast('ยังไม่ได้ตั้งค่า LINE Webhook', 'warning'); return;
   }
   const saved = ls.notifyOverdueBills;
   db.lineSettings.notifyOverdueBills = true; // force send
@@ -284,68 +284,68 @@ async function manualNotifyOverdueBills() {
   db.lineSettings.notifyOverdueBills = saved;
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─────────────────────────────────────────────────────────────
 // SECTION 3: EXPORT MONTHLY EXCEL
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─────────────────────────────────────────────────────────────
 
 function exportMonthlyExcel(monthStr) {
   const month = monthStr || new Date().toISOString().slice(0, 7);
-  if (typeof XLSX === 'undefined') { toast('à¹à¸¡à¹à¸à¸ SheetJS', 'error'); return; }
+  if (typeof XLSX === 'undefined') { toast('ไม่พบ SheetJS', 'error'); return; }
 
   const wb = XLSX.utils.book_new();
 
-  // Sheet 1: à¸£à¸²à¸¢à¸£à¸±à¸ (payments)
+  // Sheet 1: รายรับ (payments)
   const payRows = [
-    ['#','à¸§à¸±à¸à¸à¸µà¹à¸£à¸±à¸','à¹à¸¥à¸à¸à¸´à¸¥','à¸à¸¹à¹à¸£à¸±à¸à¸à¸£à¸´à¸à¸²à¸£','à¸à¸³à¸à¸§à¸à¹à¸à¸´à¸','à¸§à¸´à¸à¸µà¸à¸³à¸£à¸°','à¸à¸¹à¹à¸£à¸±à¸','à¹à¸¥à¸à¹à¸à¹à¸ªà¸£à¹à¸']
+    ['#','วันที่รับ','เลขบิล','ผู้รับบริการ','จำนวนเงิน','วิธีชำระ','ผู้รับ','เลขใบเสร็จ']
   ];
   (db.payments||[]).filter(p=>(p.paymentDate||'').startsWith(month)).forEach((p,i) => {
     const inv = (db.invoices||[]).find(inv=>inv.id===p.invoiceId);
     payRows.push([i+1,p.paymentDate,inv?.docNo||'-',p.patientName||inv?.patientName||'-',
       p.amount||0,p.method||'-',p.receivedBy||'-',p.receiptNo||'-']);
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(payRows), 'à¸£à¸²à¸¢à¸£à¸±à¸');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(payRows), 'รายรับ');
 
-  // Sheet 2: à¸£à¸²à¸¢à¸à¹à¸²à¸¢ (expenses)
-  const expRows = [['#','à¸§à¸±à¸à¸à¸µà¹','à¹à¸¥à¸à¹à¸­à¸à¸ªà¸²à¸£','à¸£à¸²à¸¢à¸à¸²à¸£','à¸à¸³à¸à¸§à¸à¹à¸à¸´à¸','à¸«à¸¡à¸²à¸¢à¹à¸«à¸à¸¸']];
+  // Sheet 2: รายจ่าย (expenses)
+  const expRows = [['#','วันที่','เลขเอกสาร','รายการ','จำนวนเงิน','หมายเหตุ']];
   (db.expenses||[]).filter(e=>(e.date||'').startsWith(month)).forEach((e,i) => {
     expRows.push([i+1,e.date,e.docNo||'-',e.vendorName||e.job||'-',e.net||0,e.note||'']);
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(expRows), 'à¸£à¸²à¸¢à¸à¹à¸²à¸¢');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(expRows), 'รายจ่าย');
 
-  // Sheet 3: à¹à¸à¹à¸à¹à¸à¸«à¸à¸µà¹à¸à¸±à¹à¸à¸«à¸¡à¸
-  const invRows = [['#','à¹à¸¥à¸à¸à¸µà¹','à¸à¸£à¸°à¹à¸ à¸','à¸à¸¹à¹à¸£à¸±à¸à¸à¸£à¸´à¸à¸²à¸£','à¸§à¸±à¸à¸à¸µà¹','à¸à¸£à¸à¸à¸³à¸«à¸à¸','à¸¢à¸­à¸à¸£à¸§à¸¡','à¸à¸³à¸£à¸°à¹à¸¥à¹à¸§','à¸à¸à¸à¹à¸²à¸','à¸ªà¸à¸²à¸à¸°']];
+  // Sheet 3: ใบแจ้งหนี้ทั้งหมด
+  const invRows = [['#','เลขที่','ประเภท','ผู้รับบริการ','วันที่','ครบกำหนด','ยอดรวม','ชำระแล้ว','คงค้าง','สถานะ']];
   (db.invoices||[]).filter(inv=>(inv.date||'').startsWith(month)).forEach((inv,i) => {
     const paid = typeof getInvoicePaidAmount==='function' ? getInvoicePaidAmount(inv.id) : 0;
     const status = typeof getInvoicePaymentStatus==='function' ? getInvoicePaymentStatus(inv) : inv.status;
-    const statusLabel = {draft:'à¸£à¹à¸²à¸',sent:'à¸£à¸­à¸à¸³à¸£à¸°',partial:'à¸à¸³à¸£à¸°à¸à¸²à¸à¸ªà¹à¸§à¸',paid:'à¸à¸³à¸£à¸°à¸à¸£à¸',cancelled:'à¸¢à¸à¹à¸¥à¸´à¸'}[status]||status;
+    const statusLabel = {draft:'ร่าง',sent:'รอชำระ',partial:'ชำระบางส่วน',paid:'ชำระครบ',cancelled:'ยกเลิก'}[status]||status;
     invRows.push([i+1,inv.docNo,inv.type,inv.patientName,inv.date,inv.dueDate||'-',
       inv.grandTotal||0,paid,Math.max(0,(inv.grandTotal||0)-paid),statusLabel]);
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(invRows), 'à¹à¸à¹à¸à¹à¸à¸«à¸à¸µà¹');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(invRows), 'ใบแจ้งหนี้');
 
   XLSX.writeFile(wb, `navasri_report_${month}.xlsx`);
-  toast(`à¸à¸²à¸§à¸à¹à¹à¸«à¸¥à¸ Excel à¸£à¸²à¸¢à¸à¸²à¸à¹à¸à¸·à¸­à¸ ${_thaiMonth(month)} à¹à¸¥à¹à¸§ â`, 'success');
+  toast(`ดาวน์โหลด Excel รายงานเดือน ${_thaiMonth(month)} แล้ว ✅`, 'success');
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// SECTION 4: BACKUP à¸à¹à¸­à¸¡à¸¹à¸¥à¸à¸±à¹à¸à¸«à¸¡à¸ (à¹à¸à¹ ExcelJS à¸ªà¸³à¸«à¸£à¸±à¸ styling à¹à¸à¹à¸¡à¸£à¸¹à¸à¹à¸à¸)
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─────────────────────────────────────────────────────────────
+// SECTION 4: BACKUP ข้อมูลทั้งหมด (ใช้ ExcelJS สำหรับ styling เต็มรูปแบบ)
+// ─────────────────────────────────────────────────────────────
 
-// à¸ªà¸µà¸à¸£à¸°à¸à¸³à¹à¸à¹à¸¥à¸° sheet
+// สีประจำแต่ละ sheet
 const BACKUP_THEMES = {
-  'à¸ªà¸£à¸¸à¸':          { dark:'1B4F72', mid:'2E86C1', light:'D6EAF8', title:'ð à¸ªà¸£à¸¸à¸à¸ à¸²à¸à¸£à¸§à¸¡' },
-  'à¸à¸¹à¹à¸£à¸±à¸à¸à¸£à¸´à¸à¸²à¸£':  { dark:'145A32', mid:'1E8449', light:'D5F5E3', title:'ð¥ à¸à¸¹à¹à¸£à¸±à¸à¸à¸£à¸´à¸à¸²à¸£' },
-  'à¸à¸à¸±à¸à¸à¸²à¸':       { dark:'4A235A', mid:'7D3C98', light:'E8DAEF', title:'ð¤ à¸à¸à¸±à¸à¸à¸²à¸' },
-  'à¸«à¹à¸­à¸à¸à¸±à¸':       { dark:'7E5109', mid:'B7770D', light:'FDEBD0', title:'ðï¸ à¸«à¹à¸­à¸à¸à¸±à¸' },
-  'à¹à¸à¸µà¸¢à¸':         { dark:'1A5276', mid:'2471A3', light:'D6EAF8', title:'ðï¸ à¹à¸à¸µà¸¢à¸' },
-  'à¸ªà¸´à¸à¸à¹à¸²':        { dark:'0E6655', mid:'17A589', light:'D1F2EB', title:'ð¦ à¸ªà¸´à¸à¸à¹à¸²' },
-  'Lot à¸ªà¸´à¸à¸à¹à¸²':    { dark:'117A65', mid:'148F77', light:'D1F2EB', title:'ð¦ Lot à¸ªà¸´à¸à¸à¹à¸²' },
-  'à¹à¸à¹à¸à¹à¸à¸«à¸à¸µà¹':    { dark:'7B241C', mid:'C0392B', light:'FADBD8', title:'ð° à¹à¸à¹à¸à¹à¸à¸«à¸à¸µà¹' },
-  'à¸à¸²à¸£à¸à¸³à¸£à¸°à¹à¸à¸´à¸':   { dark:'186A3B', mid:'239B56', light:'D5F5E3', title:'ð³ à¸à¸²à¸£à¸à¸³à¸£à¸°à¹à¸à¸´à¸' },
-  'à¸à¹à¸²à¹à¸à¹à¸à¹à¸²à¸¢':    { dark:'6E2F1A', mid:'CA6F1E', light:'FAE5D3', title:'ð¸ à¸à¹à¸²à¹à¸à¹à¸à¹à¸²à¸¢' },
-  'à¸à¸²à¸£à¹à¸à¸´à¸à¸ªà¸´à¸à¸à¹à¸²': { dark:'154360', mid:'1F618D', light:'D6EAF8', title:'ð à¸à¸²à¸£à¹à¸à¸´à¸à¸ªà¸´à¸à¸à¹à¸²' },
-  'à¸­à¸¸à¸à¸±à¸à¸´à¹à¸«à¸à¸¸':    { dark:'515A5A', mid:'717D7E', light:'EAECEE', title:'â ï¸ à¸­à¸¸à¸à¸±à¸à¸´à¹à¸«à¸à¸¸' },
-  'à¸à¸¹à¹à¸à¸³à¸«à¸à¹à¸²à¸¢':    { dark:'212F3D', mid:'566573', light:'EAECEE', title:'ð­ à¸à¸¹à¹à¸à¸³à¸«à¸à¹à¸²à¸¢' },
+  'สรุป':          { dark:'1B4F72', mid:'2E86C1', light:'D6EAF8', title:'📊 สรุปภาพรวม' },
+  'ผู้รับบริการ':  { dark:'145A32', mid:'1E8449', light:'D5F5E3', title:'🏥 ผู้รับบริการ' },
+  'พนักงาน':       { dark:'4A235A', mid:'7D3C98', light:'E8DAEF', title:'👤 พนักงาน' },
+  'ห้องพัก':       { dark:'7E5109', mid:'B7770D', light:'FDEBD0', title:'🛏️ ห้องพัก' },
+  'เตียง':         { dark:'1A5276', mid:'2471A3', light:'D6EAF8', title:'🛏️ เตียง' },
+  'สินค้า':        { dark:'0E6655', mid:'17A589', light:'D1F2EB', title:'📦 สินค้า' },
+  'Lot สินค้า':    { dark:'117A65', mid:'148F77', light:'D1F2EB', title:'📦 Lot สินค้า' },
+  'ใบแจ้งหนี้':    { dark:'7B241C', mid:'C0392B', light:'FADBD8', title:'💰 ใบแจ้งหนี้' },
+  'การชำระเงิน':   { dark:'186A3B', mid:'239B56', light:'D5F5E3', title:'💳 การชำระเงิน' },
+  'ค่าใช้จ่าย':    { dark:'6E2F1A', mid:'CA6F1E', light:'FAE5D3', title:'💸 ค่าใช้จ่าย' },
+  'การเบิกสินค้า': { dark:'154360', mid:'1F618D', light:'D6EAF8', title:'📋 การเบิกสินค้า' },
+  'อุบัติเหตุ':    { dark:'515A5A', mid:'717D7E', light:'EAECEE', title:'⚠️ อุบัติเหตุ' },
+  'ผู้จำหน่าย':    { dark:'212F3D', mid:'566573', light:'EAECEE', title:'🏭 ผู้จำหน่าย' },
 };
 
 function _exjsColor(hex) {
@@ -365,13 +365,13 @@ function _exjsApplySheet(wb, sheetName, headers, dataRows, theme) {
   });
   const today_th = (() => {
     const d = new Date();
-    const M = ['à¸¡.à¸.','à¸.à¸.','à¸¡à¸µ.à¸.','à¹à¸¡.à¸¢.','à¸.à¸.','à¸¡à¸´.à¸¢.','à¸.à¸.','à¸ª.à¸.','à¸.à¸¢.','à¸.à¸.','à¸.à¸¢.','à¸.à¸.'];
+    const M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
     return `${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()+543}`;
   })();
   const ncols = headers.length;
 
   // Row 1: Title
-  const r1 = ws.addRow([`à¸à¸§à¸¨à¸£à¸µ à¹à¸à¸­à¸£à¹à¸ªà¸à¸´à¹à¸à¹à¸®à¸¡  Â·  ${title}  Â·  ${today_th}`]);
+  const r1 = ws.addRow([`นวศรี เนอร์สซิ่งโฮม  ·  ${title}  ·  ${today_th}`]);
   r1.height = 28;
   ws.mergeCells(1, 1, 1, ncols);
   const c1 = r1.getCell(1);
@@ -380,7 +380,7 @@ function _exjsApplySheet(wb, sheetName, headers, dataRows, theme) {
   c1.alignment = { horizontal:'center', vertical:'middle' };
 
   // Row 2: Subtitle
-  const r2 = ws.addRow([`à¸à¹à¸­à¸¡à¸¹à¸¥ à¸ à¸§à¸±à¸à¸à¸µà¹ ${today_th}  |  à¸à¸³à¸à¸§à¸ ${dataRows.length} à¸£à¸²à¸¢à¸à¸²à¸£`]);
+  const r2 = ws.addRow([`ข้อมูล ณ วันที่ ${today_th}  |  จำนวน ${dataRows.length} รายการ`]);
   r2.height = 16;
   ws.mergeCells(2, 1, 2, ncols);
   const c2 = r2.getCell(1);
@@ -438,39 +438,39 @@ function _calcDuration(startDate, endDate) {
   const years  = Math.floor(days / 365);
   const months = Math.floor((days % 365) / 30);
   const rem    = days % 30;
-  if (years > 0)  return `${years} à¸à¸µ ${months} à¹à¸à¸·à¸­à¸`;
-  if (months > 0) return `${months} à¹à¸à¸·à¸­à¸ ${rem} à¸§à¸±à¸`;
-  return `${days} à¸§à¸±à¸`;
+  if (years > 0)  return `${years} ปี ${months} เดือน`;
+  if (months > 0) return `${months} เดือน ${rem} วัน`;
+  return `${days} วัน`;
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// SECTION 5: LINE SETTINGS â à¹à¸à¸´à¹à¸¡ toggle à¸ªà¸³à¸«à¸£à¸±à¸ features à¹à¸«à¸¡à¹
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─────────────────────────────────────────────────────────────
+// SECTION 5: LINE SETTINGS — เพิ่ม toggle สำหรับ features ใหม่
+// ─────────────────────────────────────────────────────────────
 
-// à¹à¸£à¸µà¸¢à¸à¹à¸à¹à¹à¸ loadLineSettingsUI() à¹à¸à¸·à¹à¸­à¹à¸à¸´à¹à¸¡ toggle à¹à¸«à¸¡à¹
+// เรียกใช้ใน loadLineSettingsUI() เพื่อเพิ่ม toggle ใหม่
 function extendLineSettingsUI() {
   const container = document.getElementById('line-extra-settings');
   if (!container) return;
   const ls = db.lineSettings || {};
   container.innerHTML = `
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;">ð à¸à¸²à¸£à¹à¸à¹à¸à¹à¸à¸·à¸­à¸à¹à¸à¸´à¹à¸¡à¹à¸à¸´à¸¡</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;">🔔 การแจ้งเตือนเพิ่มเติม</div>
       <label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;">
         <input type="checkbox" id="ls-notify-overdue" ${ls.notifyOverdueBills?'checked':''}
           onchange="updateLineSetting('notifyOverdueBills', this.checked)" style="width:16px;height:16px;">
-        <span style="font-size:13px;">â° à¹à¸à¹à¸à¹à¸à¸·à¸­à¸à¸à¸´à¸¥à¸à¹à¸²à¸à¸à¸³à¸£à¸°à¸£à¸²à¸¢à¸§à¸±à¸</span>
+        <span style="font-size:13px;">⏰ แจ้งเตือนบิลค้างชำระรายวัน</span>
       </label>
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px;">
         <input type="checkbox" id="ls-notify-stock" ${ls.notifyLowStock?'checked':''}
           onchange="updateLineSetting('notifyLowStock', this.checked)" style="width:16px;height:16px;">
-        <span style="font-size:13px;">ð¦ à¹à¸à¹à¸à¹à¸à¸·à¸­à¸à¸ªà¸à¹à¸­à¸à¸ªà¸´à¸à¸à¹à¸²à¹à¸à¸¥à¹à¸«à¸¡à¸/à¸«à¸¡à¸à¸­à¸²à¸¢à¸¸</span>
+        <span style="font-size:13px;">📦 แจ้งเตือนสต็อกสินค้าใกล้หมด/หมดอายุ</span>
       </label>
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
         <button class="btn btn-sm" onclick="manualNotifyOverdueBills()" style="background:#e67e2222;color:#e67e22;border:1px solid #e67e22;">
-          â° à¸à¸à¸ªà¸­à¸à¸ªà¹à¸à¹à¸à¹à¸à¸à¸´à¸¥à¸à¹à¸²à¸
+          ⏰ ทดสอบส่งแจ้งบิลค้าง
         </button>
         <button class="btn btn-sm" onclick="manualNotifyLowStock()" style="background:#3498db22;color:#3498db;border:1px solid #3498db;">
-          ð¦ à¸à¸à¸ªà¸­à¸à¸ªà¹à¸à¹à¸à¹à¸à¸ªà¸à¹à¸­à¸
+          📦 ทดสอบส่งแจ้งสต็อก
         </button>
       </div>
     </div>`;
@@ -479,16 +479,16 @@ function extendLineSettingsUI() {
 async function updateLineSetting(key, value) {
   db.lineSettings = db.lineSettings || {};
   db.lineSettings[key] = value;
-  // à¸à¸±à¸à¸à¸¶à¸à¸¥à¸ Supabase settings
+  // บันทึกลง Supabase settings
   await supa.from('settings').upsert({ key: 'lineSettings', value: db.lineSettings });
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// INIT: Hook à¹à¸à¹à¸² renderPageExtra à¸à¸µà¹à¸¡à¸µà¸­à¸¢à¸¹à¹à¹à¸¥à¹à¸§
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─────────────────────────────────────────────────────────────
+// INIT: Hook เข้า renderPageExtra ที่มีอยู่แล้ว
+// ─────────────────────────────────────────────────────────────
 
-// à¹à¸à¹à¸ reference à¸à¸­à¸ renderPageExtra à¹à¸à¸´à¸¡ (à¸à¸²à¸ billing-core.js)
-// à¹à¸¥à¹à¸§à¸à¹à¸­à¸à¹à¸²à¸¢ logic à¸à¸­à¸ features.js à¹à¸à¹à¸²à¹à¸
+// เก็บ reference ของ renderPageExtra เดิม (จาก billing-core.js)
+// แล้วต่อท้าย logic ของ features.js เข้าไป
 (function() {
   const _prev = typeof window._renderPageExtraOrig === 'function'
     ? window._renderPageExtraOrig
@@ -497,11 +497,11 @@ async function updateLineSetting(key, value) {
   window._renderPageExtraOrig = _prev;
 
   window.renderPageExtra = function(page) {
-    // à¹à¸£à¸µà¸¢à¸ renderPageExtra à¹à¸à¸´à¸¡ (billing-core.js)
+    // เรียก renderPageExtra เดิม (billing-core.js)
     if (_prev && _prev !== window.renderPageExtra) {
       try { _prev(page); } catch(e) { console.warn('renderPageExtra prev error', e); }
     }
-    // à¹à¸à¸´à¹à¸¡ features à¹à¸«à¸¡à¹
+    // เพิ่ม features ใหม่
     if (page === 'dashboard') {
       setTimeout(() => {
         const el = document.getElementById('dash-monthly-summary');
