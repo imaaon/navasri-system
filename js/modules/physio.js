@@ -124,7 +124,7 @@ async function renderPhysioTab(patientId) {
       endDate = new Date(parseInt(parts[0]), parseInt(parts[1]), 0).toISOString().split("T")[0];
     }
   }
-  var result = await supa.from("physio_sessions").select("*").eq("patient_id", patientId).gte("session_date", startDate).lte("session_date", endDate).order("session_date", { ascending: false });
+  var result = await supa.from("physio_sessions").select("*").eq("patient_id", patientId).order("session_date", { ascending: false });
   var sessions = result.data;
   var error = result.error;
   if (error) { listEl.innerHTML = "<div style=\"color:red;padding:16px;\">Error: " + error.message + "</div>"; return; }
