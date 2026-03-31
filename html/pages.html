@@ -16,7 +16,7 @@
           <div class="stat-card green" onclick="showPage('requisition'); setTimeout(()=>switchHistoryTab('approval'),100);" style="cursor:pointer;" title="คลิกดูรายการรออนุมัติ">
             <div class="stat-label">เบิกวันนี้</div>
             <div class="stat-value number" id="stat-today">0</div>
-            <div class="stat-sub">รายการ · <span style="text-decoration:underline;opacity:.7;">ดูประวัติ →</span></div>
+            <div class="stat-sub">รายการ · <span style="text-decoration:underline;opacity:.7;cursor:pointer;" onclick="event.stopPropagation();showPage('history');">ดูประวัติ →</span></div>
             <div class="stat-icon">📋</div>
           </div>
           <div class="stat-card blue">
