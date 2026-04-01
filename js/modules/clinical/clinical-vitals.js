@@ -163,12 +163,12 @@ async function saveVitalSign() {
     other_fields: document.getElementById('vital-other').value.trim(),
     note: document.getElementById('vital-note').value.trim(),
   };
+  const pid = String(patientId);
   let ins, error;
   if (editId) {
     // แก้ไขรายการเดิม
     ({ data: ins, error } = await supa.from('vital_signs').update(data).eq('id', editId).select().single());
     if (error) { toast('แก้ไขไม่สำเร็จ: '+error.message,'error'); return; }
-    const pid=String(patientId);
     if(!db.vitalSigns[pid]) db.vitalSigns[pid]=[];
     db.vitalSigns[pid] = db.vitalSigns[pid].map(v => String(v.id)===String(editId) ? mapVitalSign(ins) : v);
     toast('แก้ไข Vital Signs แล้ว','success');
@@ -176,7 +176,6 @@ async function saveVitalSign() {
     // เพิ่มรายการใหม่
     ({ data: ins, error } = await supa.from('vital_signs').insert(data).select().single());
     if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
-    const pid=String(patientId);
     if(!db.vitalSigns[pid]) db.vitalSigns[pid]=[];
     db.vitalSigns[pid].unshift(mapVitalSign(ins));
     toast('บันทึก Vital Signs แล้ว','success');
