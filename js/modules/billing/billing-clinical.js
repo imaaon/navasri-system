@@ -532,6 +532,9 @@ async function renderDietaryPage() {
     <td>${DIET_LABELS[d.dietType]||''} ${d.dietType||''}</td>
     <td style="font-size:12px;">${(Array.isArray(d.restrictions) ? d.restrictions : (typeof d.restrictions==='string' ? JSON.parse(d.restrictions||'[]') : [])).join(', ')||'—'}</td>
     <td>${d.meals||'3 มื้อ'}</td>
+    <td style="font-size:12px;text-align:center;">${d.calories||'—'}</td>
+    <td style="font-size:12px;text-align:center;">${d.protein!=null?d.protein+'g':'—'}</td>
+    <td style="font-size:12px;">${d.recorder||'—'}</td>
     <td style="font-size:12px;">${d.note||'—'}</td>
     <td style="font-size:11px;color:var(--text2);">${(d.updatedAt||'').slice(0,10)}</td>
     <td style="white-space:nowrap;">
