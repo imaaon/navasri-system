@@ -313,6 +313,8 @@ async function renderIncidentPage() {
       <td style="font-size:12px;">${x.location||'-'}</td>
       <td style="font-size:12px;max-width:200px;">${x.detail||''}</td>
       <td style="font-size:12px;max-width:150px;">${x.firstAid||'-'}</td>
+      <td style="font-size:12px;"><span class="badge ${x.severity==='สูง'?'badge-red':x.severity==='ปานกลาง'?'badge-orange':'badge-blue'}">${x.severity||'-'}</span></td>
+      <td style="font-size:12px;">${x.notified||'-'}</td>
       <td style="font-size:12px;">${x.recorder||'-'}</td>
       <td style="text-align:center;">${photoThumb}</td>
       <td style="white-space:nowrap;">
@@ -336,6 +338,8 @@ async function renderIncidentPage() {
       <td style="font-size:12px;">${x.width||0}×${x.length||0}×${x.depth||0}</td>
       <td style="font-size:12px;">${x.appearance||'-'}</td>
       <td style="font-size:12px;max-width:160px;">${x.treatment||'-'}</td>
+      <td style="font-size:12px;text-align:center;">${x.painScore!=null?x.painScore:'-'}</td>
+      <td style="font-size:12px;max-width:120px;">${x.note||'-'}</td>
       <td style="font-size:12px;">${x.recorder||'-'} ${TREND[x.trend]||''}</td>
       <td style="text-align:center;">${photoThumb}</td>
       <td style="white-space:nowrap;">
