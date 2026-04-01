@@ -45,7 +45,7 @@ function renderBelongingList(patientId) {
       <thead><tr style="font-size:12px;"><th style="padding:6px 16px;">สิ่งของ</th><th>จำนวน</th><th>สภาพ</th><th>วันนำเข้า</th><th>รับโดย</th><th>หมายเหตุ</th><th></th></tr></thead>
       <tbody>
         ${list.map(b=>`<tr style="font-size:13px;">
-          <td style="padding:8px 16px;font-weight:600;">${b.itemName}${b.description?`<br><span style="font-size:11px;font-weight:400;color:var(--text3);">${b.description}</span>`:''}</td>
+          <td style="padding:8px 16px;">${b.photo||b.photoUrl ? `<img src="${b.photo||b.photoUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;cursor:zoom-in;" onclick="window.open('${b.photo||b.photoUrl}','_blank')" title="คลิกขยาย">` : '<span style="color:var(--text3);font-size:11px;">-</span>'}</td><td style="padding:8px 16px;font-weight:600;">${b.itemName}${b.description?`<br><span style="font-size:11px;font-weight:400;color:var(--text3);">${b.description}</span>`:''}</td>
           <td class="number">${b.qty}</td>
           <td><span style="font-size:11px;padding:2px 7px;border-radius:10px;background:${COND_COLOR[b.condition]||'#888'}22;color:${COND_COLOR[b.condition]||'#888'};">${b.condition}</span></td>
           <td style="font-size:12px;">${b.dateIn}</td>
