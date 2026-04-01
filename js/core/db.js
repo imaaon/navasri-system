@@ -350,7 +350,7 @@ function mapBelonging(r) {
   return {
     id: r.id, patientId: r.patient_id||'', patientName: r.patient_name||'',
     itemName: r.item_name||'', qty: r.qty||1, condition: r.condition||'ดี',
-    description: r.description||'', photoUrl: r.photo_url||'',
+    description: r.description||'', photoUrl: r.photo_url||'', photo: r.photo||'',
     dateIn: r.date_in||'', dateOut: r.date_out||'',
     receivedBy: r.received_by||'', returnedBy: r.returned_by||'',
     status: r.status||'held', note: r.note||'',
