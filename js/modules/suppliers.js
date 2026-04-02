@@ -69,6 +69,13 @@ function editSupplier(id) {
   document.getElementById('supplier-taxid').value   = s.taxId || '';
   document.getElementById('supplier-status').value  = s.status || 'active';
   document.getElementById('supplier-note').value    = s.note || '';
+  document.getElementById('supplier-entity-type').value        = s.entityType || 'นิติบุคคล';
+  document.getElementById('supplier-credit-days').value        = s.creditDays != null ? s.creditDays : '';
+  document.getElementById('supplier-mobile').value             = s.mobile || '';
+  document.getElementById('supplier-website').value            = s.website || '';
+  document.getElementById('supplier-bank-name').value          = s.bankName || '';
+  document.getElementById('supplier-bank-account-name').value  = s.bankAccountName || '';
+  document.getElementById('supplier-bank-account-no').value    = s.bankAccountNo || '';
   document.querySelector('.modal-overlay#modal-addSupplier .modal-title').textContent = '✏️ แก้ไขผู้จำหน่าย';
   openModal('modal-addSupplier');
 }
@@ -753,6 +760,10 @@ function editSupplierInvoice(id) {
   document.getElementById('supinv-total').value    = inv.total;
   document.getElementById('supinv-status').value   = inv.status;
   document.getElementById('supinv-note').value     = inv.note || '';
+  document.getElementById('supinv-job-name').value     = inv.jobName || '';
+  document.getElementById('supinv-wht-rate').value     = inv.whtRate || 0;
+  document.getElementById('supinv-net-payable').value  = inv.netPayable != null ? inv.netPayable : '';
+  document.getElementById('supinv-supplier-manual').value = inv.supplierNameManual || '';
   const sel = document.getElementById('supinv-supplier');
   if (sel) { sel.innerHTML = '<option value="">--</option>' +
     (db.suppliers||[]).map(s=>`<option value="${s.id}" ${s.id==inv.supplierId?'selected':''}>${s.name}</option>`).join(''); }
