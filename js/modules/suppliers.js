@@ -195,6 +195,9 @@ function openAddPRModal() {
         .map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
   }
   renderPRItems();
+  updatePRRequesterList();
+  const rdEl = document.getElementById('pr-required-date'); if(rdEl) rdEl.value = '';
+  const rsEl = document.getElementById('pr-reason'); if(rsEl) rsEl.value = '';
   openModal('modal-addPR');
 }
 
