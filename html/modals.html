@@ -2667,7 +2667,7 @@
         <div class="modal-title" id="modal-addSupplier-title">+ เพิ่มผู้จำหน่าย</div>
         <button class="modal-close" onclick="closeModal('modal-addSupplier')">✕</button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="overflow-y:auto;flex:1;">
         <input type="hidden" id="editSupplierId">
         <div class="form-grid">
           <div class="form-group">
@@ -2823,12 +2823,12 @@
 
   <!-- Add Supplier Invoice Modal -->
   <div class="modal-overlay" id="modal-addSupInv">
-    <div class="modal" style="max-width:500px;">
+    <div class="modal" style="max-width:500px;max-height:90vh;display:flex;flex-direction:column;">
       <div class="modal-header">
         <div class="modal-title">🧾 บันทึกใบแจ้งหนี้ผู้จำหน่าย</div>
         <button class="modal-close" onclick="closeModal('modal-addSupInv')">✕</button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" style="overflow-y:auto;flex:1;">
         <input type="hidden" id="editSupInvId">
         <div class="form-grid">
           <div class="form-group">
