@@ -19,7 +19,7 @@ function renderSuppliers() {
   document.getElementById('supplierCount').textContent = `ทั้งหมด: ${list.length} ราย`;
 
   if (list.length === 0) {
-    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบข้อมูล</td></tr>';
+    tb.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบข้อมูล</td></tr>';
     return;
   }
 
@@ -607,6 +607,24 @@ function calcSupInvTotal() {
   const vat = parseFloat(document.getElementById('supinv-vat').value) || 0;
   const vatAmt = sub * vat / 100;
   document.getElementById('supinv-total').value = (sub + vatAmt).toFixed(2);
+}
+
+function calcSupInvNet() {
+  const sub = parseFloat(document.getElementById('supinv-subtotal')?.value) || 0;
+  const vat = parseFloat(document.getElementById('supinv-vat')?.value) || 0;
+  const wht = parseFloat(document.getElementById('supinv-wht-rate')?.value) || 0;
+  const total = sub * (1 + vat/100);
+  const whtAmt = sub * wht / 100;
+  const net = total - whtAmt;
+  const el = document.getElementById('supinv-net-payable');
+  if (el) el.value = net.toFixed(2);
+}
+
+function updatePRRequesterList() {
+  const dl = document.getElementById('pr-requester-list');
+  if (!dl) return;
+  const staff = (db.staff || []).filter(s => s.status === 'active' || !s.status);
+  dl.innerHTML = staff.map(s => `<option value="${s.name}">`).join('');
 }
 
 async function saveSupplierInvoice() {
