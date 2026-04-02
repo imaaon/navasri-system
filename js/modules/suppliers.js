@@ -203,15 +203,21 @@ function renderPRItems() {
     return;
   }
   container.innerHTML = prItems.map((it, i) => `
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-      <select class="form-control" style="flex:3;" onchange="prItemSelect(${i},this.value)">
-        <option value="">-- เลือกสินค้า --</option>
-        ${(db.items||[]).map(item=>`<option value="${item.id}" ${it.itemId==item.id?'selected':''}>${item.name}</option>`).join('')}
-      </select>
-      <input class="form-control number" type="number" min="1" value="${it.qty||1}" style="width:70px;"
-        oninput="prItemQty(${i},this.value)" placeholder="จำนวน">
-      <span style="font-size:12px;color:var(--text2);min-width:40px;">${it.unit||''}</span>
-      <button class="btn btn-ghost btn-sm" onclick="removePRItem(${i})">✕</button>
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div style="flex:3;display:flex;flex-direction:column;gap:4px;">
+          <select class="form-control" onchange="prItemSelect(${i},this.value)">
+            <option value="">-- เลือกจากคลังสินค้า --</option>
+            ${(db.items||[]).map(item=>`<option value="${item.id}" ${it.itemId==item.id?'selected':''}>${item.name}</option>`).join('')}
+          </select>
+          <input class="form-control" type="text" placeholder="หรือพิมพ์ชื่อรายการเอง..." value="${it.customName||''}"
+            oninput="prItemCustomName(${i},this.value)" style="font-size:12px;">
+        </div>
+        <input class="form-control number" type="number" min="1" value="${it.qty||1}" style="width:70px;"
+          oninput="prItemQty(${i},this.value)" placeholder="จำนวน">
+        <span style="font-size:12px;color:var(--text2);min-width:40px;">${it.unit||''}</span>
+        <button class="btn btn-ghost btn-sm" onclick="removePRItem(${i})">✕</button>
+      </div>
     </div>`).join('');
 }
 
