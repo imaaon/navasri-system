@@ -1454,7 +1454,7 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>#</th><th>รหัส</th><th>ชื่อ / ผู้ติดต่อ</th><th>โทรศัพท์</th><th>อีเมล</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+              <thead><tr><th>#</th><th>รหัส</th><th>ชื่อ / ผู้ติดต่อ</th><th>ประเภท</th><th>โทรศัพท์</th><th>มือถือ</th><th>อีเมล</th><th>เครดิต(วัน)</th><th>ธนาคาร</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
               <tbody id="supplierTable"></tbody>
             </table>
           </div>
@@ -1485,9 +1485,11 @@
             <table>
               <thead><tr>
                 <th>วันที่</th><th>เลขที่ใบแจ้งหนี้</th><th>ผู้จำหน่าย</th>
-                <th style="text-align:right;">ก่อน VAT</th>
+                <th>ชื่องาน</th><th style="text-align:right;">ก่อน VAT</th>
                 <th style="text-align:right;">VAT</th>
                 <th style="text-align:right;">รวม</th>
+                <th style="text-align:right;">หัก ณ(%)</th>
+                <th style="text-align:right;">ยอดชำระ</th>
                 <th>สถานะ</th><th>จัดการ</th>
               </tr></thead>
               <tbody id="supInvTable"></tbody>
@@ -1515,7 +1517,7 @@
           <div class="card-header"><div class="card-title">📋 คำขอซื้อสินค้า</div></div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>วันที่</th><th>เลขที่</th><th>ผู้ขอ</th><th>ผู้จำหน่าย</th><th>ความเร่งด่วน</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+              <thead><tr><th>วันที่</th><th>เลขที่</th><th>ผู้ขอ</th><th>ผู้จำหน่าย</th><th>ความเร่งด่วน</th><th>วันต้องการรับ</th><th>เหตุผล</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
               <tbody id="prTable"></tbody>
             </table>
           </div>
