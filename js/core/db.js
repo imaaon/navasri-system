@@ -188,6 +188,8 @@ function mapSupplierInvoice(r) {
     vatAmt: r.vat_amt || 0, total: r.total || 0,
     status: r.status || 'pending', paidDate: r.paid_date || '',
     paidAmount: r.paid_amount || 0, note: r.note || '',
+    jobName: r.job_name || '', whtRate: r.wht_rate || 0,
+    whtAmt: r.wht_amt || 0, netPayable: r.net_payable || null,
     createdBy: r.created_by || '', createdAt: r.created_at,
     lines: [],
   };
@@ -209,6 +211,7 @@ function mapPurchaseRequest(r) {
     requesterName: r.requester_name,
     supplierId: r.supplier_id, supplierName: r.supplier_name || '',
     urgency: r.urgency || 'normal', note: r.note || '',
+    requiredDate: r.required_date || '', reason: r.reason || '',
     status: r.status || 'draft',
     approvedBy: r.approved_by || '', approvedAt: r.approved_at,
     rejectReason: r.reject_reason || '',
