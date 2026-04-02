@@ -202,6 +202,10 @@ function mapSupplier(r) {
     taxId: r.tax_id || '', note: r.note || '',
     status: r.status || 'active',
     createdAt: r.created_at,
+    entityType: r.entity_type || '', creditDays: r.credit_days || null,
+    mobile: r.mobile || '', website: r.website || '',
+    bankName: r.bank_name || '', bankAccountName: r.bank_account_name || '',
+    bankAccountNo: r.bank_account_no || '',
   };
 }
 
