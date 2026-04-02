@@ -41,7 +41,9 @@ function renderSuppliers() {
 function openAddSupplierModal() {
   document.getElementById('editSupplierId').value = '';
   ['supplier-code','supplier-name','supplier-contact','supplier-phone',
-   'supplier-email','supplier-address','supplier-taxid','supplier-note'].forEach(id => {
+   'supplier-email','supplier-address','supplier-taxid','supplier-note',
+   'supplier-mobile','supplier-website','supplier-bank-name','supplier-bank-account-name','supplier-bank-account-no',
+   'supplier-credit-days'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -82,6 +84,13 @@ async function saveSupplier() {
     tax_id:         document.getElementById('supplier-taxid').value.trim() || null,
     status:         document.getElementById('supplier-status').value,
     note:           document.getElementById('supplier-note').value.trim() || null,
+    entity_type:    document.getElementById('supplier-entity-type').value || 'นิติบุคคล',
+    credit_days:    parseInt(document.getElementById('supplier-credit-days').value) || null,
+    mobile:         document.getElementById('supplier-mobile').value.trim() || null,
+    website:        document.getElementById('supplier-website').value.trim() || null,
+    bank_name:      document.getElementById('supplier-bank-name').value.trim() || null,
+    bank_account_name: document.getElementById('supplier-bank-account-name').value.trim() || null,
+    bank_account_no:   document.getElementById('supplier-bank-account-no').value.trim() || null,
     updated_at:     new Date().toISOString(),
   };
 
@@ -238,6 +247,8 @@ async function savePR(status = 'draft') {
     supplier_name:  supplier?.name || null,
     urgency:        document.getElementById('pr-urgency').value,
     note:           document.getElementById('pr-note').value.trim() || null,
+    required_date:  document.getElementById('pr-required-date').value || null,
+    reason:         document.getElementById('pr-reason').value.trim() || null,
     status,
     created_by:     currentUser?.username || '',
   };
@@ -606,7 +617,8 @@ async function saveSupplierInvoice() {
   const vatRate    = parseFloat(document.getElementById('supinv-vat').value) || 0;
 
   if (!invNo)      { toast('กรุณาระบุเลขที่ใบแจ้งหนี้', 'warning'); return; }
-  if (!supplierId) { toast('กรุณาเลือกผู้จำหน่าย', 'warning'); return; }
+  const supplierNameManual = document.getElementById('supinv-supplier-manual')?.value.trim() || '';
+  if (!supplierId && !supplierNameManual) { toast('กรุณาเลือกหรือระบุชื่อผู้จำหน่าย', 'warning'); return; }
   if (subtotal <= 0) { toast('กรุณาระบุมูลค่า', 'warning'); return; }
 
   const supplier = db.suppliers.find(s => s.id == supplierId);
@@ -618,11 +630,15 @@ async function saveSupplierInvoice() {
     invoice_date:        document.getElementById('supinv-date').value,
     due_date:            document.getElementById('supinv-due').value || null,
     supplier_id:         supplierId,
-    supplier_name:       supplier?.name || '',
+    supplier_name:       supplier?.name || supplierNameManual || '',
     purchase_request_id: document.getElementById('supinv-pr').value || null,
     subtotal, vat_rate: vatRate, vat_amt: vatAmt, total,
     status:              document.getElementById('supinv-status').value,
     note:                document.getElementById('supinv-note').value.trim() || null,
+    job_name:            document.getElementById('supinv-job-name').value.trim() || null,
+    wht_rate:            parseFloat(document.getElementById('supinv-wht-rate').value) || 0,
+    wht_amt:             (() => { const s2 = parseFloat(document.getElementById('supinv-subtotal').value)||0; const w = parseFloat(document.getElementById('supinv-wht-rate').value)||0; return s2 * w / 100; })(),
+    net_payable:         (() => { const tot = parseFloat(document.getElementById('supinv-total').value)||0; const s2 = parseFloat(document.getElementById('supinv-subtotal').value)||0; const w = parseFloat(document.getElementById('supinv-wht-rate').value)||0; return tot - (s2 * w / 100); })(),
     updated_at:          new Date().toISOString(),
   };
 
