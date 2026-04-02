@@ -29,8 +29,8 @@ function renderMedLogTab(patId, type) {
           ${entry.by ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">บันทึกโดย: ${entry.by}</div>` : ''}
         </div>
         <div style="flex-shrink:0;display:flex;flex-direction:column;gap:4px;">
-          <button class="btn btn-ghost btn-sm" onclick="editMedLog('${patId}','${type}',${i})" title="แก้ไข">✏️</button>
-          <button class="btn btn-ghost btn-sm" onclick="deleteMedLog('${patId}','${type}',${i})" title="ลบ" style="color:#e74c3c;">🗑️</button>
+          <button class="btn btn-ghost btn-sm" onclick="editMedLog('${patId}','${type}','${entry._supaId}')" title="แก้ไข">✏️</button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteMedLog('${patId}','${type}','${entry._supaId}')" title="ลบ" style="color:#e74c3c;">🗑️</button>
         </div>
       </div>`).join('');
 
