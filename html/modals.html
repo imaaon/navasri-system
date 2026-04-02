@@ -2711,6 +2711,22 @@
             <label class="form-label">หมายเหตุ</label>
             <input class="form-control" id="supplier-note" placeholder="หมายเหตุ">
           </div>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+          <b style="font-size:13px;">ข้อมูลเพิ่มเติม</b>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+            <div class="form-group"><label class="form-label">ประเภท</label><select class="form-control" id="supplier-entity-type"><option value="นิติบุคคล">นิติบุคคล</option><option value="บุคคลธรรมดา">บุคคลธรรมดา</option></select></div>
+            <div class="form-group"><label class="form-label">เครดิต (วัน)</label><input class="form-control" id="supplier-credit-days" type="number" min="0" placeholder="0"></div>
+            <div class="form-group"><label class="form-label">เบอร์มือถือ</label><input class="form-control" id="supplier-mobile" type="text" placeholder="08x-xxx-xxxx"></div>
+            <div class="form-group"><label class="form-label">เว็บไซต์</label><input class="form-control" id="supplier-website" type="text" placeholder="https://"></div>
+          </div></div>
+          <div style="margin-top:10px;">
+          <b style="font-size:13px;">ข้อมูลธนาคาร</b>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+            <div class="form-group"><label class="form-label">ธนาคาร</label><input class="form-control" id="supplier-bank-name" type="text" placeholder=""></div>
+            <div class="form-group"><label class="form-label">ชื่อบัญชี</label><input class="form-control" id="supplier-bank-account-name" type="text"></div>
+            <div class="form-group"><label class="form-label">เลขที่บัญชี</label><input class="form-control" id="supplier-bank-account-no" type="text"></div>
+          </div></div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -2732,7 +2748,8 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">ผู้ขอซื้อ <span class="required">*</span></label>
-            <input class="form-control" id="pr-requester" placeholder="ชื่อผู้ขอ">
+            <input class="form-control" id="pr-requester" list="pr-requester-list" placeholder="เลือกหรือพิมพ์ชื่อ" oninput="updatePRRequesterList()">
+            <datalist id="pr-requester-list"></datalist>
           </div>
           <div class="form-group">
             <label class="form-label">ความเร่งด่วน</label>
@@ -2757,6 +2774,8 @@
         <div class="form-group">
           <label class="form-label">หมายเหตุ</label>
           <textarea class="form-control" id="pr-note" rows="2" placeholder="หมายเหตุเพิ่มเติม"></textarea>
+        <div class="form-group" style="margin-top:8px;"><label class="form-label">วันที่ต้องการรัปสินค้า</label><input class="form-control" id="pr-required-date" type="date"></div>
+        <div class="form-group" style="margin-top:8px;"><label class="form-label">เหตุผลที่ขอซื้อ</label><textarea class="form-control" id="pr-reason" rows="2" placeholder="สินค้าหมด / เสียหาย"></textarea></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -2823,7 +2842,17 @@
         </div>
         <div class="form-group">
           <label class="form-label">หมายเหตุ</label>
-          <input class="form-control" id="supinv-note" placeholder="หมายเหตุ">
+          <input class="form-control" id="supinv-job-name" placeholder="ชื่องาน">
+        </div>
+        <div class="form-group"><label class="form-label">ชื่องาน / รายการ</label><input class="form-control" id="supinv-job-name" placeholder="ชื่องาน"></div>
+        <div class="form-group"><label class="form-label">หมายเหตุ</label>
+        <input class="form-control" id="supinv-note" placeholder="หมายเหตุ">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+          <div class="form-group"><label class="form-label">หัก ณ ที่จ่าย (%)</label><input class="form-control" id="supinv-wht-rate" type="number" step="0.01" min="0" value="0" oninput="calcSupInvNet()"></div>
+          <div class="form-group"><label class="form-label">ยอดชำระสุทธิ (บาท)</label><input class="form-control" id="supinv-net-payable" type="number" readonly style="background:var(--bg2);"></div>
+        </div>
+        <div class="form-group" style="margin-top:8px;"><label class="form-label">ระบุชื่อผู้จำหน่าย (ถ้าไม่อยู่ในรายชื่อ)</label><input class="form-control" id="supinv-supplier-manual" placeholder="พิมพ์ชื่อ..."></div>
         </div>
       </div>
       <div class="modal-footer">
