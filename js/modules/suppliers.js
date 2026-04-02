@@ -161,7 +161,7 @@ function renderPurchaseRequests() {
     <td style="font-size:12px;">${r.supplierName||'-'}</td>
     <td>${urgencyBadge(r.urgency)}</td>
     <td style="font-size:12px;">${r.requiredDate||'-'}</td>
-    <td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.reason||'''+'}">${r.reason||'-'}</td>
+    <td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.reason||''}">${r.reason||''-''}</td>
     <td>${statusBadge(r.status)}</td>
     <td>
       <button class="btn btn-ghost btn-sm" onclick="viewPurchaseRequest('${r.id}')">👁</button>
