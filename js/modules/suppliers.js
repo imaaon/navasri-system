@@ -27,8 +27,12 @@ function renderSuppliers() {
     <td style="color:var(--text3);font-size:12px;">${i+1}</td>
     <td style="font-family:monospace;font-size:12px;">${s.code||'-'}</td>
     <td style="font-weight:600;">${s.name}<br><span style="font-size:11px;color:var(--text3);">${s.contactName||''}</span></td>
+    <td style="font-size:12px;">${s.entityType||'-'}</td>
     <td style="font-size:12px;">${s.phone||'-'}</td>
+    <td style="font-size:12px;">${s.mobile||'-'}</td>
     <td style="font-size:12px;color:var(--text2);">${s.email||'-'}</td>
+    <td style="font-size:12px;">${s.creditDays!=null?s.creditDays+' วัน':'-'}</td>
+    <td style="font-size:12px;">${s.bankName||'-'}</td>
     <td>${s.status==='active'?'<span class="badge badge-green">ใช้งาน</span>':'<span class="badge badge-gray">ปิด</span>'}</td>
     <td>
       <button class="btn btn-ghost btn-sm" onclick="editSupplier('${s.id}')">✏️</button>
