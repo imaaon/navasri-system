@@ -645,6 +645,24 @@ function updatePRRequesterList() {
   dl.innerHTML = staff.map(s => `<option value="${s.name}">`).join('');
 }
 
+function calcSupInvNet() {
+  const sub = parseFloat(document.getElementById('supinv-subtotal')?.value) || 0;
+  const vat = parseFloat(document.getElementById('supinv-vat')?.value) || 0;
+  const wht = parseFloat(document.getElementById('supinv-wht-rate')?.value) || 0;
+  const total = sub * (1 + vat/100);
+  const whtAmt = sub * wht / 100;
+  const net = total - whtAmt;
+  const el = document.getElementById('supinv-net-payable');
+  if (el) el.value = net.toFixed(2);
+}
+
+function updatePRRequesterList() {
+  const dl = document.getElementById('pr-requester-list');
+  if (!dl) return;
+  const staff = (db.staff || []).filter(s => s.status === 'active' || !s.status);
+  dl.innerHTML = staff.map(s => `<option value="${s.name}">`).join('');
+}
+
 async function saveSupplierInvoice() {
   const editId     = document.getElementById('editSupInvId').value;
   const invNo      = document.getElementById('supinv-no').value.trim();
