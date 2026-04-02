@@ -574,7 +574,7 @@ function renderSupplierInvoices() {
     <td style="text-align:right;font-size:12px;color:var(--text2);">฿${(r.vatAmt||0).toLocaleString()}</td>
     <td style="text-align:right;font-weight:600;">฿${(r.total||0).toLocaleString()}</td>
     <td style="text-align:right;font-size:12px;">${r.whtRate!=null&&r.whtRate>0?r.whtRate+'%':'-'}</td>
-    <td style="text-align:right;font-size:12px;font-weight:600;color:var(--primary);">${r.netPayable!=null?'฿'+(r.netPayable||0).toLocaleString():'-'}</td>
+    <td style="text-align:right;font-size:12px;font-weight:600;color:var(--primary);">${r.netPayable!=null?"฿"+(r.netPayable||0).toLocaleString():'-'}</td>
     <td>${statusBadge(r.status)}</td>
     <td>
       <button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('${r.id}')">✏️</button>
