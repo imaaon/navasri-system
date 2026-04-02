@@ -423,7 +423,7 @@ async function loadPatientClinical(patientId) {
   const pid = String(patientId);
   const [meds, mar, vitals, notes, medlogs] = await Promise.all([
     supa.from('patient_medications').select('*').eq('patient_id', patientId).order('name'),
-    supa.from('mar_records').select('*').eq('patient_id', patientId).order('date', {ascending: false}),
+    supa.from('mar_records').select('*').eq('patient_id', patientId).order('created_at', {ascending: false}),
     supa.from('vital_signs').select('*').eq('patient_id', patientId).order('recorded_at', {ascending: false}).limit(90),
     supa.from('nursing_notes').select('*').eq('patient_id', patientId).order('date', {ascending: false}).order('shift'),
     supa.from('medical_logs').select('*').eq('patient_id', patientId).order('date', {ascending: false}),
