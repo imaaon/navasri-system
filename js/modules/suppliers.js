@@ -226,12 +226,18 @@ function prItemSelect(i, itemId) {
     prItems[i].itemId   = item.id;
     prItems[i].itemName = item.name;
     prItems[i].unit     = item.purchaseUnit || item.unit;
+    prItems[i].customName = '';
   }
   renderPRItems();
 }
 
 function prItemQty(i, val) {
   prItems[i].qty = parseFloat(val) || 1;
+}
+
+function prItemCustomName(i, val) {
+  prItems[i].customName = val;
+  if (val.trim()) prItems[i].itemName = val.trim();
 }
 
 function removePRItem(i) {
