@@ -426,7 +426,7 @@ async function loadPatientClinical(patientId) {
     supa.from('mar_records').select('*').eq('patient_id', patientId).order('created_at', {ascending: false}),
     supa.from('vital_signs').select('*').eq('patient_id', patientId).order('recorded_at', {ascending: false}).limit(90),
     supa.from('nursing_notes').select('*').eq('patient_id', patientId).order('date', {ascending: false}).order('shift'),
-    supa.from('medical_logs').select('*').eq('patient_id', patientId).order('date', {ascending: false}),
+    supa.from('medical_logs').select('*').eq('patient_id', patientId).order('created_at', {ascending: false}),
   ]);
   db.medications[pid]  = (meds.data  ||[]).map(mapMedication);
   db.marRecords[pid]   = (mar.data   ||[]).map(mapMarRecord);
