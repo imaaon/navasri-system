@@ -59,12 +59,12 @@ function openAddMedLog(patId, type) {
   openModal('modal-addMedLog');
 }
 
-function editMedLog(patId, type, idx) {
+function editMedLog(patId, type, supaId) {
   const p = db.patients.find(x => x.id == patId);
   if (!p) return;
   const key  = type === 'medical' ? 'medicalLog' : 'medsLog';
   const logs = (p[key] || []).slice().sort((a,b) => b.date.localeCompare(a.date));
-  const entry = logs[idx];
+  const entry = logs.find(e => String(e._supaId) === String(supaId));
   if (!entry) return;
   const realIdx = p[key].findIndex(e => e.date === entry.date && e.detail === entry.detail);
   document.getElementById('medlog-type').value    = type;
@@ -121,13 +121,13 @@ async function saveMedLog() {
   if (tabEl) tabEl.innerHTML = renderMedLogTab(patId, type);
 }
 
-async function deleteMedLog(patId, type, idx) {
+async function deleteMedLog(patId, type, supaId) {
   if (!confirm('ลบรายการนี้?')) return;
   const p = db.patients.find(x => x.id == patId);
   if (!p) return;
   const key  = type === 'medical' ? 'medicalLog' : 'medsLog';
   const logs = (p[key] || []).slice().sort((a,b) => b.date.localeCompare(a.date));
-  const entry = logs[idx];
+  const entry = logs.find(e => String(e._supaId) === String(supaId));
   if (entry._supaId) {
     const { error } = await supa.from('medical_logs').delete().eq('id', entry._supaId);
     if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
