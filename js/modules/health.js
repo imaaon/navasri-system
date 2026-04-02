@@ -117,6 +117,8 @@ async function saveMedLog() {
   }
 
   closeModal('modal-addMedLog');
+  closeModal('modal-addMedLog');
+  await loadPatientClinical(patId);
   const tabEl = document.getElementById(`patprofile-tab-${type}`);
   if (tabEl) tabEl.innerHTML = renderMedLogTab(patId, type);
 }
