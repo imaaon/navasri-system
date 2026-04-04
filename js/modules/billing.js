@@ -1329,6 +1329,21 @@ function openExpenseModal() {
   renderExpenseItems(); recalcExpense();
   document.getElementById('modal-expense-title').textContent = 'บันทึกค่าใช้จ่าย';
   openModal('modal-expense');
+  // inject scan button
+  setTimeout(() => {
+    if (!document.getElementById('scan-expense-btn')) {
+      const hdr = document.querySelector('#modal-expense .modal-header');
+      if (hdr) {
+        const btn = document.createElement('button');
+        btn.id = 'scan-expense-btn';
+        btn.className = 'btn btn-ghost btn-sm';
+        btn.style.cssText = 'margin-right:8px;font-size:13px;display:flex;align-items:center;';
+        btn.innerHTML = '📷 สแกนบิล';
+        btn.onclick = function() { scanExpense(); };
+        hdr.insertBefore(btn, hdr.querySelector('.modal-close'));
+      }
+    }
+  }, 50);
 }
 
 function renderExpenseItems() {
@@ -3012,3 +3027,61 @@ async function loadNewTables() {
   }
 }
 // loadNewTables ถูกเรียกจาก loadDB ใน db.js แล้ว
+
+// ── Scan Expense ───────────────────────────────────
+function scanExpense() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*,application/pdf';
+  inp.onchange = async function() {
+    const file = inp.files[0];
+    if (!file) return;
+    const btn = document.getElementById('scan-expense-btn');
+    if (btn) { btn.innerHTML = '⏳ กำลังอ่าน...'; btn.disabled = true; }
+    try {
+      const base64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result.split(',')[1]);
+        r.onerror = () => rej(new Error('อ่านไฟล์ไม่สำเร็จ'));
+        r.readAsDataURL(file);
+      });
+      const mediaType = file.type || 'image/jpeg';
+      const resp = await fetch('https://umueucsxowjaurlaubwa.supabase.co/functions/v1/scan-invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mediaType, mode: 'expense' }),
+      });
+      const result = await resp.json();
+      if (!result.ok || !result.data) {
+        toast('อ่านบิลไม่สำเร็จ: ' + (result.error || 'ไม่ทราบสาเหตุ'), 'error'); return;
+      }
+      const d = result.data;
+      if (d.invoice_date) document.getElementById('exp-date').value = d.invoice_date;
+      if (d.supplier_name) document.getElementById('exp-vendor-name').value = d.supplier_name;
+      if (d.supplier_address) document.getElementById('exp-vendor-addr').value = d.supplier_address;
+      if (d.supplier_tax_id) document.getElementById('exp-vendor-taxid').value = d.supplier_tax_id;
+      if (d.job_name) document.getElementById('exp-job').value = d.job_name;
+      if (d.note) document.getElementById('exp-note').value = d.note;
+      if (d.wht_rate != null) document.getElementById('exp-wht-rate').value = d.wht_rate;
+      // ใส่รายการสินค้าถ้ามี
+      if (d.items && d.items.length > 0) {
+        const expItems = d.items.map(it => ({
+          name: it.item_name || '',
+          qty: it.qty || 1,
+          unit: it.unit || '',
+          price: it.unit_price || 0,
+          total: it.total || 0,
+        }));
+        document.getElementById('exp-items-data').value = JSON.stringify(expItems);
+        renderExpenseItems();
+        recalcExpense();
+      }
+      toast('อ่านบิลเรียบร้อย กรุณาตรวจสอบและแก้ไขก่อนบันทึก', 'success');
+    } catch(e) {
+      toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+    } finally {
+      if (btn) { btn.innerHTML = '📷 สแกนบิล'; btn.disabled = false; }
+    }
+  };
+  inp.click();
+}
