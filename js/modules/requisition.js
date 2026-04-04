@@ -860,6 +860,7 @@ async function renderReport() {
 
   if (reportTab === 'summary') {
     const tb = document.getElementById('reportTable');
+    if (!tb) return;
     tb.innerHTML = reqs.length === 0 ? empty : reqs.map(r => `<tr>
       <td class="number" style="white-space:nowrap;">${r.date}</td>
       <td style="font-weight:500;">${r.itemName}</td>
@@ -879,6 +880,7 @@ async function renderReport() {
       if (r.date > map[r.patientName].last) map[r.patientName].last = r.date;
     });
     const tb = document.getElementById('reportByPatient');
+    if (!tb) return;
     tb.innerHTML = Object.keys(map).length === 0 ? empty :
       Object.entries(map).sort((a,b) => b[1].count - a[1].count).map(([name, v]) =>
         `<tr>
@@ -898,6 +900,7 @@ async function renderReport() {
       map[r.itemName].count++;
     });
     const tb = document.getElementById('reportByItem');
+    if (!tb) return;
     tb.innerHTML = Object.keys(map).length === 0 ? empty :
       Object.entries(map).sort((a,b) => b[1].total - a[1].total).map(([name, v]) =>
         `<tr>
@@ -918,6 +921,7 @@ async function renderReport() {
       if (r.date > map[r.staffName].last) map[r.staffName].last = r.date;
     });
     const tb = document.getElementById('reportByStaff');
+    if (!tb) return;
     tb.innerHTML = Object.keys(map).length === 0 ? empty :
       Object.entries(map).sort((a,b) => b[1].count - a[1].count).map(([name, v]) =>
         `<tr>
