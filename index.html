@@ -140,7 +140,7 @@ async function loadHTMLPartials() {
   ];
   await Promise.all(parts.map(async p => {
     try {
-      const res = await fetch(p.file);
+      const res = await fetch(p.file, {cache:'no-store'});
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();
       document.getElementById(p.id).innerHTML = html;
