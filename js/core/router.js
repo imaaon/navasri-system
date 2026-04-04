@@ -42,7 +42,6 @@ function renderPage(page) {
   else if (page === 'rooms') renderRooms();
   else if (page === 'patients') renderPatients();
   else if (page === 'staff') renderStaff();
-  else if (page === 'items') renderItemMaster();
   else if (page === 'settings') { loadLineSettingsUI(); renderLineLog(); }
   else if (page === 'requisition') initReq();
   // reqform is populated by openReqForm() before showPage('reqform') is called
