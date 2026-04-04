@@ -266,13 +266,13 @@ async function openPatientProfile(id) {
 }
 
 function switchPatTab(tab) {
-  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','nursing','appts','belongings','dnr','physio','dispense','lab'];
+  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','lab','nursing','appts','belongings','dnr','physio','dispense'];
   tabs.forEach(t => {
     const el = document.getElementById('patprofile-tab-'+t);
     if(el) el.style.display = t===tab ? '' : 'none';
   });
-  document.querySelectorAll('#patprofileTabs .tab').forEach((el,i) => {
-    el.classList.toggle('active', tabs[i] === tab);
+  document.querySelectorAll('#patprofileTabs .tab').forEach(el => {
+    const t = el.getAttribute('onclick')?.match(/'([^']+)'/)?.[1]; el.classList.toggle('active', t === tab);
   });
   if (tab === 'physio') {
     const listEl = document.querySelector('[id^="physio-list-"]');
