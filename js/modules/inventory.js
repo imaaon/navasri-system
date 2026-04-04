@@ -400,6 +400,50 @@ function openReceiveModal() {
   openModal('modal-receive');
 }
 
+function toggleNewItemForm() {
+  const form = document.getElementById('new-item-inline-form');
+  const btn  = document.getElementById('btn-toggle-new-item');
+  if (!form) return;
+  const isOpen = form.style.display !== 'none';
+  form.style.display = isOpen ? 'none' : '';
+  btn.textContent = isOpen ? '️ สินค้าใหม่ (ยังไม่มีในระบบ)' : '❌ ยกเลิกอ่านสินค้าใหม่';
+  if (!isOpen) {
+    document.getElementById('new-item-name').value = '';
+    setTimeout(() => document.getElementById('new-item-name').focus(), 100);
+  }
+}
+
+async function saveNewItemInline() {
+  const name = document.getElementById('new-item-name').value.trim();
+  if (!name) { toast('กรุณาระบุชื่อสินค้า', 'warning'); return; }
+  const category = document.getElementById('new-item-cat').value;
+  const unit     = document.getElementById('new-item-unit').value;
+  const reorder  = parseInt(document.getElementById('new-item-reorder').value) || 10;
+  const barcode  = generateBarcode(category);
+  const data = {
+    name, category, unit,
+    purchase_unit: unit, dispense_unit: unit, conversion_factor: 1,
+    qty: 0, reorder, cost: 0, price: 0, is_billable: true, barcode,
+  };
+  const { data: inserted, error } = await supa.from('items').insert(data).select().single();
+  if (error) { toast('เพิ่มสินค้าไม่สำเร็จ: ' + error.message, 'error'); return; }
+  const newItem = mapItem({ ...data, id: inserted.id });
+  db.items.push(newItem);
+  if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
+  // refresh dropdown และเลือกสินค้าใหม่
+  const sel = document.getElementById('recv-item');
+  const opt = document.createElement('option');
+  opt.value = inserted.id;
+  opt.textContent = name + ' (คงเหลือ: 0 ' + unit + ')';
+  sel.appendChild(opt);
+  sel.value = inserted.id;
+  onRecvItemChange();
+  toggleNewItemForm();
+  logAudit(AUDIT_MODULES.INVENTORY, AUDIT_ACTIONS.CREATE, inserted.id, { name });
+  toast('✅ สร้างสินค้า "' + name + '" เรียบร้อย เลือกไว้ใน dropdown แล้ว', 'success');
+}
+
+
 async function receiveItem() {
   const itemId  = document.getElementById('recv-item').value;
   const qty     = parseFloat(document.getElementById('recv-qty').value);
