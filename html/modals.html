@@ -2856,3 +2856,44 @@
       </div>
     </div>
   </div>
+
+<!-- ===== modal-add-lab ===== -->
+<div class="modal-overlay" id="modal-add-lab">
+  <div class="modal" style="max-width:640px;width:95%;max-height:90vh;overflow-y:auto;padding:24px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-add-lab-title">🧪 บันทึกผลแล็บ/ผลตรวจ</div>
+      <button class="modal-close" onclick="closeModal('modal-add-lab')">✕</button>
+    </div>
+    <div style="display:grid;gap:14px;margin-top:16px;">
+      <input type="hidden" id="lab-edit-id">
+      <input type="hidden" id="lab-patient-id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group"><label class="form-label">วันที่ตรวจ *</label>
+          <input class="form-control" type="date" id="lab-test-date"></div>
+        <div class="form-group"><label class="form-label">โรงพยาบาล/สถานพยาบาล</label>
+          <input class="form-control" type="text" id="lab-hospital" placeholder="ชื่อโรงพยาบาล"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group"><label class="form-label">แพทย์</label>
+          <input class="form-control" type="text" id="lab-doctor" placeholder="ชื่อแพทย์"></div>
+        <div class="form-group"><label class="form-label">สรุปผลโดยย่อ</label>
+          <input class="form-control" type="text" id="lab-summary" placeholder="เช่น ค่าไตสูงกว่าปกติเล็กน้อย"></div>
+      </div>
+      <div class="form-group">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <label class="form-label" style="margin:0;">รายการผลตรวจ</label>
+          <button class="btn btn-ghost btn-sm" onclick="addLabResultRow()">+ เพิ่มรายการ</button>
+        </div>
+        <div id="lab-results-container">
+          <div style="text-align:center;color:var(--text3);padding:12px;font-size:13px;">กด + เพิ่มรายการผลตรวจ หรือใช้ปุ่มสแกนผลแล็บ</div>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">หมายเหตุ</label>
+        <input class="form-control" type="text" id="lab-note" placeholder="หมายเหตุเพิ่มเติม"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-lab')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveLabResult()">บันทึก</button>
+    </div>
+  </div>
+</div>
