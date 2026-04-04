@@ -137,6 +137,12 @@ async function deleteSupplier(id) {
 // ── Purchase Request ──────────────────────────────────────────
 let prItems = [];
 
+// ── PR Permission ────────────────────────────────────────
+function canApproveReq() {
+  // ตอนนี้ทุก user ที่ login แล้วมีสิทธิ์ — ปรับตาม role system เมื่อพร้อม
+  return true;
+}
+
 function renderPurchaseRequests() {
   const statusF = document.getElementById('prStatusFilter')?.value || '';
   const tb = document.getElementById('prTable');
@@ -173,10 +179,12 @@ function renderPurchaseRequests() {
     <td style="font-size:12px;">${r.requiredDate||'-'}</td>
     <td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.reason||''}">${r.reason||''-''}</td>
     <td>${statusBadge(r.status)}</td>
-    <td>
-      <button class="btn btn-ghost btn-sm" onclick="viewPurchaseRequest('${r.id}')">👁</button>
-      ${['draft','submitted'].includes(r.status) ? `<button class="btn btn-ghost btn-sm" onclick="approvePR('${r.id}')">✅</button>` : ''}
-      ${r.status === 'draft' ? `<button class="btn btn-ghost btn-sm" onclick="deletePR('${r.id}')">🗑️</button>` : ''}
+    <td style="white-space:nowrap;">
+      <button class="btn btn-ghost btn-sm" title="ดูรายละเอียด" onclick="viewPurchaseRequest('${r.id}')">👁</button>
+      <button class="btn btn-ghost btn-sm" title="แก้ไข" onclick="editPR('${r.id}')">✏️</button>
+      ${['draft','submitted'].includes(r.status) ? `<button class="btn btn-ghost btn-sm" title="อนุมัติ" onclick="approvePR('${r.id}')">✅</button>` : ''}
+      ${['draft','submitted'].includes(r.status) ? `<button class="btn btn-ghost btn-sm" title="ปฏิเสธ" onclick="rejectPR('${r.id}')">❌</button>` : ''}
+      ${(r.status !== 'approved' || canApproveReq()) ? `<button class="btn btn-ghost btn-sm" title="ลบ" onclick="deletePR('${r.id}')">🗑️</button>` : ''}
     </td>
   </tr>`).join('');
 }
@@ -266,12 +274,9 @@ async function savePR(status = 'draft') {
 
   const supplierId = document.getElementById('pr-supplier')?.value || null;
   const supplier   = supplierId ? db.suppliers.find(s => s.id == supplierId) : null;
-
-  const { data: refData } = await supa.rpc('next_pr_ref_no').then(r => r).catch(() => ({ data: null }));
-  const refNo = refData || ('PR-' + Date.now());
+  const editId = document.getElementById('editPRId')?.value || null;
 
   const prData = {
-    ref_no:         refNo,
     request_date:   new Date().toISOString().slice(0,10),
     requester_name: requester,
     supplier_id:    supplierId || null,
@@ -281,27 +286,47 @@ async function savePR(status = 'draft') {
     required_date:  document.getElementById('pr-required-date').value || null,
     reason:         document.getElementById('pr-reason').value.trim() || null,
     status,
-    created_by:     currentUser?.username || '',
   };
 
-  const { data: inserted, error } = await supa.from('purchase_requests').insert(prData).select().single();
-  if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
+  let prId = editId;
+  let refNo = '';
 
-  // บันทึก lines
-  const lines = validItems.map(it => ({
-    request_id:    inserted.id,
+  if (editId) {
+    // UPDATE
+    const { error } = await supa.from('purchase_requests').update(prData).eq('id', editId);
+    if (error) { toast('แก้ไขไม่สำเร็จ: ' + error.message, 'error'); return; }
+    const pr = db.purchaseRequests.find(r => r.id == editId);
+    if (pr) {
+      Object.assign(pr, mapPurchaseRequest({...prData, id: editId, ref_no: pr.refNo,
+        approved_by: pr.approvedBy, approved_at: pr.approvedAt,
+        reject_reason: pr.rejectReason, created_by: pr.createdBy, created_at: pr.createdAt}));
+    }
+    refNo = db.purchaseRequests.find(r => r.id == editId)?.refNo || String(editId);
+    await supa.from('purchase_request_lines').delete().eq('request_id', editId);
+  } else {
+    // INSERT
+    const { data: refData } = await supa.rpc('next_pr_ref_no').then(r => r).catch(() => ({ data: null }));
+    refNo = refData || ('PR-' + Date.now());
+    const insertData = { ...prData, ref_no: refNo, created_by: currentUser?.username || '' };
+    const { data: inserted, error } = await supa.from('purchase_requests').insert(insertData).select().single();
+    if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
+    prId = inserted.id;
+    refNo = inserted.ref_no || refNo;
+    const pr = mapPurchaseRequest(inserted);
+    pr.lines = [];
+    db.purchaseRequests.unshift(pr);
+  }
+
+  const linesData = validItems.map(it => ({
+    request_id:    prId,
     item_id:       it.itemId,
     item_name:     it.itemName,
     qty_requested: it.qty,
     unit:          it.unit || '',
   }));
-  await supa.from('purchase_request_lines').insert(lines);
+  await supa.from('purchase_request_lines').insert(linesData);
 
-  const pr = mapPurchaseRequest(inserted);
-  pr.lines = lines;
-  db.purchaseRequests.unshift(pr);
-
-  toast(`บันทึกคำขอซื้อ ${refNo} เรียบร้อย`, 'success');
+  toast('บันทึกคำขอซื้อ ' + refNo + ' เรียบร้อย', 'success');
   closeModal('modal-addPR');
   renderPurchaseRequests();
 }
@@ -321,7 +346,13 @@ async function approvePR(id) {
 }
 
 async function deletePR(id) {
-  if (!confirm('ลบคำขอซื้อนี้?')) return;
+  const pr = db.purchaseRequests.find(r => r.id == id);
+  if (!pr) return;
+  if (pr.status === 'approved' && !canApproveReq()) {
+    toast('เฉพาะผู้มีสิทธิ์อนุมัติเท่านั้นที่ลบคำขอที่อนุมัติแล้วได้', 'error'); return;
+  }
+  if (!confirm('ลบคำขอซื้อ ' + (pr.refNo || id) + '?')) return;
+  await supa.from('purchase_request_lines').delete().eq('request_id', id);
   const { error } = await supa.from('purchase_requests').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.purchaseRequests = db.purchaseRequests.filter(r => r.id != id);
@@ -332,9 +363,84 @@ async function deletePR(id) {
 function viewPurchaseRequest(id) {
   const pr = db.purchaseRequests.find(r => r.id == id);
   if (!pr) return;
-  toast(`${pr.refNo} — ${pr.status} (${pr.requesterName})`, 'info');
+  const info = [
+    'เลขที่: ' + pr.refNo,
+    'สถานะ: ' + pr.status,
+    'ผู้ขอ: ' + pr.requesterName,
+    'ผู้จำหน่าย: ' + (pr.supplierName || '-'),
+    'ความเร่งด่วน: ' + pr.urgency,
+    'วันต้องการรับ: ' + (pr.requiredDate || '-'),
+    'เหตุผล: ' + (pr.reason || '-'),
+    pr.approvedBy ? 'อนุมัติ/ปฏิเสธโดย: ' + pr.approvedBy : '',
+    pr.rejectReason ? 'เหตุผลปฏิเสธ: ' + pr.rejectReason : '',
+  ].filter(Boolean);
+  alert(info.join('
+'));
 }
 
+async function editPR(id) {
+  const pr = db.purchaseRequests.find(r => r.id == id);
+  if (!pr) return;
+  const { data: linesData } = await supa.from('purchase_request_lines').select('*').eq('request_id', id);
+  prItems = (linesData || []).map(l => ({
+    itemId: l.item_id, itemName: l.item_name,
+    qty: l.qty_requested, unit: l.unit || '',
+  }));
+  const sel = document.getElementById('pr-supplier');
+  if (sel) {
+    sel.innerHTML = '<option value="">-- ผู้จำหน่าย (ถ้าทราบ) --</option>' +
+      (db.suppliers||[]).filter(s=>s.status==='active')
+        .map(s=>'<option value="' + s.id + '">' + s.name + '</option>').join('');
+  }
+  updatePRRequesterList();
+  document.getElementById('editPRId').value = id;
+  document.getElementById('pr-requester').value = pr.requesterName || '';
+  if (sel) sel.value = pr.supplierId || '';
+  document.getElementById('pr-urgency').value = pr.urgency || 'normal';
+  document.getElementById('pr-note').value = pr.note || '';
+  const rdEl = document.getElementById('pr-required-date'); if (rdEl) rdEl.value = pr.requiredDate || '';
+  const rsEl = document.getElementById('pr-reason'); if (rsEl) rsEl.value = pr.reason || '';
+  renderPRItems();
+  openModal('modal-addPR');
+}
+
+async function rejectPR(id) {
+  const pr = db.purchaseRequests.find(r => r.id == id);
+  if (!pr) return;
+  if (!canApproveReq()) { toast('ไม่มีสิทธิ์ปฏิเสธคำขอ', 'error'); return; }
+  const existing = document.getElementById('modal-reject-pr');
+  if (existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-reject-pr';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface,#fff);border-radius:12px;padding:24px;width:420px;max-width:95vw;';
+  box.innerHTML = '<div style="font-size:15px;font-weight:600;margin-bottom:16px;">' +
+    '❌ ปฏิเสธคำขอซื้อ: ' + pr.refNo + '</div>' +
+    '<div class="form-group"><label class="form-label">เหตุผลที่ปฏิเสธ *</label>' +
+    '<textarea class="form-control" id="reject-reason-input" rows="3" placeholder="ระบุเหตุผล..." style="margin-top:6px;"></textarea></div>' +
+    '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">' +
+    '<button class="btn btn-ghost" id="reject-cancel-btn">ยกเลิก</button>' +
+    '<button class="btn btn-primary" id="reject-confirm-btn" style="background:#e74c3c;border-color:#e74c3c;">ปฏิเสธ</button>' +
+    '</div>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  document.getElementById('reject-cancel-btn').onclick = () => overlay.remove();
+  document.getElementById('reject-confirm-btn').onclick = async () => {
+    const reason = document.getElementById('reject-reason-input').value.trim();
+    if (!reason) { toast('กรุณาระบุเหตุผล', 'warning'); return; }
+    const actor = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+    const { error } = await supa.from('purchase_requests').update({
+      status: 'rejected', reject_reason: reason,
+      approved_by: actor, approved_at: new Date().toISOString()
+    }).eq('id', id);
+    if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
+    pr.status = 'rejected'; pr.rejectReason = reason; pr.approvedBy = actor;
+    overlay.remove();
+    toast('ปฏิเสธคำขอซื้อแล้ว', 'success');
+    renderPurchaseRequests();
+  };
+}
 // ── Operational Reports ───────────────────────────────────────
 async function renderStockReport() {
   const tab = document.getElementById('stock-report-tabs')?.dataset?.active || 'lowstock';
