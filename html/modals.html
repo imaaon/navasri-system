@@ -1638,6 +1638,47 @@
         <label class="form-label">รายการสินค้า <span class="required">*</span></label>
         <select class="form-control" id="recv-item" onchange="onRecvItemChange()"></select>
       </div>
+      <div style="margin-bottom:12px;">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="toggleNewItemForm()" id="btn-toggle-new-item" style="font-size:12px;color:var(--accent);padding:4px 10px;">＋ สินค้าใหม่ (ยังไม่มีในระบบ)</button>
+      </div>
+      <div id="new-item-inline-form" style="display:none;background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">➕ เพิ่มสินค้าใหม่เข้าระบบ</div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+          <div class="form-group" style="margin-bottom:8px;">
+            <label class="form-label" style="font-size:12px;">ชื่อสินค้า <span class="required">*</span></label>
+            <input class="form-control" id="new-item-name" placeholder="เช่น ถุงมือยาง M">
+          </div>
+          <div class="form-group" style="margin-bottom:8px;">
+            <label class="form-label" style="font-size:12px;">ประเภท</label>
+            <select class="form-control" id="new-item-cat">
+              <option value="ยา">ยา</option>
+              <option value="เวชภัณฑ์">เวชภัณฑ์</option>
+              <option value="อุปกรณ์">อุปกรณ์</option>
+              <option value="สารสิ้นเปลือง">สารสิ้นเปลือง</option>
+              <option value="อื่นๆ">อื่นๆ</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+          <div class="form-group" style="margin-bottom:8px;">
+            <label class="form-label" style="font-size:12px;">หน่วย</label>
+            <select class="form-control" id="new-item-unit">
+              <option>ชิ้น</option><option>กล่อง</option><option>ขวด</option>
+              <option>เม็ด</option><option>ชุด</option><option>Amp</option>
+              <option>Vial</option><option>ซอง</option><option>ถุง</option>
+              <option>ใบ</option><option>แผ่น</option><option>ม้วน</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:8px;">
+            <label class="form-label" style="font-size:12px;">จุดแจ้งเตือน (min)</label>
+            <input class="form-control number" id="new-item-reorder" type="number" min="0" value="10" placeholder="10">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="toggleNewItemForm()">ยกเลิก</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="saveNewItemInline()">สร้างสินค้า</button>
+        </div>
+      </div>
       <div id="recv-unit-info" style="display:none;background:var(--sage-light);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--accent);">
         📦 <span id="recv-unit-text"></span>
       </div>
