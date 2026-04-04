@@ -204,35 +204,6 @@ function showLotDetail(itemId) {
   openModal('modal-lot-detail');
 }
 
-// ===== ITEM MASTER =====
-function renderItemMaster() {
-  const search = (document.getElementById('itemSearch')?.value || '').toLowerCase();
-  let items = db.items.filter(i => !search || i.name.toLowerCase().includes(search));
-  const catBadges = { ยา:'badge-red', เวชภัณฑ์:'badge-orange', ของใช้:'badge-blue', บริการ:'badge-purple' };
-  const tb = document.getElementById('itemMasterTable');
-  tb.innerHTML = items.map((item, i) => {
-    const photoEl = item.photo
-      ? `<img src="${item.photo}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;" onclick="showItemPhoto('${item.id}')" title="${item.name}">`
-      : `<div style="width:40px;height:40px;border-radius:6px;border:2px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;" onclick="editItem('${item.id}')" title="เพิ่มรูปภาพ">📷</div>`;
-    const qtyColor = item.qty === 0 ? 'color:#e74c3c;font-weight:700;' : item.qty <= item.reorder ? 'color:#e67e22;font-weight:600;' : '';
-    return `<tr>
-    <td style="color:var(--text3);" class="number">${i+1}</td>
-    <td style="padding:6px 8px;">${photoEl}</td>
-    <td style="font-weight:600;">${item.name}</td>
-    <td><span class="badge ${catBadges[item.category]||'badge-gray'}">${item.category}</span></td>
-    <td>${item.unit}</td>
-    <td class="number" style="${qtyColor}">${item.qty}</td>
-    <td class="number" style="font-size:12px;">${item.cost > 0 ? item.cost.toLocaleString('th-TH',{minimumFractionDigits:2}) : '-'}</td>
-    <td class="number" style="font-size:12px;">${item.price > 0 ? item.price.toLocaleString('th-TH',{minimumFractionDigits:2}) : '-'}</td>
-    <td class="number">${item.reorder}</td>
-    <td style="white-space:nowrap;">
-      <button class="btn btn-ghost btn-sm" onclick="editItem('${item.id}')" style="margin-right:4px;">✏️</button>
-      <button class="btn btn-ghost btn-sm" onclick="deleteItem('${item.id}')">🗑️</button>
-    </td>
-  </tr>`;
-  }).join('');
-}
-
 // ===== ITEM CRUD =====
 function openAddItemModal() {
   document.getElementById('editItemIdx').value = '';
