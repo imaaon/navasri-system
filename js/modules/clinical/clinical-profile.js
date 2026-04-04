@@ -84,6 +84,7 @@ async function openPatientProfile(id) {
         <div class="tab" onclick="switchPatTab('notes')">📝 หมายเหตุ</div>
         <div class="tab" onclick="switchPatTab('mar')">💊 MAR ยาประจำวัน</div>
         <div class="tab" onclick="switchPatTab('vitals')">📊 Vital Signs</div>
+        <div class="tab" onclick="switchPatTab('lab')">🧪 ผลแล็บ</div>
         <div class="tab" onclick="switchPatTab('nursing')">📋 บันทึกพยาบาล</div>
         <div class="tab" onclick="switchPatTab('appts')">🚐 นัดหมายแพทย์</div>
         <div class="tab" onclick="switchPatTab('belongings')">🧳 ทรัพย์สิน</div>
@@ -189,6 +190,10 @@ async function openPatientProfile(id) {
       <div id="patprofile-tab-vitals" style="display:none;">
         ${renderVitalsTab(pid, p.id)}
       </div>
+      <!-- LAB RESULTS TAB -->
+      <div id="patprofile-tab-lab" style="display:none;">
+        <div id="lab-list-${p.id}"></div>
+      </div>
       <!-- NURSING NOTES TAB -->
       <div id="patprofile-tab-nursing" style="display:none;">
         ${renderNursingTab(pid, p.id)}
@@ -261,7 +266,7 @@ async function openPatientProfile(id) {
 }
 
 function switchPatTab(tab) {
-  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','nursing','appts','belongings','dnr','physio','dispense'];
+  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','nursing','appts','belongings','dnr','physio','dispense','lab'];
   tabs.forEach(t => {
     const el = document.getElementById('patprofile-tab-'+t);
     if(el) el.style.display = t===tab ? '' : 'none';
