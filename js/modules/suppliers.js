@@ -821,55 +821,278 @@ function updatePRRequesterList() {
   dl.innerHTML = staff.map(s => `<option value="${s.name}">`).join('');
 }
 
-async function saveSupplierInvoice() {
+async function saveSupplierInvoice(andConfirm = false) {
   const editId     = document.getElementById('editSupInvId').value;
   const invNo      = document.getElementById('supinv-no').value.trim();
   const supplierId = document.getElementById('supinv-supplier').value;
+  const supplierNameManual = document.getElementById('supinv-supplier-manual')?.value.trim() || '';
+  if (!invNo) { toast('กรุณาระบุเลขที่ใบแจ้งหนี้', 'warning'); return; }
+  if (!supplierId && !supplierNameManual) { toast('กรุณาเลือกหรือระบุชื่อผู้จำหน่าย', 'warning'); return; }
+
+  const supplier   = db.suppliers.find(s => s.id == supplierId);
   const subtotal   = parseFloat(document.getElementById('supinv-subtotal').value) || 0;
   const vatRate    = parseFloat(document.getElementById('supinv-vat').value) || 0;
+  const vatAmt     = subtotal * vatRate / 100;
+  const total      = subtotal + vatAmt;
+  const whtRate    = parseFloat(document.getElementById('supinv-wht-rate').value) || 0;
+  const whtAmt     = subtotal * whtRate / 100;
+  const netPayable = total - whtAmt;
 
-  if (!invNo)      { toast('กรุณาระบุเลขที่ใบแจ้งหนี้', 'warning'); return; }
-  const supplierNameManual = document.getElementById('supinv-supplier-manual')?.value.trim() || '';
-  if (!supplierId && !supplierNameManual) { toast('กรุณาเลือกหรือระบุชื่อผู้จำหน่าย', 'warning'); return; }
-  if (subtotal <= 0) { toast('กรุณาระบุมูลค่า', 'warning'); return; }
+  // status: ถ้า andConfirm ให้เป็น 'confirmed', ไม่งั้นใช้ค่าใน select
+  let status = document.getElementById('supinv-status').value;
+  if (andConfirm) status = 'confirmed';
 
-  const supplier = db.suppliers.find(s => s.id == supplierId);
-  const vatAmt   = subtotal * vatRate / 100;
-  const total    = subtotal + vatAmt;
+  const prId = document.getElementById('supinv-pr').value || null;
 
   const data = {
     invoice_no:          invNo,
     invoice_date:        document.getElementById('supinv-date').value,
     due_date:            document.getElementById('supinv-due').value || null,
-    supplier_id:         supplierId,
+    supplier_id:         supplierId || null,
     supplier_name:       supplier?.name || supplierNameManual || '',
-    purchase_request_id: document.getElementById('supinv-pr').value || null,
+    purchase_request_id: prId,
     subtotal, vat_rate: vatRate, vat_amt: vatAmt, total,
-    status:              document.getElementById('supinv-status').value,
+    status,
     note:                document.getElementById('supinv-note').value.trim() || null,
     job_name:            document.getElementById('supinv-job-name').value.trim() || null,
-    wht_rate:            parseFloat(document.getElementById('supinv-wht-rate').value) || 0,
-    wht_amt:             (() => { const s2 = parseFloat(document.getElementById('supinv-subtotal').value)||0; const w = parseFloat(document.getElementById('supinv-wht-rate').value)||0; return s2 * w / 100; })(),
-    net_payable:         (() => { const tot = parseFloat(document.getElementById('supinv-total').value)||0; const s2 = parseFloat(document.getElementById('supinv-subtotal').value)||0; const w = parseFloat(document.getElementById('supinv-wht-rate').value)||0; return tot - (s2 * w / 100); })(),
+    wht_rate:            whtRate, wht_amt: whtAmt, net_payable: netPayable,
+    received_date:       andConfirm ? (document.getElementById('supinv-received-date').value || new Date().toISOString().slice(0,10)) : (document.getElementById('supinv-received-date').value || null),
+    received_by:         document.getElementById('supinv-received-by').value.trim() || null,
+    is_stock_updated:    andConfirm,
     updated_at:          new Date().toISOString(),
   };
+
+  let invoiceId = editId;
 
   if (editId) {
     const { error } = await supa.from('supplier_invoices').update(data).eq('id', editId);
     if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
     const inv = db.supplierInvoices.find(x => x.id == editId);
     if (inv) Object.assign(inv, mapSupplierInvoice({ ...data, id: editId, created_at: inv.createdAt }));
-    if (typeof logAudit === 'function') logAudit('supplier', 'update', editId, { invoice_no: data.invoice_no, supplier: data.supplier_name, total: data.total });
+    if (typeof logAudit === 'function') logAudit('supplier', 'update', editId, { invoice_no: data.invoice_no, total: data.total });
     toast('แก้ไขใบแจ้งหนี้เรียบร้อย', 'success');
   } else {
     data.created_by = currentUser?.username || '';
     const { data: inserted, error } = await supa.from('supplier_invoices').insert(data).select().single();
     if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
-    if (inserted) db.supplierInvoices.unshift(mapSupplierInvoice(inserted));
-    if (typeof logAudit === 'function') logAudit('supplier', 'create', inserted?.id || 'new', { invoice_no: data.invoice_no, supplier: data.supplier_name, total: data.total });
-    toast('บันทึกใบแจ้งหนี้เรียบร้อย', 'success');
+    if (inserted) { db.supplierInvoices.unshift(mapSupplierInvoice(inserted)); invoiceId = inserted.id; }
+    if (typeof logAudit === 'function') logAudit('supplier', 'create', inserted?.id || 'new', { invoice_no: data.invoice_no, total: data.total });
+    toast(andConfirm ? 'บันทึกและเพิ่มสต็อกเรียบร้อย' : 'บันทึกร่างเรียบร้อย', 'success');
   }
+
+  // บันทึก invoice lines (ถ้ามี) และ stock movements (ถ้า confirm)
+  if (invoiceId) {
+    await saveSupInvLines(invoiceId, andConfirm);
+    // ถ้ามี PO ให้ link ด้วย
+    if (prId && !editId) {
+      await supa.from('supplier_invoice_links').upsert(
+        { invoice_id: invoiceId, purchase_request_id: prId, linked_by: currentUser?.username || '' },
+        { onConflict: 'invoice_id,purchase_request_id', ignoreDuplicates: true }
+      );
+    }
+  }
+
   closeModal('modal-addSupInv');
+  renderSupplierInvoices();
+}
+
+async function saveSupInvLines(invoiceId, updateStock) {
+  const container = document.getElementById('supinv-lines-container');
+  if (!container) return;
+  const rows = container.querySelectorAll('.supinv-line-row');
+  if (!rows.length) return;
+
+  // ลบ lines เดิมของ invoice นี้ก่อน (ถ้ามี)
+  await supa.from('supplier_invoice_lines').delete().eq('invoice_id', invoiceId);
+
+  const linesToInsert = [];
+  rows.forEach(row => {
+    const itemId    = row.querySelector('.siline-item')?.value || null;
+    const itemName  = row.querySelector('.siline-name')?.value.trim() || '';
+    const qty       = parseFloat(row.querySelector('.siline-qty')?.value) || 0;
+    const unit      = row.querySelector('.siline-unit')?.value.trim() || '';
+    const unitPrice = parseFloat(row.querySelector('.siline-price')?.value) || 0;
+    const lineType  = row.querySelector('.siline-type')?.value || 'product';
+    const lotNumber = row.querySelector('.siline-lot')?.value.trim() || null;
+    const expiryDate = row.querySelector('.siline-expiry')?.value || null;
+    if (!itemName || qty <= 0) return;
+    linesToInsert.push({
+      invoice_id: invoiceId,
+      item_id:    itemId || null,
+      item_name:  itemName,
+      qty, unit, unit_price: unitPrice,
+      total:      qty * unitPrice,
+      line_type:  lineType,
+      update_stock: (lineType === 'product') && updateStock,
+      lot_number: lotNumber,
+      expiry_date: expiryDate || null,
+    });
+  });
+
+  if (!linesToInsert.length) return;
+  const { data: insertedLines, error } = await supa.from('supplier_invoice_lines').insert(linesToInsert).select();
+  if (error) { toast('เกิดข้อผิดพลาดบันทึกรายการ: ' + error.message, 'error'); return; }
+
+  // ถ้า updateStock ให้สร้าง stock_movements และ item_lots
+  if (updateStock && insertedLines) {
+    for (const line of insertedLines) {
+      if (!line.update_stock || !line.item_id) continue;
+      const item = db.items.find(x => x.id === line.item_id);
+      if (!item) continue;
+      const beforeQty = parseFloat(item.qty) || 0;
+      const afterQty  = beforeQty + parseFloat(line.qty);
+
+      // สร้าง stock_movement (trigger จะ sync items.qty อัตโนมัติ)
+      await supa.from('stock_movements').insert({
+        item_id:             line.item_id,
+        movement_type:       'receive',
+        quantity:            line.qty,
+        before_qty:          beforeQty,
+        after_qty:           afterQty,
+        supplier_invoice_id: invoiceId,
+        lot_no:              line.lot_number || null,
+        expiry_date:         line.expiry_date || null,
+        cost:                line.unit_price || 0,
+        ref_id:              invoiceId,
+        ref_type:            'supplier_invoice',
+        created_by:          currentUser?.username || '',
+        note:                'รับสินค้าจาก invoice ' + (document.getElementById('supinv-no')?.value || ''),
+      });
+
+      // สร้าง item_lot
+      if (line.lot_number || line.expiry_date) {
+        await supa.from('item_lots').insert({
+          item_id:            line.item_id,
+          lot_number:         line.lot_number || ('LOT-' + Date.now()),
+          expiry_date:        line.expiry_date || null,
+          qty_in_lot:         line.qty,
+          qty_remaining:      line.qty,
+          unit_cost:          line.unit_price || 0,
+          supplier_invoice_id: invoiceId,
+          invoice_line_id:    line.id,
+          received_by:        currentUser?.username || '',
+          received_date:      new Date().toISOString().slice(0,10),
+        });
+      }
+
+      // update local db.items
+      item.qty = afterQty;
+    }
+  }
+}
+
+function addSupInvLine(itemId, itemName, qty, unit, unitPrice, lineType) {
+  const container = document.getElementById('supinv-lines-container');
+  if (!container) return;
+  const items = db.items || [];
+  const row = document.createElement('div');
+  row.className = 'supinv-line-row';
+  row.style.cssText = 'display:grid;grid-template-columns:2fr 1.2fr 0.7fr 1fr 1fr 1fr 0.5fr;gap:4px;align-items:center;padding:4px;background:var(--surface2);border-radius:6px;';
+  row.innerHTML = `
+    <select class="form-control form-control-sm siline-item" style="font-size:12px;" onchange="onSupInvItemChange(this)">
+      <option value="">-- เลือกสินค้า --</option>
+      ${items.map(i=>`<option value="${i.id}" ${i.id===(itemId||'')?'selected':''}>${i.name}</option>`).join('')}
+    </select>
+    <input class="form-control form-control-sm siline-name" style="font-size:12px;" placeholder="ชื่อสินค้า" value="${itemName||''}">
+    <input class="form-control form-control-sm siline-qty" style="font-size:12px;" type="number" min="0.01" step="0.01" value="${qty||1}" oninput="calcSupInvLinesTotal()">
+    <input class="form-control form-control-sm siline-unit" style="font-size:12px;" placeholder="หน่วย" value="${unit||''}">
+    <input class="form-control form-control-sm siline-price" style="font-size:12px;" type="number" min="0" step="0.01" placeholder="ราคา/หน่วย" value="${unitPrice||''}" oninput="calcSupInvLinesTotal()">
+    <select class="form-control form-control-sm siline-type" style="font-size:12px;" onchange="calcSupInvLinesTotal()">
+      <option value="product" ${(lineType||'product')==='product'?'selected':''}>สินค้า</option>
+      <option value="shipping" ${lineType==='shipping'?'selected':''}>ค่าขนส่ง</option>
+      <option value="service" ${lineType==='service'?'selected':''}>ค่าบริการ</option>
+      <option value="discount" ${lineType==='discount'?'selected':''}>ส่วนลด</option>
+      <option value="other" ${lineType==='other'?'selected':''}>อื่นๆ</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" type="button" onclick="removeSupInvLine(this)" style="color:var(--danger);padding:2px 6px;">✕</button>
+  `;
+  container.appendChild(row);
+  calcSupInvLinesTotal();
+}
+
+function onSupInvItemChange(sel) {
+  const row = sel.closest('.supinv-line-row');
+  if (!row) return;
+  const item = db.items.find(x => x.id === sel.value);
+  if (!item) return;
+  row.querySelector('.siline-name').value  = item.name || '';
+  row.querySelector('.siline-unit').value  = item.dispenseUnit || item.unit || '';
+  row.querySelector('.siline-price').value = item.cost || '';
+  calcSupInvLinesTotal();
+}
+
+function removeSupInvLine(btn) {
+  btn.closest('.supinv-line-row')?.remove();
+  calcSupInvLinesTotal();
+}
+
+function calcSupInvLinesTotal() {
+  const rows = document.querySelectorAll('.supinv-line-row');
+  let subtotal = 0;
+  rows.forEach(row => {
+    const qty   = parseFloat(row.querySelector('.siline-qty')?.value) || 0;
+    const price = parseFloat(row.querySelector('.siline-price')?.value) || 0;
+    const type  = row.querySelector('.siline-type')?.value || 'product';
+    const lineTotal = qty * price;
+    subtotal += (type === 'discount') ? -lineTotal : lineTotal;
+  });
+  const subEl = document.getElementById('supinv-subtotal');
+  if (subEl && rows.length > 0) {
+    subEl.value = subtotal.toFixed(2);
+    calcSupInvTotal();
+  }
+  const summary = document.getElementById('supinv-lines-summary');
+  if (summary) summary.textContent = rows.length + ' รายการ รวม ' + subtotal.toLocaleString('th-TH', {minimumFractionDigits:2}) + ' บาท';
+}
+
+function autoFillSupInvFromPO() {
+  const prId = document.getElementById('supinv-pr')?.value;
+  if (!prId) return;
+  const pr = (db.purchaseRequests || []).find(x => x.id == prId);
+  if (!pr) return;
+  const container = document.getElementById('supinv-lines-container');
+  if (!container) return;
+  // ดู PO lines
+  const prLines = (db.purchaseRequestLines || []).filter(l => l.requestId == prId);
+  if (!prLines.length) { toast('ไม่พบรายการใน PO นี้', 'warning'); return; }
+  // clear และ fill
+  container.innerHTML = '';
+  prLines.forEach(pl => {
+    addSupInvLine(pl.itemId, pl.itemName, pl.qtyRequested, pl.unit, pl.unitCost, 'product');
+  });
+  toast('Auto-fill จาก PO เรียบร้อย (' + prLines.length + ' รายการ)', 'success');
+}
+
+async function confirmInvoiceStock(id) {
+  if (!confirm('ยืนยันรับสินค้าและเพิ่มสต็อก? ไม่สามารถยกเลิกได้')) return;
+  const inv = db.supplierInvoices.find(x => x.id == id);
+  if (!inv) return;
+  const { error } = await supa.from('supplier_invoices')
+    .update({ status: 'confirmed', is_stock_updated: true, received_date: new Date().toISOString().slice(0,10) })
+    .eq('id', id);
+  if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
+  inv.status = 'confirmed'; inv.isStockUpdated = true;
+  // update stock จาก invoice lines ที่มีอยู่
+  const { data: invLines } = await supa.from('supplier_invoice_lines')
+    .select('*').eq('invoice_id', id).eq('update_stock', false).eq('line_type', 'product');
+  if (invLines?.length) {
+    for (const line of invLines) {
+      if (!line.item_id) continue;
+      const item = db.items.find(x => x.id === line.item_id);
+      const beforeQty = parseFloat(item?.qty) || 0;
+      const afterQty  = beforeQty + parseFloat(line.qty);
+      await supa.from('stock_movements').insert({
+        item_id: line.item_id, movement_type: 'receive',
+        quantity: line.qty, before_qty: beforeQty, after_qty: afterQty,
+        supplier_invoice_id: id, cost: line.unit_price || 0,
+        ref_id: id, ref_type: 'supplier_invoice',
+        created_by: currentUser?.username || '',
+      });
+      await supa.from('supplier_invoice_lines').update({ update_stock: true }).eq('id', line.id);
+      if (item) item.qty = afterQty;
+    }
+  }
+  toast('เพิ่มสต็อกเรียบร้อย', 'success');
   renderSupplierInvoices();
 }
 
