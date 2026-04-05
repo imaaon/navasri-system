@@ -677,11 +677,12 @@ function renderSupplierInvoices() {
   }
 
   const statusBadge = s => ({
+    draft:     '<span class="badge" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);">ร่าง</span>',
+    confirmed: '<span class="badge badge-blue" style="background:#e3f0ff;color:#1a5fb4;">✅ รับแล้ว</span>',
     pending:   '<span class="badge badge-orange">รอจ่าย</span>',
     paid:      '<span class="badge badge-green">จ่ายแล้ว</span>',
     overdue:   '<span class="badge badge-red">เกินกำหนด</span>',
     cancelled: '<span class="badge badge-gray">ยกเลิก</span>',
-  }[s] || '<span class="badge badge-gray">'+s+'</span>');
 
   tb.innerHTML = list.map(r => `<tr>
     <td style="font-size:12px;">${r.date||'-'}</td>
@@ -695,7 +696,9 @@ function renderSupplierInvoices() {
     <td>${statusBadge(r.status)}</td>
     <td>
       <button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('${r.id}')">✏️</button>
+      ${r.status === 'draft' ? `<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="confirmInvoiceStock('${r.id}')">📦 ยืนยันสต็อก</button>` : ''}
       ${r.status === 'pending' ? `<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('${r.id}')">✅ จ่ายแล้ว</button>` : ''}
+      ${r.status === 'confirmed' ? `<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('${r.id}')">✅ จ่ายแล้ว</button>` : ''}
     </td>
   </tr>`).join('');
 }
