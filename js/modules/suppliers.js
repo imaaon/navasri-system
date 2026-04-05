@@ -669,39 +669,59 @@ function renderSupplierInvoices() {
     return true;
   });
 
-  document.getElementById('supInvCount').textContent = `ทั้งหมด: ${list.length} ใบ`;
+  document.getElementById('supInvCount').textContent = 'ทั้งหมด: ' + list.length + ' ใบ';
 
   if (list.length === 0) {
-    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3);">ไม่มีข้อมูล</td></tr>';
+    tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3);">ไม่มีข้อมูล</td></tr>';
     return;
   }
 
   const statusBadge = s => ({
     draft:     '<span class="badge" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);">ร่าง</span>',
-    confirmed: '<span class="badge badge-blue" style="background:#e3f0ff;color:#1a5fb4;">✅ รับแล้ว</span>',
+    confirmed: '<span class="badge" style="background:#e3f0ff;color:#1a5fb4;">&#9989; รับแล้ว</span>',
     pending:   '<span class="badge badge-orange">รอจ่าย</span>',
     paid:      '<span class="badge badge-green">จ่ายแล้ว</span>',
     overdue:   '<span class="badge badge-red">เกินกำหนด</span>',
     cancelled: '<span class="badge badge-gray">ยกเลิก</span>',
   }[s] || '<span class="badge badge-gray">'+s+'</span>');
-  tb.innerHTML = list.map(r => `<tr>
-    <td style="font-size:12px;">${r.date||'-'}</td>
-    <td style="font-family:monospace;font-size:12px;">${r.invoiceNo}</td>
-    <td style="font-weight:500;">${r.supplierName}</td>
-    <td style="text-align:right;">฿${(r.subtotal||0).toLocaleString()}</td>
-    <td style="text-align:right;font-size:12px;color:var(--text2);">฿${(r.vatAmt||0).toLocaleString()}</td>
-    <td style="text-align:right;font-weight:600;">฿${(r.total||0).toLocaleString()}</td>
-    <td style="text-align:right;font-size:12px;">${r.whtRate!=null&&r.whtRate>0?r.whtRate+'%':'-'}</td>
-    <td style="text-align:right;font-size:12px;font-weight:600;color:var(--primary);">${r.netPayable!=null?"฿"+(r.netPayable||0).toLocaleString():'-'}</td>
-    <td>${statusBadge(r.status)}</td>
-    <td>
-      <button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('${r.id}')">✏️</button>
-      ${r.status==='draft' ? '<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="confirmInvoiceStock('+r.id+')">&#128230; ยืนยันสต็อก</button>' : ''}
-      ${r.status==='pending'||r.status==='confirmed' ? '<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('+r.id+')">&#9989; จ่ายแล้ว</button>' : ''}
-    </td>
-  </tr>`).join('');
-}
 
+  tb.innerHTML = list.map(r => {
+    const lines = (db.supplierInvoiceLines||[]).filter(l=>l.invoice_id==r.id||l.invoiceId==r.id)
+    const linesHtml = lines.length ? lines.map(l=>{
+      const typeLabel = {product:'สินค้า',shipping:'ค่าขนส่ง',service:'บริการ',discount:'ส่วนลด',other:'อื่นๆ'}[l.line_type||l.lineType]||'สินค้า'
+      const stockMark = (l.update_stock||l.updateStock) ? '&#128230;' : ''
+      return '<tr style="background:var(--surface2);font-size:12px;">'+
+        '<td colspan="2" style="padding:4px 8px;color:var(--text3);">'+stockMark+' '+typeLabel+'</td>'+
+        '<td style="padding:4px 8px;">'+( l.item_name||l.itemName||'-')+'</td>'+
+        '<td colspan="2" style="padding:4px 8px;text-align:right;">'+
+          (l.qty||0)+' '+(l.unit||'')+' × &#3647;'+(l.unit_price||l.unitPrice||0).toLocaleString()+
+        '</td>'+
+        '<td style="padding:4px 8px;text-align:right;font-weight:600;">&#3647;'+(l.total||0).toLocaleString()+'</td>'+
+        '<td colspan="3" style="padding:4px 8px;color:var(--text3);font-size:11px;">'+
+          (l.lot_number||l.lotNumber?'Lot: '+(l.lot_number||l.lotNumber)+' ':'')+
+          (l.expiry_date||l.expiryDate?'หมดอายุ: '+(l.expiry_date||l.expiryDate):'')+'</td>'+
+        '</tr>'
+    }).join('') : ''
+    const stockUpdatedBadge = r.isStockUpdated
+      ? '<span style="font-size:11px;color:#1a5fb4;">&#128230;สต็อกแล้ว</span>'
+      : (r.status==='draft'?'<span style="font-size:11px;color:var(--text3);">ยังไม่รับ</span>':'')
+    return '<tr>'+
+      '<td style="font-size:12px;">'+(r.date||'-')+'</td>'+
+      '<td style="font-family:monospace;font-size:12px;">'+r.invoiceNo+'</td>'+
+      '<td style="font-weight:500;">'+r.supplierName+'<br><span style="font-size:11px;color:var(--text3);">'+(r.receivedBy?'ผู้รับ: '+r.receivedBy:'')+'</span></td>'+
+      '<td style="text-align:right;">&#3647;'+(r.subtotal||0).toLocaleString()+'</td>'+
+      '<td style="text-align:right;font-size:12px;color:var(--text2);">&#3647;'+(r.vatAmt||0).toLocaleString()+'</td>'+
+      '<td style="text-align:right;font-weight:600;">&#3647;'+(r.total||0).toLocaleString()+'</td>'+
+      '<td>'+statusBadge(r.status)+'<br>'+stockUpdatedBadge+'</td>'+
+      '<td>'+
+        '<button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('+r.id+')">&#9998;</button>'+
+        (r.status==='draft'?'<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="confirmInvoiceStock('+r.id+')">&#128230; ยืนยัน</button>':'')+
+        (r.status==='pending'||r.status==='confirmed'?'<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('+r.id+')">&#9989; จ่าย</button>':'')+
+      '</td>'+
+      '</tr>'+
+      linesHtml
+  }).join('');
+}
 function openAddSupplierInvoiceModal() {
   document.getElementById('editSupInvId').value = '';
   document.getElementById('supinv-no').value    = 'INV-' + Date.now().toString().slice(-6);
@@ -992,13 +1012,13 @@ async function saveSupInvLines(invoiceId, updateStock) {
   }
 }
 
-function addSupInvLine(itemId, itemName, qty, unit, unitPrice, lineType) {
+function addSupInvLine(itemId, itemName, qty, unit, unitPrice, lineType, lotNumber, expiryDate) {
   const container = document.getElementById('supinv-lines-container');
   if (!container) return;
   const items = db.items || [];
   const row = document.createElement('div');
   row.className = 'supinv-line-row';
-  row.style.cssText = 'display:grid;grid-template-columns:2fr 1.2fr 0.7fr 1fr 1fr 1fr 0.5fr;gap:4px;align-items:center;padding:4px;background:var(--surface2);border-radius:6px;';
+  row.style.cssText = 'display:grid;grid-template-columns:2fr 1.2fr 0.7fr 0.8fr 1fr 1fr 1fr 1fr 0.5fr;gap:4px;align-items:center;padding:4px;background:var(--surface2);border-radius:6px;';
   row.innerHTML = `
     <select class="form-control form-control-sm siline-item" style="font-size:12px;" onchange="onSupInvItemChange(this)">
       <option value="">-- เลือกสินค้า --</option>
@@ -1015,6 +1035,8 @@ function addSupInvLine(itemId, itemName, qty, unit, unitPrice, lineType) {
       <option value="discount" ${lineType==='discount'?'selected':''}>ส่วนลด</option>
       <option value="other" ${lineType==='other'?'selected':''}>อื่นๆ</option>
     </select>
+    <input class="form-control form-control-sm siline-lot" style="font-size:11px;" placeholder="Lot" value="${lotNumber||''}">
+    <input class="form-control form-control-sm siline-expiry" style="font-size:11px;" type="date" title="วันหมดอายุ" value="${expiryDate||''}">
     <button class="btn btn-ghost btn-sm" type="button" onclick="removeSupInvLine(this)" style="color:var(--danger);padding:2px 6px;">✕</button>
   `;
   container.appendChild(row);
@@ -1107,26 +1129,47 @@ async function confirmInvoiceStock(id) {
   renderSupplierInvoices();
 }
 
-function editSupplierInvoice(id) {
+async function editSupplierInvoice(id) {
   const inv = db.supplierInvoices.find(x => x.id == id);
   if (!inv) return;
-  document.getElementById('editSupInvId').value    = inv.id;
-  document.getElementById('supinv-no').value       = inv.invoiceNo;
-  document.getElementById('supinv-date').value     = inv.date || '';
-  document.getElementById('supinv-due').value      = inv.dueDate || '';
-  document.getElementById('supinv-subtotal').value = inv.subtotal;
-  document.getElementById('supinv-vat').value      = inv.vatRate;
-  document.getElementById('supinv-total').value    = inv.total;
-  document.getElementById('supinv-status').value   = inv.status;
-  document.getElementById('supinv-note').value     = inv.note || '';
-  document.getElementById('supinv-job-name').value     = inv.jobName || '';
-  document.getElementById('supinv-wht-rate').value     = inv.whtRate || 0;
-  document.getElementById('supinv-net-payable').value  = inv.netPayable != null ? inv.netPayable : '';
-  document.getElementById('supinv-supplier-manual').value = inv.supplierNameManual || '';
+  // populate header fields
+  document.getElementById('editSupInvId').value          = inv.id;
+  document.getElementById('supinv-no').value             = inv.invoiceNo;
+  document.getElementById('supinv-date').value           = inv.date || '';
+  document.getElementById('supinv-due').value            = inv.dueDate || '';
+  document.getElementById('supinv-subtotal').value       = inv.subtotal;
+  document.getElementById('supinv-vat').value            = inv.vatRate;
+  document.getElementById('supinv-total').value          = inv.total;
+  document.getElementById('supinv-status').value         = inv.status;
+  document.getElementById('supinv-note').value           = inv.note || '';
+  document.getElementById('supinv-job-name').value       = inv.jobName || '';
+  document.getElementById('supinv-wht-rate').value       = inv.whtRate || 0;
+  document.getElementById('supinv-net-payable').value    = inv.netPayable != null ? inv.netPayable : '';
+  document.getElementById('supinv-supplier-manual').value= inv.supplierName || '';
+  document.getElementById('supinv-received-date').value  = inv.receivedDate || '';
+  document.getElementById('supinv-received-by').value    = inv.receivedBy || '';
+  // populate supplier dropdown
   const sel = document.getElementById('supinv-supplier');
-  if (sel) { sel.innerHTML = '<option value="">--</option>' +
-    (db.suppliers||[]).map(s=>`<option value="${s.id}" ${s.id==inv.supplierId?'selected':''}>${s.name}</option>`).join(''); }
+  if (sel) { sel.innerHTML = '<option value="">-- เลือกผู้จำหน่าย --</option>' +
+    (db.suppliers||[]).map(s=>'<option value="'+s.id+'" '+(s.id==inv.supplierId?'selected':'')+'>'+s.name+'</option>').join(''); }
+  // populate PR dropdown
+  const prSel = document.getElementById('supinv-pr');
+  if (prSel) { prSel.innerHTML = '<option value="">-- อ้างอิง PO (ถ้ามี) --</option>' +
+    (db.purchaseRequests||[]).filter(r=>['approved','ordered'].includes(r.status))
+      .map(r=>'<option value="'+r.id+'">'+r.refNo+' - '+(r.supplierName||'')+'</option>').join(''); }
+  // โหลด invoice lines จาก DB แล้ว render ใน modal
+  const lc = document.getElementById('supinv-lines-container');
+  const ls = document.getElementById('supinv-lines-summary');
+  if (lc) { lc.innerHTML = ''; if(ls) ls.textContent = ''; }
   openModal('modal-addSupInv');
+  // โหลด lines จาก Supabase
+  const { data: invLines } = await supa.from('supplier_invoice_lines')
+    .select('*').eq('invoice_id', id);
+  if (invLines && lc) {
+    invLines.forEach(l => addSupInvLine(
+      l.item_id, l.item_name, l.qty, l.unit, l.unit_price, l.line_type, l.lot_number, l.expiry_date
+    ));
+  }
 }
 
 async function markInvoicePaid(id) {
