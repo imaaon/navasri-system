@@ -383,19 +383,44 @@ async function approveReq(reqId) {
     req.status = 'approved';
     const item = db.items.find(i => i.id == req.itemId);
     if (item) {
-      // sync item qty จาก Supabase
+      // sync item qty จาก Supabase (trigger อัปเดตให้แล้ว แต่ sync local cache)
       const { data: updItem } = await supa.from('items').select('qty').eq('id', item.id).single();
       if (updItem) item.qty = updItem.qty;
-      // sync lots
-      const { data: lotsData } = await supa.from('item_lots').select('*').eq('item_id', item.id);
+
+      // sync lots + FEFO (First Expired First Out)
+      const { data: lotsData } = await supa.from('item_lots')
+        .select('*').eq('item_id', item.id).gt('qty_remaining', 0)
+        .order('expiry_date', { ascending: true, nullsFirst: false });
       if (lotsData) {
-        db.itemLots = db.itemLots.filter(l => l.itemId != item.id);
+        db.itemLots = (db.itemLots||[]).filter(l => String(l.itemId) !== String(item.id));
         lotsData.forEach(l => db.itemLots.push({
-          id: l.id, itemId: l.item_id, lotNo: l.lot_no,
+          id: l.id, itemId: l.item_id, lotNumber: l.lot_number,
           qtyInLot: l.qty_in_lot, qtyRemaining: l.qty_remaining,
-          expiryDate: l.expiry_date, note: l.note
+          unitCost: l.unit_cost || 0,
+          expiryDate: l.expiry_date, receivedDate: l.received_date
         }));
       }
+    }
+
+    // FEFO: เลือก lot ที่หมดอายุก่อน แล้วตัด qty_remaining
+    let selectedLotId = null, selectedUnitCost = 0, selectedLotNumber = null;
+    const fefoLots = (db.itemLots||[])
+      .filter(l => String(l.itemId) === String(req.itemId) && l.qtyRemaining > 0)
+      .sort((a,b) => {
+        if (!a.expiryDate && !b.expiryDate) return 0;
+        if (!a.expiryDate) return 1;
+        if (!b.expiryDate) return -1;
+        return new Date(a.expiryDate) - new Date(b.expiryDate);
+      });
+    if (fefoLots.length > 0) {
+      selectedLotId    = fefoLots[0].id;
+      selectedUnitCost = fefoLots[0].unitCost || 0;
+      selectedLotNumber= fefoLots[0].lotNumber || null;
+      // อัปเดต lot qty_remaining ใน Supabase
+      const newRemaining = Math.max(0, fefoLots[0].qtyRemaining - (req.qty || 0));
+      supa.from('item_lots').update({ qty_remaining: newRemaining }).eq('id', selectedLotId);
+      // อัปเดต local cache
+      fefoLots[0].qtyRemaining = newRemaining;
     }
 
     sendLineNotify('approved', buildLineMsg('approved', {
@@ -417,6 +442,10 @@ async function approveReq(reqId) {
         ref_type:      'requisition',
         ref_id:        reqId,
         created_by:    actor,
+        lot_id:                selectedLotId,
+        requisition_header_id: reqId,
+        unit_cost:             selectedUnitCost,
+        lot_no:                selectedLotNumber,
       };
       supa.from('stock_movements').insert(movData).select().single().then(({ data }) => {
         if (data) db.stockMovements.unshift(mapStockMovement(data));
