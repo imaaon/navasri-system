@@ -723,7 +723,16 @@ function openAddSupplierInvoiceModal() {
       (db.purchaseRequests||[]).filter(r=>['approved','ordered'].includes(r.status))
         .map(r=>`<option value="${r.id}">${r.refNo} - ${r.supplierName||'ไม่ระบุ'}</option>`).join('');
   }
-  document.getElementById('supinv-status').value = 'pending';
+  document.getElementById('supinv-status').value = 'draft';
+  // reset new fields
+  document.getElementById('supinv-supplier-manual').value = '';
+  document.getElementById('supinv-received-date').value  = new Date().toISOString().slice(0,10);
+  document.getElementById('supinv-received-by').value    = '';
+  document.getElementById('supinv-job-name').value       = '';
+  document.getElementById('supinv-wht-rate').value       = '0';
+  document.getElementById('supinv-net-payable').value    = '';
+  const lc = document.getElementById('supinv-lines-container'); if(lc) lc.innerHTML = '';
+  const ls = document.getElementById('supinv-lines-summary'); if(ls) ls.textContent = '';
   openModal('modal-addSupInv');
   // inject scan button
   setTimeout(() => {
