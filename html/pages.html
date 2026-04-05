@@ -1534,3 +1534,120 @@
           <div id="sr-trace-result"></div>
         </div>
       </div>
+
+      <!-- ===== PAGE: EXPENSES ===== -->
+      <div id="page-expenses" style="display:none;">
+        <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+          <div style="flex:1;">
+            <h2 style="margin:0;font-size:20px;">💸 ค่าใช้จ่าย</h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ค่าน้ำ · ค่าไฟ · ซ่อมแซม · เงินเดือน · และอื่นๆ</div>
+          </div>
+          <button class="btn btn-primary" onclick="openAddExpenseModal()">+ บันทึกค่าใช้จ่าย</button>
+        </div>
+        <!-- Summary Cards -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
+          <div class="card" style="padding:14px;text-align:center;">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">เดือนนี้ทั้งหมด</div>
+            <div id="exp-stat-total" style="font-size:20px;font-weight:700;color:var(--primary);">0 ฿</div>
+          </div>
+          <div class="card" style="padding:14px;text-align:center;background:#fff8f0;border-color:#f39c12;">
+            <div style="font-size:11px;color:#e67e22;margin-bottom:4px;">⏳ ค้างชำระ</div>
+            <div id="exp-stat-unpaid" style="font-size:20px;font-weight:700;color:#e67e22;">0 ฿</div>
+          </div>
+          <div class="card" style="padding:14px;text-align:center;background:#f0fff4;border-color:#27ae60;">
+            <div style="font-size:11px;color:#27ae60;margin-bottom:4px;">✅ จ่ายแล้ว</div>
+            <div id="exp-stat-paid" style="font-size:20px;font-weight:700;color:#27ae60;">0 ฿</div>
+          </div>
+        </div>
+        <!-- Filters -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+          <select id="exp-filter-category" class="form-control" style="width:160px;" onchange="renderExpenses()">
+            <option value="">ทุกประเภท</option>
+            <option value="utilities">สาธารณูปโภค</option>
+            <option value="maintenance">ซ่อมแซม</option>
+            <option value="salary">เงินเดือน/บุคลากร</option>
+            <option value="rent">ค่าเช่า</option>
+            <option value="professional">ค่าบริการวิชาชีพ</option>
+            <option value="medical_supply">วัสดุการแพทย์</option>
+            <option value="consumable">วัสดุสิ้นเปลือง</option>
+            <option value="food">อาหาร/วัตถุดิบ</option>
+            <option value="insurance">ประกันภัย</option>
+            <option value="tax_fee">ค่าธรรมเนียม/ภาษี</option>
+            <option value="training">อบรม/สัมมนา</option>
+            <option value="transport">เดินทาง/น้ำมัน</option>
+            <option value="other">อื่นๆ</option>
+          </select>
+          <select id="exp-filter-status" class="form-control" style="width:130px;" onchange="renderExpenses()">
+            <option value="">ทุกสถานะ</option>
+            <option value="unpaid">ค้างชำระ</option>
+            <option value="paid">จ่ายแล้ว</option>
+            <option value="overdue">เกินกำหนด</option>
+          </select>
+          <select id="exp-filter-month" class="form-control" style="width:120px;" onchange="renderExpenses()">
+            <option value="">ทุกเดือน</option>
+          </select>
+          <input id="exp-search" class="form-control" placeholder="ค้นหา..." oninput="renderExpenses()" style="width:180px;">
+          <span id="exp-count" style="font-size:13px;color:var(--text3);margin-left:auto;"></span>
+        </div>
+        <!-- Table -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <table class="data-table" style="width:100%;">
+            <thead><tr>
+              <th>วันที่</th><th>เลขที่</th><th>ประเภท</th>
+              <th>รายการ</th><th>ผู้รับ/บริษัท</th>
+              <th style="text-align:right;">ยอดสุทธิ</th>
+              <th>สถานะ</th><th>จ่ายโดย</th><th></th>
+            </tr></thead>
+            <tbody id="expTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== PAGE: ASSETS ===== -->
+      <div id="page-assets" style="display:none;">
+        <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+          <div style="flex:1;">
+            <h2 style="margin:0;font-size:20px;">🔧 ครุภัณฑ์ & ซ่อมบำรุง</h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ทะเบียนอุปกรณ์ · ประวัติซ่อม · แจ้งเตือนบำรุงรักษา</div>
+          </div>
+          <button class="btn btn-primary" onclick="openAddAssetModal()">+ เพิ่มครุภัณฑ์</button>
+        </div>
+        <!-- Alert: ใกล้ถึงรอบซ่อม -->
+        <div id="asset-alert-card" style="display:none;background:#fff8f0;border:1px solid #f39c12;border-radius:10px;padding:14px;margin-bottom:16px;">
+          <div style="font-weight:600;color:#e67e22;margin-bottom:8px;">⚠️ อุปกรณ์ถึงรอบซ่อมบำรุง / ใกล้หมดประกัน</div>
+          <div id="asset-alert-list" style="font-size:13px;"></div>
+        </div>
+        <!-- Filters -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+          <select id="asset-filter-category" class="form-control" style="width:160px;" onchange="renderAssets()">
+            <option value="">ทุกประเภท</option>
+            <option value="medical_equipment">เครื่องมือแพทย์</option>
+            <option value="furniture">เฟอร์นิเจอร์/เตียง</option>
+            <option value="building_system">ระบบอาคาร</option>
+            <option value="kitchen_laundry">ครัว/ซักล้าง</option>
+            <option value="vehicle">ยานพาหนะ</option>
+            <option value="it_telecom">IT/สื่อสาร</option>
+            <option value="other">อื่นๆ</option>
+          </select>
+          <select id="asset-filter-status" class="form-control" style="width:130px;" onchange="renderAssets()">
+            <option value="">ทุกสถานะ</option>
+            <option value="active">ใช้งานปกติ</option>
+            <option value="under_repair">ส่งซ่อม</option>
+            <option value="retired">เลิกใช้</option>
+          </select>
+          <input id="asset-search" class="form-control" placeholder="ค้นหาชื่อ/รหัส..." oninput="renderAssets()" style="width:200px;">
+          <span id="asset-count" style="font-size:13px;color:var(--text3);margin-left:auto;"></span>
+        </div>
+        <!-- Table -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <table class="data-table" style="width:100%;">
+            <thead><tr>
+              <th>รหัส</th><th>ชื่ออุปกรณ์</th><th>ประเภท</th>
+              <th>ตำแหน่ง</th><th>ซ่อมล่าสุด</th>
+              <th>ซ่อมถัดไป</th><th>ประกันหมด</th>
+              <th>สถานะ</th><th></th>
+            </tr></thead>
+            <tbody id="assetTable"></tbody>
+          </table>
+        </div>
+      </div>
