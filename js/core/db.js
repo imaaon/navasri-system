@@ -21,7 +21,9 @@ let db = {
   stockMovements: [], // stock_movements
   suppliers: [],       // suppliers master
   purchaseRequests: [], // purchase_requests
-  supplierInvoices: [], // supplier_invoices
+  supplierInvoices: [],
+  assets: [],
+  assetMaintenanceLogs: [], // supplier_invoices
   supplierInvoiceLines: [],   // supplier_invoice_lines
   invoiceResetLogs: [], // invoice_reset_logs
   appointments: [], // patient_appointments
@@ -115,7 +117,7 @@ async function loadDBSecondary() {
       contractsRes, paymentsRes, approvalLogsRes, returnItemsRes,
       appointmentsRes, belongingsRes, consentsRes, invoicesRes,
       expensesRes, roomHistoryRes, invoiceResetLogsRes,
-      stockMovementsRes, suppliersRes, purchaseRequestsRes, supplierInvoicesRes, supplierInvoiceLinesRes
+      stockMovementsRes, suppliersRes, purchaseRequestsRes, supplierInvoicesRes, supplierInvoiceLinesRes, assetsRes, assetMaintenanceLogsRes
     ] = await Promise.all([
       supa.from('patient_contracts').select('*').order('created_at', {ascending: false}).limit(200),
       supa.from('payments').select('*').order('payment_date', {ascending: false}).limit(300),
@@ -133,6 +135,8 @@ async function loadDBSecondary() {
       supa.from('purchase_requests').select('*').order('created_at', {ascending: false}).limit(200),
       supa.from('supplier_invoices').select('*').order('created_at', {ascending: false}).limit(200),
       supa.from('supplier_invoice_lines').select('*').order('id'),
+      supa.from('assets').select('*').order('asset_no'),
+      supa.from('asset_maintenance_logs').select('*').order('maintenance_date',{ascending:false}).limit(500),
     ]);
     db.contracts       = (contractsRes.data || []).map(mapContract);
     db.payments        = (paymentsRes.data || []).map(mapPayment);
@@ -150,6 +154,8 @@ async function loadDBSecondary() {
     db.purchaseRequests  = (purchaseRequestsRes?.data || []).map(mapPurchaseRequest);
     db.supplierInvoices  = (supplierInvoicesRes?.data || []).map(mapSupplierInvoice);
     db.supplierInvoiceLines = (supplierInvoiceLinesRes?.data || []);
+    db.assets = (assetsRes?.data || []).map(mapAsset);
+    db.assetMaintenanceLogs = (assetMaintenanceLogsRes?.data || []);
     window._dbSecondaryLoaded = true;
     buildBarcodeMap();
   } catch(e) {
