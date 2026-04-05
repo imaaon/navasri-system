@@ -683,7 +683,7 @@ function renderSupplierInvoices() {
     paid:      '<span class="badge badge-green">จ่ายแล้ว</span>',
     overdue:   '<span class="badge badge-red">เกินกำหนด</span>',
     cancelled: '<span class="badge badge-gray">ยกเลิก</span>',
-
+  }[s] || '<span class="badge badge-gray">'+s+'</span>');
   tb.innerHTML = list.map(r => `<tr>
     <td style="font-size:12px;">${r.date||'-'}</td>
     <td style="font-family:monospace;font-size:12px;">${r.invoiceNo}</td>
@@ -696,9 +696,8 @@ function renderSupplierInvoices() {
     <td>${statusBadge(r.status)}</td>
     <td>
       <button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('${r.id}')">✏️</button>
-      ${r.status === 'draft' ? `<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="confirmInvoiceStock('${r.id}')">📦 ยืนยันสต็อก</button>` : ''}
-      ${r.status === 'pending' ? `<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('${r.id}')">✅ จ่ายแล้ว</button>` : ''}
-      ${r.status === 'confirmed' ? `<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('${r.id}')">✅ จ่ายแล้ว</button>` : ''}
+      ${r.status==='draft' ? '<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="confirmInvoiceStock('+r.id+')">&#128230; ยืนยันสต็อก</button>' : ''}
+      ${r.status==='pending'||r.status==='confirmed' ? '<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('+r.id+')">&#9989; จ่ายแล้ว</button>' : ''}
     </td>
   </tr>`).join('');
 }
@@ -1003,7 +1002,7 @@ function addSupInvLine(itemId, itemName, qty, unit, unitPrice, lineType) {
   row.innerHTML = `
     <select class="form-control form-control-sm siline-item" style="font-size:12px;" onchange="onSupInvItemChange(this)">
       <option value="">-- เลือกสินค้า --</option>
-      ${items.map(i=>`<option value="${i.id}" ${i.id===(itemId||'')?'selected':''}>${i.name}</option>`).join('')}
+      ${items.map(i=>'<option value="'+i.id+'" '+(i.id===(itemId||'')?'selected':'')+'>'+i.name+'</option>').join('')}
     </select>
     <input class="form-control form-control-sm siline-name" style="font-size:12px;" placeholder="ชื่อสินค้า" value="${itemName||''}">
     <input class="form-control form-control-sm siline-qty" style="font-size:12px;" type="number" min="0.01" step="0.01" value="${qty||1}" oninput="calcSupInvLinesTotal()">
