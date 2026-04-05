@@ -66,4 +66,6 @@ function renderPage(page) {
     if (srMonth && !srMonth.value) srMonth.value = new Date().toISOString().slice(0,7);
     switchStockReportTab('lowstock');
   }
+  else if (page === 'expenses') renderExpenses();
+  else if (page === 'assets') { renderAssets(); }
 }
