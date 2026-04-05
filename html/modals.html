@@ -2535,9 +2535,12 @@
   </div>
 <!-- ===== MODAL: EXPENSE NOTE ===== -->
 <div class="modal-overlay" id="modal-expense">
-  <div class="modal" style="max-width:680px;width:95%;max-height:90vh;overflow-y:auto;padding:24px;">
-    <div class="modal-title" id="modal-expense-title">บันทึกค่าใช้จ่าย</div>
-    <button class="modal-close" onclick="closeModal('modal-expense')">✕</button>
+  <div class="modal" style="max-width:680px;width:95%;max-height:90vh;overflow-y:auto;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-expense-title">บันทึกค่าใช้จ่าย</div>
+      <button class="modal-close" onclick="closeModal('modal-expense')">✕</button>
+    </div>
+    <div class="modal-body">
     <div style="display:grid;gap:14px;">
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -2646,6 +2649,7 @@
       <input type="hidden" id="exp-edit-id" value="">
       <input type="hidden" id="exp-items-data" value="[]">
 
+    </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-expense')">ยกเลิก</button>
@@ -2948,11 +2952,12 @@
 
 <!-- ===== modal-add-lab ===== -->
 <div class="modal-overlay" id="modal-add-lab">
-  <div class="modal" style="max-width:640px;width:95%;max-height:90vh;overflow-y:auto;padding:24px;">
+  <div class="modal" style="max-width:640px;width:95%;max-height:90vh;overflow-y:auto;">
     <div class="modal-header">
       <div class="modal-title" id="modal-add-lab-title">🧪 บันทึกผลแล็บ/ผลตรวจ</div>
       <button class="modal-close" onclick="closeModal('modal-add-lab')">✕</button>
     </div>
+    <div class="modal-body">
     <div style="display:grid;gap:14px;margin-top:16px;">
       <input type="hidden" id="lab-edit-id">
       <input type="hidden" id="lab-patient-id">
@@ -2979,6 +2984,7 @@
       </div>
       <div class="form-group"><label class="form-label">หมายเหตุ</label>
         <input class="form-control" type="text" id="lab-note" placeholder="หมายเหตุเพิ่มเติม"></div>
+    </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-add-lab')">ยกเลิก</button>
