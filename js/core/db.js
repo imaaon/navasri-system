@@ -534,6 +534,7 @@ function mapLot(r) {
     unitCost: r.unit_cost || 0, receivedBy: r.received_by || '',
     purchaseId: r.purchase_id, receivedDate: r.received_date,
     supplierInvoiceId: r.supplier_invoice_id || null, notes: r.notes,
+  };
 }
 // helper: คืน lots ของ item เรียงตาม FEFO
 function getLotsForItem(itemId) {
