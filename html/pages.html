@@ -1444,6 +1444,8 @@
         <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
           <select class="form-control" id="supInvStatusFilter" style="width:150px;" onchange="renderSupplierInvoices()">
             <option value="">ทุกสถานะ</option>
+            <option value="draft">ร่าง (ยังไม่รับสต็อก)</option>
+            <option value="confirmed">รับสต็อกแล้ว</option>
             <option value="pending">รอจ่าย</option>
             <option value="paid">จ่ายแล้ว</option>
             <option value="overdue">เกินกำหนด</option>
