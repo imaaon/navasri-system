@@ -22,6 +22,7 @@ let db = {
   suppliers: [],       // suppliers master
   purchaseRequests: [], // purchase_requests
   supplierInvoices: [], // supplier_invoices
+  supplierInvoiceLines: [],   // supplier_invoice_lines
   invoiceResetLogs: [], // invoice_reset_logs
   appointments: [], // patient_appointments
   belongings: [],   // patient_belongings
@@ -114,7 +115,7 @@ async function loadDBSecondary() {
       contractsRes, paymentsRes, approvalLogsRes, returnItemsRes,
       appointmentsRes, belongingsRes, consentsRes, invoicesRes,
       expensesRes, roomHistoryRes, invoiceResetLogsRes,
-      stockMovementsRes, suppliersRes, purchaseRequestsRes, supplierInvoicesRes
+      stockMovementsRes, suppliersRes, purchaseRequestsRes, supplierInvoicesRes, supplierInvoiceLinesRes
     ] = await Promise.all([
       supa.from('patient_contracts').select('*').order('created_at', {ascending: false}).limit(200),
       supa.from('payments').select('*').order('payment_date', {ascending: false}).limit(300),
@@ -131,6 +132,7 @@ async function loadDBSecondary() {
       supa.from('suppliers').select('*').order('supplier_name'),
       supa.from('purchase_requests').select('*').order('created_at', {ascending: false}).limit(200),
       supa.from('supplier_invoices').select('*').order('created_at', {ascending: false}).limit(200),
+      supa.from('supplier_invoice_lines').select('*').order('id'),
     ]);
     db.contracts       = (contractsRes.data || []).map(mapContract);
     db.payments        = (paymentsRes.data || []).map(mapPayment);
@@ -147,6 +149,7 @@ async function loadDBSecondary() {
     db.suppliers         = (suppliersRes?.data || []).map(mapSupplier);
     db.purchaseRequests  = (purchaseRequestsRes?.data || []).map(mapPurchaseRequest);
     db.supplierInvoices  = (supplierInvoicesRes?.data || []).map(mapSupplierInvoice);
+    db.supplierInvoiceLines = (supplierInvoiceLinesRes?.data || []);
     window._dbSecondaryLoaded = true;
     buildBarcodeMap();
   } catch(e) {
@@ -528,8 +531,9 @@ function mapLot(r) {
     id: r.id, itemId: r.item_id, lotNumber: r.lot_number,
     manufacturingDate: r.manufacturing_date, expiryDate: r.expiry_date,
     qtyInLot: r.qty_in_lot, qtyRemaining: r.qty_remaining,
-    purchaseId: r.purchase_id, receivedDate: r.received_date, notes: r.notes,
-  };
+    unitCost: r.unit_cost || 0, receivedBy: r.received_by || '',
+    purchaseId: r.purchase_id, receivedDate: r.received_date,
+    supplierInvoiceId: r.supplier_invoice_id || null, notes: r.notes,
 }
 // helper: คืน lots ของ item เรียงตาม FEFO
 function getLotsForItem(itemId) {
