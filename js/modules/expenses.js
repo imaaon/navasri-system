@@ -158,8 +158,8 @@ async function saveExpense() {
     if (idx>=0) db.expenses[idx] = mapExpense(data);
   } else {
     // auto doc_no
-    const { data: seq } = await supa.rpc('get_next_doc_no',{p_module:'expense'}).single().catch(()=>({data:null}));
-    if (seq) payload.doc_no = seq;
+  let docNo = null; try { const { data: seq } = await supa.rpc('get_next_doc_no',{p_module:'expense'}); if(seq) docNo = seq; } catch(_){}
+  if (docNo) payload.doc_no = docNo;
     const { data, error } = await supa.from('expenses').insert(payload).select().single();
     if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
     if (!db.expenses) db.expenses = [];
