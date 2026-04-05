@@ -938,7 +938,7 @@ async function saveSupInvLines(invoiceId, updateStock) {
 
   const linesToInsert = [];
   rows.forEach(row => {
-    const itemId    = row.querySelector('.siline-item')?.value || null;
+    const itemId    = row.getAttribute('data-item-id') || null;
     const itemName  = row.querySelector('.siline-name')?.value.trim() || '';
     const qty       = parseFloat(row.querySelector('.siline-qty')?.value) || 0;
     const unit      = row.querySelector('.siline-unit')?.value.trim() || '';
@@ -1039,29 +1039,123 @@ function addSupInvLine(itemId, itemName, qty, unit, unitPrice, lineType, lotNumb
   const container = document.getElementById('supinv-lines-container');
   if (!container) return;
   const items = db.items || [];
+  const isManual = !itemId && !!itemName;
+
   const row = document.createElement('div');
   row.className = 'supinv-line-row';
-  row.style.cssText = 'display:grid;grid-template-columns:2fr 1.2fr 0.7fr 0.8fr 1fr 1fr 1fr 1fr 0.5fr;gap:4px;align-items:center;padding:4px;background:var(--surface2);border-radius:6px;';
-  row.innerHTML = `
-    <select class="form-control form-control-sm siline-item" style="font-size:12px;" onchange="onSupInvItemChange(this)">
-      <option value="">-- เลือกสินค้า --</option>
-      ${items.map(i=>'<option value="'+i.id+'" '+(i.id===(itemId||'')?'selected':'')+'>'+i.name+'</option>').join('')}
-    </select>
-    <input class="form-control form-control-sm siline-name" style="font-size:12px;" placeholder="ชื่อสินค้า" value="${itemName||''}">
-    <input class="form-control form-control-sm siline-qty" style="font-size:12px;" type="number" min="0.01" step="0.01" value="${qty||1}" oninput="calcSupInvLinesTotal()">
-    <input class="form-control form-control-sm siline-unit" style="font-size:12px;" placeholder="หน่วย" value="${unit||''}">
-    <input class="form-control form-control-sm siline-price" style="font-size:12px;" type="number" min="0" step="0.01" placeholder="ราคา/หน่วย" value="${unitPrice||''}" oninput="calcSupInvLinesTotal()">
-    <select class="form-control form-control-sm siline-type" style="font-size:12px;" onchange="calcSupInvLinesTotal()">
-      <option value="product" ${(lineType||'product')==='product'?'selected':''}>สินค้า</option>
-      <option value="shipping" ${lineType==='shipping'?'selected':''}>ค่าขนส่ง</option>
-      <option value="service" ${lineType==='service'?'selected':''}>ค่าบริการ</option>
-      <option value="discount" ${lineType==='discount'?'selected':''}>ส่วนลด</option>
-      <option value="other" ${lineType==='other'?'selected':''}>อื่นๆ</option>
-    </select>
-    <input class="form-control form-control-sm siline-lot" style="font-size:11px;" placeholder="Lot" value="${lotNumber||''}">
-    <input class="form-control form-control-sm siline-expiry" style="font-size:11px;" type="date" title="วันหมดอายุ" value="${expiryDate||''}">
-    <button class="btn btn-ghost btn-sm" type="button" onclick="removeSupInvLine(this)" style="color:var(--danger);padding:2px 6px;">✕</button>
-  `;
+  row.setAttribute('data-item-id', itemId || '');
+  row.style.cssText = 'display:flex;flex-direction:column;gap:6px;padding:8px 10px;background:var(--surface2);border-radius:8px;margin-bottom:2px;';
+
+  // แถวบน: เลือกสินค้า | ประเภท | badge | ลบ
+  const row1 = document.createElement('div');
+  row1.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:end;';
+
+  // --- dropdown สินค้า ---
+  const selWrap = document.createElement('div');
+  const selLabel = document.createElement('div');
+  selLabel.style.cssText = 'font-size:11px;color:var(--text2);margin-bottom:3px;';
+  selLabel.textContent = 'สินค้า';
+  const sel = document.createElement('select');
+  sel.className = 'form-control form-control-sm siline-item';
+  sel.style.fontSize = '12px';
+  sel.setAttribute('onchange', 'onSupInvItemChange(this)');
+  const optBlank = document.createElement('option');
+  optBlank.value = ''; optBlank.textContent = '-- เลือกสินค้า --';
+  sel.appendChild(optBlank);
+  items.forEach(function(it) {
+    const o = document.createElement('option');
+    o.value = it.id; o.textContent = it.name;
+    if (it.id === (itemId || '')) o.selected = true;
+    sel.appendChild(o);
+  });
+  const optManual = document.createElement('option');
+  optManual.value = '__manual__';
+  optManual.textContent = 'พิมพ์ชื่อเอง (ไม่ตัดสต็อก)';
+  if (isManual) optManual.selected = true;
+  sel.appendChild(optManual);
+  selWrap.appendChild(selLabel); selWrap.appendChild(sel);
+
+  // --- ประเภท ---
+  const typeWrap = document.createElement('div');
+  const typeLabel = document.createElement('div');
+  typeLabel.style.cssText = 'font-size:11px;color:var(--text2);margin-bottom:3px;';
+  typeLabel.textContent = 'ประเภท';
+  const selType = document.createElement('select');
+  selType.className = 'form-control form-control-sm siline-type';
+  selType.style.fontSize = '12px';
+  selType.setAttribute('onchange', 'calcSupInvLinesTotal()');
+  [['product','สินค้า'],['shipping','ค่าขนส่ง'],['service','ค่าบริการ'],['discount','ส่วนลด'],['other','อื่นๆ']].forEach(function(pair) {
+    const o = document.createElement('option');
+    o.value = pair[0]; o.textContent = pair[1];
+    if ((lineType || 'product') === pair[0]) o.selected = true;
+    selType.appendChild(o);
+  });
+  typeWrap.appendChild(typeLabel); typeWrap.appendChild(selType);
+
+  // --- badge ---
+  const badge = document.createElement('div');
+  badge.className = 'siline-badge';
+  badge.style.cssText = 'font-size:11px;padding:3px 8px;border-radius:5px;white-space:nowrap;align-self:center;margin-top:14px;';
+  if (isManual) {
+    badge.textContent = 'ไม่ตัดสต็อก';
+    badge.style.background = 'var(--surface3)'; badge.style.color = 'var(--text2)';
+  } else if (itemId) {
+    badge.textContent = 'ตัดสต็อก';
+    badge.style.background = '#e8f5e9'; badge.style.color = '#2d7a4f';
+  }
+
+  // --- ปุ่มลบ ---
+  const delBtn = document.createElement('button');
+  delBtn.className = 'btn btn-ghost btn-sm';
+  delBtn.type = 'button';
+  delBtn.style.cssText = 'color:var(--danger);padding:4px 8px;margin-top:14px;';
+  delBtn.textContent = 'x';
+  delBtn.setAttribute('onclick', 'removeSupInvLine(this)');
+
+  row1.appendChild(selWrap); row1.appendChild(typeWrap); row1.appendChild(badge); row1.appendChild(delBtn);
+
+  // manual input row (แสดงเมื่อเลือก "พิมพ์เอง")
+  const manualWrap = document.createElement('div');
+  manualWrap.className = 'siline-manual-wrap';
+  manualWrap.style.display = isManual ? 'block' : 'none';
+  const manualLabel = document.createElement('div');
+  manualLabel.style.cssText = 'font-size:11px;color:var(--text2);margin-bottom:3px;';
+  manualLabel.textContent = 'ชื่อสินค้า (จะไม่ตัดสต็อก)';
+  const manualInput = document.createElement('input');
+  manualInput.className = 'form-control form-control-sm siline-name';
+  manualInput.style.fontSize = '12px';
+  manualInput.placeholder = 'พิมพ์ชื่อสินค้า...';
+  manualInput.value = isManual ? (itemName || '') : '';
+  manualInput.setAttribute('oninput', '_supInvFuzzyMatch(this)');
+  const fuzzyHint = document.createElement('div');
+  fuzzyHint.className = 'siline-fuzzy-hint';
+  fuzzyHint.style.cssText = 'font-size:11px;color:var(--accent-dark);margin-top:3px;display:none;';
+  manualWrap.appendChild(manualLabel); manualWrap.appendChild(manualInput); manualWrap.appendChild(fuzzyHint);
+
+  // แถวล่าง: จำนวน | หน่วย | ราคา/หน่วย | Lot | วันหมดอายุ
+  const row2 = document.createElement('div');
+  row2.style.cssText = 'display:grid;grid-template-columns:0.7fr 0.7fr 1fr 1fr 1.2fr;gap:6px;align-items:end;';
+  function makeField(labelText, inputAttrs) {
+    const wrap = document.createElement('div');
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:11px;color:var(--text2);margin-bottom:3px;';
+    lbl.textContent = labelText;
+    const inp = document.createElement('input');
+    inp.className = 'form-control form-control-sm ' + (inputAttrs.cls || '');
+    inp.style.fontSize = '12px';
+    Object.keys(inputAttrs).forEach(function(k) {
+      if (k !== 'cls') inp.setAttribute(k, inputAttrs[k]);
+    });
+    wrap.appendChild(lbl); wrap.appendChild(inp);
+    return wrap;
+  }
+  row2.appendChild(makeField('จำนวน',       {cls:'siline-qty',    type:'number', min:'0.01', step:'0.01', value:qty||1, oninput:'calcSupInvLinesTotal()'}));
+  row2.appendChild(makeField('หน่วย',       {cls:'siline-unit',   placeholder:'หน่วย', value:unit||''}));
+  row2.appendChild(makeField('ราคา/หน่วย (฿)',{cls:'siline-price', type:'number', min:'0', step:'0.01', placeholder:'0.00', value:unitPrice||'', oninput:'calcSupInvLinesTotal()'}));
+  row2.appendChild(makeField('Lot',         {cls:'siline-lot',    placeholder:'Lot', value:lotNumber||''}));
+  row2.appendChild(makeField('วันหมดอายุ',  {cls:'siline-expiry', type:'date', value:expiryDate||''}));
+
+  row.appendChild(row1); row.appendChild(manualWrap); row.appendChild(row2);
   container.appendChild(row);
   calcSupInvLinesTotal();
 }
@@ -1069,12 +1163,64 @@ function addSupInvLine(itemId, itemName, qty, unit, unitPrice, lineType, lotNumb
 function onSupInvItemChange(sel) {
   const row = sel.closest('.supinv-line-row');
   if (!row) return;
-  const item = db.items.find(x => x.id === sel.value);
-  if (!item) return;
-  row.querySelector('.siline-name').value  = item.name || '';
-  row.querySelector('.siline-unit').value  = item.dispenseUnit || item.unit || '';
-  row.querySelector('.siline-price').value = item.cost || '';
+  const manualWrap = row.querySelector('.siline-manual-wrap');
+  const badge      = row.querySelector('.siline-badge');
+  if (sel.value === '__manual__') {
+    row.setAttribute('data-item-id', '');
+    if (manualWrap) manualWrap.style.display = 'block';
+    if (badge) { badge.textContent = 'ไม่ตัดสต็อก'; badge.style.background = 'var(--surface3)'; badge.style.color = 'var(--text2)'; }
+    const nameInput = row.querySelector('.siline-name');
+    if (nameInput) nameInput.focus();
+  } else {
+    const item = db.items.find(function(x) { return x.id === sel.value; });
+    row.setAttribute('data-item-id', item ? item.id : '');
+    if (manualWrap) manualWrap.style.display = 'none';
+    if (badge) {
+      badge.textContent = item ? 'ตัดสต็อก' : '';
+      badge.style.background = item ? '#e8f5e9' : 'transparent';
+      badge.style.color = item ? '#2d7a4f' : '';
+    }
+    if (item) {
+      row.querySelector('.siline-unit').value  = item.dispenseUnit || item.unit || '';
+      row.querySelector('.siline-price').value = item.cost || '';
+    }
+  }
   calcSupInvLinesTotal();
+}
+
+var _supInvFuzzyTimer = null;
+function _supInvFuzzyMatch(input) {
+  clearTimeout(_supInvFuzzyTimer);
+  _supInvFuzzyTimer = setTimeout(function() {
+    var q = input.value.trim().toLowerCase();
+    var hint = input.closest('.siline-manual-wrap') && input.closest('.siline-manual-wrap').querySelector('.siline-fuzzy-hint');
+    if (!hint) return;
+    if (q.length < 2) { hint.style.display = 'none'; return; }
+    var matches = (db.items || []).filter(function(i) { return i.name.toLowerCase().indexOf(q) >= 0; }).slice(0, 3);
+    if (!matches.length) { hint.style.display = 'none'; return; }
+    hint.style.display = 'block';
+    hint.innerHTML = '';
+    var prefix = document.createTextNode('คล้ายกับ: ');
+    hint.appendChild(prefix);
+    matches.forEach(function(m, idx) {
+      if (idx > 0) hint.appendChild(document.createTextNode(', '));
+      var span = document.createElement('span');
+      span.style.cssText = 'cursor:pointer;color:var(--accent);text-decoration:underline;';
+      span.textContent = m.name;
+      span.setAttribute('data-match-id', m.id);
+      span.onclick = function() { _supInvFuzzySelect(span, m.id); };
+      hint.appendChild(span);
+    });
+    var suffix = document.createTextNode(' — คลิกเพื่อเชื่อมสต็อก');
+    hint.appendChild(suffix);
+  }, 300);
+}
+
+function _supInvFuzzySelect(el, itemId) {
+  var row = el.closest('.supinv-line-row');
+  if (!row) return;
+  var sel = row.querySelector('.siline-item');
+  if (sel) { sel.value = itemId; onSupInvItemChange(sel); }
 }
 
 function removeSupInvLine(btn) {
