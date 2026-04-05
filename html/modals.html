@@ -2978,3 +2978,324 @@
     </div>
   </div>
 </div>
+
+<!-- ===== MODAL: ADD EXPENSE ===== -->
+<div id="modal-addExpense" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal('modal-addExpense')">
+  <div class="modal-box" style="max-width:680px;width:95%;">
+    <div class="modal-header">
+      <h3 id="addExpenseModalTitle">💸 บันทึกค่าใช้จ่าย</h3>
+      <button class="modal-close" onclick="closeModal('modal-addExpense')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editExpenseId">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label class="form-label">วันที่ <span style="color:red">*</span></label>
+          <input type="date" id="exp-date" class="form-control">
+        </div>
+        <div>
+          <label class="form-label">เลขที่เอกสาร</label>
+          <input type="text" id="exp-doc-no" class="form-control" placeholder="EXP-0001 (auto)">
+        </div>
+        <div>
+          <label class="form-label">ประเภท <span style="color:red">*</span></label>
+          <select id="exp-type" class="form-control" onchange="onExpTypeChange()">
+            <option value="utilities">🔌 สาธารณูปโภค (ไฟ/น้ำ/เน็ต)</option>
+            <option value="maintenance">🔧 ซ่อมแซม/บำรุงรักษา</option>
+            <option value="salary">👤 เงินเดือน/บุคลากร</option>
+            <option value="rent">🏠 ค่าเช่า</option>
+            <option value="professional">📋 ค่าบริการวิชาชีพ</option>
+            <option value="medical_supply">💊 วัสดุการแพทย์</option>
+            <option value="consumable">🧴 วัสดุสิ้นเปลือง</option>
+            <option value="food">🍽️ อาหาร/วัตถุดิบ</option>
+            <option value="insurance">🛡️ ประกันภัย</option>
+            <option value="tax_fee">🏛️ ค่าธรรมเนียม/ภาษี</option>
+            <option value="training">📚 อบรม/สัมมนา</option>
+            <option value="transport">🚗 เดินทาง/น้ำมัน</option>
+            <option value="other">📌 อื่นๆ</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">รายการ/ชื่องาน <span style="color:red">*</span></label>
+          <input type="text" id="exp-job" class="form-control" placeholder="เช่น ค่าไฟ เม.ย. 2568">
+        </div>
+        <div>
+          <label class="form-label">ผู้รับ/บริษัท</label>
+          <input type="text" id="exp-vendor" class="form-control" placeholder="ชื่อผู้รับเงิน">
+        </div>
+        <div>
+          <label class="form-label">เลขอ้างอิง (เลขมิเตอร์/สัญญา)</label>
+          <input type="text" id="exp-ref-no" class="form-control" placeholder="เช่น เลขมิเตอร์ไฟฟ้า">
+        </div>
+        <div>
+          <label class="form-label">เดือนที่ใช้</label>
+          <div style="display:flex;gap:6px;">
+            <select id="exp-period-month" class="form-control">
+              <option value="">-- เดือน --</option>
+              <option value="1">ม.ค.</option><option value="2">ก.พ.</option><option value="3">มี.ค.</option>
+              <option value="4">เม.ย.</option><option value="5">พ.ค.</option><option value="6">มิ.ย.</option>
+              <option value="7">ก.ค.</option><option value="8">ส.ค.</option><option value="9">ก.ย.</option>
+              <option value="10">ต.ค.</option><option value="11">พ.ย.</option><option value="12">ธ.ค.</option>
+            </select>
+            <input type="number" id="exp-period-year" class="form-control" placeholder="ปี พ.ศ." style="width:90px;">
+          </div>
+        </div>
+        <div>
+          <label class="form-label">ครบกำหนด</label>
+          <input type="date" id="exp-due-date" class="form-control">
+        </div>
+      </div>
+      <!-- ยอดเงิน -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:12px;">
+        <div>
+          <label class="form-label">ยอดก่อน VAT <span style="color:red">*</span></label>
+          <input type="number" id="exp-subtotal" class="form-control number" min="0" step="0.01" oninput="calcExpTotal()">
+        </div>
+        <div>
+          <label class="form-label">VAT (%)</label>
+          <select id="exp-vat-rate" class="form-control" onchange="calcExpTotal()">
+            <option value="0">0%</option>
+            <option value="7">7%</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">หัก ณ ที่จ่าย (%)</label>
+          <select id="exp-wht-rate" class="form-control" onchange="calcExpTotal()">
+            <option value="0">0%</option>
+            <option value="1">1%</option>
+            <option value="1.5">1.5%</option>
+            <option value="3">3%</option>
+            <option value="5">5%</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">ยอดสุทธิ</label>
+          <input type="number" id="exp-net" class="form-control number" readonly style="font-weight:700;background:var(--surface2);">
+        </div>
+      </div>
+      <!-- การจ่ายเงิน -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;">
+        <div>
+          <label class="form-label">วิธีชำระ</label>
+          <select id="exp-pay-method" class="form-control">
+            <option value="cash">เงินสด</option>
+            <option value="transfer">โอนเงิน</option>
+            <option value="cheque">เช็ค</option>
+            <option value="credit_card">บัตรเครดิต</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">สถานะ</label>
+          <select id="exp-status" class="form-control">
+            <option value="paid">จ่ายแล้ว</option>
+            <option value="unpaid">ยังไม่จ่าย</option>
+            <option value="overdue">เกินกำหนด</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">จ่ายโดย</label>
+          <input type="text" id="exp-paid-by" class="form-control" placeholder="ชื่อผู้จ่าย">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+        <div>
+          <label class="form-label" style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="exp-is-recurring" onchange="toggleRecurring()">
+            รายจ่ายประจำ (recurring)
+          </label>
+          <div id="exp-recurring-block" style="display:none;margin-top:6px;">
+            <select id="exp-recur-interval" class="form-control">
+              <option value="30">ทุกเดือน (30 วัน)</option>
+              <option value="90">ทุก 3 เดือน</option>
+              <option value="180">ทุก 6 เดือน</option>
+              <option value="365">ทุกปี</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">หมายเหตุ</label>
+          <input type="text" id="exp-note" class="form-control" placeholder="หมายเหตุเพิ่มเติม">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-addExpense')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveExpense()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ADD ASSET ===== -->
+<div id="modal-addAsset" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal('modal-addAsset')">
+  <div class="modal-box" style="max-width:720px;width:95%;">
+    <div class="modal-header">
+      <h3 id="addAssetModalTitle">🔧 เพิ่มครุภัณฑ์</h3>
+      <button class="modal-close" onclick="closeModal('modal-addAsset')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editAssetId">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label class="form-label">ชื่ออุปกรณ์ <span style="color:red">*</span></label>
+          <input type="text" id="asset-name" class="form-control" placeholder="เช่น เครื่องวัดความดัน">
+        </div>
+        <div>
+          <label class="form-label">ประเภท <span style="color:red">*</span></label>
+          <select id="asset-category" class="form-control">
+            <option value="medical_equipment">🏥 เครื่องมือแพทย์</option>
+            <option value="furniture">🛏️ เฟอร์นิเจอร์/เตียง</option>
+            <option value="building_system">🏠 ระบบอาคาร</option>
+            <option value="kitchen_laundry">🍳 ครัว/ซักล้าง</option>
+            <option value="vehicle">🚗 ยานพาหนะ</option>
+            <option value="it_telecom">💻 IT/สื่อสาร</option>
+            <option value="other">📦 อื่นๆ</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">ยี่ห้อ</label>
+          <input type="text" id="asset-brand" class="form-control" placeholder="เช่น Omron">
+        </div>
+        <div>
+          <label class="form-label">รุ่น</label>
+          <input type="text" id="asset-model" class="form-control" placeholder="เช่น HEM-7120">
+        </div>
+        <div>
+          <label class="form-label">Serial Number</label>
+          <input type="text" id="asset-serial" class="form-control" placeholder="S/N จากผู้ผลิต">
+        </div>
+        <div>
+          <label class="form-label">รหัสภายใน</label>
+          <input type="text" id="asset-internal-code" class="form-control" placeholder="รหัสของนวศรี (ถ้ามี)">
+        </div>
+        <div>
+          <label class="form-label">ตำแหน่งที่ตั้ง <span style="color:red">*</span></label>
+          <input type="text" id="asset-location" class="form-control" placeholder="เช่น ห้องพยาบาล ชั้น 1">
+        </div>
+        <div>
+          <label class="form-label">สถานะ</label>
+          <select id="asset-status" class="form-control">
+            <option value="active">✅ ใช้งานปกติ</option>
+            <option value="under_repair">🔧 ส่งซ่อม</option>
+            <option value="retired">❌ เลิกใช้</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">วันที่ซื้อ</label>
+          <input type="date" id="asset-purchase-date" class="form-control">
+        </div>
+        <div>
+          <label class="form-label">ราคาซื้อ (บาท)</label>
+          <input type="number" id="asset-purchase-cost" class="form-control number" min="0" step="0.01">
+        </div>
+        <div>
+          <label class="form-label">วันหมดประกัน</label>
+          <input type="date" id="asset-warranty-expiry" class="form-control">
+        </div>
+        <div>
+          <label class="form-label">อายุการใช้งาน (ปี)</label>
+          <input type="number" id="asset-lifespan" class="form-control" min="0" step="0.5" placeholder="เช่น 5">
+        </div>
+        <div>
+          <label class="form-label">รอบซ่อมบำรุง (วัน)</label>
+          <input type="number" id="asset-maint-interval" class="form-control" min="0" placeholder="เช่น 180 = ทุก 6 เดือน">
+        </div>
+        <div>
+          <label class="form-label" style="display:flex;align-items:center;gap:6px;">
+            <input type="checkbox" id="asset-is-critical">
+            อุปกรณ์สำคัญต่อความปลอดภัยผู้รับบริการ
+          </label>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label class="form-label">หมายเหตุ</label>
+        <textarea id="asset-note" class="form-control" rows="2" placeholder="หมายเหตุเพิ่มเติม"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-addAsset')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveAsset()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ADD MAINTENANCE LOG ===== -->
+<div id="modal-addMaintenance" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal('modal-addMaintenance')">
+  <div class="modal-box" style="max-width:620px;width:95%;">
+    <div class="modal-header">
+      <h3>🛠️ บันทึกการซ่อมบำรุง</h3>
+      <button class="modal-close" onclick="closeModal('modal-addMaintenance')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="maintAssetId">
+      <div id="maint-asset-name-badge" style="background:var(--surface2);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-weight:600;font-size:13px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label class="form-label">วันที่ซ่อม <span style="color:red">*</span></label>
+          <input type="date" id="maint-date" class="form-control">
+        </div>
+        <div>
+          <label class="form-label">ประเภทการซ่อม <span style="color:red">*</span></label>
+          <select id="maint-type" class="form-control">
+            <option value="preventive">📅 ซ่อมบำรุงตามแผน</option>
+            <option value="corrective">🔨 แก้ไขที่พัง</option>
+            <option value="emergency">🚨 ฉุกเฉิน</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="form-label">รายละเอียดที่ทำ <span style="color:red">*</span></label>
+          <textarea id="maint-desc" class="form-control" rows="2" placeholder="เช่น ล้างแอร์ เปลี่ยนฟิลเตอร์ ตรวจเช็คระบบ"></textarea>
+        </div>
+        <div>
+          <label class="form-label">อะไหล่ที่เปลี่ยน</label>
+          <input type="text" id="maint-parts" class="form-control" placeholder="เช่น ฟิลเตอร์ใหม่ 1 ชิ้น">
+        </div>
+        <div>
+          <label class="form-label">ค่าใช้จ่าย (บาท)</label>
+          <input type="number" id="maint-cost" class="form-control number" min="0" step="0.01">
+        </div>
+        <div>
+          <label class="form-label">ชื่อช่าง/บริษัท</label>
+          <input type="text" id="maint-tech-name" class="form-control" placeholder="ชื่อช่างหรือบริษัทผู้รับจ้าง">
+        </div>
+        <div>
+          <label class="form-label">เบอร์โทร</label>
+          <input type="text" id="maint-tech-phone" class="form-control" placeholder="เบอร์โทรช่าง">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="form-label">ที่อยู่ช่าง/บริษัท</label>
+          <input type="text" id="maint-tech-addr" class="form-control" placeholder="ที่อยู่ผู้รับจ้าง">
+        </div>
+        <div>
+          <label class="form-label">ระยะเวลาซ่อม (ชม.)</label>
+          <input type="number" id="maint-duration" class="form-control" min="0" step="0.5" placeholder="เช่น 2.5">
+        </div>
+        <div>
+          <label class="form-label">หยุดใช้งาน (ชม.)</label>
+          <input type="number" id="maint-downtime" class="form-control" min="0" step="0.5" placeholder="ชั่วโมงที่ไม่สามารถใช้ได้">
+        </div>
+        <div>
+          <label class="form-label">นัดซ่อมครั้งถัดไป</label>
+          <input type="date" id="maint-next-date" class="form-control">
+        </div>
+        <div>
+          <label class="form-label" style="display:flex;gap:8px;align-items:center;">
+            <input type="checkbox" id="maint-resolved" checked>
+            แก้ไขได้สมบูรณ์แล้ว
+          </label>
+          <label class="form-label" style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+            <input type="checkbox" id="maint-followup">
+            ต้องติดตามเพิ่มเติม
+          </label>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label class="form-label">หมายเหตุ</label>
+        <input type="text" id="maint-note" class="form-control" placeholder="หมายเหตุเพิ่มเติม">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-addMaintenance')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveMaintenance()">💾 บันทึกการซ่อม</button>
+    </div>
+  </div>
+</div>
