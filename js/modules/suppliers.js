@@ -74,8 +74,8 @@ function editSupplier(id) {
   document.getElementById('supplier-note').value    = s.note || '';
   document.getElementById('supplier-entity-type').value        = s.entityType || 'นิติบุคคล';
   document.getElementById('supplier-credit-days').value        = s.creditDays != null ? s.creditDays : '';
-  document.getElementById('supplier-mobile').value             = s.mobile || '';
-  document.getElementById('supplier-website').value            = s.website || '';
+  if(document.getElementById('supplier-mobile')) document.getElementById('supplier-mobile').value = s.mobile || '';
+  if(document.getElementById('supplier-website')) document.getElementById('supplier-website').value = s.website || '';
   document.getElementById('supplier-bank-name').value          = s.bankName || '';
   document.getElementById('supplier-bank-account-name').value  = s.bankAccountName || '';
   document.getElementById('supplier-bank-account-no').value    = s.bankAccountNo || '';
@@ -100,8 +100,8 @@ async function saveSupplier() {
     note:           document.getElementById('supplier-note').value.trim() || null,
     entity_type:    document.getElementById('supplier-entity-type').value || 'นิติบุคคล',
     credit_days:    parseInt(document.getElementById('supplier-credit-days').value) || null,
-    mobile:         document.getElementById('supplier-mobile').value.trim() || null,
-    website:        document.getElementById('supplier-website').value.trim() || null,
+    mobile:         document.getElementById('supplier-mobile')?.value?.trim() || null,
+    website:        document.getElementById('supplier-website')?.value?.trim() || null,
     bank_name:      document.getElementById('supplier-bank-name').value.trim() || null,
     bank_account_name: document.getElementById('supplier-bank-account-name').value.trim() || null,
     bank_account_no:   document.getElementById('supplier-bank-account-no').value.trim() || null,
