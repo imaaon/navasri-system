@@ -191,6 +191,10 @@ function mapSupplierInvoice(r) {
     jobName: r.job_name || '', whtRate: r.wht_rate || 0,
     whtAmt: r.wht_amt || 0, netPayable: r.net_payable || null,
     createdBy: r.created_by || '', createdAt: r.created_at,
+    createdBy: r.created_by || '', createdAt: r.created_at,
+    isStockUpdated: r.is_stock_updated || false,
+    receivedDate: r.received_date || null,
+    receivedBy: r.received_by || null,
     lines: [],
   };
 }
