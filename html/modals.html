@@ -2836,12 +2836,12 @@
 
   <!-- Add Supplier Invoice Modal -->
   <div class="modal-overlay" id="modal-addSupInv">
-    <div class="modal" style="max-width:500px;max-height:90vh;display:flex;flex-direction:column;">
+    <div class="modal" style="max-width:720px;max-height:92vh;display:flex;flex-direction:column;">
       <div class="modal-header">
-        <div class="modal-title">🧾 บันทึกใบแจ้งหนี้ผู้จำหน่าย</div>
+        <div class="modal-title">🧾 บันทึกการรับสินค้า / ใบแจ้งหนี้</div>
         <button class="modal-close" onclick="closeModal('modal-addSupInv')">✕</button>
       </div>
-      <div class="modal-body" style="overflow-y:auto;flex:1;">
+      <div class="modal-body" style="overflow-y:auto;flex:1;padding:16px;">
         <input type="hidden" id="editSupInvId">
         <div class="form-grid">
           <div class="form-group">
@@ -2859,6 +2859,7 @@
           <div class="form-group">
             <label class="form-label">สถานะ</label>
             <select class="form-control" id="supinv-status">
+              <option value="draft">ร่าง (ยังไม่เพิ่มสต็อก)</option>
               <option value="pending">รอจ่าย</option>
               <option value="paid">จ่ายแล้ว</option>
               <option value="overdue">เกินกำหนด</option>
@@ -2867,16 +2868,28 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">ผู้จำหน่าย <span class="required">*</span></label>
+          <label class="form-label">ผู้จำหน่าย</label>
           <select class="form-control" id="supinv-supplier"></select>
         </div>
         <div class="form-group">
-          <label class="form-label">อ้างอิงคำขอซื้อ</label>
-          <select class="form-control" id="supinv-pr"></select>
+          <label class="form-label">ระบุชื่อผู้จำหน่าย (ถ้าไม่อยู่ในรายชื่อ)</label>
+          <input class="form-control" id="supinv-supplier-manual" placeholder="พิมพ์ชื่อ...">
         </div>
+        <div class="form-group">
+          <label class="form-label">อ้างอิงคำขอซื้อ (PO)</label>
+          <select class="form-control" id="supinv-pr" onchange="autoFillSupInvFromPO()"></select>
+        </div>
+        <hr style="margin:12px 0;border-color:var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <label class="form-label" style="margin:0;font-weight:600;">📦 รายการสินค้า</label>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="addSupInvLine()">+ เพิ่มรายการ</button>
+        </div>
+        <div id="supinv-lines-container" style="display:flex;flex-direction:column;gap:6px;min-height:40px;"></div>
+        <div id="supinv-lines-summary" style="text-align:right;font-size:13px;color:var(--text3);margin-top:6px;"></div>
+        <hr style="margin:12px 0;border-color:var(--border);">
         <div class="form-grid">
           <div class="form-group">
-            <label class="form-label">มูลค่าก่อน VAT (฿) <span class="required">*</span></label>
+            <label class="form-label">มูลค่าก่อน VAT (฿)</label>
             <input class="form-control number" id="supinv-subtotal" type="number" min="0" step="0.01" oninput="calcSupInvTotal()">
           </div>
           <div class="form-group">
@@ -2888,20 +2901,39 @@
             <input class="form-control number" id="supinv-total" type="number" readonly style="background:var(--surface2);">
           </div>
         </div>
-        <div class="form-group"><label class="form-label">ชื่องาน / รายการ</label>
-          <input class="form-control" id="supinv-job-name" placeholder="ชื่องาน..."></div>
-        <div class="form-group"><label class="form-label">หมายเหตุ</label>
-          <input class="form-control" id="supinv-note" placeholder="หมายเหตุ"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
-          <div class="form-group"><label class="form-label">หัก ณ ที่จ่าย (%)</label><input class="form-control" id="supinv-wht-rate" type="number" step="0.01" min="0" value="0" oninput="calcSupInvNet()"></div>
-          <div class="form-group"><label class="form-label">ยอดชำระสุทธิ (บาท)</label><input class="form-control" id="supinv-net-payable" type="number" readonly style="background:var(--bg2);"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="form-group">
+            <label class="form-label">หัก ณ ที่จ่าย (%)</label>
+            <input class="form-control" id="supinv-wht-rate" type="number" step="0.01" min="0" value="0" oninput="calcSupInvNet()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ยอดชำระสุทธิ (฿)</label>
+            <input class="form-control" id="supinv-net-payable" type="number" readonly style="background:var(--bg2);">
+          </div>
         </div>
-        <div class="form-group" style="margin-top:8px;"><label class="form-label">ระบุชื่อผู้จำหน่าย (ถ้าไม่อยู่ในรายชื่อ)</label>
-          <input class="form-control" id="supinv-supplier-manual" placeholder="พิมพ์ชื่อ..."></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="form-group">
+            <label class="form-label">วันที่รับสินค้า</label>
+            <input class="form-control" id="supinv-received-date" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ผู้รับสินค้า</label>
+            <input class="form-control" id="supinv-received-by" placeholder="ชื่อผู้รับ">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ชื่องาน / รายการ</label>
+          <input class="form-control" id="supinv-job-name" placeholder="ชื่องาน...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">หมายเหตุ</label>
+          <input class="form-control" id="supinv-note" placeholder="หมายเหตุ">
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="closeModal('modal-addSupInv')">ยกเลิก</button>
-        <button class="btn btn-primary" onclick="saveSupplierInvoice()">บันทึก</button>
+      <div class="modal-footer" style="gap:8px;">
+        <button class="btn btn-ghost" type="button" onclick="closeModal('modal-addSupInv')">ยกเลิก</button>
+        <button class="btn btn-secondary" type="button" onclick="saveSupplierInvoice(false)">💾 บันทึกร่าง</button>
+        <button class="btn btn-primary" type="button" onclick="saveSupplierInvoice(true)">✅ ยืนยันและเพิ่มสต็อก</button>
       </div>
     </div>
   </div>
