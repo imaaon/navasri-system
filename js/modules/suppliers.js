@@ -1010,6 +1010,29 @@ async function saveSupInvLines(invoiceId, updateStock) {
       item.qty = afterQty;
     }
   }
+
+  // ── Cost Allocation (ระดับ 2): กระจายค่าจัดส่ง/บริการลงสินค้าตามสัดส่วน ──
+  if (updateStock && insertedLines) {
+    const shippingLines = insertedLines.filter(l => l.line_type === 'shipping' || l.line_type === 'service');
+    const productLines  = insertedLines.filter(l => l.line_type === 'product' && l.update_stock && l.item_id);
+    const totalShipping = shippingLines.reduce((s, l) => s + parseFloat(l.total || 0), 0);
+    if (totalShipping > 0 && productLines.length > 0) {
+      const productSubtotal = productLines.reduce((s, l) => s + parseFloat(l.total || 0), 0);
+      for (const pl of productLines) {
+        if (productSubtotal <= 0) break;
+        const ratio       = parseFloat(pl.total || 0) / productSubtotal;
+        const allocCost   = totalShipping * ratio;
+        const allocPerUnit= pl.qty > 0 ? allocCost / pl.qty : 0;
+        const finalUnitCost = parseFloat(pl.unit_price || 0) + allocPerUnit;
+        // อัปเดต unit_cost ใน item_lots ที่เพิ่งสร้าง
+        if (pl.lot_number || pl.expiry_date) {
+          await supa.from('item_lots')
+            .update({ unit_cost: parseFloat(finalUnitCost.toFixed(4)) })
+            .eq('invoice_line_id', pl.id);
+        }
+      }
+    }
+  }
 }
 
 function addSupInvLine(itemId, itemName, qty, unit, unitPrice, lineType, lotNumber, expiryDate) {
