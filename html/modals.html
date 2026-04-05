@@ -2260,13 +2260,11 @@
 
 <!-- ===== MODAL: CREATE INVOICE ===== -->
 <div class="modal-overlay" id="modal-createInvoice">
-  <div class="modal-box" style="max-width:720px;width:95%;">
-    <div class="modal-header">
-      <h3 id="modal-invoice-title">สร้างใบแจ้งหนี้</h3>
-      <button class="modal-close" onclick="closeModal('modal-createInvoice')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="display:grid;gap:14px;">
+  <div class="modal" style="max-width:720px;width:95%;max-height:92vh;overflow-y:auto;">
+    <div class="modal-title" id="modal-invoice-title">สร้างใบแจ้งหนี้</div>
+    <button class="modal-close" onclick="closeModal('modal-createInvoice')">✕</button>
+    <div style="display:grid;gap:14px;">
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
           <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">ประเภทเอกสาร <span class="required">*</span></label>
@@ -2469,7 +2467,6 @@
       <input type="hidden" id="inv-req-items-data" value="[]">
       <input type="hidden" id="inv-other-items-data" value="[]">
 
-      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-createInvoice')">ยกเลิก</button>
