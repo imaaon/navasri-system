@@ -938,7 +938,7 @@ async function saveSupInvLines(invoiceId, updateStock) {
 
   const linesToInsert = [];
   rows.forEach(row => {
-    const itemId    = row.getAttribute('data-item-id') || null;
+    const itemId    = row.querySelector('.siline-item')?.value || null;
     const itemName  = row.querySelector('.siline-name')?.value.trim() || '';
     const qty       = parseFloat(row.querySelector('.siline-qty')?.value) || 0;
     const unit      = row.querySelector('.siline-unit')?.value.trim() || '';
@@ -1041,46 +1041,26 @@ function addSupInvLine(itemId, itemName, qty, unit, unitPrice, lineType, lotNumb
   const items = db.items || [];
   const row = document.createElement('div');
   row.className = 'supinv-line-row';
-  row.style.cssText = 'display:flex;flex-direction:column;gap:6px;padding:8px 10px;background:var(--surface2);border-radius:8px;';
-  const isManual = !itemId && itemName && !window.db?.items?.find(x=>x.id===itemId);
-  row.setAttribute('data-item-id', itemId || '');
+  row.style.cssText = 'display:grid;grid-template-columns:2fr 1.2fr 0.7fr 0.8fr 1fr 1fr 1fr 1fr 0.5fr;gap:4px;align-items:center;padding:4px;background:var(--surface2);border-radius:6px;';
   row.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:6px;align-items:end;">
-      <div>
-        <div style="font-size:11px;color:var(--text2);margin-bottom:3px;">สินค้า</div>
-        <select class="form-control form-control-sm siline-item" style="font-size:12px;" onchange="onSupInvItemChange(this)">
-          <option value="">-- เลือกสินค้า --</option>
-          ${(window.db?.items||[]).map(i=>'<option value="'+i.id+'" '+(i.id===(itemId||'')?'selected':'')+'>'+i.name+'</option>').join('')}
-          <option value="__manual__" ${(!itemId&&itemName)?'selected':''}>✏️ พิมพ์ชื่อเอง (ไม่ตัดสต็อก)</option>
-        </select>
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--text2);margin-bottom:3px;">ประเภท</div>
-        <select class="form-control form-control-sm siline-type" style="font-size:12px;" onchange="calcSupInvLinesTotal()">
-          <option value="product" ${(lineType||'product')==='product'?'selected':''}>สินค้า</option>
-          <option value="shipping" ${lineType==='shipping'?'selected':''}>ค่าขนส่ง</option>
-          <option value="service" ${lineType==='service'?'selected':''}>ค่าบริการ</option>
-          <option value="discount" ${lineType==='discount'?'selected':''}>ส่วนลด</option>
-          <option value="other" ${lineType==='other'?'selected':''}>อื่นๆ</option>
-        </select>
-      </div>
-      <div class="siline-badge" style="font-size:11px;padding:3px 8px;border-radius:5px;white-space:nowrap;align-self:center;margin-top:14px;${(!itemId&&itemName)?'background:var(--surface3);color:var(--text2);':'background:#e8f5e9;color:#2d7a4f;'}">
-        ${(!itemId&&itemName)?'ไม่ตัดสต็อก':'ตัดสต็อก'}
-      </div>
-      <button class="btn btn-ghost btn-sm" type="button" onclick="removeSupInvLine(this)" style="color:var(--danger);padding:4px 8px;margin-top:14px;">✕</button>
-    </div>
-    <div class="siline-manual-wrap" style="display:${(!itemId&&itemName)?'block':'none'};">
-      <div style="font-size:11px;color:var(--text2);margin-bottom:3px;">ชื่อสินค้า <span style="color:var(--accent);font-size:10px;">(จะไม่ตัดสต็อก)</span></div>
-      <input class="form-control form-control-sm siline-name" style="font-size:12px;" placeholder="พิมพ์ชื่อสินค้า..." value="${(!itemId&&itemName)?itemName:''}">
-      <div class="siline-fuzzy-hint" style="font-size:11px;color:var(--accent-dark);margin-top:3px;display:none;"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:0.7fr 0.7fr 1fr 1fr 1.2fr;gap:6px;align-items:end;">
-      <div><div style="font-size:11px;color:var(--text2);margin-bottom:3px;">จำนวน</div><input class="form-control form-control-sm siline-qty" style="font-size:12px;" type="number" min="0.01" step="0.01" value="${qty||1}" oninput="calcSupInvLinesTotal()"></div>
-      <div><div style="font-size:11px;color:var(--text2);margin-bottom:3px;">หน่วย</div><input class="form-control form-control-sm siline-unit" style="font-size:12px;" placeholder="หน่วย" value="${unit||''}"></div>
-      <div><div style="font-size:11px;color:var(--text2);margin-bottom:3px;">ราคา/หน่วย (฿)</div><input class="form-control form-control-sm siline-price" style="font-size:12px;" type="number" min="0" step="0.01" placeholder="0.00" value="${unitPrice||''}" oninput="calcSupInvLinesTotal()"></div>
-      <div><div style="font-size:11px;color:var(--text2);margin-bottom:3px;">Lot</div><input class="form-control form-control-sm siline-lot" style="font-size:12px;" placeholder="Lot" value="${lotNumber||''}"></div>
-      <div><div style="font-size:11px;color:var(--text2);margin-bottom:3px;">วันหมดอายุ</div><input class="form-control form-control-sm siline-expiry" style="font-size:12px;" type="date" value="${expiryDate||''}"></div>
-    </div>
+    <select class="form-control form-control-sm siline-item" style="font-size:12px;" onchange="onSupInvItemChange(this)">
+      <option value="">-- เลือกสินค้า --</option>
+      ${items.map(i=>'<option value="'+i.id+'" '+(i.id===(itemId||'')?'selected':'')+'>'+i.name+'</option>').join('')}
+    </select>
+    <input class="form-control form-control-sm siline-name" style="font-size:12px;" placeholder="ชื่อสินค้า" value="${itemName||''}">
+    <input class="form-control form-control-sm siline-qty" style="font-size:12px;" type="number" min="0.01" step="0.01" value="${qty||1}" oninput="calcSupInvLinesTotal()">
+    <input class="form-control form-control-sm siline-unit" style="font-size:12px;" placeholder="หน่วย" value="${unit||''}">
+    <input class="form-control form-control-sm siline-price" style="font-size:12px;" type="number" min="0" step="0.01" placeholder="ราคา/หน่วย" value="${unitPrice||''}" oninput="calcSupInvLinesTotal()">
+    <select class="form-control form-control-sm siline-type" style="font-size:12px;" onchange="calcSupInvLinesTotal()">
+      <option value="product" ${(lineType||'product')==='product'?'selected':''}>สินค้า</option>
+      <option value="shipping" ${lineType==='shipping'?'selected':''}>ค่าขนส่ง</option>
+      <option value="service" ${lineType==='service'?'selected':''}>ค่าบริการ</option>
+      <option value="discount" ${lineType==='discount'?'selected':''}>ส่วนลด</option>
+      <option value="other" ${lineType==='other'?'selected':''}>อื่นๆ</option>
+    </select>
+    <input class="form-control form-control-sm siline-lot" style="font-size:11px;" placeholder="Lot" value="${lotNumber||''}">
+    <input class="form-control form-control-sm siline-expiry" style="font-size:11px;" type="date" title="วันหมดอายุ" value="${expiryDate||''}">
+    <button class="btn btn-ghost btn-sm" type="button" onclick="removeSupInvLine(this)" style="color:var(--danger);padding:2px 6px;">✕</button>
   `;
   container.appendChild(row);
   calcSupInvLinesTotal();
@@ -1089,53 +1069,12 @@ function addSupInvLine(itemId, itemName, qty, unit, unitPrice, lineType, lotNumb
 function onSupInvItemChange(sel) {
   const row = sel.closest('.supinv-line-row');
   if (!row) return;
-  const manualWrap = row.querySelector('.siline-manual-wrap');
-  const badge      = row.querySelector('.siline-badge');
-  if (sel.value === '__manual__') {
-    // โหมดพิมพ์เอง — แสดง text input, ล้าง item_id
-    row.setAttribute('data-item-id', '');
-    if (manualWrap) manualWrap.style.display = 'block';
-    if (badge) { badge.textContent = 'ไม่ตัดสต็อก'; badge.style.background = 'var(--surface3)'; badge.style.color = 'var(--text2)'; }
-    const nameInput = row.querySelector('.siline-name');
-    if (nameInput) { nameInput.value = ''; nameInput.focus(); nameInput.oninput = function(){ _supInvFuzzyMatch(this); }; }
-  } else {
-    // โหมดเลือกจาก dropdown — autofill + ซ่อน manual input
-    const item = db.items.find(x => x.id === sel.value);
-    row.setAttribute('data-item-id', item ? item.id : '');
-    if (manualWrap) manualWrap.style.display = 'none';
-    if (badge) { badge.textContent = item ? 'ตัดสต็อก' : ''; badge.style.background = item ? '#e8f5e9' : 'transparent'; badge.style.color = item ? '#2d7a4f' : ''; }
-    if (item) {
-      row.querySelector('.siline-unit').value  = item.dispenseUnit || item.unit || '';
-      row.querySelector('.siline-price').value = item.cost || '';
-    }
-  }
+  const item = db.items.find(x => x.id === sel.value);
+  if (!item) return;
+  row.querySelector('.siline-name').value  = item.name || '';
+  row.querySelector('.siline-unit').value  = item.dispenseUnit || item.unit || '';
+  row.querySelector('.siline-price').value = item.cost || '';
   calcSupInvLinesTotal();
-}
-
-// Fuzzy match helper — debounce 300ms
-let _supInvFuzzyTimer = null;
-function _supInvFuzzyMatch(input) {
-  clearTimeout(_supInvFuzzyTimer);
-  _supInvFuzzyTimer = setTimeout(() => {
-    const q = input.value.trim().toLowerCase();
-    const hint = input.closest('.siline-manual-wrap')?.querySelector('.siline-fuzzy-hint');
-    if (!hint) return;
-    if (q.length < 2) { hint.style.display = 'none'; return; }
-    const matches = (db.items || []).filter(i => i.name.toLowerCase().includes(q)).slice(0, 3);
-    if (!matches.length) { hint.style.display = 'none'; return; }
-    hint.style.display = 'block';
-    hint.innerHTML = '⚠️ พบในระบบ: ' + matches.map(m =>
-      '<span style="cursor:pointer;color:var(--accent);text-decoration:underline;" onclick="_supInvFuzzySelect(this,\''+m.id+'\',\''+m.name.replace(/'/g,\'\\\'\')+'\')">' + m.name + '</span>'
-    ).join(', ') + ' — คลิกเพื่อเชื่อมสต็อก';
-  }, 300);
-}
-
-function _supInvFuzzySelect(el, itemId, itemName) {
-  const row = el.closest('.supinv-line-row');
-  if (!row) return;
-  // สลับ dropdown ไปเลือก item นั้น
-  const sel = row.querySelector('.siline-item');
-  if (sel) { sel.value = itemId; onSupInvItemChange(sel); }
 }
 
 function removeSupInvLine(btn) {
