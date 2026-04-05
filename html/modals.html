@@ -2221,8 +2221,11 @@
 <!-- ===== MODAL: QUICK INVOICE (เลือกผู้รับบริการ + ช่วงวันที่) ===== -->
 <div class="modal-overlay" id="modal-quick-invoice">
   <div class="modal" style="max-width:520px;width:95%;">
-    <div class="modal-title">🧾 สร้างใบวางบิล</div>
-    <button class="modal-close" onclick="closeModal('modal-quick-invoice')">✕</button>
+    <div class="modal-header">
+      <div class="modal-title">🧾 สร้างใบวางบิล</div>
+      <button class="modal-close" onclick="closeModal('modal-quick-invoice')">✕</button>
+    </div>
+    <div class="modal-body">
     <div style="display:grid;gap:16px;padding-top:4px;">
 
       <div>
@@ -2250,6 +2253,7 @@
         ✅ นำไปหน้าใบวางบิลเพื่อกรอกค่าห้อง / ค่าดูแล / ค่าอื่นๆ เพิ่มเติม
       </div>
 
+    </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-quick-invoice')">ยกเลิก</button>
