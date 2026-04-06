@@ -77,11 +77,20 @@ function renderAssets() {
   }).join('');
 }
 
+function onAssetCategoryChange(sel) {
+  var wrap = document.getElementById('asset-category-custom-wrap');
+  if (wrap) wrap.style.display = sel.value === 'other' ? 'block' : 'none';
+}
+
 function openAddAssetModal() {
   document.getElementById('editAssetId').value='';
   document.getElementById('addAssetModalTitle').textContent='🔧 เพิ่มครุภัณฑ์';
   ['asset-name','asset-brand','asset-model','asset-serial','asset-internal-code','asset-location','asset-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('asset-category').value='medical_equipment';
+  const customWrap = document.getElementById('asset-category-custom-wrap');
+  if (customWrap) { customWrap.style.display='none'; }
+  const customInp = document.getElementById('asset-category-custom');
+  if (customInp) customInp.value = '';
   document.getElementById('asset-status').value='active';
   document.getElementById('asset-purchase-date').value='';
   document.getElementById('asset-purchase-cost').value='';
@@ -104,7 +113,7 @@ async function saveAsset() {
 
   const payload = {
     name, location: loc,
-    category:              document.getElementById('asset-category').value,
+  category: (function(){ var c=document.getElementById('asset-category').value; return c==='other'?(document.getElementById('asset-category-custom').value.trim()||'other'):c; })(),
     brand:                 document.getElementById('asset-brand').value.trim()||null,
     model:                 document.getElementById('asset-model').value.trim()||null,
     serial_number:         document.getElementById('asset-serial').value.trim()||null,
@@ -143,7 +152,7 @@ function editAsset(id) {
   document.getElementById('editAssetId').value=id;
   document.getElementById('addAssetModalTitle').textContent='✏️ แก้ไขครุภัณฑ์';
   document.getElementById('asset-name').value=a.name||'';
-  document.getElementById('asset-category').value=a.category||'other';
+  (function(){ var known=["medical_equipment","furniture","building_system","kitchen_laundry","vehicle","it_telecom","electrical","other"]; var cat=a.category||'other'; if(known.includes(cat)){ document.getElementById('asset-category').value=cat; var w=document.getElementById('asset-category-custom-wrap'); if(w)w.style.display='none'; } else { document.getElementById('asset-category').value='other'; var w2=document.getElementById('asset-category-custom-wrap'); if(w2)w2.style.display='block'; var ci=document.getElementById('asset-category-custom'); if(ci)ci.value=cat; } })();
   document.getElementById('asset-brand').value=a.brand||'';
   document.getElementById('asset-model').value=a.model||'';
   document.getElementById('asset-serial').value=a.serialNumber||'';
