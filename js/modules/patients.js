@@ -346,7 +346,7 @@ async function saveAllergy() {
   }
   toast(`บันทึกประวัติแพ้ "${allergen}" เรียบร้อย`, 'success');
   closeModal('modal-add-allergy');
-  openPatientProfile(patId);
+  openPatientProfile(patId, 'allergy');
 }
 async function deleteAllergy(patId, allergyId) {
   if (!confirm('ลบประวัติการแพ้นี้?')) return;
@@ -355,7 +355,7 @@ async function deleteAllergy(patId, allergyId) {
   const patient = db.patients.find(p => p.id == patId);
   if (patient) patient.allergies = (patient.allergies||[]).filter(a => a.id != allergyId);
   toast('ลบเรียบร้อย');
-  openPatientProfile(patId);
+  openPatientProfile(patId, 'allergy');
 }
 
 // ===== CONTACT CRUD =====
@@ -429,7 +429,7 @@ async function saveContact() {
   }
   toast(editId ? `แก้ไขผู้ติดต่อ "${name}" เรียบร้อย` : `เพิ่มผู้ติดต่อ "${name}" เรียบร้อย`, 'success');
   closeModal('modal-add-contact');
-  openPatientProfile(patId);
+  openPatientProfile(patId, 'contacts');
 }
 async function deleteContact(patId, contactId) {
   if (!confirm('ลบผู้ติดต่อนี้?')) return;
@@ -438,7 +438,7 @@ async function deleteContact(patId, contactId) {
   const patient = db.patients.find(p => p.id == patId);
   if (patient) patient.contacts = (patient.contacts||[]).filter(c => c.id != contactId);
   toast('ลบเรียบร้อย');
-  openPatientProfile(patId);
+  openPatientProfile(patId, 'contacts');
 }
 
 function exportPatientsExcel() {
