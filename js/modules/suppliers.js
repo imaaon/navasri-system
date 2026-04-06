@@ -707,8 +707,8 @@ function renderSupplierInvoices() {
       : (r.status==='draft'?'<span style="font-size:11px;color:var(--text3);">ยังไม่รับ</span>':'')
     return '<tr>'+
       '<td style="font-size:12px;">'+(r.date||'-')+'</td>'+
-      '<td style="font-family:monospace;font-size:12px;">'+r.invoiceNo+'</td>'+
-      '<td style="font-weight:500;">'+r.supplierName+'<br><span style="font-size:11px;color:var(--text3);">'+(r.receivedBy?'ผู้รับ: '+r.receivedBy:'')+'</span></td>'+
+      '<td style="font-family:monospace;font-size:12px;min-width:130px;white-space:nowrap;">'+r.invoiceNo+'</td>'+
+      '<td style="font-weight:500;min-width:180px;">'+r.supplierName+'<br><span style="font-size:11px;color:var(--text3);">'+(r.receivedBy?'ผู้รับ: '+r.receivedBy:'')+'</span></td>'+
       '<td style="text-align:right;">&#3647;'+(r.subtotal||0).toLocaleString()+'</td>'+
       '<td style="text-align:right;font-size:12px;color:var(--text2);">&#3647;'+(r.vatAmt||0).toLocaleString()+'</td>'+
       '<td style="text-align:right;font-weight:600;">&#3647;'+(r.total||0).toLocaleString()+'</td>'+
