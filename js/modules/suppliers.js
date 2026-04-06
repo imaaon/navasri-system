@@ -1312,8 +1312,7 @@ async function deleteSupplierInvoice(id, invoiceNo) {
   const inv = db.supplierInvoices.find(x => x.id == id);
   if (!inv) return;
   if (inv.status !== 'draft') { toast('ลบได้เฉพาะใบที่ยังไม่ยืนยัน (ร่าง) เท่านั้น', 'error'); return; }
-  if (!confirm('ยืนยันลบใบแจ้งหนี้ ' + invoiceNo + ' ?
-ลบแล้วไม่สามารถกู้คืนได้')) return;
+  if (!confirm('ยืนยันลบใบแจ้งหนี้ ' + invoiceNo + ' ?\nลบแล้วไม่สามารถกู้คืนได้')) return;
   // audit log ก่อนลบ
   if (typeof logAudit === 'function') logAudit('supplier_invoice', 'delete', String(id), {
     invoice_no: inv.invoiceNo, supplier_name: inv.supplierName,
