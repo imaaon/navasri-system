@@ -1,6 +1,6 @@
 // ===== CLINICAL PROFILE =====
 
-async function openPatientProfile(id) {
+async function openPatientProfile(id, activeTab) {
   try {
   const p = db.patients.find(x => x.id == id);
   if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ','error'); return; }
@@ -76,7 +76,7 @@ async function openPatientProfile(id) {
     <div>
       ${renderAllergyBanner(p)}
       <div class="tabs" id="patprofileTabs" style="margin-bottom:16px;">
-        <div class="tab active" onclick="switchPatTab('history')">📦 ประวัติเบิก (${totalReqs})</div>
+        <div class="tab" onclick="switchPatTab('history')">📦 ประวัติเบิก (${totalReqs})</div>
         <div class="tab" onclick="switchPatTab('medical')">🏥 ประวัติการรักษา</div>
         <div class="tab" onclick="switchPatTab('meds')">💊 ยาประจำ</div>
         <div class="tab${p.allergies?.length ? ' tab-alert' : ''}" onclick="switchPatTab('allergy')">🚨 แพ้ยา/อาหาร ${p.allergies?.length ? `<span style="background:#c0392b;color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">${p.allergies.length}</span>` : ''}</div>
@@ -262,6 +262,7 @@ async function openPatientProfile(id) {
       </div>
     </div>
   </div>`;
+  switchPatTab(activeTab || 'history');
   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
