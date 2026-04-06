@@ -350,20 +350,24 @@ async function deletePR(id) {
 }
 
 function viewPurchaseRequest(id) {
-  const pr = db.purchaseRequests.find(r => r.id == id);
-  if (!pr) return;
-  const info = [
-    'เลขที่: ' + pr.refNo,
-    'สถานะ: ' + pr.status,
-    'ผู้ขอ: ' + pr.requesterName,
-    'ผู้จำหน่าย: ' + (pr.supplierName || '-'),
-    'ความเร่งด่วน: ' + pr.urgency,
-    'วันต้องการรับ: ' + (pr.requiredDate || '-'),
-    'เหตุผล: ' + (pr.reason || '-'),
-    pr.approvedBy ? 'อนุมัติ/ปฏิเสธโดย: ' + pr.approvedBy : '',
-    pr.rejectReason ? 'เหตุผลปฏิเสธ: ' + pr.rejectReason : '',
-  ].filter(Boolean);
-  alert(info.join('\n'));
+  const pr = db.purchaseRequests.find(r => r.id == id); if (!pr) return;
+  const smap = {draft:'ร่าง',submitted:'ยื่นยันแล้ว',approved:'✅ อนุมัติ',rejected:'❌ ปฏิเสธ',ordered:'สั่งซื้อแล้ว',received:'รับแล้ว',cancelled:'ยกเลิก'};
+  const urgMap = {normal:'ปกติ',urgent:'ด่วน',critical:'ด่วนมาก'};
+  const field=(lb,val)=>val?`<div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:11px;color:var(--text3);">${lb}</span><span style="font-size:13px;font-weight:500;">${val}</span></div>`:'';
+  const items=(pr.items||[]);
+  const itemsHtml=items.length?items.map(it=>`<div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:12px;"><span>${it.itemName||it.item_name||'-'}</span><span style="color:var(--text3);">${it.qty||0} ${it.unit||''}</span><span style="font-weight:500;text-align:right;">${it.note||''}</span></div>`).join(''):'<p style="font-size:12px;color:var(--text3);">ไม่มีรายการ</p>';
+  document.getElementById('view-pr-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      ${field('เลขที่',pr.refNo)}${field('วันที่สร้าง',pr.createdAt?.slice(0,10)||pr.date||'')}
+      ${field('สถานะ',smap[pr.status]||pr.status)}${field('ความเร่งด่วน',urgMap[pr.urgency]||pr.urgency)}
+      ${field('ผู้ขอ',pr.requesterName)}${field('ผู้จำหน่าย',pr.supplierName||'-')}
+      ${field('วันต้องการรับ',pr.requiredDate||'-')}${field('อนุมัติ/ปฏิเสธโดย',pr.approvedBy||'-')}
+    </div>
+    ${pr.reason?`<div style="margin-bottom:14px;"><div style="font-size:11px;color:var(--text3);margin-bottom:4px;">เหตุผล</div><div style="font-size:13px;background:var(--surface2);padding:10px 12px;border-radius:6px;line-height:1.6;">${pr.reason}</div></div>`:''}
+    ${pr.rejectReason?`<div style="margin-bottom:14px;"><div style="font-size:11px;color:#c0392b;margin-bottom:4px;">เหตุผลปฏิเสธ</div><div style="font-size:13px;background:#fdf2f2;padding:10px 12px;border-radius:6px;color:#c0392b;">${pr.rejectReason}</div></div>`:''}
+    ${items.length?`<hr style="margin:12px 0;border-color:var(--border);"><div style="font-size:12px;font-weight:500;margin-bottom:8px;">📦 รายการสินค้า</div>${itemsHtml}`:''}
+  `;
+  openModal('modal-view-pr');
 }
 
 async function editPR(id) {
