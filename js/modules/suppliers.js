@@ -717,6 +717,7 @@ function renderSupplierInvoices() {
         '<button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('+r.id+')">&#9998;</button>'+
         (r.status==='draft'?'<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="confirmInvoiceStock('+r.id+')">&#128230; ยืนยัน</button>':'')+
         (r.status==='pending'||r.status==='confirmed'?'<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('+r.id+')">&#9989; จ่าย</button>':'')+
+        +(r.status==='draft'&&(currentUser?.role==='admin'||currentUser?.role==='manager')?'<button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="deleteSupplierInvoice('+r.id+',\''+r.invoiceNo+'\')">&#128465;</button>':'')+
       '</td>'+
       '</tr>'+
       linesHtml
@@ -1302,6 +1303,33 @@ async function confirmInvoiceStock(id) {
     alert('✅ เพิ่มสต็อกแล้ว: '+_added.length+' รายการ\n⚠️ ไม่ได้เพิ่มสต็อก (พิมพ์ชื่อเอง): '+_skipped.length+' รายการ\n'+names+'\n\n→ กรุณาไปเพิ่มสต็อคด้วยตนเองที่ 📦 คลังสต็อค');
   }
   toast('เพิ่มสต็อกเรียบร้อย', 'success');
+  renderSupplierInvoices();
+}
+
+async function deleteSupplierInvoice(id, invoiceNo) {
+  const role = currentUser?.role;
+  if (role !== 'admin' && role !== 'manager') { toast('ไม่มีสิทธิ์ลบรายการ', 'error'); return; }
+  const inv = db.supplierInvoices.find(x => x.id == id);
+  if (!inv) return;
+  if (inv.status !== 'draft') { toast('ลบได้เฉพาะใบที่ยังไม่ยืนยัน (ร่าง) เท่านั้น', 'error'); return; }
+  if (!confirm('ยืนยันลบใบแจ้งหนี้ ' + invoiceNo + ' ?
+ลบแล้วไม่สามารถกู้คืนได้')) return;
+  // audit log ก่อนลบ
+  if (typeof logAudit === 'function') logAudit('supplier_invoice', 'delete', String(id), {
+    invoice_no: inv.invoiceNo, supplier_name: inv.supplierName,
+    total: inv.total, status: inv.status, deleted_by: currentUser?.username
+  });
+  // reset PR ถ้าผูกไว้
+  if (inv.purchaseRequestId) {
+    await supa.from('purchase_requests').update({ status: 'approved' }).eq('id', inv.purchaseRequestId);
+    const pr = db.purchaseRequests?.find(x => x.id == inv.purchaseRequestId);
+    if (pr) pr.status = 'approved';
+  }
+  // ลบจาก DB (lines ถูก cascade delete อัตโนมัติ)
+  const { error } = await supa.from('supplier_invoices').delete().eq('id', id);
+  if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  db.supplierInvoices = (db.supplierInvoices || []).filter(x => x.id != id);
+  toast('ลบใบแจ้งหนี้ ' + invoiceNo + ' เรียบร้อย', 'success');
   renderSupplierInvoices();
 }
 
