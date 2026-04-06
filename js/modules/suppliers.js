@@ -38,6 +38,7 @@ function renderSuppliers() {
     <td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.note||''}">${s.note||'-'}</td>
     <td>${s.status==='active'?'<span class="badge badge-green">ใช้งาน</span>':'<span class="badge badge-gray">ปิด</span>'}</td>
     <td>
+            <button class="btn btn-ghost btn-sm" title="ดูรายละเอียด" onclick="viewSupplier('${s.id}')">&#128065;</button>
       <button class="btn btn-ghost btn-sm" onclick="editSupplier('${s.id}')">✏️</button>
       <button class="btn btn-ghost btn-sm" onclick="deleteSupplier('${s.id}')">🗑️</button>
     </td>
@@ -714,7 +715,7 @@ function renderSupplierInvoices() {
       '<td style="text-align:right;font-weight:600;">&#3647;'+(r.total||0).toLocaleString()+'</td>'+
       '<td>'+statusBadge(r.status)+'<br>'+stockUpdatedBadge+'</td>'+
       '<td>'+
-        '<button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('+r.id+')">&#9998;</button>'+
+        '<button class="btn btn-ghost btn-sm" title="ดูรายละเอียด" onclick="viewSupInv('+r.id+')">&#128065;</button>'+'<button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('+r.id+')">&#9998;</button>'+
         (r.status==='draft'?'<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="confirmInvoiceStock('+r.id+')">&#128230; ยืนยัน</button>':'')+
         (r.status==='pending'||r.status==='confirmed'?'<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('+r.id+')">&#9989; จ่าย</button>':'')+
         (r.status==='draft'&&(currentUser?.role==='admin'||currentUser?.role==='manager')?'<button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="deleteSupplierInvoice('+r.id+',\''+r.invoiceNo+'\')">&#128465;</button>':'')+
@@ -851,6 +852,41 @@ function updatePRRequesterList() {
   if (!dl) return;
   const staff = (db.staff || []).filter(s => s.status === 'active' || !s.status);
   dl.innerHTML = staff.map(s => `<option value="${s.name}">`).join('');
+}
+
+function viewSupInv(id) {
+  const r = db.supplierInvoices.find(x => x.id == id); if (!r) return;
+  const lines = (db.supplierInvoiceLines||[]).filter(l=>l.invoice_id==r.id||l.invoiceId==r.id);
+  const smap = {'draft':'ร่าง','confirmed':'✅ รับสินค้าแล้ว','pending':'รอจ่าย','paid':'จ่ายแล้ว','overdue':'เกินกำหนด','cancelled':'ยกเลิก'};
+  const field = (lb,val) => val ? `<div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:11px;color:var(--text3);">${lb}</span><span style="font-size:13px;font-weight:500;">${val}</span></div>` : '';
+  const linesHtml = lines.length ? lines.map(l=>`<div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:12px;"><span>${l.item_name||'-'}</span><span style="color:var(--text3);">${l.qty||0} ${l.unit||''}</span><span style="font-weight:500;text-align:right;">&#3647;${(l.total||0).toLocaleString()}</span></div>`).join('') : '<p style="font-size:12px;color:var(--text3);">ไม่มีรายการ</p>';
+  document.getElementById('view-supinv-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      ${field('เลขที่ใบแจ้งหนี้',r.invoiceNo)}${field('วันที่',r.date)}${field('ผู้จำหน่าย',r.supplierName)}${field('ชื่องาน',r.jobName)}${field('วันครบกำหนด',r.dueDate)}${field('ผู้รับสินค้า',r.receivedBy)}${field('สถานะ',smap[r.status]||r.status)}
+    </div>
+    <hr style="margin:12px 0;border-color:var(--border);">
+    <div style="font-size:12px;font-weight:500;margin-bottom:8px;">📦 รายการสินค้า</div>
+    ${linesHtml}
+    <div style="display:flex;justify-content:flex-end;gap:20px;margin-top:10px;font-size:13px;">
+      <span style="color:var(--text3);">ก่อน VAT <b>&#3647;${(r.subtotal||0).toLocaleString()}</b></span>
+      <span style="color:var(--text3);">VAT <b>&#3647;${(r.vatAmt||0).toLocaleString()}</b></span>
+      <span style="font-size:14px;font-weight:600;">ยอดชำระ &#3647;${(r.netPayable||r.total||0).toLocaleString()}</span>
+    </div>`;
+  openModal('modal-view-supinv');
+}
+
+function viewSupplier(id) {
+  const s = db.suppliers.find(x => x.id == id); if (!s) return;
+  const field = (lb,val) => val ? `<div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:11px;color:var(--text3);">${lb}</span><span style="font-size:13px;font-weight:500;">${val}</span></div>` : '';
+  document.getElementById('view-supplier-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      ${field('รหัส',s.supplierCode)}${field('ประเภท',s.entityType)}${field('ชื่อ / ผู้ติดต่อ',s.name)}${field('เลขภาษี',s.taxId)}${field('โทร',s.phone)}${field('มือถือ',s.mobile)}${field('อีเมล',s.email)}${field('เครดิต',s.creditDays!=null?s.creditDays+' วัน':'')}${field('ธนาคาร',s.bankName)}${field('สถานะ',s.status==='active'?'ใช้งาน':'ปิด')}
+    </div>
+    <hr style="margin:12px 0;border-color:var(--border);">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${field('ที่อยู่',s.address)}${field('หมายเหตุ',s.note)}
+    </div>`;
+  openModal('modal-view-supplier');
 }
 
 async function saveSupplierInvoice(andConfirm = false) {
