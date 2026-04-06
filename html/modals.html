@@ -3155,15 +3155,19 @@
         </div>
         <div>
           <label class="form-label">ประเภท <span style="color:red">*</span></label>
-          <select id="asset-category" class="form-control">
+          <select id="asset-category" class="form-control" onchange="onAssetCategoryChange(this)">
             <option value="medical_equipment">🏥 เครื่องมือแพทย์</option>
             <option value="furniture">🛏️ เฟอร์นิเจอร์/เตียง</option>
             <option value="building_system">🏠 ระบบอาคาร</option>
             <option value="kitchen_laundry">🍳 ครัว/ซักล้าง</option>
             <option value="vehicle">🚗 ยานพาหนะ</option>
             <option value="it_telecom">💻 IT/สื่อสาร</option>
-            <option value="other">📦 อื่นๆ</option>
+              <option value="electrical">⚡ เครื่องใช้ไฟฟ้า</option>
+              <option value="other">📦 อื่นๆ (ระบุเอง)</option>
           </select>
+            <div id="asset-category-custom-wrap" style="display:none;margin-top:6px;">
+              <input type="text" id="asset-category-custom" class="form-control" placeholder="ระบุประเภทครุภัณฑ์...">
+            </div>
         </div>
         <div>
           <label class="form-label">ยี่ห้อ</label>
