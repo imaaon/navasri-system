@@ -2848,7 +2848,7 @@
 
   <!-- Add Supplier Invoice Modal -->
   <div class="modal-overlay" id="modal-addSupInv">
-    <div class="modal" style="max-width:720px;max-height:92vh;display:flex;flex-direction:column;">
+    <div class="modal" style="max-width:860px;width:860px;max-height:92vh;display:flex;flex-direction:column;">
       <div class="modal-header">
         <div class="modal-title">🧾 บันทึกการรับสินค้า / ใบแจ้งหนี้</div>
         <button class="modal-close" onclick="closeModal('modal-addSupInv')">✕</button>
@@ -2879,6 +2879,7 @@
             </select>
           </div>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="form-group">
           <label class="form-label">ผู้จำหน่าย</label>
           <select class="form-control" id="supinv-supplier"></select>
@@ -2892,6 +2893,7 @@
           <select class="form-control" id="supinv-pr" onchange="autoFillSupInvFromPO()"></select>
         </div>
         <hr style="margin:12px 0;border-color:var(--border);">
+        </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <label class="form-label" style="margin:0;font-weight:600;">📦 รายการสินค้า</label>
           <button class="btn btn-ghost btn-sm" type="button" onclick="addSupInvLine()">+ เพิ่มรายการ</button>
