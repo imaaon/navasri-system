@@ -183,7 +183,7 @@
     backdrop-filter: blur(2px);
   }
   .modal-overlay.open { display: flex; }
-  .modal {
+  .modal, .modal-box {
     background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-lg);
     width: 540px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
     animation: slideUp 0.2s ease;
