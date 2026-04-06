@@ -1294,6 +1294,13 @@ async function confirmInvoiceStock(id) {
       if (item) item.qty = afterQty;
     }
   }
+  // สรุปผลการเพิ่มสต็อก
+  const _added   = (invLines||[]).filter(l=>l.update_stock&&l.item_id);
+  const _skipped = (invLines||[]).filter(l=>l.line_type==='product'&&!l.item_id);
+  if (_skipped.length > 0) {
+    const names = _skipped.map(l=>'  • '+(l.item_name||'?ไม่ระบุ')).join('\n');
+    alert('✅ เพิ่มสต็อกแล้ว: '+_added.length+' รายการ\n⚠️ ไม่ได้เพิ่มสต็อก (พิมพ์ชื่อเอง): '+_skipped.length+' รายการ\n'+names+'\n\n→ กรุณาไปเพิ่มสต็อคด้วยตนเองที่ 📦 คลังสต็อค');
+  }
   toast('เพิ่มสต็อกเรียบร้อย', 'success');
   renderSupplierInvoices();
 }
