@@ -263,5 +263,28 @@ function renderAdminDashboard() {
         `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:13px;"><span>${statusLabel[s]||s}</span><span style="font-weight:600;">${n}</span></div>`
       ).join('');
     }
+
+  // ---- Widget: ครุภัณฑ์ใกล้ถึงเวลาซ่อม ----
+  const _maintEl = document.getElementById('dash-maintenance-widget');
+  if (_maintEl && db.assets && db.assets.length) {
+    const _today = new Date();
+    const _soon  = new Date(_today); _soon.setDate(_today.getDate()+30);
+    const _soonStr = _soon.toISOString().slice(0,10);
+    const _due = db.assets.filter(a=>a.status==='active'&&a.next_maintenance_date&&a.next_maintenance_date<=_soonStr)
+      .sort((a,b)=>a.next_maintenance_date.localeCompare(b.next_maintenance_date));
+    if (!_due.length) {
+      _maintEl.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px;">ไม่มีครุภัณฑ์ใกล้ถึงเวลาซ่อม</div>';
+    } else {
+      _maintEl.innerHTML = _due.slice(0,5).map(a=>{
+        const d = Math.ceil((new Date(a.next_maintenance_date)-_today)/864e5);
+        const col = d<0?'#e74c3c':d<=7?'#e67e22':'#f39c12';
+        const lbl = d<0?'เลยกำหนด '+Math.abs(d)+' วัน':'อีก '+d+' วัน';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:13px;cursor:pointer;" onclick="showPage(\'assets\')">'+
+          '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+a.asset_no+' '+a.name+'</span>'+
+          '<span style="color:'+col+';font-weight:600;white-space:nowrap;margin-left:8px;">'+lbl+'</span></div>';
+      }).join('');
+      if (_due.length>5) _maintEl.innerHTML += '<div style="font-size:12px;color:var(--text2);text-align:center;padding:6px;">และอีก '+(_due.length-5)+' รายการ</div>';
+    }
+  }
   }
 }  // end renderAdminDashboard
