@@ -717,7 +717,7 @@ function renderSupplierInvoices() {
         '<button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('+r.id+')">&#9998;</button>'+
         (r.status==='draft'?'<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="confirmInvoiceStock('+r.id+')">&#128230; ยืนยัน</button>':'')+
         (r.status==='pending'||r.status==='confirmed'?'<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('+r.id+')">&#9989; จ่าย</button>':'')+
-        +(r.status==='draft'&&(currentUser?.role==='admin'||currentUser?.role==='manager')?'<button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="deleteSupplierInvoice('+r.id+',\''+r.invoiceNo+'\')">&#128465;</button>':'')+
+        (r.status==='draft'&&(currentUser?.role==='admin'||currentUser?.role==='manager')?'<button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="deleteSupplierInvoice('+r.id+',\''+r.invoiceNo+'\')">&#128465;</button>':'')+
       '</td>'+
       '</tr>'+
       linesHtml
