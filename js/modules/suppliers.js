@@ -32,7 +32,7 @@ function renderSuppliers() {
     <td style="font-size:12px;">${s.mobile||'-'}</td>
     <td style="font-size:12px;color:var(--text2);">${s.email||'-'}</td>
     <td style="font-size:12px;">${s.taxId||'-'}</td>
-    <td style="font-size:12px;">${s.creditDays!=null?s.creditDays+' วัน':'-'}</td>
+    <td style="font-size:12px;text-align:center;white-space:nowrap;">${s.creditDays!=null?s.creditDays+' วัน':'-'}</td>
     <td style="font-size:12px;">${s.bankName||'-'}</td>
     <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.address||''}">${s.address||'-'}</td>
     <td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.note||''}">${s.note||'-'}</td>
@@ -175,7 +175,7 @@ function renderPurchaseRequests() {
     <td style="font-weight:500;">${r.requesterName||'-'}</td>
     <td style="font-size:12px;">${r.supplierName||'-'}</td>
     <td>${urgencyBadge(r.urgency)}</td>
-    <td style="font-size:12px;">${r.requiredDate||'-'}</td>
+    <td style="font-size:12px;white-space:nowrap;">${r.requiredDate||'-'}</td>
     <td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.reason||''}">${r.reason||''-''}</td>
     <td>${statusBadge(r.status)}</td>
     <td style="white-space:nowrap;">
