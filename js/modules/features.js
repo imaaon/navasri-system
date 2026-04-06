@@ -66,32 +66,32 @@ function renderMonthlySummaryCard(targetElementId, monthStr) {
       </div>
 
       <!-- Summary Cards -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px;">
-        <div style="background:#eafaf1;border:1px solid #a9dfbf;border-radius:10px;padding:14px;text-align:center;">
-          <div style="font-size:11px;color:#27ae60;font-weight:600;margin-bottom:4px;">💵 รายได้รวม</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;padding:16px 16px 0 16px;margin-bottom:20px;">
+        <div style="background:#eafaf1;border:1px solid #a9dfbf;border-radius:10px;padding:18px 20px;text-align:center;">
+          <div style="font-size:13px;color:#27ae60;font-weight:600;margin-bottom:6px;">💵 รายได้รวม</div>
           <div style="font-size:20px;font-weight:800;color:#27ae60;">${_thb(totalRevenue)}</div>
-          <div style="font-size:10px;color:#7dcea0;margin-top:2px;">${paidPayments.length} รายการ</div>
+          <div style="font-size:12px;color:#7dcea0;margin-top:4px;">${paidPayments.length} รายการ</div>
         </div>
-        <div style="background:#fdedec;border:1px solid #f1948a;border-radius:10px;padding:14px;text-align:center;">
-          <div style="font-size:11px;color:#e74c3c;font-weight:600;margin-bottom:4px;">💸 รายจ่ายรวม</div>
+        <div style="background:#fdedec;border:1px solid #f1948a;border-radius:10px;padding:18px 20px;text-align:center;">
+          <div style="font-size:13px;color:#e74c3c;font-weight:600;margin-bottom:6px;">💸 รายจ่ายรวม</div>
           <div style="font-size:20px;font-weight:800;color:#e74c3c;">${_thb(totalExpense)}</div>
-          <div style="font-size:10px;color:#f1948a;margin-top:2px;">ค่าใช้จ่าย + จัดซื้อ</div>
+          <div style="font-size:12px;color:#f1948a;margin-top:4px;">ค่าใช้จ่าย + จัดซื้อ</div>
         </div>
-        <div style="background:${netProfit>=0?'#eafaf1':'#fdedec'};border:1px solid ${netProfit>=0?'#a9dfbf':'#f1948a'};border-radius:10px;padding:14px;text-align:center;">
-          <div style="font-size:11px;color:${profitColor};font-weight:600;margin-bottom:4px;">${profitIcon} กำไรสุทธิ</div>
+        <div style="background:${netProfit>=0?'#eafaf1':'#fdedec'};border:1px solid ${netProfit>=0?'#a9dfbf':'#f1948a'};border-radius:10px;padding:18px 20px;text-align:center;">
+          <div style="font-size:13px;color:${profitColor};font-weight:600;margin-bottom:6px;">${profitIcon} กำไรสุทธิ</div>
           <div style="font-size:20px;font-weight:800;color:${profitColor};">${_thb(netProfit)}</div>
-          <div style="font-size:10px;color:${profitColor}99;margin-top:2px;">${netProfit>=0?'กำไร':'ขาดทุน'}</div>
+          <div style="font-size:12px;color:${profitColor}99;margin-top:4px;">${netProfit>=0?'กำไร':'ขาดทุน'}</div>
         </div>
         ${overdueTotal > 0 ? `
-        <div style="background:#fef9e7;border:1px solid #f9e79f;border-radius:10px;padding:14px;text-align:center;cursor:pointer;" onclick="showPage('billing')">
-          <div style="font-size:11px;color:#e67e22;font-weight:600;margin-bottom:4px;">⏰ ค้างชำระ</div>
+        <div style="background:#fef9e7;border:1px solid #f9e79f;border-radius:10px;padding:18px 20px;text-align:center;cursor:pointer;" onclick="showPage('billing')">
+          <div style="font-size:13px;color:#e67e22;font-weight:600;margin-bottom:6px;">⏰ ค้างชำระ</div>
           <div style="font-size:20px;font-weight:800;color:#e67e22;">${_thb(overdueTotal)}</div>
-          <div style="font-size:10px;color:#f0b27a;margin-top:2px;">${overdueInvoices.length} บิล</div>
+          <div style="font-size:12px;color:#f0b27a;margin-top:4px;">${overdueInvoices.length} บิล</div>
         </div>` : ''}
       </div>
 
       <!-- Bar Chart 6 เดือน -->
-      <div style="margin-bottom:8px;">
+      <div style="margin-bottom:8px;padding:0 16px;">
         <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;">📊 รายได้-รายจ่าย 6 เดือนล่าสุด</div>
         ${_renderBarChart(chartData)}
       </div>
