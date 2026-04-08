@@ -173,27 +173,29 @@ async function saveExpense() {
 
 function editExpense(id) {
   const r = (db.expenses||[]).find(x=>x.id===id); if(!r) return;
+  const modal = document.getElementById('modal-addExpense');
+  const q = (eid) => modal ? modal.querySelector('#'+eid) : document.getElementById(eid);
   document.getElementById('editExpenseId').value = id;
   document.getElementById('addExpenseModalTitle').textContent = '✏️ แก้ไขค่าใช้จ่าย';
-  document.getElementById('exp-date').value         = r.date||'';
-  document.getElementById('exp-doc-no').value       = r.docNo||'';
-  document.getElementById('exp-type').value         = r.expenseType||'other';
-  document.getElementById('exp-job').value          = r.job||'';
-  document.getElementById('exp-vendor').value       = r.vendorName||'';
-  document.getElementById('exp-ref-no').value       = r.referenceNo||'';
-  document.getElementById('exp-period-month').value = r.periodMonth||'';
-  document.getElementById('exp-period-year').value  = r.periodYear||'';
-  document.getElementById('exp-due-date').value     = r.dueDate||'';
-  document.getElementById('exp-subtotal').value     = r.subtotal||'';
-  document.getElementById('exp-vat-rate').value     = r.vatAmt&&r.subtotal ? Math.round(r.vatAmt/r.subtotal*100) : '0';
-  document.getElementById('exp-wht-rate').value     = r.whtAmt&&r.subtotal ? Math.round(r.whtAmt/r.subtotal*100) : '0';
-  document.getElementById('exp-net').value          = r.net||'';
-  document.getElementById('exp-pay-method').value   = r.payMethod||'cash';
-  document.getElementById('exp-status').value       = r.status||'paid';
-  document.getElementById('exp-paid-by').value      = r.paidBy||'';
-  document.getElementById('exp-is-recurring').checked = r.isRecurring||false;
-  document.getElementById('exp-recurring-block').style.display = r.isRecurring?'':'none';
-  document.getElementById('exp-note').value         = r.note||'';
+  q('exp-date').value         = r.date||'';
+  q('exp-doc-no').value       = r.docNo||'';
+  q('exp-type').value         = r.expenseType||'other';
+  q('exp-job').value          = r.job||'';
+  q('exp-vendor').value       = r.vendorName||'';
+  q('exp-ref-no').value       = r.referenceNo||'';
+  q('exp-period-month').value = r.periodMonth||'';
+  q('exp-period-year').value  = r.periodYear||'';
+  q('exp-due-date').value     = r.dueDate||'';
+  q('exp-subtotal').value     = r.subtotal||'';
+  q('exp-vat-rate').value     = r.vatAmt&&r.subtotal ? Math.round(r.vatAmt/r.subtotal*100) : '0';
+  q('exp-wht-rate').value     = r.whtAmt&&r.subtotal ? Math.round(r.whtAmt/r.subtotal*100) : '0';
+  q('exp-net').value          = r.net||'';
+  q('exp-pay-method').value   = r.payMethod||'cash';
+  q('exp-status').value       = r.status||'paid';
+  q('exp-paid-by').value      = r.paidBy||'';
+  q('exp-is-recurring').checked = r.isRecurring||false;
+  q('exp-recurring-block').style.display = r.isRecurring?'':'none';
+  q('exp-note').value         = r.note||'';
   openModal('modal-addExpense');
 }
 
