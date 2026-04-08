@@ -515,3 +515,82 @@ async function updateLineSetting(key, value) {
   };
 })();
 
+
+
+// ===== AUDIT TRAIL PAGE =====
+window._auditPage = 1;
+window._auditPageSize = 50;
+
+async function renderAuditPage() {
+  const tbody = document.getElementById('audit-table-body');
+  const countEl = document.getElementById('audit-count');
+  const pagEl = document.getElementById('audit-pagination');
+  if (!tbody) return;
+
+  const modFilter  = document.getElementById('audit-filter-module')?.value || '';
+  const actFilter  = document.getElementById('audit-filter-action')?.value || '';
+  const actorFilter= document.getElementById('audit-filter-actor')?.value?.trim() || '';
+  const dateFrom   = document.getElementById('audit-filter-date-from')?.value || '';
+  const dateTo     = document.getElementById('audit-filter-date-to')?.value || '';
+
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text3);">โหลดข้อมูล...</td></tr>';
+
+  try {
+    let q = supa.from('audit_events').select('*', {count: 'exact'}).order('created_at', {ascending: false});
+    if (modFilter)   q = q.eq('module', modFilter);
+    if (actFilter)   q = q.eq('action', actFilter);
+    if (actorFilter) q = q.ilike('actor', '%' + actorFilter + '%');
+    if (dateFrom)    q = q.gte('created_at', dateFrom + 'T00:00:00');
+    if (dateTo)      q = q.lte('created_at', dateTo + 'T23:59:59');
+    const from = (window._auditPage - 1) * window._auditPageSize;
+    q = q.range(from, from + window._auditPageSize - 1);
+
+    const {data, count, error} = await q;
+    if (error) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red);">เกิดข้อผิดพลาด: ' + error.message + '</td></tr>'; return; }
+
+    // populate module filter options once
+    const modSel = document.getElementById('audit-filter-module');
+    if (modSel && modSel.options.length <= 1) {
+      const mods = [...new Set((data||[]).map(r=>r.module).filter(Boolean))].sort();
+      mods.forEach(m => { const o=document.createElement('option'); o.value=m; o.textContent=m; modSel.appendChild(o); });
+    }
+
+    const actionColors = {create:'#27ae60',update:'#2980b9',delete:'#e74c3c',login:'#8e44ad',logout:'#95a5a6',approve:'#16a085',reject:'#e67e22'};
+    const total = count || 0;
+    if (countEl) countEl.textContent = 'ทั้งหมด ' + total.toLocaleString() + ' รายการ';
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3);">ไม่มีข้อมูล</td></tr>';
+      if (pagEl) pagEl.innerHTML = '';
+      return;
+    }
+
+    tbody.innerHTML = data.map(r => {
+      const dt = r.created_at ? new Date(r.created_at).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
+      const col = actionColors[r.action] || '#888';
+      let detail = '';
+      try { const d=JSON.parse(r.detail||'{}'); detail=Object.entries(d).map(([k,v])=>k+': '+String(v).slice(0,40)).join(', '); } catch(e) { detail=String(r.detail||'').slice(0,80); }
+      return '<tr>'
+        +'<td style="font-size:11px;white-space:nowrap;color:var(--text2);">'+dt+'</td>'
+        +'<td><span style="font-size:11px;background:var(--surface2);padding:2px 7px;border-radius:4px;">'+String(r.module||'-')+'</span></td>'
+        +'<td><span style="font-size:11px;color:'+col+';font-weight:600;">'+String(r.action||'-')+'</span></td>'
+        +'<td style="font-size:12px;font-weight:500;">'+String(r.actor||'-')+'</td>'
+        +'<td style="font-size:11px;color:var(--text3);">'+String(r.actor_role||'-')+'</td>'
+        +'<td style="font-size:11px;font-family:monospace;color:var(--text3);">'+String(r.record_id||'-').slice(0,18)+'</td>'
+        +'<td style="font-size:11px;color:var(--text2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+String(detail).replace(/"/g,"'")+'">'+detail+'</td>'
+        +'</tr>';
+    }).join('');
+
+    // pagination
+    if (pagEl) {
+      const totalPages = Math.ceil(total / window._auditPageSize);
+      const cur = window._auditPage;
+      let html = '<span style="font-size:12px;color:var(--text3);">หน้า '+cur+'/'+totalPages+'</span>';
+      html += '<button class="btn btn-ghost btn-sm" '+(cur<=1?'disabled':'')+' onclick="window._auditPage=1;renderAuditPage();">«</button>';
+      html += '<button class="btn btn-ghost btn-sm" '+(cur<=1?'disabled':'')+' onclick="window._auditPage--;renderAuditPage();">‹</button>';
+      html += '<button class="btn btn-ghost btn-sm" '+(cur>=totalPages?'disabled':'')+' onclick="window._auditPage++;renderAuditPage();">›</button>';
+      html += '<button class="btn btn-ghost btn-sm" '+(cur>=totalPages?'disabled':'')+' onclick="window._auditPage='+totalPages+';renderAuditPage();">»</button>';
+      pagEl.innerHTML = html;
+    }
+  } catch(e) { tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--red);">'+e.message+'</td></tr>'; }
+}
