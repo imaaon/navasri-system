@@ -675,3 +675,86 @@ async function exportAssetsExcel() {
   a2.download='ครุภัณฑ์_'+(new Date().toISOString().slice(0,10))+'.xlsx'; a2.click();
   toast('ดาวน์โหลด Excel สำเร็จ','success');
 }
+
+
+// ===== IN-APP NOTIFICATION =====
+window._notifOpen = false;
+
+function renderNotifPanel() {
+  const panel = document.getElementById('notif-panel');
+  const badge = document.getElementById('notif-badge');
+  if (!panel) return;
+
+  const alerts = [];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().split('T')[0];
+  const soon30 = new Date(today); soon30.setDate(today.getDate()+30);
+  const soon30Str = soon30.toISOString().split('T')[0];
+
+  // 1. สินค้าหมดสต็อค
+  const outItems=(db.items||[]).filter(i=>i.qty<=0);
+  if(outItems.length) alerts.push({icon:'🔴',text:'สินค้าหมดสต็อค '+outItems.length+' รายการ',page:'stock',color:'#e74c3c'});
+
+  // 2. สินค้าใกล้หมด
+  const lowItems=(db.items||[]).filter(i=>i.qty>0&&i.qty<=i.reorder);
+  if(lowItems.length) alerts.push({icon:'🟡',text:'สินค้าใกล้หมด '+lowItems.length+' รายการ',page:'stock',color:'#e67e22'});
+
+  // 3. สินค้าใกล้หมดอายุ 7 วัน
+  const urgentExp=(db.itemLots||[]).filter(l=>{
+    if(!l.expiryDate||l.qtyRemaining<=0) return false;
+    const diff=Math.ceil((new Date(l.expiryDate)-today)/86400000);
+    return diff>=0&&diff<=7;
+  });
+  if(urgentExp.length) alerts.push({icon:'📅',text:'สินค้าหมดอายุใน 7 วัน '+urgentExp.length+' Lot',page:'stock',color:'#e74c3c'});
+
+  // 4. PR รออนุมัติเกิน 3 วัน
+  const staleDate=new Date(today); staleDate.setDate(today.getDate()-3);
+  const stalePRs=(db.purchaseRequests||[]).filter(r=>r.status==='submitted'&&r.createdAt&&new Date(r.createdAt)<staleDate);
+  if(stalePRs.length) alerts.push({icon:'📋',text:'คำขอซื้อรออนุมัติเกิน 3 วัน ('+stalePRs.length+' รายการ)',page:'purchaserequests',color:'#8e44ad'});
+
+  // 5. ครุภัณฑ์ถึงเวลาซ่อมภายใน 30 วัน
+  const assetsDue=(db.assets||[]).filter(a=>a.status==='active'&&a.nextMaintenanceDate&&a.nextMaintenanceDate<=soon30Str);
+  if(assetsDue.length) alerts.push({icon:'🔧',text:'ครุภัณฑ์ถึงรอบซ่อม '+assetsDue.length+' รายการ',page:'assets',color:'#e67e22'});
+
+  // 6. บิลค้างชำระ
+  const overdueInv=(db.invoices||[]).filter(inv=>{
+    if(inv.status==='paid'||inv.type!=='invoice') return false;
+    if(!inv.dueDate) return false;
+    return inv.dueDate<todayStr;
+  });
+  if(overdueInv.length) alerts.push({icon:'💸',text:'บิลเกินกำหนดชำระ '+overdueInv.length+' ใบ',page:'billing',color:'#e74c3c'});
+
+  // update badge
+  if(badge){
+    if(alerts.length>0){badge.style.display='';badge.textContent=alerts.length>9?'9+':String(alerts.length);}
+    else{badge.style.display='none';}
+  }
+
+  if(!window._notifOpen) return;
+
+  if(alerts.length===0){
+    panel.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);">✅ ไม่มีการแจ้งเตือนในขณะนี้</div>';
+    return;
+  }
+  panel.innerHTML='<div style="padding:10px 14px 6px;font-weight:700;font-size:13px;border-bottom:1px solid var(--border);">🔔 การแจ้งเตือน ('+alerts.length+')</div>'
+    +alerts.map(a=>'<div onclick="showPage(''+a.page+'');toggleNotifPanel();" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:0.5px solid var(--border);transition:background .15s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">'
+      +'<span style="font-size:18px;">'+a.icon+'</span>'
+      +'<span style="font-size:13px;color:'+a.color+';font-weight:500;">'+a.text+'</span>'
+    +'</div>').join('');
+}
+
+function toggleNotifPanel() {
+  window._notifOpen = !window._notifOpen;
+  const panel = document.getElementById('notif-panel');
+  if(panel) panel.style.display = window._notifOpen ? 'block' : 'none';
+  if(window._notifOpen) renderNotifPanel();
+  if(window._notifOpen){
+    setTimeout(()=>{ document.addEventListener('click',function closeNotif(e){
+      if(!document.getElementById('notif-bell-wrap')?.contains(e.target)){
+        window._notifOpen=false;
+        if(panel) panel.style.display='none';
+        document.removeEventListener('click',closeNotif);
+      }
+    }); },50);
+  }
+}
