@@ -446,3 +446,67 @@
   }
   .rq-tl-circle.done { background: #2a7a4f; border-color: #2a7a4f; color: white; }
   .rq-tl-circle.active { background: #d4760a; border-color: #d4760a; color: white; }
+
+/* ── MOBILE RESPONSIVE IMPROVEMENTS (max-width: 768px) ── */
+@media (max-width: 768px) {
+
+  /* Content padding */
+  .content { padding: 12px 10px; }
+
+  /* Page header buttons — stack vertically on very small screens */
+  .page-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+
+  /* Tables — horizontal scroll always on */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { min-width: 480px; }
+  th, td { font-size: 12px; padding: 8px 10px; }
+
+  /* Cards */
+  .card { border-radius: 8px; }
+  .card-header { flex-wrap: wrap; gap: 6px; }
+  .card-title { font-size: 13px; }
+
+  /* Stats grid — 2 cols already but shrink padding */
+  .stat-card { padding: 12px 10px; }
+  .stat-value { font-size: 26px; }
+
+  /* Modals — full width on mobile */
+  .modal-box {
+    width: 96vw !important;
+    max-width: 96vw !important;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 5vh auto;
+  }
+  .modal-body { padding: 14px 12px; }
+
+  /* Forms */
+  .form-row { flex-direction: column; gap: 8px; }
+  .form-group { width: 100% !important; }
+  .form-control { font-size: 14px; }
+
+  /* Buttons in header — smaller */
+  .page-header .btn { font-size: 12px; padding: 6px 10px; }
+
+  /* Tabs — scrollable horizontal */
+  .tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+  .tab { font-size: 12px; padding: 7px 12px; flex-shrink: 0; }
+
+  /* Topbar */
+  .topbar-date { display: none; }
+  #userDisplayName { display: none; }
+  .topbar { height: 52px; }
+
+  /* Notification bell panel */
+  #notif-panel { width: 90vw; right: -8px; }
+
+  /* Billing/report grids */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .stat-value { font-size: 22px; }
+  table { min-width: 380px; }
+  .tab { font-size: 11px; padding: 6px 9px; }
+}
