@@ -256,6 +256,9 @@ async function openPatientProfile(id) {
           <div id="pat-unbilled-list-${p.id}"></div>
         </div>
       </div>
+<div id="patprofile-tab-lab" style="display:none;">
+<div id="lab-list-${p.id}" data-patient-id="${p.id}"></div>
+</div>
     </div>
   </div>`;
   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
