@@ -92,11 +92,11 @@ async function saveAppt() {
     const {data:ins,error} = await supa.from('patient_appointments').insert(row).select().single();
     if(error){toast('บันทึกไม่สำเร็จ: '+error.message,'error');return;}
     db.appointments.push(mapAppointment(ins));
-  // Send LINE notification: 7 days before and 1 day before
+  // Send LINE notification: 3 days before and 1 day before
   const daysLeft = Math.ceil((new Date(apptDate)-new Date())/(86400000));
-  if (daysLeft >= 0 && daysLeft <= 7) {
-    const urgencyTxt = daysLeft <= 1 ? '🔴 ⚠️ ด่วนมาก!' : '🟡 ใกล้แล้ว';
-    const timeTxt = daysLeft === 0 ? 'วันนี้!' : daysLeft === 1 ? 'พรุ่งนี้!' : 'อีก '+daysLeft+' วัน';
+  if (daysLeft === 3 || daysLeft === 1) {
+    const urgencyTxt = daysLeft === 1 ? '🔴 ⚠️ ด่วนมาก!' : '🟡 ใกล้แล้ว';
+    const timeTxt = daysLeft === 1 ? 'พรุ่งนี้!' : 'อีก 3 วัน';
     sendLineNotify('appt_reminder', '🚐 นัดหมาย: '+timeTxt+' '+urgencyTxt+'\n━━━━━━━━━━━━━━\n👤 ผู้รับบริการ: '+_apptPatName+'\n🏥 '+hospital+'\n📅 '+apptDate+(apptTime?' '+apptTime:'')+'\n🎯 วัตถุประสงค์: '+(row.purpose||'-'), {patientName:_apptPatName});
   }
     toast('เพิ่มนัดหมายเรียบร้อย','success');
