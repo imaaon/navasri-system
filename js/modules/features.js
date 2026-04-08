@@ -594,3 +594,84 @@ async function renderAuditPage() {
     }
   } catch(e) { tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--red);">'+e.message+'</td></tr>'; }
 }
+
+
+// ===== EXPORT: BILLING =====
+async function exportBillingExcel() {
+  if (typeof ExcelJS === 'undefined') { toast('กำลังโหลด ExcelJS...','info'); return; }
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('ใบแจ้งหนี้');
+  ws.columns = [
+    {header:'เลขที่',key:'docNo',width:16},
+    {header:'ผู้รับบริการ',key:'patientName',width:24},
+    {header:'วันที่',key:'date',width:14},
+    {header:'ยอดรวม',key:'total',width:14},
+    {header:'ชำระแล้ว',key:'paid',width:14},
+    {header:'ค้างชำระ',key:'balance',width:14},
+    {header:'สถานะ',key:'status',width:14},
+    {header:'หมายเหตุ',key:'note',width:24},
+  ];
+  ws.getRow(1).font = {bold:true};
+  (db.invoices||[]).filter(inv=>inv.type==='invoice').forEach(inv => {
+    const paid = typeof getInvoicePaidAmount==='function' ? getInvoicePaidAmount(inv.id) : 0;
+    const bal  = typeof getInvoiceBalance==='function' ? getInvoiceBalance(inv.id) : (inv.total||0)-paid;
+    ws.addRow({ docNo:inv.docNo||'-', patientName:inv.patientName||'-', date:inv.date||'-',
+      total:inv.total||0, paid, balance:bal, status:inv.status||'-', note:inv.note||'' });
+  });
+  const buf = await wb.xlsx.writeBuffer();
+  const a = document.createElement('a'); a.href=URL.createObjectURL(new Blob([buf]));
+  a.download='ใบแจ้งหนี้_'+(new Date().toISOString().slice(0,10))+'.xlsx'; a.click();
+  toast('ดาวน์โหลด Excel สำเร็จ','success');
+}
+
+// ===== EXPORT: EXPENSES =====
+async function exportExpensesExcel() {
+  if (typeof ExcelJS === 'undefined') { toast('กำลังโหลด ExcelJS...','info'); return; }
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('ค่าใช้จ่าย');
+  ws.columns = [
+    {header:'วันที่',key:'date',width:14},
+    {header:'หมวดหมู่',key:'category',width:18},
+    {header:'รายการ',key:'description',width:30},
+    {header:'จำนวนเงิน',key:'amount',width:16},
+    {header:'ผู้บันทึก',key:'createdBy',width:18},
+    {header:'หมายเหตุ',key:'note',width:24},
+  ];
+  ws.getRow(1).font = {bold:true};
+  (db.expenses||[]).forEach(e => {
+    ws.addRow({ date:e.date||'-', category:e.category||'-', description:e.description||'-',
+      amount:e.amount||0, createdBy:e.createdBy||'-', note:e.note||'' });
+  });
+  const buf = await wb.xlsx.writeBuffer();
+  const a = document.createElement('a'); a.href=URL.createObjectURL(new Blob([buf]));
+  a.download='ค่าใช้จ่าย_'+(new Date().toISOString().slice(0,10))+'.xlsx'; a.click();
+  toast('ดาวน์โหลด Excel สำเร็จ','success');
+}
+
+// ===== EXPORT: ASSETS =====
+async function exportAssetsExcel() {
+  if (typeof ExcelJS === 'undefined') { toast('กำลังโหลด ExcelJS...','info'); return; }
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('ครุภัณฑ์');
+  ws.columns = [
+    {header:'ทะเบียนที่',key:'assetNo',width:16},
+    {header:'ชื่อทรัพย์สิน',key:'name',width:28},
+    {header:'ประเภท',key:'category',width:16},
+    {header:'สถานที่',key:'location',width:18},
+    {header:'สถานะ',key:'status',width:12},
+    {header:'วันซื้อ',key:'purchaseDate',width:14},
+    {header:'ราคาซื้อ',key:'purchasePrice',width:14},
+    {header:'ซ่อมถัดไป',key:'nextMaintenance',width:18},
+    {header:'ประกันหมด',key:'warrantyExpiry',width:18},
+  ];
+  ws.getRow(1).font = {bold:true};
+  (db.assets||[]).forEach(a => {
+    ws.addRow({ assetNo:a.assetNo||'-', name:a.name||'-', category:a.category||'-',
+      location:a.location||'-', status:a.status||'-', purchaseDate:a.purchaseDate||'-',
+      purchasePrice:a.purchasePrice||0, nextMaintenance:a.nextMaintenanceDate||'-', warrantyExpiry:a.warrantyExpiry||'-' });
+  });
+  const buf = await wb.xlsx.writeBuffer();
+  const a2 = document.createElement('a'); a2.href=URL.createObjectURL(new Blob([buf]));
+  a2.download='ครุภัณฑ์_'+(new Date().toISOString().slice(0,10))+'.xlsx'; a2.click();
+  toast('ดาวน์โหลด Excel สำเร็จ','success');
+}
