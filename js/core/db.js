@@ -117,7 +117,7 @@ async function loadDBSecondary() {
       contractsRes, paymentsRes, approvalLogsRes, returnItemsRes,
       appointmentsRes, belongingsRes, consentsRes, invoicesRes,
       expensesRes, roomHistoryRes, invoiceResetLogsRes,
-      stockMovementsRes, suppliersRes, purchaseRequestsRes, supplierInvoicesRes, supplierInvoiceLinesRes, assetsRes, incidentReportsRes, assetMaintenanceLogsRes
+stockMovementsRes, suppliersRes, purchaseRequestsRes, supplierInvoicesRes, supplierInvoiceLinesRes, assetsRes, assetMaintenanceLogsRes, incidentReportsRes,
     ] = await Promise.all([
       supa.from('patient_contracts').select('*').order('created_at', {ascending: false}).limit(200),
       supa.from('payments').select('*').order('payment_date', {ascending: false}).limit(300),
