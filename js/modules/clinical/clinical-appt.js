@@ -92,11 +92,13 @@ async function saveAppt() {
     const {data:ins,error} = await supa.from('patient_appointments').insert(row).select().single();
     if(error){toast('บันทึกไม่สำเร็จ: '+error.message,'error');return;}
     db.appointments.push(mapAppointment(ins));
-    // Send LINE notification if upcoming and within 2 days
-    const daysLeft = Math.ceil((new Date(apptDate)-new Date())/(86400000));
-    if (daysLeft <= 2) {
-      sendLineNotify('appt_reminder', `🚐 นัดหมายใกล้แล้ว!\n━━━━━━━━━━━━━━\n👤 ${_apptPatName}\n🏥 ${hospital}\n📅 ${apptDate} ${row.appt_time||''}\n🎯 ${row.purpose||'-'}`, {patientName:_apptPatName});
-    }
+  // Send LINE notification: 7 days before and 1 day before
+  const daysLeft = Math.ceil((new Date(apptDate)-new Date())/(86400000));
+  if (daysLeft >= 0 && daysLeft <= 7) {
+    const urgencyTxt = daysLeft <= 1 ? '🔴 ⚠️ ด่วนมาก!' : '🟡 ใกล้แล้ว';
+    const timeTxt = daysLeft === 0 ? 'วันนี้!' : daysLeft === 1 ? 'พรุ่งนี้!' : 'อีก '+daysLeft+' วัน';
+    sendLineNotify('appt_reminder', '🚐 นัดหมาย: '+timeTxt+' '+urgencyTxt+'\n━━━━━━━━━━━━━━\n👤 ผู้รับบริการ: '+_apptPatName+'\n🏥 '+hospital+'\n📅 '+apptDate+(apptTime?' '+apptTime:'')+'\n🎯 วัตถุประสงค์: '+(row.purpose||'-'), {patientName:_apptPatName});
+  }
     toast('เพิ่มนัดหมายเรียบร้อย','success');
   }
   closeModal('modal-appt');
