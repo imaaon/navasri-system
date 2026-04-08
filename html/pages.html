@@ -1670,3 +1670,73 @@
           </table>
         </div>
       </div>
+
+<div id="page-audit" style="display:none;">
+<div class="page-header">
+  <div>
+    <div class="page-title">🔍 Audit Trail</div>
+    <div class="page-subtitle">ประวัติการใช้งานระบบ</div>
+  </div>
+</div>
+<div class="card" style="margin-bottom:12px;">
+  <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+    <div>
+      <label class="form-label">หมวดหมู่</label>
+      <select class="form-control" id="audit-filter-module" onchange="renderAuditPage()" style="width:140px;">
+        <option value="">ทั้งหมด</option>
+      </select>
+    </div>
+    <div>
+      <label class="form-label">การกระทำ</label>
+      <select class="form-control" id="audit-filter-action" onchange="renderAuditPage()" style="width:130px;">
+        <option value="">ทั้งหมด</option>
+        <option value="create">สร้าง</option>
+        <option value="update">แก้ไข</option>
+        <option value="delete">ลบ</option>
+        <option value="login">เข้าระบบ</option>
+        <option value="logout">ออกจากระบบ</option>
+        <option value="approve">อนุมัติ</option>
+        <option value="reject">ปฏิเสธ</option>
+      </select>
+    </div>
+    <div>
+      <label class="form-label">ผู้ใช้งาน</label>
+      <input class="form-control" id="audit-filter-actor" placeholder="ชื่อผู้ใช้" oninput="renderAuditPage()" style="width:140px;">
+    </div>
+    <div>
+      <label class="form-label">วันที่เริ่ม</label>
+      <input class="form-control" type="date" id="audit-filter-date-from" onchange="renderAuditPage()">
+    </div>
+    <div>
+      <label class="form-label">วันที่สิ้น</label>
+      <input class="form-control" type="date" id="audit-filter-date-to" onchange="renderAuditPage()">
+    </div>
+    <button class="btn btn-ghost" onclick="document.getElementById('audit-filter-module').value='';document.getElementById('audit-filter-action').value='';document.getElementById('audit-filter-actor').value='';document.getElementById('audit-filter-date-from').value='';document.getElementById('audit-filter-date-to').value='';renderAuditPage();">ล้างตัวกรอง</button>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">📄 บันทึกการใช้งาน</div>
+    <div id="audit-count" style="font-size:12px;color:var(--text3);"></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:150px;">วันที่-เวลา</th>
+          <th style="width:110px;">หมวดหมู่</th>
+          <th style="width:90px;">การกระทำ</th>
+          <th style="width:110px;">ผู้กระทำ</th>
+          <th style="width:90px;">Role</th>
+          <th style="width:120px;">Record ID</th>
+          <th>รายละเอียด</th>
+        </tr>
+      </thead>
+      <tbody id="audit-table-body">
+        <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3);">โหลดข้อมูล...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div id="audit-pagination" style="padding:12px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;"></div>
+</div>
+</div>
