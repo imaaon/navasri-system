@@ -287,4 +287,96 @@ function renderAdminDashboard() {
     }
   }
   }
+  renderIncidentWidget();
 }  // end renderAdminDashboard
+
+function renderIncidentWidget() {
+  const el = document.getElementById('dash-incident-widget');
+  if (!el) return;
+  const now = new Date();
+  const tz7 = new Date(now.getTime() + 7*60*60*1000);
+  const y = tz7.getUTCFullYear(), m = String(tz7.getUTCMonth()+1).padStart(2,'0');
+  const monthStr = y+'-'+m;
+  const todayStr = tz7.toISOString().slice(0,10);
+  const thMonth = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const monthLabel = thMonth[tz7.getUTCMonth()] + ' ' + (y+543);
+  const incidents = (db.incidentReports || []);
+
+  // --- Card 1: อุบัติเหตุประจำเดือน ---
+  const monthInc = incidents.filter(r => (r.date||'').startsWith(monthStr));
+  const prevM = new Date(Date.UTC(y, tz7.getUTCMonth()-1, 1));
+  const prevStr = prevM.getUTCFullYear()+'-'+String(prevM.getUTCMonth()+1).padStart(2,'0');
+  const prevCount = incidents.filter(r => (r.date||'').startsWith(prevStr)).length;
+  const diff = monthInc.length - prevCount;
+  const diffTxt = diff === 0 ? 'เท่ากับเดือนก่อน' : (diff > 0 ? '▲ เพิ่มขึ้น '+diff : '▼ ลดลง '+Math.abs(diff));
+  const diffColor = diff > 0 ? '#e74c3c' : diff < 0 ? '#27ae60' : '#888';
+  const numColor = monthInc.length === 0 ? '#27ae60' : '#e74c3c';
+
+  // --- Card 2: วันที่ไม่เกิดอุบัติเหตุ ---
+  const sorted = [...incidents].filter(r=>r.date).sort((a,b)=>b.date.localeCompare(a.date));
+  const lastInc = sorted[0];
+  let streakDays = 0, lastIncDate = '-', streakColor = '#27ae60', streakBorder = '#27ae60';
+  if (lastInc) {
+    const last = new Date(lastInc.date + 'T00:00:00+07:00');
+    const today = new Date(todayStr + 'T00:00:00+07:00');
+    streakDays = Math.max(0, Math.floor((today - last) / 86400000));
+    lastIncDate = lastInc.date;
+    if (streakDays === 0) { streakColor = '#e74c3c'; streakBorder = '#e74c3c'; }
+    else if (streakDays < 7) { streakColor = '#e67e22'; streakBorder = '#e67e22'; }
+  } else {
+    // ไม่เคยมีอุบัติเหตุ — นับตั้งแต่ admit แรกสุด หรือ 0
+    streakDays = 0;
+  }
+
+  // --- Bar chart 6 เดือนย้อนหลัง ---
+  const months6 = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(Date.UTC(y, tz7.getUTCMonth()-i, 1));
+    months6.push({ str: d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0'), label: thMonth[d.getUTCMonth()] });
+  }
+  const barData = months6.map(m => ({ label: m.label, count: incidents.filter(r=>(r.date||'').startsWith(m.str)).length }));
+  const maxBar = Math.max(...barData.map(b=>b.count), 1);
+
+  const barHtml = barData.map(b => {
+    const pct = Math.round((b.count / maxBar) * 100);
+    const color = b.count === 0 ? 'var(--surface2)' : '#e74c3c';
+    const numColor2 = b.count === 0 ? '#27ae60' : '#e74c3c';
+    return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;">'
+      +'<span style="width:30px;color:var(--text3);">'+b.label+'</span>'
+      +'<div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;">'
+      +(b.count > 0 ? '<div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:4px;"></div>' : '')
+      +'</div>'
+      +'<span style="width:20px;text-align:right;color:'+numColor2+';font-weight:'+(b.count===0?'400':'500')+';">'+b.count+'</span>'
+      +'</div>';
+  }).join('');
+
+  const streakBg = streakDays === 0 ? '#fff5f5' : streakDays < 7 ? '#fff8f0' : '#f0fff4';
+  el.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">'
+    // card รายเดือน
+    +'<div style="background:var(--surface2);border-radius:8px;padding:14px;">'
+    +'<div style="font-size:11px;color:var(--text3);margin-bottom:8px;">อุบัติเหตุ — '+monthLabel+'</div>'
+    +'<div style="font-size:32px;font-weight:500;color:'+numColor+';line-height:1;">'+monthInc.length+'</div>'
+    +'<div style="font-size:11px;color:var(--text3);margin-top:4px;">ครั้ง</div>'
+    +'<div style="font-size:11px;color:'+diffColor+';margin-top:6px;">'+diffTxt+'</div>'
+    +'<div style="font-size:11px;color:var(--text3);">เดือนก่อน: '+prevCount+' ครั้ง</div>'
+    +'</div>'
+    // card streak
+    +'<div style="background:'+streakBg+';border-radius:8px;padding:14px;">'
+    +'<div style="font-size:11px;color:var(--text3);margin-bottom:8px;">วันที่ไม่เกิดอุบัติเหตุ</div>'
+    +'<div style="display:flex;align-items:center;gap:12px;">'
+    +'<div style="width:54px;height:54px;border-radius:50%;border:2.5px solid '+streakBorder+';background:var(--background);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">'
+    +'<span style="font-size:20px;font-weight:500;color:'+streakColor+';line-height:1;">'+streakDays+'</span>'
+    +'<span style="font-size:9px;color:'+streakColor+';">วัน</span>'
+    +'</div>'
+    +'<div>'
+    +'<div style="font-size:12px;color:var(--text2);">นับตั้งแต่ครั้งล่าสุด</div>'
+    +(lastIncDate !== '-' ? '<div style="font-size:11px;color:var(--text3);">'+lastIncDate+'</div>' : '<div style="font-size:11px;color:#27ae60;">ยังไม่เคยมีบันทึก</div>')
+    +'</div></div></div>'
+    +'</div>'
+    // bar chart
+    +'<div style="border-top:0.5px solid var(--border);padding-top:14px;">'
+    +'<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">แนวโน้ม 6 เดือน</div>'
+    +'<div style="display:flex;flex-direction:column;gap:5px;">'+barHtml+'</div>'
+    +'</div>';
+}
