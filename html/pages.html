@@ -931,6 +931,7 @@
           <button class="btn btn-ghost" onclick="runAutoBilling()" style="background:rgba(90,158,122,.1);color:var(--accent);border-color:var(--accent);">🤖 ออกบิลอัตโนมัติ</button>
           <button class="btn btn-ghost" onclick="openInvoiceResetLogModal()" style="color:#8e44ad;border-color:#8e44ad;">📋 ประวัติการ Reset</button>
           <button class="btn btn-ghost" onclick="showPage('billing-settings')">⚙️ ตั้งค่า</button>
+<button class="btn btn-ghost" onclick="exportBillingExcel()" style="color:#27ae60;border-color:#27ae60;">📥 Export บิล</button>
         </div>
 
         <!-- Tabs: Invoices / Contracts / Payments -->
@@ -1561,6 +1562,7 @@
             <h2 style="margin:0;font-size:20px;">💸 ค่าใช้จ่าย</h2>
             <div style="font-size:13px;color:var(--text2);margin-top:4px;">ค่าน้ำ · ค่าไฟ · ซ่อมแซม · เงินเดือน · และอื่นๆ</div>
           </div>
+<button class="btn btn-ghost" onclick="exportExpensesExcel()" style="color:#27ae60;border-color:#27ae60;">📥 Export ค่าใช้จ่าย</button>
           <button class="btn btn-primary" onclick="openAddExpenseModal()">+ บันทึกค่าใช้จ่าย</button>
         </div>
         <!-- Summary Cards -->
@@ -1630,6 +1632,7 @@
             <div style="font-size:13px;color:var(--text2);margin-top:4px;">ทะเบียนอุปกรณ์ · ประวัติซ่อม · แจ้งเตือนบำรุงรักษา</div>
           </div>
           <button class="btn btn-primary" onclick="openAddAssetModal()">+ เพิ่มครุภัณฑ์</button>
+<button class="btn btn-ghost" onclick="exportAssetsExcel()" style="color:#27ae60;border-color:#27ae60;">📥 Export ครุภัณฑ์</button>
         </div>
         <!-- Alert: ใกล้ถึงรอบซ่อม -->
         <div id="asset-alert-card" style="display:none;background:#fff8f0;border:1px solid #f39c12;border-radius:10px;padding:14px;margin-bottom:16px;">
