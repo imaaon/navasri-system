@@ -264,6 +264,19 @@ function taStaff() {
     .map(x=>({ id:x.id, label:x.name||'', sub: x.position||'' }));
 }
 function taSuppliers() {
-  return (db.suppliers||[]).filter(x=>x.status==='active').sort((a,b)=>(a.name||'').localeCompare(b.name||''))
-    .map(x=>({ id:x.id, label:x.name||'', sub: x.contact_name||'' }));
+  const list = (db.suppliers||[]).filter(x=>x.status==='active')
+    .sort((a,b)=>(a.name||''). localeCompare(b.name||'')).map(x=>({id:x.id,label:x.name||'',sub:x.contact_name||''}));
+  return list;
+}
+
+// lazy-load suppliers then re-render typeahead
+async function ensureSuppliersLoaded(inputId, listId, hiddenId) {
+  if ((db.suppliers||[]).length > 0) return;
+  try {
+    const {data} = await supa.from('suppliers').select('*').order('name');
+    if (data) db.suppliers = data;
+    makeTypeahead({inputId, listId, hiddenId, dataFn:()=>taSuppliers()});
+    const inp = document.getElementById(inputId);
+    if (inp) inp.dispatchEvent(new Event('focus'));
+  } catch(e) { console.warn('ensureSuppliersLoaded:', e.message); }
 }
