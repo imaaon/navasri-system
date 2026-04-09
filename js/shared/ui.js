@@ -271,12 +271,15 @@ function taSuppliers() {
 
 // lazy-load suppliers then re-render typeahead
 async function ensureSuppliersLoaded(inputId, listId, hiddenId) {
-  if ((db.suppliers||[]).length > 0) return;
-  try {
-    const {data} = await supa.from('suppliers').select('*').order('supplier_name');
-    if (data) db.suppliers = data.map(r=>({id:r.id, code:r.supplier_code||'', name:r.supplier_name||'', contact_name:r.contact_name||'', status:r.status||'active', phone:r.phone||''}));
-    makeTypeahead({inputId, listId, hiddenId, dataFn:()=>taSuppliers()});
-    const inp = document.getElementById(inputId);
-    if (inp) inp.dispatchEvent(new Event('focus'));
-  } catch(e) { console.warn('ensureSuppliersLoaded:', e.message); }
+  // fetch เฉพาะเมื่อ db.suppliers ว่าง
+  if ((db.suppliers||[]).length === 0) {
+    try {
+      const {data} = await supa.from('suppliers').select('*').order('supplier_name');
+      if (data && data.length > 0) db.suppliers = data.map(r=>({id:r.id, code:r.supplier_code||'', name:r.supplier_name||'', contact_name:r.contact_name||'', status:r.status||'active', phone:r.phone||''}));
+    } catch(e) { console.warn('ensureSuppliersLoaded fetch:', e.message); }
+  }
+  // init typeahead เสมอ ไม่ว่าจะ fetch หรือไม่
+  makeTypeahead({inputId, listId, hiddenId, dataFn:()=>taSuppliers()});
+  const inp = document.getElementById(inputId);
+  if (inp) inp.dispatchEvent(new Event('focus'));
 }
