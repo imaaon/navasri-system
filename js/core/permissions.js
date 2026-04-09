@@ -21,9 +21,9 @@ const ROLE_PAGES = {
   nurse:             ['dashboard','requisition','history','report','patients','rooms',
                       'healthreport','incident','dietary'],
   // Caregiver: ดูข้อมูลผู้ป่วย + บันทึก vital ได้ แต่ไม่แก้ไขข้อมูลหลัก
-  caregiver:         ['dashboard','patients','requisition','history','healthreport'],
+  caregiver:         ['dashboard','patients','requisition','history'],
   // Physical Therapist: ดูผู้ป่วย + บันทึก vital + จัดการ physio เท่านั้น
-  physical_therapist:['dashboard','patients','healthreport'],
+  physical_therapist:['dashboard','patients'],
   // Legacy roles (backward compat)
   supervisor:        ['dashboard','requisition','history','report','patients','rooms'],
   warehouse:         ['dashboard','stock','requisition','history','report','patients',
