@@ -506,8 +506,10 @@ function openHealthReportModal(patientId) {
     if (p) {
       badge.innerHTML = "<strong>"+p.name+"</strong> &nbsp;|&nbsp; HN: "+(p.hn||"-")+" &nbsp;|&nbsp; สถานะ: "+(p.status==="active"?"พักอยู่":p.status);
     } else {
-      const opts = (db.patients||[]).filter(x=>x.status==="active").sort((a,b)=>(a.name||"").localeCompare(b.name||"")).map(x=>'<option value="'+x.id+'">'+x.name+(x.hn?' ('+x.hn+')':'')+"</option>").join("");
-      badge.innerHTML = '<select id="hrPatientSelect" class="form-control" style="font-size:13px;" onchange="document.getElementById(\'hrPatientId\').value=this.value"><option value="">— เลือกผู้รับบริการ —</option>'+opts+'</select>';
+      badge.innerHTML = '<div style="position:relative;">' +
+        '<input id="hrPatSearch" type="text" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off" oninput="hrPatFilter(this.value)" onfocus="hrPatFilter(this.value)">' +
+        '<div id="hrPatList" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:200px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>' +
+        '</div>';
     }
   }
   _hrChecked = new Set();
@@ -648,4 +650,30 @@ function hrPrintReport(d){
     "<button class=\"noprint\" onclick=\"window.print()\" style=\"padding:7px 18px;background:#1a5276;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;\">🖨️ พิมพ์ / PDF</button>"+
     "</div></div>"+body+"</body></html>");
   win.document.close();
+}
+function hrPatFilter(q) {
+  const list = document.getElementById("hrPatList");
+  if (!list) return;
+  const patients = (db.patients||[]).filter(x=>x.status==="active");
+  const kw = (q||"").trim().toLowerCase();
+  const matches = kw
+    ? patients.filter(x=>(x.name||"").toLowerCase().includes(kw)||(x.hn||"").toLowerCase().includes(kw))
+    : patients.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  if (!matches.length) { list.style.display="none"; return; }
+  list.innerHTML = matches.slice(0,30).map(x=>{
+    const esc = (s)=>(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    return '<div style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);" ' +
+      'onmousedown="hrPatSelect(\''+(x.id)+'\',\''+(x.name).replace(/'/g,"&apos;")+'\')" ' +
+      'onmouseover="this.style.background=\'var(--surface2)\'" ' +
+      'onmouseout="this.style.background=\'\'">'+ esc(x.name) + (x.hn?'<span style="color:var(--text3);font-size:11px;margin-left:6px;">HN '+esc(x.hn)+'</span>':"")+'</div>';
+  }).join("");
+  list.style.display = "block";
+}
+
+function hrPatSelect(id, name) {
+  document.getElementById("hrPatientId").value = id;
+  const inp = document.getElementById("hrPatSearch");
+  if (inp) inp.value = name;
+  const list = document.getElementById("hrPatList");
+  if (list) list.style.display = "none";
 }
