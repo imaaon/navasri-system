@@ -407,32 +407,47 @@ function loadPatDeposits(patId) {
   if (!(ROLE_PAGES[currentUser?.role]||[]).includes('deposits')) return;
   const listEl = document.getElementById('pat-deposits-list-' + patId);
   if (!listEl) return;
-  const deps = (db.patientDeposits||[]).filter(d=>String(d.patientId||d.patient_id)===String(patId))
-    .sort((a,b)=>(b.dateIn||b.date_in||'').localeCompare(a.dateIn||a.date_in||''));
-  if (!deps.length) {
-    listEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);">\u2705 \u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e35\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e21\u0e31\u0e14\u0e08\u0e33</div>';
-    return;
-  }
-  const totalActive = deps.filter(d=>d.status==='active').reduce((s,d)=>s+(parseFloat(d.amount)||0),0);
-  var rows = deps.map(function(d){
-    var sl = d.status==='active'?'\u2705 \u0e04\u0e07\u0e2d\u0e22\u0e39\u0e48':'\u274c \u0e04\u0e37\u0e19\u0e41\u0e25\u0e49\u0e27';
-    var sc = d.status==='active'?'var(--success)':'var(--text3)';
-    return '<tr>'+
-      '<td style="font-size:12px;white-space:nowrap;">'+(d.dateIn||d.date_in||'-')+'</td>'+
-      '<td style="font-weight:500;">'+(d.type||'-')+'</td>'+
-      '<td class="number" style="font-weight:600;">'+(parseFloat(d.amount)||0).toLocaleString('th-TH',{minimumFractionDigits:2})+'</td>'+
-      '<td style="font-size:12px;">'+(d.payMethod||d.pay_method||'-')+'</td>'+
-      '<td><span style="font-size:12px;color:'+sc+';">'+sl+'</span></td>'+
-      '<td style="font-size:12px;color:var(--text3);">'+(d.note||'')+'</td>'+
-      '<td><button class="btn btn-ghost btn-sm" onclick="showPage(\u0027deposits\u0027)" title="\u0e44\u0e1b\u0e2b\u0e19\u0e49\u0e32\u0e21\u0e31\u0e14\u0e08\u0e33">\u2197\ufe0f</button></td>'+
-    '</tr>';
-  }).join('');
-  listEl.innerHTML =
-    '<div style="padding:8px 16px;background:var(--surface2);border-radius:8px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">'+
-      '<span style="font-size:13px;color:var(--text2);">\u0e22\u0e2d\u0e14\u0e21\u0e31\u0e14\u0e08\u0e33\u0e04\u0e07\u0e40\u0e2b\u0e25\u0e37\u0e2d</span>'+
-      '<span style="font-size:18px;font-weight:700;color:var(--accent);">'+totalActive.toLocaleString('th-TH',{minimumFractionDigits:2})+' \u0e1a\u0e32\u0e17</span>'+
-    '</div>'+
-    '<div class="table-wrap"><table>'+
-      '<thead><tr><th>\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48</th><th>\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17</th><th class="number">\u0e08\u0e33\u0e19\u0e27\u0e19</th><th>\u0e27\u0e34\u0e18\u0e35\u0e0a\u0e33\u0e23\u0e30</th><th>\u0e2a\u0e16\u0e32\u0e19\u0e30</th><th>\u0e2b\u0e21\u0e32\u0e22\u0e40\u0e2b\u0e15\u0e38</th><th></th></tr></thead>'+
-      '<tbody>'+rows+'</tbody></table></div>';
+  listEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);">\u23f3 \u0e01\u0e33\u0e25\u0e31\u0e07\u0e42\u0e2b\u0e25\u0e14...</div>';
+  supa.from('patient_deposits').select('*').eq('patient_id', patId)
+    .order('date_in', {ascending: false})
+    .then(function(res) {
+      var deps = res.data || [];
+      if (res.error) { listEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--danger);">\u274c \u0e42\u0e2b\u0e25\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e44\u0e21\u0e48\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08</div>'; return; }
+      if (!deps.length) {
+        listEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);">\u2705 \u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e35\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e21\u0e31\u0e14\u0e08\u0e33</div>';
+        return;
+      }
+      var totalActive = deps.filter(function(d){return d.status==='active';}).reduce(function(s,d){return s+(parseFloat(d.amount)||0);},0);
+      var rows = deps.map(function(d){
+        var sl = d.status==='active'?'\u2705 \u0e04\u0e07\u0e2d\u0e22\u0e39\u0e48':'\u274c \u0e04\u0e37\u0e19\u0e41\u0e25\u0e49\u0e27';
+        var sc = d.status==='active'?'var(--success)':'var(--text3)';
+        var dateOut = d.date_out ? (' <span style="color:var(--text3);font-size:11px;">(\u0e04\u0e37\u0e19 '+d.date_out+')</span>') : '';
+        return '<tr>'+
+          '<td style="font-size:12px;white-space:nowrap;">'+(d.date_in||'-')+'</td>'+
+          '<td style="font-weight:500;">'+(d.type||'-')+'</td>'+
+          '<td class="number" style="font-weight:600;">'+(parseFloat(d.amount)||0).toLocaleString('th-TH',{minimumFractionDigits:2})+'</td>'+
+          '<td style="font-size:12px;">'+(d.pay_method||'-')+'</td>'+
+          '<td><span style="font-size:12px;color:'+sc+';">'+sl+'</span>'+dateOut+'</td>'+
+          '<td style="font-size:12px;color:var(--text3);">'+(d.note||'')+'</td>'+
+          '<td><button class="btn btn-ghost btn-sm" onclick="showPage(\u0027deposits\u0027)" title="\u0e44\u0e1b\u0e2b\u0e19\u0e49\u0e32\u0e21\u0e31\u0e14\u0e08\u0e33">\u2197\ufe0f</button></td>'+
+        '</tr>';
+      }).join('');
+      listEl.innerHTML =
+        '<div style="padding:8px 16px;background:var(--surface2);border-radius:8px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">'+
+          '<span style="font-size:13px;color:var(--text2);">\u0e22\u0e2d\u0e14\u0e21\u0e31\u0e14\u0e08\u0e33\u0e04\u0e07\u0e40\u0e2b\u0e25\u0e37\u0e2d</span>'+
+          '<span style="font-size:18px;font-weight:700;color:var(--accent);">'+totalActive.toLocaleString('th-TH',{minimumFractionDigits:2})+' \u0e1a\u0e32\u0e17</span>'+
+        '</div>'+
+        '<div class="table-wrap"><table>'+
+          '<thead><tr>'+
+            '<th>\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48</th>'+
+            '<th>\u0e1b\u0e23\u0e30\u0e40\u0e20\u0e17</th>'+
+            '<th class="number">\u0e08\u0e33\u0e19\u0e27\u0e19</th>'+
+            '<th>\u0e27\u0e34\u0e18\u0e35\u0e0a\u0e33\u0e23\u0e30</th>'+
+            '<th>\u0e2a\u0e16\u0e32\u0e19\u0e30</th>'+
+            '<th>\u0e2b\u0e21\u0e32\u0e22\u0e40\u0e2b\u0e15\u0e38</th>'+
+            '<th></th>'+
+          '</tr></thead>'+
+          '<tbody>'+rows+'</tbody>'+
+        '</table></div>';
+    });
 }
