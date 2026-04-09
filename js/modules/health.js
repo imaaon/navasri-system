@@ -506,7 +506,7 @@ function openHealthReportModal(patientId) {
     if (p) {
       badge.innerHTML = "<strong>"+p.name+"</strong> &nbsp;|&nbsp; HN: "+(p.hn||"-")+" &nbsp;|&nbsp; สถานะ: "+(p.status==="active"?"พักอยู่":p.status);
     } else {
-      const opts = (db.patients||[]).filter(x=>x.status==="active").sort((a,b)=>(a.name||"").localeCompare(b.name||"")).map(x=>'<option value="'+x.id+'">'+x.name+(x.hn?" ("+x.hn+")"):'')+"</option>").join("");
+      const opts = (db.patients||[]).filter(x=>x.status==="active").sort((a,b)=>(a.name||"").localeCompare(b.name||"")).map(x=>'<option value="'+x.id+'">'+x.name+(x.hn?' ('+x.hn+')':'')+"</option>").join("");
       badge.innerHTML = '<select id="hrPatientSelect" class="form-control" style="font-size:13px;" onchange="document.getElementById(\'hrPatientId\').value=this.value"><option value="">— เลือกผู้รับบริการ —</option>'+opts+'</select>';
     }
   }
