@@ -206,6 +206,7 @@ function openAddPRModal() {
   updatePRRequesterList();
   const rdEl = document.getElementById('pr-required-date'); if(rdEl) rdEl.value = '';
   const rsEl = document.getElementById('pr-reason'); if(rsEl) rsEl.value = '';
+  makeTypeahead({inputId:'ta-prs-inp',listId:'ta-prs-list',hiddenId:'ta-prs-id',dataFn:()=>taSuppliers()});
   openModal('modal-addPR');
 }
 
@@ -761,6 +762,7 @@ function openAddSupplierInvoiceModal() {
   document.getElementById('supinv-net-payable').value    = '';
   const lc = document.getElementById('supinv-lines-container'); if(lc) lc.innerHTML = '';
   const ls = document.getElementById('supinv-lines-summary'); if(ls) ls.textContent = '';
+  makeTypeahead({inputId:'ta-sis-inp',listId:'ta-sis-list',hiddenId:'ta-sis-id',dataFn:()=>taSuppliers()});
   openModal('modal-addSupInv');
   // inject scan button
   setTimeout(() => {
