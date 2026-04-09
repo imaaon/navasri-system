@@ -66,10 +66,14 @@ function renderReqItems() {
       <div style="min-width:24px;text-align:center;padding-bottom:8px;font-size:12px;color:var(--text3);font-weight:600;">${idx+1}</div>
       <div class="form-group" style="flex:4;margin:0;">
         <label class="form-label" style="font-size:11px;">รายการสินค้า / ยา / เวชภัณฑ์</label>
-        <select class="form-control" onchange="updateReqItem(${idx},'itemId',this.value)">
-          <option value="">-- เลือกรายการ --</option>
-          ${db.items.map(i => `<option value="${i.id}" ${ri.itemId == i.id ? 'selected' : ''}>${i.name} (คงเหลือ: ${i.qty} ${i.unit})</option>`).join('')}
-        </select>
+        <div style="position:relative;">
+          <input type="text" id="ta-ri-inp-${idx}" class="form-control" style="font-size:13px;" 
+            placeholder="พิมพ์ชื่อสินค้า / ยา / เวชภัณฑ์..." autocomplete="off"
+            value="${item ? item.name+' (คงเหลือ: '+item.qty+' '+item.unit+')' : ''}"
+            oninput="reqItemFilter(${idx},this.value)" onfocus="reqItemFilter(${idx},this.value)">
+          <div id="ta-ri-list-${idx}" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+          <input type="hidden" id="ta-ri-id-${idx}" value="${ri.itemId||''}">
+        </div>
       </div>
       <div class="form-group" style="flex:1;margin:0;min-width:72px;">
         <label class="form-label" style="font-size:11px;">จำนวน</label>
@@ -1412,4 +1416,34 @@ function renderCostReport() {
         '</div>' +
       '</div>';
   }
+}
+
+function reqItemFilter(idx, q) {
+  const list = document.getElementById('ta-ri-list-'+idx);
+  if (!list) return;
+  const kw = (q||'').trim().toLowerCase();
+  const all = (db.items||[]);
+  const matches = kw
+    ? all.filter(x=>(x.name||'').toLowerCase().includes(kw)||(x.code||'').toLowerCase().includes(kw))
+    : all.filter(x=>(x.qty||0)>0).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  if (!matches.length) { list.style.display='none'; return; }
+  const esc = s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+  list.innerHTML = matches.slice(0,40).map(x=>{
+    const stock = x.qty!=null ? ' (คงเหลือ: '+x.qty+' '+(x.unit||'')+')' : '';
+    return '<div style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:0.5px solid var(--border);" '+
+      'onmousedown="reqItemSelect('+idx+',\''+x.id+'\',\''+esc(x.name)+'\')" '+
+      'onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'">'+ esc(x.name)+stock+'</div>';
+  }).join('');
+  list.style.display = 'block';
+}
+
+function reqItemSelect(idx, id, name) {
+  const inp  = document.getElementById('ta-ri-inp-'+idx);
+  const hid  = document.getElementById('ta-ri-id-'+idx);
+  const list = document.getElementById('ta-ri-list-'+idx);
+  const it   = (db.items||[]).find(x=>String(x.id)===String(id));
+  if (inp) inp.value = name+(it&&it.qty!=null?' (คงเหลือ: '+it.qty+' '+(it.unit||'')+')':'');
+  if (hid) hid.value = id;
+  if (list) list.style.display = 'none';
+  updateReqItem(idx, 'itemId', id);
 }
