@@ -222,14 +222,15 @@ function makeTypeahead(cfg) {
       ? all.filter(x => (x.label||'').toLowerCase().includes(q) || (x.sub||'').toLowerCase().includes(q))
       : all;
     if (!matches.length) { list.style.display = 'none'; return; }
-    list.innerHTML = matches.slice(0, 40).map(x =>
-      '<div class="ta-item" data-id="' + esc(String(x.id)) + '" data-label="' + esc(x.label) + '" ' +
-      'style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;" ' +
-      'onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">' +
-      '<span>' + esc(x.label) + '</span>' +
-      (x.sub ? '<span style="font-size:11px;color:var(--text3);margin-left:8px;">' + esc(x.sub) + '</span>' : '') +
-      '</div>'
-    ).join('');
+    list.innerHTML = matches.slice(0, 40).map(function(x) {
+      var hover = "onmouseover=\"this.style.background='var(--surface2)'\" onmouseout=\"this.style.background=''\"";
+      return "<div class=\"ta-item\" data-id=\"" + esc(String(x.id)) + "\" data-label=\"" + esc(x.label) + "\" " +
+        "style=\"padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;\" " +
+        hover + ">" +
+        "<span>" + esc(x.label) + "</span>" +
+        (x.sub ? "<span style=\"font-size:11px;color:var(--text3);margin-left:8px;\">" + esc(x.sub) + "</span>" : "") +
+        "</div>";
+    }).join("");
     list.style.display = 'block';
     // bind click
     list.querySelectorAll('.ta-item').forEach(el => {
