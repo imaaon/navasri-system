@@ -42,7 +42,7 @@ function openPhysioSessionModal(patientId, patientName, editId) {
   } else {
     document.getElementById("physio-duration").value = "60";
   }
-  var sel2 = document.getElementById("physio-therapist-id");
+  var sel2 = document.getElementById("ta-pt-id");
   if (sel2) {
     sel2.innerHTML = "<option value=\"\">เลือกพนักงาน</option>" +
       (db.staff || []).filter(function(s) { return !s.endDate || s.endDate >= today; })
@@ -62,7 +62,7 @@ async function loadPhysioSessionForEdit(sessionId) {
   document.getElementById("physio-duration").value = String(data.duration_minutes);
   document.getElementById("physio-rate").value = data.rate_per_hour;
   document.getElementById("physio-note").value = data.note || "";
-  document.getElementById("physio-therapist-id").value = data.therapist_id || "";
+  (function(){var _v=data.therapist_id || "";var _h=document.getElementById("ta-pt-id");if(_h)_h.value=_v||"";var _i=document.getElementById("ta-pt-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
   calcPhysioAmount();
 }
 
@@ -74,7 +74,7 @@ async function savePhysioSession() {
   var duration = parseInt(document.getElementById("physio-duration").value);
   var rate = parseFloat(document.getElementById("physio-rate").value) || 0;
   var note = document.getElementById("physio-note").value.trim();
-  var therapistId = document.getElementById("physio-therapist-id").value || null;
+  var therapistId = document.getElementById("ta-pt-id").value || null;
   var therapist = (db.staff && therapistId) ? db.staff.find(function(s) { return String(s.id) === String(therapistId); }) : null;
   if (!date) { toast("กรุณาเลือกวันที่", "warning"); return; }
   if (!duration) { toast("กรุณาเลือกระยะเวลา", "warning"); return; }
