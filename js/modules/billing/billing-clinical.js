@@ -10,7 +10,7 @@ function switchIncidentTab(tab) {
 
 function openIncidentModal(id) {
   const patients = (db.patients||[]).filter(p=>p.status==='active');
-  document.getElementById('incident-patient').innerHTML = patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  makeTypeahead({inputId:"ta-inc-inp",listId:"ta-inc-list",hiddenId:"ta-inc-id",dataFn:()=>taPatients(true)});
   document.getElementById('incident-edit-id').value = id||'';
   document.getElementById('modal-incident-title').textContent = id ? '✏️ แก้ไขรายงานอุบัติเหตุ' : '⚠️ บันทึกอุบัติเหตุ / ความเสี่ยง';
   // reset photo
@@ -21,7 +21,7 @@ function openIncidentModal(id) {
   if (id) {
     const inc = (db.incidents||[]).find(x=>x.id==id);
     if (inc) {
-      document.getElementById('incident-patient').value = inc.patientId;
+      (function(){var _v=inc.patientId;var _h=document.getElementById("ta-inc-id");if(_h)_h.value=String(_v||"");var _i=document.getElementById("ta-inc-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
       document.getElementById('incident-type').value = inc.type;
       document.getElementById('incident-date').value = inc.date;
       document.getElementById('incident-time').value = inc.time||'';
@@ -53,7 +53,7 @@ function openIncidentModal(id) {
 }
 
 async function saveIncident() {
-  const patientId = document.getElementById('incident-patient').value;
+  const patientId = document.getElementById("ta-inc-id").value;
   const detail = document.getElementById('incident-detail').value.trim();
   if (!patientId||!detail) { toast('กรุณากรอกข้อมูลที่จำเป็น','error'); return; }
   const patient = (db.patients||[]).find(p=>String(p.id)===String(patientId));
@@ -121,7 +121,7 @@ async function deleteIncident(id) {
 
 function openWoundModal(id) {
   const patients = (db.patients||[]).filter(p=>p.status==='active');
-  document.getElementById('wound-patient').innerHTML = patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  makeTypeahead({inputId:"ta-wnd-inp",listId:"ta-wnd-list",hiddenId:"ta-wnd-id",dataFn:()=>taPatients(true)});
   document.getElementById('wound-edit-id').value = id||'';
   document.getElementById('modal-wound-title').textContent = id ? '✏️ แก้ไขบันทึกแผล' : '🩹 บันทึกการทำแผล / แผลกดทับ';
   // reset photo
@@ -130,7 +130,7 @@ function openWoundModal(id) {
   if (id) {
     const w = (db.wounds||[]).find(x=>x.id==id);
     if (w) {
-      document.getElementById('wound-patient').value = w.patientId;
+      (function(){var _v=w.patientId;var _h=document.getElementById("ta-wnd-id");if(_h)_h.value=String(_v||"");var _i=document.getElementById("ta-wnd-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
       document.getElementById('wound-date').value = w.date;
       document.getElementById('wound-location').value = w.location;
       document.getElementById('wound-stage').value = w.stage;
@@ -164,7 +164,7 @@ function openWoundModal(id) {
 }
 
 async function saveWound() {
-  const patientId = document.getElementById('wound-patient').value;
+  const patientId = document.getElementById("ta-wnd-id").value;
   const location = document.getElementById('wound-location').value;
   if (!patientId||!location) { toast('กรุณาเลือกผู้ป่วยและตำแหน่งแผล','error'); return; }
   const patient = (db.patients||[]).find(p=>String(p.id)===String(patientId));
@@ -365,7 +365,7 @@ function switchDietTab(tab) {
 
 function openDietModal(id) {
   const patients = (db.patients||[]).filter(p=>p.status==='active');
-  document.getElementById('diet-patient').innerHTML = patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  makeTypeahead({inputId:"ta-diet-inp",listId:"ta-diet-list",hiddenId:"ta-diet-id",dataFn:()=>taPatients(true)});
   document.getElementById('diet-edit-id').value = id||'';
   document.getElementById('modal-diet-title').textContent = id ? '✏️ แก้ไขแผนอาหาร' : '🍽️ กำหนดแผนอาหารผู้ป่วย';
   // reset checkboxes
@@ -373,7 +373,7 @@ function openDietModal(id) {
   if (id) {
     const d = (db.diets||[]).find(x=>x.id==id);
     if (d) {
-      document.getElementById('diet-patient').value = d.patientId;
+      (function(){var _v=d.patientId;var _h=document.getElementById("ta-diet-id");if(_h)_h.value=String(_v||"");var _i=document.getElementById("ta-diet-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
       document.getElementById('diet-type').value = d.dietType;
       document.getElementById('diet-meals').value = d.meals||'3 มื้อ';
       document.getElementById('diet-note').value = d.note||'';
@@ -389,7 +389,7 @@ function openDietModal(id) {
 }
 
 async function saveDiet() {
-  const patientId = document.getElementById('diet-patient').value;
+  const patientId = document.getElementById("ta-diet-id").value;
   const dietType = document.getElementById('diet-type').value;
   if (!patientId) { toast('กรุณาเลือกผู้ป่วย','error'); return; }
   const patient = (db.patients||[]).find(p=>String(p.id)===String(patientId));
@@ -438,13 +438,13 @@ async function deleteDiet(id) {
 
 function openTubeFeedModal(id) {
   const patients = (db.patients||[]).filter(p=>p.status==='active');
-  document.getElementById('tubefeed-patient').innerHTML = patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  makeTypeahead({inputId:"ta-tf-inp",listId:"ta-tf-list",hiddenId:"ta-tf-id",dataFn:()=>taPatients(true)});
   document.getElementById('tubefeed-edit-id').value = id||'';
   document.getElementById('modal-tubefeed-title').textContent = id ? '✏️ แก้ไขบันทึก' : '🧪 บันทึกการให้อาหารทางสายยาง';
   if (id) {
     const t = (db.tubeFeeds||[]).find(x=>x.id==id);
     if (t) {
-      document.getElementById('tubefeed-patient').value = t.patientId;
+      (function(){var _v=t.patientId;var _h=document.getElementById("ta-tf-id");if(_h)_h.value=String(_v||"");var _i=document.getElementById("ta-tf-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
       document.getElementById('tubefeed-date').value = t.date;
       document.getElementById('tubefeed-time').value = t.time||'';
       document.getElementById('tubefeed-meal').value = t.meal||'เช้า';
@@ -466,7 +466,7 @@ function openTubeFeedModal(id) {
 }
 
 async function saveTubeFeed() {
-  const patientId = document.getElementById('tubefeed-patient').value;
+  const patientId = document.getElementById("ta-tf-id").value;
   if (!patientId) { toast('กรุณาเลือกผู้ป่วย','error'); return; }
   const patient = (db.patients||[]).find(p=>String(p.id)===String(patientId));
   const row = {
@@ -595,13 +595,13 @@ function printDietaryReport() {
 
 function openDepositModal(id) {
   const patients = (db.patients||[]).filter(p=>p.status==='active');
-  document.getElementById('deposit-patient').innerHTML = patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  makeTypeahead({inputId:"ta-dep-inp",listId:"ta-dep-list",hiddenId:"ta-dep-id",dataFn:()=>taPatients(true)});
   document.getElementById('deposit-edit-id').value = id||'';
   document.getElementById('modal-deposit-title').textContent = id ? '✏️ แก้ไขรายการมัดจำ' : '🏦 บันทึกเงินมัดจำ / เงินประกัน';
   if (id) {
     const dep = (db.deposits||[]).find(x=>x.id==id);
     if (dep) {
-      document.getElementById('deposit-patient').value = dep.patientId;
+      (function(){var _v=dep.patientId;var _h=document.getElementById("ta-dep-id");if(_h)_h.value=String(_v||"");var _i=document.getElementById("ta-dep-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
       document.getElementById('deposit-type').value = dep.type;
       document.getElementById('deposit-amount').value = dep.amount;
       document.getElementById('deposit-date-in').value = dep.dateIn;
@@ -623,7 +623,7 @@ function openDepositModal(id) {
 }
 
 async function saveDeposit() {
-  const patientId = document.getElementById('deposit-patient').value;
+  const patientId = document.getElementById("ta-dep-id").value;
   const amount = parseFloat(document.getElementById('deposit-amount').value)||0;
   if (!patientId||!amount) { toast('กรุณากรอกข้อมูลที่จำเป็น','error'); return; }
   const patient = (db.patients||[]).find(p=>String(p.id)===String(patientId));
