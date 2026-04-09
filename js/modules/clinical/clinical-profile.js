@@ -374,7 +374,7 @@ function openBillingFromPatient(patId) {
     openCreateInvoiceModal();
     // set patient
     setTimeout(() => {
-      const sel = document.getElementById('inv-patient');
+      const sel = document.getElementById("ta-inv-id");
       if (sel) {
         sel.value = patId;
         if (typeof onInvoicePatientChange === 'function') onInvoicePatientChange();
