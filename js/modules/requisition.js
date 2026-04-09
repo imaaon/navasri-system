@@ -3,7 +3,7 @@
 // ===== REQUISITION =====
 let reqItems = [];
 function onReqPatientChange() {
-  const patId = document.getElementById('req-patient').value;
+  const patId = document.getElementById("ta-rp-id").value;
   const alertDiv = document.getElementById('req-allergy-alert');
   const bedDiv   = document.getElementById('req-bed-info');
   const bedText  = document.getElementById('req-bed-text');
@@ -34,11 +34,11 @@ function onReqPatientChange() {
 
 function initReq() {
   // Populate selects
-  const patSel = document.getElementById('req-patient');
+  const patSel = document.getElementById("ta-rp-id");
   patSel.innerHTML = '<option value="">-- เลือกผู้รับบริการ --</option>' +
     db.patients.filter(p => p.status === 'active').map(p => `<option value="${p.id}">${p.name}</option>`).join('');
 
-  const staffSel = document.getElementById('req-staff');
+  const staffSel = document.getElementById("ta-rs-id");
   staffSel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>' +
     db.staff.map(s => `<option value="${s.id}">${s.name}${s.nickname ? ' ('+s.nickname+')' : ''}</option>`).join('');
 
@@ -103,8 +103,8 @@ function removeReqItem(idx) {
 }
 
 async function submitReq() {
-  const patId   = document.getElementById('req-patient').value;
-  const staffId = document.getElementById('req-staff').value;
+  const patId   = document.getElementById("ta-rp-id").value;
+  const staffId = document.getElementById("ta-rs-id").value;
   const date    = document.getElementById('req-date').value;
   const note    = document.getElementById('req-note').value;
 
@@ -193,8 +193,8 @@ async function submitReq() {
 
 function clearReq() {
   reqItems = [];
-  document.getElementById('req-patient').value = '';
-  document.getElementById('req-staff').value = '';
+  (function(){var _v='';var _h=document.getElementById("ta-rp-id");if(_h)_h.value=String(_v||"");var _i=document.getElementById("ta-rp-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
+  (function(){var _v='';var _h=document.getElementById("ta-rs-id");if(_h)_h.value=String(_v||"");var _i=document.getElementById("ta-rs-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
   document.getElementById('req-note').value = '';
   document.getElementById('req-date').value = new Date().toISOString().split('T')[0];
   for (let i = 0; i < 5; i++) reqItems.push({ itemId: '', qty: 1, unit: '' });
