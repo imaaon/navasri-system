@@ -472,3 +472,175 @@ function exportPatMedPDF(patId, type) {
 }
 
 function printHealthReport() { exportHealthPDF(); }
+// ===== HEALTH REPORT MODAL =====
+const HR_GROUPS = [
+  { label: "ข้อมูลพื้นฐาน", items: [
+    { id:"meds",    label:"ยาประจำ",          sub:"รายการยาที่ใช้อยู่ปัจจุบัน" },
+    { id:"allergy", label:"การแพ้ยา/อาหาร", sub:"สิ่งที่แพ้, อาการ, ความรุนแรง" },
+  ]},
+  { label: "การดูแลรายวัน", items: [
+    { id:"vital",   label:"Vital Signs",       sub:"BP, HR, Temp, SpO2, DTX" },
+    { id:"nursing", label:"บันทึกพยาบาล",    sub:"กะ, อาการทั่วไป, ส่งเวร" },
+    { id:"mar",     label:"การให้ยา (MAR)", sub:"รายการยาตามช่วงเวลา" },
+  ]},
+  { label: "การรักษาและการแพทย์", items: [
+    { id:"medlog",  label:"ประวัติการรักษา",  sub:"บันทึกการรักษา, คำสั่งแพทย์" },
+    { id:"lab",     label:"ผลแล็บ",               sub:"ผลการตรวจ, ค่าอ้างอิง, สรุป" },
+    { id:"appt",    label:"นัดหมายแพทย์",      sub:"โรงพยาบาล, แพทย์" },
+  ]},
+  { label: "การดูแลเฉพาะด้าน", items: [
+    { id:"wound",   label:"แผลและการดูแลแผล", sub:"Stage, ได้รับการดูแล, แนวโน้ม" },
+    { id:"physio",  label:"กายภาพบำบัด",      sub:"วัน, นักกายภาพ, ระยะเวลา" },
+    { id:"incident",label:"อุบัติเหตุ",           sub:"ประเภท, ความรุนแรง" },
+  ]},
+];
+
+let _hrChecked = new Set();
+let _hrRange = "30d";
+
+function openHealthReportModal(patientId) {
+  const p = (db.patients||[]).find(x=>String(x.id)===String(patientId));
+  document.getElementById("hrPatientId").value = patientId||"";
+  const badge = document.getElementById("hrPatientBadge");
+  if(badge) badge.innerHTML = p
+    ? "<strong>"+p.name+"</strong> &nbsp;|&nbsp; HN: "+(p.hn||"-")+" &nbsp;|&nbsp; สถานะ: "+(p.status==="active"?"พักอยู่":p.status)
+    : "ผู้รับบริการทุกคน";
+  _hrChecked = new Set();
+  HR_GROUPS.forEach(g=>g.items.forEach(i=>_hrChecked.add(i.id)));
+  hrRenderChecklist();
+  hrSetRange("30d");
+  openModal("modal-healthReport");
+}
+
+function hrRenderChecklist() {
+  const el = document.getElementById("hr-checklist");
+  if(!el) return;
+  el.innerHTML = HR_GROUPS.map(g=>`
+    <div style="grid-column:1/-1;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;padding:8px 0 4px;border-bottom:1px solid var(--border);">${g.label}</div>
+    ${g.items.map(item=>`
+      <label style="display:flex;align-items:flex-start;gap:7px;padding:5px 0;cursor:pointer;border-bottom:.5px solid var(--border);">
+        <input type="checkbox" ${_hrChecked.has(item.id)?"checked":""} onchange="hrToggle('${item.id}',this.checked)" style="margin-top:2px;flex-shrink:0;">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--text1);">${item.label}</div>
+          <div style="font-size:11px;color:var(--text3);">${item.sub}</div>
+        </div>
+      </label>
+    `).join("")}
+  `).join("");
+}
+
+function hrToggle(id,val){ val?_hrChecked.add(id):_hrChecked.delete(id); }
+function hrSelectAll(val){
+  HR_GROUPS.forEach(g=>g.items.forEach(i=>val?_hrChecked.add(i.id):_hrChecked.delete(i.id)));
+  hrRenderChecklist();
+}
+
+function hrSetRange(type){
+  _hrRange=type;
+  ["7d","30d","month","custom"].forEach(t=>{
+    const b=document.getElementById("hr-btn-"+t);
+    if(b){b.style.background=t===type?"var(--accent)":"";b.style.color=t===type?"#fff":"";}
+  });
+  const md=document.getElementById("hr-range-month");
+  const cd=document.getElementById("hr-range-custom");
+  if(md) md.style.display=type==="month"?"block":"none";
+  if(cd) cd.style.display=type==="custom"?"flex":"none";
+  if(type!=="month"&&type!=="custom"){
+    const days=type==="7d"?7:30;
+    const to=new Date(); const from=new Date(); from.setDate(from.getDate()-days);
+    const fmt=d=>d.toISOString().slice(0,10);
+    const fe=document.getElementById("hr-date-from"); const te=document.getElementById("hr-date-to");
+    if(fe)fe.value=fmt(from); if(te)te.value=fmt(to);
+  }
+}
+
+function hrGetDateRange(){
+  if(_hrRange==="month"){
+    const mv=document.getElementById("hr-month-val")?.value;
+    if(!mv)return{from:null,to:null};
+    const[y,m]=mv.split("-");
+    const last=new Date(+y,+m,0).getDate();
+    return{from:y+"-"+m+"-01",to:y+"-"+m+"-"+String(last).padStart(2,"0")};
+  }
+  return{from:document.getElementById("hr-date-from")?.value||null,to:document.getElementById("hr-date-to")?.value||null};
+}
+
+async function generateHealthReport(){
+  const patId=document.getElementById("hrPatientId")?.value;
+  const{from,to}=hrGetDateRange();
+  const items=[..._hrChecked];
+  if(!items.length){toast("กรุณาเลือกอย่างน้อย 1 รายการ","error");return;}
+  const p=(db.patients||[]).find(x=>String(x.id)===String(patId));
+  const pid=patId||null;
+  const df=(field)=>(qb,f,t)=>{if(f)qb=qb.gte(field,f);if(t)qb=qb.lte(field,t);return qb;};
+  const dc=(qb,f,t)=>{if(f)qb=qb.gte("created_at",f+"T00:00:00");if(t)qb=qb.lte("created_at",t+"T23:59:59");return qb;};
+  const q=async(tbl,extra)=>{
+    let qb=supa.from(tbl).select("*");
+    if(pid)qb=qb.eq("patient_id",pid);
+    if(extra)qb=extra(qb,from,to);
+    const{data,error}=await qb;
+    if(error)console.warn(tbl,error.message);
+    return data||[];
+  };
+  toast("กำลังโหลดข้อมูล...","info");
+  const[vitals,nursing,mar,meds,medlog,lab,appt,wounds,woundCare,physio,incidents,allergies]=await Promise.all([
+    items.includes("vital")    ?q("vital_signs",   df("recorded_at")):Promise.resolve([]),
+    items.includes("nursing")  ?q("nursing_notes", df("date")):Promise.resolve([]),
+    items.includes("mar")      ?q("mar_records",   df("date")):Promise.resolve([]),
+    items.includes("meds")     ?q("patient_medications",null):Promise.resolve([]),
+    items.includes("medlog")   ?q("medical_logs",  dc):Promise.resolve([]),
+    items.includes("lab")      ?q("patient_lab_results",df("test_date")):Promise.resolve([]),
+    items.includes("appt")     ?q("patient_appointments",df("appt_date")):Promise.resolve([]),
+    items.includes("wound")    ?q("patient_wounds",df("wound_date")):Promise.resolve([]),
+    items.includes("wound")    ?q("wound_care_logs",df("date")):Promise.resolve([]),
+    items.includes("physio")   ?q("physio_sessions",df("session_date")):Promise.resolve([]),
+    items.includes("incident") ?q("incident_reports",df("date")):Promise.resolve([]),
+    items.includes("allergy")  ?q("patient_allergies",null):Promise.resolve([]),
+  ]);
+  closeModal("modal-healthReport");
+  hrPrintReport({p,from,to,items,vitals,nursing,mar,meds,medlog,lab,appt,wounds,woundCare,physio,incidents,allergies});
+}
+
+function hrPrintReport(d){
+  const{p,from,to,items,vitals,nursing,mar,meds,medlog,lab,appt,wounds,woundCare,physio,incidents,allergies}=d;
+  const fmtD=s=>{if(!s)return"-";const[y,m,day]=s.slice(0,10).split("-");return day+"/"+m+"/"+(+y+543);};
+  const today=fmtD(new Date().toISOString().slice(0,10));
+  const rangeLabel=from&&to?fmtD(from)+" - "+fmtD(to):"ทั้งหมด";
+  const sec=(title,html)=>`<div class="hrs"><div class="hrst">${title}</div>${html}</div>`;
+  const tbl=(heads,rows)=>`<table><thead><tr>${heads.map(h=>"<th>"+h+"</th>").join("")}</tr></thead><tbody>${rows.length?rows.join(""):"<tr><td colspan=\""+heads.length+"\" class=\"empty\">ไม่มีข้อมูล</td></tr>"}</tbody></table>`;
+  const tr=cells=>"<tr>"+cells.map(c=>"<td>"+(c||"-")+"</td>").join("")+"</tr>";
+  let body="";
+  if(items.includes("allergy")) body+=sec("⚠️ การแพ้ยา/อาหาร",tbl(["ประเภท","สิ่งที่แพ้","อาการ","ความรุนแรง"],allergies.map(r=>tr([r.allergy_type,r.allergen,r.reaction,r.severity]))));
+  if(items.includes("meds"))    body+=sec("💊 ยาประจำ",tbl(["ชื่อยา","ขนาด/หน่วย","วิธีใช้","สถานะ"],meds.filter(r=>r.is_active).map(r=>tr([r.name,(r.dose||"")+" "+(r.unit||""),r.route,"ใช้อยู่"]))));
+  if(items.includes("vital"))   body+=sec("🩺 Vital Signs",tbl(["วันที่","เวลา","BP","ชีพจร","อุณหภูมิ","SpO2","DTX","น้ำหนัก"],vitals.sort((a,b)=>b.recorded_at>a.recorded_at?1:-1).map(r=>tr([fmtD(r.recorded_at?.slice(0,10)),r.recorded_at?.slice(11,16),(r.bp_sys&&r.bp_dia?r.bp_sys+"/"+r.bp_dia:""),r.hr,r.temp,r.spo2,r.dtx,r.weight]))));
+  if(items.includes("nursing"))  body+=sec("📝 บันทึกพยาบาล",tbl(["วันที่","กะ","อาการทั่วไป","สติปัญญา","ส่งเวร"],nursing.sort((a,b)=>b.date>a.date?1:-1).map(r=>tr([fmtD(r.date),r.shift,r.general_condition,r.consciousness,r.handover_note]))));
+  if(items.includes("mar"))      body+=sec("💉 MAR การให้ยา",tbl(["วันที่","เวลา","ยา","มื้อ","สถานะ","ผู้ให้"],mar.sort((a,b)=>b.date>a.date?1:-1).map(r=>{const mn=(db.patientMedications||[]).find(m=>String(m.id)===String(r.medication_id))?.name||r.medication_id;return tr([fmtD(r.date),r.given_at?.slice(11,16),mn,r.timing,r.status,r.given_by]);})));
+  if(items.includes("medlog"))   body+=sec("🏥 ประวัติการรักษา",tbl(["วันที่","ประเภท","รายละเอียด","ผู้บันทึก"],medlog.sort((a,b)=>b.created_at>a.created_at?1:-1).map(r=>tr([fmtD(r.created_at?.slice(0,10)),r.log_type,r.detail,r.created_by]))));
+  if(items.includes("lab"))      body+=sec("🧪 ผลแล็บ",tbl(["วันที่","โรงพยาบาล","แพทย์","การตรวจ","ค่า","สรุป"],lab.sort((a,b)=>b.test_date>a.test_date?1:-1).flatMap(r=>(r.results||[]).length?r.results.map(it=>tr([fmtD(r.test_date),r.hospital,r.doctor,it.test_name,(it.value||"")+(it.unit?" "+it.unit:""),r.summary])):tr([fmtD(r.test_date),r.hospital,r.doctor,"",r.summary,""]))));
+  if(items.includes("appt"))     body+=sec("📅 นัดหมายแพทย์",tbl(["วันที่","เวลา","โรงพยาบาล","แพทย์","วัตถุประสงค์","สถานะ"],appt.sort((a,b)=>b.appt_date>a.appt_date?1:-1).map(r=>tr([fmtD(r.appt_date),r.appt_time,r.hospital,r.doctor,r.purpose,r.status]))));
+  if(items.includes("wound"))    body+=sec("🩹 แผลและการดูแลแผล",tbl(["วันที่","ตำแหน่ง","Stage","ลักษณะ","การรักษา","แนวโน้ม"],woundCare.sort((a,b)=>b.date>a.date?1:-1).map(r=>tr([fmtD(r.date),r.location,r.stage,r.appearance,r.treatment,r.trend]))));
+  if(items.includes("physio"))   body+=sec("🤸 กายภาพบำบัด",tbl(["วันที่","นักกายภาพ","ระยะเวลา (นาที)","ยอดเงิน","หมายเหตุ"],physio.sort((a,b)=>b.session_date>a.session_date?1:-1).map(r=>tr([fmtD(r.session_date),r.therapist_name,r.duration_minutes,r.amount,r.note]))));
+  if(items.includes("incident")) body+=sec("🚨 อุบัติเหตุ",tbl(["วันที่","เวลา","ประเภท","ความรุนแรง","รายละเอียด","การช่วยเหลือ"],incidents.sort((a,b)=>b.date>a.date?1:-1).map(r=>tr([fmtD(r.date),r.time,r.type,r.severity,r.detail,r.first_aid]))));
+  const win=window.open("","_blank","width=1000,height=750");
+  if(!win){toast("ไม่สามารถเปิด popup ได้ กรุณาอนุญาต popup ก่อนครับ","error");return;}
+  win.document.write("<"+"!DOCTYPE html><html><head>"+
+    "<meta charset=\"utf-8\"><title>รายงานสุขภาพ - "+(p?.name||"")+"</title>"+
+    "<link href=\"https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap\" rel=\"stylesheet\">"+
+    "<style>*{box-sizing:border-box;}body{font-family:Sarabun,sans-serif;font-size:13px;color:#222;padding:20px 32px;max-width:960px;margin:0 auto;}"+
+    ".hrh{border-bottom:2px solid #1a5276;padding-bottom:12px;margin-bottom:20px;}"+
+    ".hrh h2{margin:0;font-size:18px;color:#1a5276;}.hrh p{margin:4px 0 0;font-size:12px;color:#555;}"+
+    ".hrs{margin-bottom:18px;}.hrst{font-size:14px;font-weight:700;color:#1a5276;background:#eaf2f8;padding:6px 12px;border-left:4px solid #1a5276;margin-bottom:8px;}"+
+    "table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px;}"+
+    "th{background:#1a5276;color:#fff;padding:5px 8px;text-align:left;font-weight:600;}"+
+    "td{padding:4px 8px;border-bottom:1px solid #e8e8e8;vertical-align:top;}"+
+    "tr:nth-child(even)td{background:#f6fafd;}.empty{text-align:center;color:#aaa;padding:10px!important;}"+
+    "@media print{.noprint{display:none!important;}body{padding:8px 16px;}}"+
+    "</style></head><body>"+
+    "<div class=\"hrh\"><div style=\"display:flex;justify-content:space-between;align-items:flex-start;\">"+
+    "<div><h2>รายงานสุขภาพ — "+(p?.name||"ทุกคน")+"</h2>"+
+    "<p>โรงพยาบาลนวศรี เนอร์สซิ่งโฮม &nbsp;|&nbsp; HN: "+(p?.hn||"-")+" &nbsp;|&nbsp; ช่วง: "+rangeLabel+"</p>"+
+    "<p style=\"font-size:11px;color:#888;\">วันที่ออกรายงาน: "+today+"</p></div>"+
+    "<button class=\"noprint\" onclick=\"window.print()\" style=\"padding:7px 18px;background:#1a5276;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;\">🖨️ พิมพ์ / PDF</button>"+
+    "</div></div>"+body+"</body></html>");
+  win.document.close();
+}
