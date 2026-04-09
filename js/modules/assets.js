@@ -77,9 +77,35 @@ function renderAssets() {
   }).join('');
 }
 
+// helper: แปลง category → code สำหรับเลขครุภัณฑ์
+function getAssetCatCode(cat) {
+  const map = {
+    medical_equipment: 'MED', furniture: 'FUR', building_system: 'BLD',
+    kitchen_laundry: 'KIT', vehicle: 'VHC', it_telecom: 'ITC',
+    electrical: 'ELC', other: 'OTH'
+  };
+  return map[cat] || 'OTH';
+}
+
+// re-generate asset no เมื่อ category หรือ purchase_date เปลี่ยน
+function reGenAssetNo() {
+  const catEl = document.getElementById('asset-category');
+  const noEl  = document.getElementById('asset-no');
+  if (!catEl || !noEl) return;
+  const cat  = catEl.value === 'other'
+    ? (document.getElementById('asset-category-custom')?.value?.trim() || 'other')
+    : catEl.value;
+  const code = getAssetCatCode(cat);
+  const year = new Date().getFullYear() + 543;
+  noEl.value = 'กำลังสร้าง...';
+  supa.rpc('get_next_doc_no', { p_module: 'asset', p_category: code, p_year: year })
+    .then(({ data, error }) => { if (!error && data && noEl) noEl.value = data; });
+}
+
 function onAssetCategoryChange(sel) {
   var wrap = document.getElementById('asset-category-custom-wrap');
   if (wrap) wrap.style.display = sel.value === 'other' ? 'block' : 'none';
+  reGenAssetNo();
 }
 
 function openAddAssetModal() {
@@ -99,12 +125,9 @@ function openAddAssetModal() {
   document.getElementById('asset-maint-interval').value='';
   document.getElementById('asset-is-critical').checked=false;
   // auto-generate asset no
-  const assetNoEl = document.getElementById('asset-no');
-  if (assetNoEl) { assetNoEl.value = 'กำลังสร้าง...'; assetNoEl.readOnly = true; }
-  supa.rpc('get_next_doc_no', { p_module: 'asset' }).then(({ data, error }) => {
-    if (!error && data && assetNoEl) assetNoEl.value = data;
-    else if (assetNoEl) assetNoEl.value = '';
-  });
+  reGenAssetNo();
+  const assetNoEl2 = document.getElementById('asset-no');
+  if (assetNoEl2) assetNoEl2.readOnly = false;
   openModal('modal-addAsset');
 }
 
@@ -174,7 +197,7 @@ function editAsset(id) {
   document.getElementById('asset-maint-interval').value=a.maintenanceInterval||'';
   document.getElementById('asset-is-critical').checked=a.isCritical||false;
   document.getElementById('asset-note').value=a.note||'';
-  const assetNoEdit = document.getElementById('asset-no'); if(assetNoEdit){ assetNoEdit.value=a.assetNo||''; assetNoEdit.readOnly=true; }
+  const assetNoEdit = document.getElementById('asset-no'); if(assetNoEdit){ assetNoEdit.value=a.assetNo||''; assetNoEdit.readOnly=false; }
   openModal('modal-addAsset');
 }
 
