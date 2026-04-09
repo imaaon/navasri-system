@@ -211,7 +211,7 @@ function openCreateInvoiceModal() {
   document.getElementById('inv-med-from').value = ym;
   document.getElementById('inv-med-to').value   = ym;
 
-  const sel = document.getElementById('inv-patient');
+  const sel = document.getElementById("ta-inv-id");
   sel.innerHTML = '<option value="">-- เลือกผู้รับบริการ --</option>' +
     db.patients.filter(p=>p.status==='active').map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
 
@@ -231,7 +231,7 @@ function updateInvoiceTitle() {
 }
 
 function onInvoicePatientChange() {
-  const patId = document.getElementById('inv-patient').value;
+  const patId = document.getElementById("ta-inv-id").value;
   if (!patId) return;
   const p = db.patients.find(p=>String(p.id)===String(patId));
   if (!p) return;
@@ -284,7 +284,7 @@ function onInvoicePatientChange() {
 function applyRoomRate(type, roomObj, bedObj) {
   // ถ้าไม่ส่ง room/bed มา ให้หาจาก patient ที่เลือกอยู่
   if (!roomObj) {
-    const patId = document.getElementById('inv-patient').value;
+    const patId = document.getElementById("ta-inv-id").value;
     const p = db.patients.find(x => String(x.id)===String(patId));
     roomObj = getPatientRoom(p);
     bedObj  = getPatientBed(p);
@@ -318,7 +318,7 @@ function onInvRoomTypeChange() {
 
 // ── Load requisitions ────────────────────────────────
 async function loadRequisitionsForInvoice() {
-  const patId = document.getElementById('inv-patient').value;
+  const patId = document.getElementById("ta-inv-id").value;
   const from  = document.getElementById('inv-med-from').value;
   const to    = document.getElementById('inv-med-to').value;
   if (!patId) { toast('กรุณาเลือกผู้รับบริการก่อน','warning'); return; }
@@ -531,7 +531,7 @@ function recalcInvoice() {
 
 // ── Save invoice ─────────────────────────────────────
 async function saveInvoice(status) {
-  const patId = document.getElementById('inv-patient').value;
+  const patId = document.getElementById("ta-inv-id").value;
   if (!patId) { toast('กรุณาเลือกผู้รับบริการ','warning'); return; }
   // Check duplicate doc number
   const editId_ = document.getElementById('inv-edit-id').value;
@@ -666,7 +666,7 @@ function editInvoice(id) {
   document.getElementById('inv-wht-rate').value   = inv.whtRate||0;
   document.getElementById('inv-note').value       = inv.note||'';
 
-  const sel = document.getElementById('inv-patient');
+  const sel = document.getElementById("ta-inv-id");
   sel.innerHTML = '<option value="">-- เลือกผู้รับบริการ --</option>' +
     db.patients.filter(p=>p.status==='active').map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   sel.value = inv.patientId||'';
