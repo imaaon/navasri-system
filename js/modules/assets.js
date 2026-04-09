@@ -2,15 +2,15 @@
 'use strict';
 
 const ASSET_CAT_LABEL = {
-  medical_equipment:'เครื่องมือแพทย์', furniture:'เฟอร์นิเจอร์/เตียง',
-  building_system:'ระบบอาคาร', kitchen_laundry:'ครัว/ซักล้าง',
-  vehicle:'ยานพาหนะ', it_telecom:'IT/สื่อสาร', other:'อื่นๆ'
+  medical_equipment:'à¹à¸à¸£à¸·à¹à¸­à¸à¸¡à¸·à¸­à¹à¸à¸à¸¢à¹', furniture:'à¹à¸à¸­à¸£à¹à¸à¸´à¹à¸à¸­à¸£à¹/à¹à¸à¸µà¸¢à¸',
+  building_system:'à¸£à¸°à¸à¸à¸­à¸²à¸à¸²à¸£', kitchen_laundry:'à¸à¸£à¸±à¸§/à¸à¸±à¸à¸¥à¹à¸²à¸',
+  vehicle:'à¸¢à¸²à¸à¸à¸²à¸«à¸à¸°', it_telecom:'IT/à¸ªà¸·à¹à¸­à¸ªà¸²à¸£', other:'à¸­à¸·à¹à¸à¹'
 };
 const ASSET_STATUS_BADGE = {
-  active:       '<span class="badge badge-green">ใช้งานปกติ</span>',
-  under_repair: '<span class="badge badge-orange">ส่งซ่อม</span>',
-  retired:      '<span class="badge badge-gray">เลิกใช้</span>',
-  lost:         '<span class="badge badge-red">สูญหาย</span>',
+  active:       '<span class="badge badge-green">à¹à¸à¹à¸à¸²à¸à¸à¸à¸à¸´</span>',
+  under_repair: '<span class="badge badge-orange">à¸ªà¹à¸à¸à¹à¸­à¸¡</span>',
+  retired:      '<span class="badge badge-gray">à¹à¸¥à¸´à¸à¹à¸à¹</span>',
+  lost:         '<span class="badge badge-red">à¸ªà¸¹à¸à¸«à¸²à¸¢</span>',
 };
 
 function renderAssets() {
@@ -19,7 +19,7 @@ function renderAssets() {
   const q       = (document.getElementById('asset-search')?.value||'').toLowerCase();
   const tb      = document.getElementById('assetTable'); if(!tb) return;
 
-  // Alert: ถึงรอบซ่อม หรือประกันใกล้หมด
+  // Alert: à¸à¸¶à¸à¸£à¸­à¸à¸à¹à¸­à¸¡ à¸«à¸£à¸·à¸­à¸à¸£à¸°à¸à¸±à¸à¹à¸à¸¥à¹à¸«à¸¡à¸
   const today = new Date(); const soon7 = new Date(today); soon7.setDate(soon7.getDate()+7);
   const soon30= new Date(today); soon30.setDate(soon30.getDate()+30);
   const alerts = (db.assets||[]).filter(a => {
@@ -37,9 +37,9 @@ function renderAssets() {
         const nm = a.nextMaintenanceDate ? new Date(a.nextMaintenanceDate) : null;
         const we = a.warrantyExpiry     ? new Date(a.warrantyExpiry)       : null;
         const parts = [];
-        if (nm&&nm<=soon7) parts.push('ถึงรอบซ่อม '+(a.nextMaintenanceDate));
-        if (we&&we<=soon30) parts.push('ประกันหมด '+(a.warrantyExpiry));
-        return `<div style="margin-bottom:4px;">🔔 <b>${a.name}</b> (${a.assetNo}) — ${parts.join(' | ')}</div>`;
+        if (nm&&nm<=soon7) parts.push('à¸à¸¶à¸à¸£à¸­à¸à¸à¹à¸­à¸¡ '+(a.nextMaintenanceDate));
+        if (we&&we<=soon30) parts.push('à¸à¸£à¸°à¸à¸±à¸à¸«à¸¡à¸ '+(a.warrantyExpiry));
+        return `<div style="margin-bottom:4px;">ð <b>${a.name}</b> (${a.assetNo}) â ${parts.join(' | ')}</div>`;
       }).join('');
     } else { alertCard.style.display='none'; }
   }
@@ -51,16 +51,16 @@ function renderAssets() {
     return true;
   }).sort((a,b)=>(a.assetNo||'').localeCompare(b.assetNo||''));
 
-  document.getElementById('asset-count').textContent = 'ทั้งหมด: '+list.length+' รายการ';
+  document.getElementById('asset-count').textContent = 'à¸à¸±à¹à¸à¸«à¸¡à¸: '+list.length+' à¸£à¸²à¸¢à¸à¸²à¸£';
 
-  if (!list.length) { tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3);">ไม่มีข้อมูล</td></tr>'; return; }
+  if (!list.length) { tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3);">à¹à¸¡à¹à¸¡à¸µà¸à¹à¸­à¸¡à¸¹à¸¥</td></tr>'; return; }
 
   const today2 = today.toISOString().slice(0,10);
   tb.innerHTML = list.map(a=>{
     const nmCls = a.nextMaintenanceDate && a.nextMaintenanceDate <= today2 ? 'color:#c0392b;font-weight:700' : (a.nextMaintenanceDate&&a.nextMaintenanceDate<=soon7.toISOString().slice(0,10)?'color:#e67e22;font-weight:600':'');
     const weCls = a.warrantyExpiry && a.warrantyExpiry <= soon30.toISOString().slice(0,10) ? 'color:#e67e22' : '';
     return `<tr>
-      <td style="font-family:monospace;font-size:12px;">${a.assetNo||'-'}${a.isCritical?'<span style="color:#c0392b;margin-left:4px;" title="อุปกรณ์สำคัญ">⚠️</span>':''}</td>
+      <td style="font-family:monospace;font-size:12px;">${a.assetNo||'-'}${a.isCritical?'<span style="color:#c0392b;margin-left:4px;" title="à¸­à¸¸à¸à¸à¸£à¸à¹à¸ªà¸³à¸à¸±à¸">â ï¸</span>':''}</td>
       <td style="font-weight:500;">${a.name}<br><span style="font-size:11px;color:var(--text3);">${a.brand||''} ${a.model||''}</span></td>
       <td><span class="badge" style="background:var(--surface2);color:var(--text2);">${ASSET_CAT_LABEL[a.category]||a.category}</span></td>
       <td style="font-size:12px;">${a.location||'-'}</td>
@@ -69,9 +69,9 @@ function renderAssets() {
       <td style="font-size:12px;${weCls}">${a.warrantyExpiry||'-'}</td>
       <td>${ASSET_STATUS_BADGE[a.status]||a.status}</td>
       <td>
-        <button class="btn btn-ghost btn-sm" onclick="openAddMaintenanceModal('${a.id}')">🛠️</button>
-        <button class="btn btn-ghost btn-sm" onclick="editAsset('${a.id}')">✏️</button>
-        <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteAsset('${a.id}')">🗑️</button>
+        <button class="btn btn-ghost btn-sm" onclick="openAddMaintenanceModal('${a.id}')">ð ï¸</button>
+        <button class="btn btn-ghost btn-sm" onclick="editAsset('${a.id}')">âï¸</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteAsset('${a.id}')">ðï¸</button>
       </td>
     </tr>`;
   }).join('');
@@ -84,7 +84,7 @@ function onAssetCategoryChange(sel) {
 
 function openAddAssetModal() {
   document.getElementById('editAssetId').value='';
-  document.getElementById('addAssetModalTitle').textContent='🔧 เพิ่มครุภัณฑ์';
+  document.getElementById('addAssetModalTitle').textContent='ð§ à¹à¸à¸´à¹à¸¡à¸à¸£à¸¸à¸ à¸±à¸à¸à¹';
   ['asset-name','asset-brand','asset-model','asset-serial','asset-internal-code','asset-location','asset-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('asset-category').value='medical_equipment';
   const customWrap = document.getElementById('asset-category-custom-wrap');
@@ -98,6 +98,13 @@ function openAddAssetModal() {
   document.getElementById('asset-lifespan').value='';
   document.getElementById('asset-maint-interval').value='';
   document.getElementById('asset-is-critical').checked=false;
+  // auto-generate asset no
+  const assetNoEl = document.getElementById('asset-no');
+  if (assetNoEl) { assetNoEl.value = 'กำลังสร้าง...'; assetNoEl.readOnly = true; }
+  supa.rpc('get_next_doc_no', { p_module: 'asset' }).then(({ data, error }) => {
+    if (!error && data && assetNoEl) assetNoEl.value = data;
+    else if (assetNoEl) assetNoEl.value = '';
+  });
   openModal('modal-addAsset');
 }
 
@@ -105,7 +112,7 @@ async function saveAsset() {
   const id   = document.getElementById('editAssetId').value;
   const name = document.getElementById('asset-name').value.trim();
   const loc  = document.getElementById('asset-location').value.trim();
-  if (!name||!loc) { toast('กรุณากรอกชื่ออุปกรณ์และตำแหน่ง','error'); return; }
+  if (!name||!loc) { toast('à¸à¸£à¸¸à¸à¸²à¸à¸£à¸­à¸à¸à¸·à¹à¸­à¸­à¸¸à¸à¸à¸£à¸à¹à¹à¸¥à¸°à¸à¸³à¹à¸«à¸à¹à¸','error'); return; }
 
   const mi = parseInt(document.getElementById('asset-maint-interval').value)||null;
   const pd = document.getElementById('asset-purchase-date').value||null;
@@ -113,6 +120,7 @@ async function saveAsset() {
 
   const payload = {
     name, location: loc,
+    asset_no:              document.getElementById('asset-no')?.value?.trim()||null,
   category: (function(){ var c=document.getElementById('asset-category').value; return c==='other'?(document.getElementById('asset-category-custom').value.trim()||'other'):c; })(),
     brand:                 document.getElementById('asset-brand').value.trim()||null,
     model:                 document.getElementById('asset-model').value.trim()||null,
@@ -132,16 +140,16 @@ async function saveAsset() {
 
   if (id) {
     const { data, error } = await supa.from('assets').update(payload).eq('id',id).select().single();
-    if (error) { toast('แก้ไขไม่สำเร็จ: '+error.message,'error'); return; }
+    if (error) { toast('à¹à¸à¹à¹à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: '+error.message,'error'); return; }
     const idx = (db.assets||[]).findIndex(r=>String(r.id)===String(id));
     if (idx>=0) db.assets[idx]=mapAsset(data);
   } else {
     const { data, error } = await supa.from('assets').insert(payload).select().single();
-    if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
+    if (error) { toast('à¸à¸±à¸à¸à¸¶à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: '+error.message,'error'); return; }
     if (!db.assets) db.assets=[];
     db.assets.unshift(mapAsset(data));
   }
-  toast(id?'แก้ไขครุภัณฑ์แล้ว':'เพิ่มครุภัณฑ์แล้ว','success');
+  toast(id?'à¹à¸à¹à¹à¸à¸à¸£à¸¸à¸ à¸±à¸à¸à¹à¹à¸¥à¹à¸§':'à¹à¸à¸´à¹à¸¡à¸à¸£à¸¸à¸ à¸±à¸à¸à¹à¹à¸¥à¹à¸§','success');
   logAudit('assets',id?'edit':'add',id||'new',{name});
   closeModal('modal-addAsset');
   renderAssets();
@@ -150,7 +158,7 @@ async function saveAsset() {
 function editAsset(id) {
   const a=(db.assets||[]).find(x=>String(x.id)===String(id)); if(!a) return;
   document.getElementById('editAssetId').value=id;
-  document.getElementById('addAssetModalTitle').textContent='✏️ แก้ไขครุภัณฑ์';
+  document.getElementById('addAssetModalTitle').textContent='âï¸ à¹à¸à¹à¹à¸à¸à¸£à¸¸à¸ à¸±à¸à¸à¹';
   document.getElementById('asset-name').value=a.name||'';
   (function(){ var known=["medical_equipment","furniture","building_system","kitchen_laundry","vehicle","it_telecom","electrical","other"]; var cat=a.category||'other'; if(known.includes(cat)){ document.getElementById('asset-category').value=cat; var w=document.getElementById('asset-category-custom-wrap'); if(w)w.style.display='none'; } else { document.getElementById('asset-category').value='other'; var w2=document.getElementById('asset-category-custom-wrap'); if(w2)w2.style.display='block'; var ci=document.getElementById('asset-category-custom'); if(ci)ci.value=cat; } })();
   document.getElementById('asset-brand').value=a.brand||'';
@@ -166,23 +174,24 @@ function editAsset(id) {
   document.getElementById('asset-maint-interval').value=a.maintenanceInterval||'';
   document.getElementById('asset-is-critical').checked=a.isCritical||false;
   document.getElementById('asset-note').value=a.note||'';
+  const assetNoEdit = document.getElementById('asset-no'); if(assetNoEdit){ assetNoEdit.value=a.assetNo||''; assetNoEdit.readOnly=true; }
   openModal('modal-addAsset');
 }
 
 async function deleteAsset(id) {
   const a=(db.assets||[]).find(x=>String(x.id)===String(id)); if(!a) return;
-  if(!confirm('ลบครุภัณฑ์ "'+a.name+'" และประวัติซ่อมทั้งหมด?')) return;
+  if(!confirm('à¸¥à¸à¸à¸£à¸¸à¸ à¸±à¸à¸à¹ "'+a.name+'" à¹à¸¥à¸°à¸à¸£à¸°à¸§à¸±à¸à¸´à¸à¹à¸­à¸¡à¸à¸±à¹à¸à¸«à¸¡à¸?')) return;
   const {error}=await supa.from('assets').delete().eq('id',id);
-  if(error){toast('ลบไม่สำเร็จ: '+error.message,'error');return;}
+  if(error){toast('à¸¥à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: '+error.message,'error');return;}
   db.assets=(db.assets||[]).filter(x=>String(x.id)!==String(id));
   db.assetMaintenanceLogs=(db.assetMaintenanceLogs||[]).filter(x=>String(x.assetId)!==String(id));
-  toast('ลบแล้ว','success'); renderAssets();
+  toast('à¸¥à¸à¹à¸¥à¹à¸§','success'); renderAssets();
 }
 
 function openAddMaintenanceModal(assetId) {
   const a=(db.assets||[]).find(x=>String(x.id)===String(assetId)); if(!a) return;
   document.getElementById('maintAssetId').value=assetId;
-  document.getElementById('maint-asset-name-badge').textContent='🔧 '+a.name+' ('+a.assetNo+')';
+  document.getElementById('maint-asset-name-badge').textContent='ð§ '+a.name+' ('+a.assetNo+')';
   document.getElementById('maint-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('maint-type').value='preventive';
   ['maint-desc','maint-parts','maint-tech-name','maint-tech-phone','maint-tech-addr','maint-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
@@ -203,7 +212,7 @@ async function saveMaintenance() {
   const assetId = document.getElementById('maintAssetId').value;
   const date    = document.getElementById('maint-date').value;
   const desc    = document.getElementById('maint-desc').value.trim();
-  if (!assetId||!date||!desc) { toast('กรุณากรอกวันที่และรายละเอียด','error'); return; }
+  if (!assetId||!date||!desc) { toast('à¸à¸£à¸¸à¸à¸²à¸à¸£à¸­à¸à¸§à¸±à¸à¸à¸µà¹à¹à¸¥à¸°à¸£à¸²à¸¢à¸¥à¸°à¹à¸­à¸µà¸¢à¸','error'); return; }
 
   const payload = {
     asset_id:             parseInt(assetId),
@@ -225,18 +234,18 @@ async function saveMaintenance() {
   };
 
   const {data,error}=await supa.from('asset_maintenance_logs').insert(payload).select().single();
-  if (error){toast('บันทึกไม่สำเร็จ: '+error.message,'error');return;}
+  if (error){toast('à¸à¸±à¸à¸à¸¶à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: '+error.message,'error');return;}
   if(!db.assetMaintenanceLogs) db.assetMaintenanceLogs=[];
   db.assetMaintenanceLogs.unshift(data);
 
-  // อัปเดต local db.assets
+  // à¸­à¸±à¸à¹à¸à¸ local db.assets
   const a=(db.assets||[]).find(x=>String(x.id)===String(assetId));
   if(a){
     a.lastMaintenanceDate=date;
     if(payload.next_maintenance_date) a.nextMaintenanceDate=payload.next_maintenance_date;
     if(payload.is_resolved) a.status='active'; else a.status='under_repair';
   }
-  toast('บันทึกการซ่อมแล้ว','success');
+  toast('à¸à¸±à¸à¸à¸¶à¸à¸à¸²à¸£à¸à¹à¸­à¸¡à¹à¸¥à¹à¸§','success');
   logAudit('assets','maintenance',assetId,{date,desc:desc.slice(0,50)});
   closeModal('modal-addMaintenance');
   renderAssets();
