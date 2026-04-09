@@ -148,7 +148,7 @@ async function loadHTMLPartials() {
     try {
       const res = await fetch(p.file, {cache:'no-store'});
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const html = await res.text();
+      const buf = await res.arrayBuffer(); const html = new TextDecoder('utf-8').decode(buf);
       document.getElementById(p.id).innerHTML = html;
     } catch(e) {
       console.error(`Failed to load ${p.file}:`, e);
