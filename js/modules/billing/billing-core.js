@@ -219,6 +219,7 @@ function openCreateInvoiceModal() {
   renderOtherItems();
   recalcInvoice();
   updateInvoiceTitle();
+  makeTypeahead({inputId:'ta-inv-inp',listId:'ta-inv-list',hiddenId:'ta-inv-id',dataFn:()=>taPatients(true)});
   openModal('modal-createInvoice');
 }
 
