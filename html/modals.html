@@ -523,7 +523,11 @@
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
-          <select class="form-control" id="incident-patient"></select>
+          <div style="position:relative;">
+            <input type="text" id="ta-inc-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div id="ta-inc-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+            <input type="hidden" id="ta-inc-id">
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">ประเภทอุบัติเหตุ <span class="required">*</span></label>
@@ -623,7 +627,11 @@
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
-          <select class="form-control" id="wound-patient"></select>
+          <div style="position:relative;">
+            <input type="text" id="ta-wnd-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div id="ta-wnd-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+            <input type="hidden" id="ta-wnd-id">
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">วันที่ทำแผล <span class="required">*</span></label>
@@ -739,7 +747,11 @@
       <input type="hidden" id="diet-edit-id">
       <div class="form-group">
         <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
-        <select class="form-control" id="diet-patient"></select>
+        <div style="position:relative;">
+          <input type="text" id="ta-diet-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+          <div id="ta-diet-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+          <input type="hidden" id="ta-diet-id">
+        </div>
       </div>
       <div class="form-grid">
         <div class="form-group">
@@ -798,7 +810,11 @@
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
-          <select class="form-control" id="tubefeed-patient"></select>
+          <div style="position:relative;">
+            <input type="text" id="ta-tf-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div id="ta-tf-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+            <input type="hidden" id="ta-tf-id">
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">วันที่ <span class="required">*</span></label>
@@ -870,7 +886,11 @@
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
-          <select class="form-control" id="deposit-patient"></select>
+          <div style="position:relative;">
+            <input type="text" id="ta-dep-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div id="ta-dep-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+            <input type="hidden" id="ta-dep-id">
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">ประเภท</label>
@@ -1216,9 +1236,11 @@
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">ผู้รับบริการ <span class="required">*</span></label>
-          <select class="form-control" id="contract-patient">
-            <option value="">-- เลือกผู้รับบริการ --</option>
-          </select>
+          <div style="position:relative;">
+            <input type="text" id="ta-con-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div id="ta-con-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+            <input type="hidden" id="ta-con-id">
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">ชื่อแพ็กเกจ <span class="required">*</span></label>
@@ -2230,9 +2252,11 @@
 
       <div>
         <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">ผู้รับบริการ <span class="required">*</span></label>
-        <select id="qi-patient" class="form-control">
-          <option value="">-- เลือกผู้รับบริการ --</option>
-        </select>
+        <div style="position:relative;">
+          <input type="text" id="ta-qi-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+          <div id="ta-qi-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+          <input type="hidden" id="ta-qi-id">
+        </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -2291,9 +2315,11 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
           <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">ผู้รับบริการ <span class="required">*</span></label>
-          <select id="inv-patient" class="form-control" onchange="onInvoicePatientChange()">
-            <option value="">-- เลือกผู้รับบริการ --</option>
-          </select>
+          <div style="position:relative;">
+            <input type="text" id="ta-inv-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div id="ta-inv-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+            <input type="hidden" id="ta-inv-id">
+          </div>
           <div id="inv-payer-info" style="display:none;margin-top:6px;font-size:12px;color:var(--accent-dark);background:var(--accent-light);border-radius:5px;padding:6px 10px;"></div>
         </div>
         <div>
@@ -2509,7 +2535,11 @@
         </div>
         <div class="form-group">
           <label class="form-label">ผู้รับบริการ <span class="required">*</span></label>
-          <select class="form-control" id="qd-patient"></select>
+          <div style="position:relative;">
+            <input type="text" id="ta-qd-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div id="ta-qd-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+            <input type="hidden" id="ta-qd-id">
+          </div>
         </div>
         <div class="form-grid">
           <div class="form-group">
@@ -2518,7 +2548,11 @@
           </div>
           <div class="form-group">
             <label class="form-label">ผู้เบิก</label>
-            <select class="form-control" id="qd-staff"></select>
+            <div style="position:relative;">
+              <input type="text" id="ta-qds-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อพนักงาน..." autocomplete="off">
+              <div id="ta-qds-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+              <input type="hidden" id="ta-qds-id">
+            </div>
           </div>
         </div>
         <div class="form-group">
@@ -2682,9 +2716,11 @@
         </div>
         <div class="form-group">
           <label class="form-label">นักกายภาพที่ทำ</label>
-          <select class="form-control" id="physio-therapist-id">
-            <option value="">-- เลือกพนักงาน --</option>
-          </select>
+          <div style="position:relative;">
+            <input type="text" id="ta-pt-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อนักกายภาพ..." autocomplete="off">
+            <div id="ta-pt-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+            <input type="hidden" id="ta-pt-id">
+          </div>
         </div>
       </div>
 
@@ -2822,9 +2858,11 @@
         </div>
         <div class="form-group">
           <label class="form-label">ผู้จำหน่าย (ถ้าทราบ)</label>
-          <select class="form-control" id="pr-supplier">
-            <option value="">-- ผู้จำหน่าย (ถ้าทราบ) --</option>
-          </select>
+          <div style="position:relative;">
+            <input type="text" id="ta-prs-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อผู้จำหน่าย..." autocomplete="off">
+            <div id="ta-prs-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+            <input type="hidden" id="ta-prs-id">
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">รายการสินค้าที่ขอซื้อ</label>
@@ -2881,7 +2919,11 @@
         </div>
         <div class="form-group">
           <label class="form-label">ผู้จำหน่าย</label>
-          <select class="form-control" id="supinv-supplier"></select>
+          <div style="position:relative;">
+            <input type="text" id="ta-sis-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อผู้จำหน่าย..." autocomplete="off">
+            <div id="ta-sis-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+            <input type="hidden" id="ta-sis-id">
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">ระบุชื่อผู้จำหน่าย (ถ้าไม่อยู่ในรายชื่อ)</label>
