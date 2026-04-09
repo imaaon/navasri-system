@@ -196,7 +196,7 @@ function openAddPRModal() {
   document.getElementById('pr-urgency').value = 'normal';
   document.getElementById('pr-note').value = '';
   // populate suppliers
-  const sel = document.getElementById('pr-supplier');
+  const sel = document.getElementById("ta-prs-id");
   if (sel) {
     sel.innerHTML = '<option value="">-- ผู้จำหน่าย (ถ้าทราบ) --</option>' +
       (db.suppliers||[]).filter(s=>s.status==='active')
@@ -268,7 +268,7 @@ async function savePR(status = 'draft') {
   if (!requester) { toast('กรุณาระบุผู้ขอ', 'warning'); return; }
   const validItems = prItems.filter(it => it.itemId && it.qty > 0);
   if (validItems.length === 0) { toast('กรุณาเพิ่มรายการสินค้าอย่างน้อย 1 รายการ', 'warning'); return; }
-  const supplierId = document.getElementById('pr-supplier')?.value || null;
+  const supplierId = document.getElementById("ta-prs-id")?.value || null;
   const supplier = supplierId ? db.suppliers.find(s => s.id == supplierId) : null;
   const editId = document.getElementById('editPRId')?.value || null;
   const prData = {
@@ -378,7 +378,7 @@ async function editPR(id) {
     itemId: l.item_id, itemName: l.item_name,
     qty: l.qty_requested, unit: l.unit || '',
   }));
-  const sel = document.getElementById('pr-supplier');
+  const sel = document.getElementById("ta-prs-id");
   if (sel) {
     sel.innerHTML = '<option value="">― ผู้จำหน่าย (ถ้าทราบ) ―</option>' +
       (db.suppliers||[]).filter(s=>s.status==='active')
@@ -738,7 +738,7 @@ function openAddSupplierInvoiceModal() {
   document.getElementById('supinv-vat').value   = '7';
   document.getElementById('supinv-total').value = '';
   // populate suppliers
-  const sel = document.getElementById('supinv-supplier');
+  const sel = document.getElementById("ta-sis-id");
   if (sel) {
     sel.innerHTML = '<option value="">-- เลือกผู้จำหน่าย --</option>' +
       (db.suppliers||[]).filter(s=>s.status==='active')
@@ -896,7 +896,7 @@ function viewSupplier(id) {
 async function saveSupplierInvoice(andConfirm = false) {
   const editId     = document.getElementById('editSupInvId').value;
   const invNo      = document.getElementById('supinv-no').value.trim();
-  const supplierId = document.getElementById('supinv-supplier').value;
+  const supplierId = document.getElementById("ta-sis-id").value;
   const supplierNameManual = document.getElementById('supinv-supplier-manual')?.value.trim() || '';
   if (!invNo) { toast('กรุณาระบุเลขที่ใบแจ้งหนี้', 'warning'); return; }
   if (!supplierId && !supplierNameManual) { toast('กรุณาเลือกหรือระบุชื่อผู้จำหน่าย', 'warning'); return; }
@@ -1392,7 +1392,7 @@ async function editSupplierInvoice(id) {
   document.getElementById('supinv-received-date').value  = inv.receivedDate || '';
   document.getElementById('supinv-received-by').value    = inv.receivedBy || '';
   // populate supplier dropdown
-  const sel = document.getElementById('supinv-supplier');
+  const sel = document.getElementById("ta-sis-id");
   if (sel) { sel.innerHTML = '<option value="">-- เลือกผู้จำหน่าย --</option>' +
     (db.suppliers||[]).map(s=>'<option value="'+s.id+'" '+(s.id==inv.supplierId?'selected':'')+'>'+s.name+'</option>').join(''); }
   // populate PR dropdown
@@ -1482,7 +1482,7 @@ function scanSupplierInvoice() {
       calcSupInvTotal();
       // จับคู่ชื่อผู้จำหน่าย
       if (d.supplier_name) {
-        const sel = document.getElementById('supinv-supplier');
+        const sel = document.getElementById("ta-sis-id");
         const matched = Array.from(sel.options).find(o => o.text.includes(d.supplier_name) || d.supplier_name.includes(o.text));
         if (matched) {
           sel.value = matched.value;
