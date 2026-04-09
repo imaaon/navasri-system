@@ -51,6 +51,7 @@ function openPhysioSessionModal(patientId, patientName, editId) {
   var titleEl = document.getElementById("modal-physio-title");
   if (titleEl) titleEl.textContent = editId ? "✏️ แก้ไข Session" : "🤸 บันทึกกายภาพ";
   if (editId) loadPhysioSessionForEdit(editId);
+  makeTypeahead({inputId:"ta-pt-inp",listId:"ta-pt-list",hiddenId:"ta-pt-id",dataFn:()=>taStaff()});
   openModal("modal-physio-session");
 }
 
