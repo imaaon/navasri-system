@@ -349,8 +349,7 @@ async function deleteItem(id) {
 
 // ===== RECEIVE =====
 function openReceiveModal() {
-  const sel = document.getElementById('recv-item');
-  sel.innerHTML = db.items.map(i => `<option value="${i.id}">${i.name} (คงเหลือ: ${i.qty} ${i.dispenseUnit||i.unit})</option>`).join('');
+  makeTypeahead({inputId:'ta-ri-inp',listId:'ta-ri-list',hiddenId:'ta-ri-id',dataFn:()=>(db.items||[]).filter(x=>(x.qty||0)>0).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(x=>({id:x.id,label:x.name||String(x.id),sub:'คงเหลือ '+x.qty+' '+(x.dispenseUnit||'')})),onSelect:()=>{if(typeof onRecvItemChange==='function')onRecvItemChange();}});
   document.getElementById('recv-qty').value = '';
   document.getElementById('recv-cost').value = '';
   document.getElementById('recv-note').value = '';
@@ -768,20 +767,10 @@ function switchPhTab(tab) {
 // ===== QUICK DISPENSE =====
 function openQuickDispenseModal() {
   // populate patients
-  const patSel = document.getElementById('qd-patient');
-  if (patSel) {
-    patSel.innerHTML = '<option value="">-- เลือกผู้รับบริการ --</option>' +
-      (db.patients || []).filter(p => p.status === 'active' || p.status === 'hospital')
-        .map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-  }
+  makeTypeahead({inputId:'ta-qd-inp',listId:'ta-qd-list',hiddenId:'ta-qd-id',dataFn:()=>taPatients(true)});
   // populate staff
-  const staffSel = document.getElementById('qd-staff');
-  if (staffSel) {
-    staffSel.innerHTML = '<option value="">-- เลือกผู้เบิก --</option>' +
-      (db.staff || []).map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-    // auto-select current user ถ้าเป็น staff
-    const me = db.staff.find(s => s.name === currentUser?.displayName);
-    if (me) staffSel.value = me.id;
+  makeTypeahead({inputId:'ta-qds-inp',listId:'ta-qds-list',hiddenId:'ta-qds-id',dataFn:()=>taStaff()});
+  (function(){var me=(db.staff||[]).find(s=>s.name===currentUser?.displayName);if(me){var _h=document.getElementById('ta-qds-id');var _i=document.getElementById('ta-qds-inp');if(_h)_h.value=me.id;if(_i)_i.value=me.name;}})();
   }
   // reset
   const fields = ['qd-barcode','qd-note'];
@@ -818,8 +807,8 @@ function onQdBarcodeScan() {
 
 async function saveQuickDispense() {
   const itemId  = document.getElementById('qd-item-id').value;
-  const patId   = document.getElementById('qd-patient').value;
-  const staffId = document.getElementById('qd-staff').value;
+  const patId   = document.document.getElementById('ta-qd-id').value;
+  const staffId = document.document.getElementById('ta-qds-id').value;
   const qty     = parseFloat(document.getElementById('qd-qty').value);
   const note    = document.getElementById('qd-note').value.trim();
 
