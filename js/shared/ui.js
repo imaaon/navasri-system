@@ -198,3 +198,71 @@ function buildLineMsg(event, data) {
       return `[${event}] ${JSON.stringify(data)}`;
   }
 }
+
+// ===== TYPEAHEAD HELPER =====
+// makeTypeahead(cfg)
+// cfg.inputId   — id ของ <input> ที่ user พิมพ์
+// cfg.listId    — id ของ <div> dropdown list
+// cfg.hiddenId  — id ของ <input type=hidden> ที่เก็บ value จริง
+// cfg.dataFn    — function() -> [{id, label, sub}]
+// cfg.onSelect  — optional callback(id, label)
+// cfg.placeholder — optional
+function makeTypeahead(cfg) {
+  const inp = document.getElementById(cfg.inputId);
+  const list = document.getElementById(cfg.listId);
+  const hidden = document.getElementById(cfg.hiddenId);
+  if (!inp || !list) return;
+
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function render(kw) {
+    const all = cfg.dataFn();
+    const q = (kw||'').trim().toLowerCase();
+    const matches = q
+      ? all.filter(x => (x.label||'').toLowerCase().includes(q) || (x.sub||'').toLowerCase().includes(q))
+      : all;
+    if (!matches.length) { list.style.display = 'none'; return; }
+    list.innerHTML = matches.slice(0, 40).map(x =>
+      '<div class="ta-item" data-id="' + esc(String(x.id)) + '" data-label="' + esc(x.label) + '" ' +
+      'style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;" ' +
+      'onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">' +
+      '<span>' + esc(x.label) + '</span>' +
+      (x.sub ? '<span style="font-size:11px;color:var(--text3);margin-left:8px;">' + esc(x.sub) + '</span>' : '') +
+      '</div>'
+    ).join('');
+    list.style.display = 'block';
+    // bind click
+    list.querySelectorAll('.ta-item').forEach(el => {
+      el.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        const id = this.dataset.id;
+        const label = this.dataset.label;
+        inp.value = label;
+        if (hidden) hidden.value = id;
+        list.style.display = 'none';
+        if (cfg.onSelect) cfg.onSelect(id, label);
+      });
+    });
+  }
+
+  inp.addEventListener('input', () => render(inp.value));
+  inp.addEventListener('focus', () => render(inp.value));
+  inp.addEventListener('blur',  () => setTimeout(() => { list.style.display = 'none'; }, 150));
+  if (cfg.placeholder) inp.placeholder = cfg.placeholder;
+}
+
+// ---- data helpers ----
+function taPatients(activeOnly) {
+  const pts = (db.patients||[]);
+  const filtered = activeOnly ? pts.filter(x=>x.status==='active') : pts;
+  return filtered.sort((a,b)=>(a.name||'').localeCompare(b.name||''))
+    .map(x=>({ id:x.id, label:x.name||'', sub: x.hn ? 'HN '+x.hn : '' }));
+}
+function taStaff() {
+  return (db.staff||[]).sort((a,b)=>(a.name||'').localeCompare(b.name||''))
+    .map(x=>({ id:x.id, label:x.name||'', sub: x.position||'' }));
+}
+function taSuppliers() {
+  return (db.suppliers||[]).filter(x=>x.status==='active').sort((a,b)=>(a.name||'').localeCompare(b.name||''))
+    .map(x=>({ id:x.id, label:x.name||'', sub: x.contact_name||'' }));
+}
