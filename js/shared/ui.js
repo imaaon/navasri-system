@@ -273,8 +273,8 @@ function taSuppliers() {
 async function ensureSuppliersLoaded(inputId, listId, hiddenId) {
   if ((db.suppliers||[]).length > 0) return;
   try {
-    const {data} = await supa.from('suppliers').select('*').order('name');
-    if (data) db.suppliers = data;
+    const {data} = await supa.from('suppliers').select('*').order('supplier_name');
+    if (data) db.suppliers = data.map(r=>({id:r.id, code:r.supplier_code||'', name:r.supplier_name||'', contact_name:r.contact_name||'', status:r.status||'active', phone:r.phone||''}));
     makeTypeahead({inputId, listId, hiddenId, dataFn:()=>taSuppliers()});
     const inp = document.getElementById(inputId);
     if (inp) inp.dispatchEvent(new Event('focus'));
