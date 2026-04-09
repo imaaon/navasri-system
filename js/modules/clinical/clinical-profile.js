@@ -305,6 +305,11 @@ function switchPatTab(tab) {
     const patId = el?.id?.replace('pat-dispense-list-','');
     if (patId) loadPatDispense(patId);
   }
+  if (tab === 'deposits') {
+    var depEl = document.querySelector('[id^="pat-deposits-list-"]');
+    var depPid = depEl ? depEl.id.replace('pat-deposits-list-','') : null;
+    if (depPid && typeof loadPatDeposits === 'function') setTimeout(function(){ loadPatDeposits(depPid); }, 100);
+  }
 }
 
 async function loadPatDispense(patId) {
