@@ -416,14 +416,14 @@ function loadPatDeposits(patId) {
   supa.from('patient_deposits').select('*').eq('patient_id', patId)
     .order('date_in', {ascending: false})
     .then(function(res) {
-      var deps = res.data || [];
       if (res.error) { listEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--danger);">\u274c \u0e42\u0e2b\u0e25\u0e14\u0e44\u0e21\u0e48\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08</div>'; return; }
+      var deps = res.data || [];
       var totalActive = deps.filter(function(d){return d.status==='active';}).reduce(function(s,d){return s+(parseFloat(d.amount)||0);},0);
-      var emptyMsg = !deps.length ? '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text3);">\u2705 \u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e35\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23</td></tr>' : '';
+      var emptyRow = !deps.length ? '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text3);">\u2705 \u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e35\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23</td></tr>' : '';
       var rows = deps.map(function(d){
         var sl = d.status==='active'?'\u2705 \u0e04\u0e07\u0e2d\u0e22\u0e39\u0e48':'\u274c \u0e04\u0e37\u0e19\u0e41\u0e25\u0e49\u0e27';
         var sc = d.status==='active'?'var(--success)':'var(--text3)';
-        var dateOut = d.date_out?(' <span style="color:var(--text3);font-size:11px;">(\u0e04\u0e37\u0e19 '+d.date_out+')</span>')  :'';
+        var dateOut = d.date_out?' <span style="color:var(--text3);font-size:11px;">(\u0e04\u0e37\u0e19 '+d.date_out+')</span>':'';
         return '<tr>'+
           '<td style="font-size:12px;white-space:nowrap;">'+(d.date_in||'-')+'</td>'+
           '<td style="font-weight:500;">'+(d.type||'-')+'</td>'+
@@ -438,12 +438,14 @@ function loadPatDeposits(patId) {
         '</tr>';
       }).join('');
       listEl.innerHTML =
-        '<div style="padding:8px 16px;background:var(--surface2);border-radius:8px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">'+
-          '<span style="font-size:13px;color:var(--text2);">\u0e22\u0e2d\u0e14\u0e21\u0e31\u0e14\u0e08\u0e33\u0e04\u0e07\u0e40\u0e2b\u0e25\u0e37\u0e2d</span>'+
-          '<div style="display:flex;align-items:center;gap:8px;">'+
-            '<span style="font-size:18px;font-weight:700;color:var(--accent);">'+totalActive.toLocaleString('th-TH',{minimumFractionDigits:2})+' \u0e1a\u0e32\u0e17</span>'+
-            '<button class="btn btn-primary btn-sm" onclick="openDepositModalFromProfile(null,\u0027'+patId+'\u0027)">+ \u0e40\u0e1e\u0e34\u0e48\u0e21</button>'+
-            '<button class="btn btn-ghost btn-sm" onclick="showPage(\u0027deposits\u0027)" title="\u0e44\u0e1b\u0e2b\u0e19\u0e49\u0e32\u0e21\u0e31\u0e14\u0e08\u0e33">\u2197\ufe0f \u0e14\u0e39\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14</button>'+
+        '<div style="background:var(--surface2);border-radius:8px;margin-bottom:12px;padding:10px 14px;">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+
+            '<span style="font-size:12px;color:var(--text2);">\u0e22\u0e2d\u0e14\u0e21\u0e31\u0e14\u0e08\u0e33\u0e04\u0e07\u0e40\u0e2b\u0e25\u0e37\u0e2d</span>'+
+            '<span style="font-size:16px;font-weight:700;color:var(--accent);">'+totalActive.toLocaleString('th-TH',{minimumFractionDigits:2})+' \u0e1a\u0e32\u0e17</span>'+
+          '</div>'+
+          '<div style="display:flex;gap:6px;">'+
+            '<button class="btn btn-primary btn-sm" onclick="openDepositModalFromProfile(null,\u0027'+patId+'\u0027)">+ \u0e40\u0e1e\u0e34\u0e48\u0e21\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23</button>'+
+            '<button class="btn btn-ghost btn-sm" onclick="showPage(\u0027deposits\u0027)">\u2197\ufe0f \u0e14\u0e39\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14</button>'+
           '</div>'+
         '</div>'+
         '<div class="table-wrap"><table>'+
@@ -456,7 +458,7 @@ function loadPatDeposits(patId) {
             '<th>\u0e2b\u0e21\u0e32\u0e22\u0e40\u0e2b\u0e15\u0e38</th>'+
             '<th></th>'+
           '</tr></thead>'+
-          '<tbody>'+emptyMsg+rows+'</tbody>'+
+          '<tbody>'+emptyRow+rows+'</tbody>'+
         '</table></div>';
     });
 }
