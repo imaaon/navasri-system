@@ -502,9 +502,14 @@ function openHealthReportModal(patientId) {
   const p = (db.patients||[]).find(x=>String(x.id)===String(patientId));
   document.getElementById("hrPatientId").value = patientId||"";
   const badge = document.getElementById("hrPatientBadge");
-  if(badge) badge.innerHTML = p
-    ? "<strong>"+p.name+"</strong> &nbsp;|&nbsp; HN: "+(p.hn||"-")+" &nbsp;|&nbsp; สถานะ: "+(p.status==="active"?"พักอยู่":p.status)
-    : "ผู้รับบริการทุกคน";
+  if (badge) {
+    if (p) {
+      badge.innerHTML = "<strong>"+p.name+"</strong> &nbsp;|&nbsp; HN: "+(p.hn||"-")+" &nbsp;|&nbsp; สถานะ: "+(p.status==="active"?"พักอยู่":p.status);
+    } else {
+      const opts = (db.patients||[]).filter(x=>x.status==="active").sort((a,b)=>(a.name||"").localeCompare(b.name||"")).map(x=>'<option value="'+x.id+'">'+x.name+(x.hn?" ("+x.hn+")"):'')+"</option>").join("");
+      badge.innerHTML = '<select id="hrPatientSelect" class="form-control" style="font-size:13px;" onchange="document.getElementById(\'hrPatientId\').value=this.value"><option value="">— เลือกผู้รับบริการ —</option>'+opts+'</select>';
+    }
+  }
   _hrChecked = new Set();
   HR_GROUPS.forEach(g=>g.items.forEach(i=>_hrChecked.add(i.id)));
   hrRenderChecklist();
