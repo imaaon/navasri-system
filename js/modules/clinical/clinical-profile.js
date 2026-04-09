@@ -40,6 +40,9 @@ async function openPatientProfile(id, activeTab) {
         <div style="margin-top:16px;">
           <button class="btn btn-primary" style="width:100%;" onclick="editPatient('${p.id}')">✏️ แก้ไขข้อมูล</button>
         </div>
+        <div style="margin-top:8px;">
+          <button class="btn btn-ghost" style="width:100%;font-size:13px;" onclick="openHealthReportModal('${p.id}')">📋 รายงานสุขภาพ</button>
+        </div>
       </div>
       <!-- Info card -->
       <div class="card" style="margin-top:16px;">
