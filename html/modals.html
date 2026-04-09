@@ -3371,3 +3371,50 @@
     </div>
   </div>
 </div>
+
+
+<!-- ===== MODAL: HEALTH REPORT ===== -->
+<div id="modal-healthReport" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal('modal-healthReport')">
+  <div class="modal-box" style="max-width:640px;width:95%;">
+    <div class="modal-header">
+      <h3 id="hrModalTitle">📋 สร้างรายงานสุขภาพ</h3>
+      <button class="modal-close" onclick="closeModal('modal-healthReport')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="hrPatientId">
+      <!-- Patient badge -->
+      <div id="hrPatientBadge" style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--text2);"></div>
+      <!-- ช่วงเวลา -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">ช่วงเวลา</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+          <button id="hr-btn-7d"  onclick="hrSetRange('7d')"     class="btn btn-sm btn-ghost" style="font-size:12px;">7 วันล่าสุด</button>
+          <button id="hr-btn-30d" onclick="hrSetRange('30d')"    class="btn btn-sm btn-ghost" style="font-size:12px;">30 วันล่าสุด</button>
+          <button id="hr-btn-month" onclick="hrSetRange('month')" class="btn btn-sm btn-ghost" style="font-size:12px;">เลือกเดือน</button>
+          <button id="hr-btn-custom" onclick="hrSetRange('custom')" class="btn btn-sm btn-ghost" style="font-size:12px;">กำหนดเอง</button>
+        </div>
+        <div id="hr-range-month" style="display:none;"><input type="month" id="hr-month-val" class="form-control" style="max-width:180px;font-size:13px;"></div>
+        <div id="hr-range-custom" style="display:none;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="date" id="hr-date-from" class="form-control" style="max-width:160px;font-size:13px;">
+          <span style="font-size:13px;color:var(--text2);">ถึง</span>
+          <input type="date" id="hr-date-to"   class="form-control" style="max-width:160px;font-size:13px;">
+        </div>
+      </div>
+      <!-- เลือกรายการ -->
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);">เลือกรายการ</div>
+          <div style="display:flex;gap:10px;">
+            <span onclick="hrSelectAll(true)"  style="font-size:12px;color:var(--accent);cursor:pointer;">เลือกทั้งหมด</span>
+            <span onclick="hrSelectAll(false)" style="font-size:12px;color:var(--text3);cursor:pointer;">ล้าง</span>
+          </div>
+        </div>
+        <div id="hr-checklist" style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-healthReport')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="generateHealthReport()">📋 สร้างรายงาน</button>
+    </div>
+  </div>
+</div>
