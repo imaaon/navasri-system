@@ -467,15 +467,19 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label">ผู้รับบริการ <span class="required">*</span></label>
-                <select class="form-control" id="req-patient" onchange="onReqPatientChange()">
-                  <option value="">-- เลือกผู้รับบริการ --</option>
-                </select>
+                <div style="position:relative;">
+                  <input type="text" id="ta-rp-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+                  <div id="ta-rp-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+                  <input type="hidden" id="ta-rp-id">
+                </div>
               </div>
               <div class="form-group">
                 <label class="form-label">ผู้เบิก (พนักงาน) <span class="required">*</span></label>
-                <select class="form-control" id="req-staff">
-                  <option value="">-- เลือกพนักงาน --</option>
-                </select>
+                <div style="position:relative;">
+                  <input type="text" id="ta-rs-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อพนักงาน..." autocomplete="off">
+                  <div id="ta-rs-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+                  <input type="hidden" id="ta-rs-id">
+                </div>
               </div>
             </div>
             <!-- Allergy Alert Banner — shows when patient has allergies -->
@@ -823,9 +827,11 @@
               </div>
               <div class="form-group" style="margin:0;flex:1;min-width:180px;">
                 <label class="form-label" style="font-size:11px;">🏥 ผู้รับบริการ</label>
-                <select class="form-control" id="hr-patient" onchange="renderHealthReport()">
-                  <option value="">ทั้งหมด</option>
-                </select>
+                <div style="position:relative;">
+                  <input type="text" id="ta-hrp-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+                  <div id="ta-hrp-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+                  <input type="hidden" id="ta-hrp-id">
+                </div>
               </div>
               <div class="form-group" style="margin:0;min-width:140px;">
                 <label class="form-label" style="font-size:11px;">ประเภท</label>
