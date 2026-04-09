@@ -264,7 +264,6 @@ async function openPatientProfile(id, activeTab) {
           <div id="pat-unbilled-list-${p.id}"></div>
         </div>
       </div>
-    </div>
       <!-- DEPOSITS TAB -->
       ${(ROLE_PAGES[currentUser?.role]||[]).includes('deposits') ? `
       <div id="patprofile-tab-deposits" style="display:none;">
@@ -279,6 +278,7 @@ async function openPatientProfile(id, activeTab) {
         </div>
       </div>
       ` : ''}
+    </div>
   </div>`;
   switchPatTab(activeTab || 'history');
   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
