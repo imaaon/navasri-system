@@ -771,7 +771,6 @@ function openQuickDispenseModal() {
   // populate staff
   makeTypeahead({inputId:'ta-qds-inp',listId:'ta-qds-list',hiddenId:'ta-qds-id',dataFn:()=>taStaff()});
   (function(){var me=(db.staff||[]).find(s=>s.name===currentUser?.displayName);if(me){var _h=document.getElementById('ta-qds-id');var _i=document.getElementById('ta-qds-inp');if(_h)_h.value=me.id;if(_i)_i.value=me.name;}})();
-  }
   // reset
   const fields = ['qd-barcode','qd-note'];
   fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
