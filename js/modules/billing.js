@@ -19,7 +19,7 @@ function openInvoiceResetModal(id) {
   const paid = getInvoicePaidAmount(id);
   document.getElementById('reset-invoice-info').innerHTML =
     `<div>เลขที่: <strong>${inv.docNo||'-'}</strong></div>
-     <div>สถานะปัจจุบัน: <strong style="color:#c0392b;">${STATUS_LABELS[dynStatus]||dynStatus}</strong></div>
+     <div>สถานะปัจจุบัน: <strong style="color:var(--red);">${STATUS_LABELS[dynStatus]||dynStatus}</strong></div>
      <div>ยอดรับชำระแล้ว: <strong>${formatThb(paid)}</strong> / ${formatThb(inv.grandTotal||0)}</div>`;
 
   openModal('modal-invoice-reset');
@@ -104,8 +104,8 @@ function renderInvoiceResetLog() {
       <td style="padding:9px 12px;font-size:11px;color:var(--text3);">${l.reset_at ? new Date(l.reset_at).toLocaleString('th-TH') : '-'}</td>
       <td style="padding:9px 12px;font-weight:600;font-family:monospace;">${l.doc_no||'-'}</td>
       <td style="padding:9px 12px;">${l.patient_name||'-'}</td>
-      <td style="padding:9px 12px;"><span style="color:#c0392b;font-weight:600;">${STATUS_LABELS[l.old_status]||l.old_status||'-'}</span></td>
-      <td style="padding:9px 12px;"><span style="color:#27ae60;font-weight:600;">${STATUS_LABELS[l.new_status]||l.new_status||'-'}</span></td>
+      <td style="padding:9px 12px;"><span style="color:var(--red);font-weight:600;">${STATUS_LABELS[l.old_status]||l.old_status||'-'}</span></td>
+      <td style="padding:9px 12px;"><span style="color:#5ecba1;font-weight:600;">${STATUS_LABELS[l.new_status]||l.new_status||'-'}</span></td>
       <td style="padding:9px 12px;text-align:right;">${l.old_paid_amount ? formatThb(l.old_paid_amount) : '-'}</td>
       <td style="padding:9px 12px;color:var(--text2);">${l.reason||'-'}</td>
       <td style="padding:9px 12px;font-size:12px;">${l.reset_by||'-'} <span style="color:var(--text3);">(${l.reset_by_role||'-'})</span></td>
@@ -185,7 +185,7 @@ function renderBilling() {
   if(expCard) expCard.textContent = formatThb(allExpTotal);
 
   const TYPE_LABELS   = { invoice:'ใบแจ้งหนี้', receipt:'ใบเสร็จ', quotation:'ใบเสนอราคา', tax_invoice:'ใบกำกับภาษี', expense:'ค่าใช้จ่าย' };
-  const STATUS_COLORS = { draft:'#888', sent:'#e67e22', partial:'#3498db', paid:'#27ae60', cancelled:'#e74c3c' };
+  const STATUS_COLORS = { draft:'#888', sent:'#f5a453', partial:'var(--blue)', paid:'#5ecba1', cancelled:'var(--red)' };
   const STATUS_LABELS = { draft:'ร่าง', sent:'รอชำระ', partial:'ชำระบางส่วน', paid:'ชำระครบ', cancelled:'ยกเลิก' };
 
   const TYPE_ORDER = {quotation:1, invoice:2, tax_invoice:3, receipt:4};
@@ -199,24 +199,24 @@ function renderBilling() {
     const dynStatus = getInvoicePaymentStatus(inv);
     const isOverdue = inv.dueDate && inv.dueDate < new Date().toISOString().split('T')[0] && dynStatus !== 'paid';
     return `
-    <tr style="${isOverdue?'background:#fff8f8;':''}">
+    <tr style="${isOverdue?'background:var(--red-light);':''}">
       <td style="font-family:monospace;font-size:12px;">${inv.docNo||'-'}${inv.contractId?'<span style="font-size:10px;color:var(--accent);margin-left:4px;">🤖</span>':''}</td>
-      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(90,158,122,.15);color:var(--accent);">${TYPE_LABELS[inv.type]||inv.type}</span></td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(46,196,182,0.12);color:var(--accent);">${TYPE_LABELS[inv.type]||inv.type}</span></td>
       <td>${inv.patientName||'-'}</td>
       <td style="font-size:12px;">${inv.date||'-'}</td>
-      <td style="font-size:12px;color:${isOverdue?'#e74c3c':'var(--text2)'};">${inv.dueDate||'-'}${isOverdue?' ⚠️':''}</td>
+      <td style="font-size:12px;color:${isOverdue?'var(--red)':'var(--text2)'};">${inv.dueDate||'-'}${isOverdue?' ⚠️':''}</td>
       <td style="text-align:right;font-weight:600;">${formatThb(inv.grandTotal||0)}</td>
-      <td style="text-align:right;color:#27ae60;">${paid>0?formatThb(paid):'-'}</td>
-      <td style="text-align:right;font-weight:${balance>0?'700':'400'};color:${balance>0?'#e67e22':'var(--text3)'};">${balance>0?formatThb(balance):'-'}</td>
+      <td style="text-align:right;color:#5ecba1;">${paid>0?formatThb(paid):'-'}</td>
+      <td style="text-align:right;font-weight:${balance>0?'700':'400'};color:${balance>0?'#f5a453':'var(--text3)'};">${balance>0?formatThb(balance):'-'}</td>
       <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${STATUS_COLORS[dynStatus]||'#888'}22;color:${STATUS_COLORS[dynStatus]||'#888'};">${STATUS_LABELS[dynStatus]||dynStatus}</span></td>
       <td style="white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" onclick="previewDoc('${inv.id}','invoice')" title="ดู Preview">👁️</button>
         <button class="btn btn-ghost btn-sm" onclick="printInvoice('${inv.id}')" title="พิมพ์">🖨️</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportInvoicePDF('${inv.id}')" title="Export PDF" style="color:#e74c3c;">📄</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportInvoicePDF('${inv.id}')" title="Export PDF" style="color:var(--red);">📄</button>
         <button class="btn btn-ghost btn-sm" onclick="editInvoice('${inv.id}')" title="แก้ไข">✏️</button>
         ${dynStatus!=='paid'?`<button class="btn btn-primary btn-sm" onclick="openRecordPaymentModal('${inv.id}')" title="รับชำระ" style="font-size:11px;">💳 รับชำระ</button>`:''}
         ${['admin','manager','officer'].includes(currentUser?.role) && (dynStatus==='paid'||dynStatus==='partial') ? `<button class="btn btn-ghost btn-sm" onclick="openInvoiceResetModal('${inv.id}')" title="Reset บิล" style="color:#8e44ad;font-size:11px;">🔄 Reset</button>` : ''}
-        <button class="btn btn-ghost btn-sm" onclick="deleteInvoice('${inv.id}')" style="color:#e74c3c;">🗑️</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteInvoice('${inv.id}')" style="color:var(--red);">🗑️</button>
       </td>
     </tr>`;
   }).join('');
@@ -224,19 +224,19 @@ function renderBilling() {
   const expRows = [...expList].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(exp => `
     <tr>
       <td style="font-family:monospace;font-size:12px;">${exp.docNo||'-'}</td>
-      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#e67e2222;color:#e67e22;">ค่าใช้จ่าย</span></td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#f5a45322;color:#f5a453;">ค่าใช้จ่าย</span></td>
       <td style="font-size:13px;">${exp.vendorName||exp.job||'-'}</td>
       <td style="font-size:12px;">${exp.date||'-'}</td>
       <td style="font-size:12px;color:var(--text2);">${exp.payDate||'-'}</td>
       <td style="text-align:right;font-weight:600;">${formatThb(exp.net||0)}</td>
       <td>-</td><td>-</td>
-      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#27ae6022;color:#27ae60;">บันทึกแล้ว</span></td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#5ecba122;color:#5ecba1;">บันทึกแล้ว</span></td>
       <td style="white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" onclick="previewDoc('${exp.id}','expense')" title="ดู Preview">👁️</button>
         <button class="btn btn-ghost btn-sm" onclick="printExpense('${exp.id}')" title="พิมพ์">🖨️</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportExpensePDF('${exp.id}')" title="Export PDF" style="color:#e74c3c;">📄</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportExpensePDF('${exp.id}')" title="Export PDF" style="color:var(--red);">📄</button>
         <button class="btn btn-ghost btn-sm" onclick="editExpense('${exp.id}')" title="แก้ไข">✏️</button>
-        <button class="btn btn-ghost btn-sm" onclick="deleteExpense('${exp.id}')" style="color:#e74c3c;">🗑️</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteExpense('${exp.id}')" style="color:var(--red);">🗑️</button>
       </td>
     </tr>`).join('');
 
@@ -501,7 +501,7 @@ function renderInvoiceItems() {
         style="width:80px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:13px;">
     </td>
     <td style="padding:5px 6px;text-align:right;font-weight:600;" id="inv-item-row-${it._idx}">${formatThb((it.qty||0)*(it.price||0))}</td>
-    <td><button onclick="removeInvItem('${it._idx}')" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>
+    <td><button onclick="removeInvItem('${it._idx}')" style="border:none;background:none;cursor:pointer;color:var(--red);font-size:13px;">✕</button></td>
   </tr>`;
   const allCats = [...CAT_ORDER, ...Object.keys(grouped).filter(c=>!CAT_ORDER.includes(c))];
   let html = '';
@@ -576,7 +576,7 @@ function renderOtherItems() {
       <td style="padding:5px 6px;"><input type="number" value="${it.qty||1}" min="0" oninput="updateOtherItem(${idx},'qty',this.value)" style="width:65px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:13px;"></td>
       <td style="padding:5px 6px;"><input type="number" value="${it.price||0}" min="0" oninput="updateOtherItem(${idx},'price',this.value)" style="width:80px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:13px;"></td>
       <td style="padding:5px 6px;text-align:right;font-weight:600;" id="inv-other-row-${idx}">${formatThb((it.qty||1)*(it.price||0))}</td>
-      <td><button onclick="removeOtherItem(${idx})" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>
+      <td><button onclick="removeOtherItem(${idx})" style="border:none;background:none;cursor:pointer;color:var(--red);font-size:13px;">✕</button></td>
     </tr>`).join('')}
     </tbody></table>`;
   document.getElementById('inv-other-total').textContent=formatThb(items.reduce((s,it)=>s+(it.qty||1)*(it.price||0),0));
@@ -850,8 +850,8 @@ function openRecordPaymentModal(invoiceId) {
     <div style="font-weight:700;margin-bottom:4px;">${inv.docNo} · ${inv.patientName}</div>
     <div style="display:flex;gap:16px;font-size:12px;">
       <span>ยอดรวม: <strong>${formatThb(inv.grandTotal||0)}</strong></span>
-      <span style="color:#27ae60;">ชำระแล้ว: <strong>${formatThb(paid)}</strong></span>
-      <span style="color:#e67e22;">คงค้าง: <strong>${formatThb(balance)}</strong></span>
+      <span style="color:#5ecba1;">ชำระแล้ว: <strong>${formatThb(paid)}</strong></span>
+      <span style="color:#f5a453;">คงค้าง: <strong>${formatThb(balance)}</strong></span>
     </div>`;
   document.getElementById('pay-amount').value = balance.toFixed(2);
   document.getElementById('pay-date').value = new Date().toISOString().split('T')[0];
@@ -934,9 +934,9 @@ function renderPaymentsTab() {
 
   container.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;">
-      <div style="background:#f0fff4;border:1px solid #27ae60;border-radius:10px;padding:14px;text-align:center;">
-        <div style="font-size:11px;color:#27ae60;margin-bottom:4px;">รับชำระรวมทั้งหมด</div>
-        <div style="font-size:18px;font-weight:700;color:#27ae60;">${formatThb(totalReceived)}</div>
+      <div style="background:#e0f7ec;border:1px solid #5ecba1;border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:#5ecba1;margin-bottom:4px;">รับชำระรวมทั้งหมด</div>
+        <div style="font-size:18px;font-weight:700;color:#5ecba1;">${formatThb(totalReceived)}</div>
       </div>
       ${Object.entries(byMethod).map(([m,v])=>`
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
@@ -960,13 +960,13 @@ function renderPaymentsTab() {
                 <td style="font-size:12px;">${p.paymentDate||'-'}</td>
                 <td style="font-weight:500;">${p.patientName||'-'}</td>
                 <td style="font-size:12px;color:var(--text2);">${inv?.docNo||'-'}</td>
-                <td style="text-align:right;font-weight:700;color:#27ae60;">${formatThb(p.amount)}</td>
+                <td style="text-align:right;font-weight:700;color:#5ecba1;">${formatThb(p.amount)}</td>
                 <td><span style="background:var(--surface2);border-radius:4px;padding:2px 8px;font-size:12px;">${p.method}</span></td>
                 <td style="font-size:12px;color:var(--text3);">${p.reference||'-'}</td>
                 <td style="font-size:12px;">${p.receivedBy||'-'}</td>
                 <td>
                   <button class="btn btn-ghost btn-sm" onclick="printReceiptById('${p.id}')" title="พิมพ์ใบเสร็จ">🖨️</button>
-                  <button class="btn btn-ghost btn-sm" onclick="deletePayment('${p.id}')" style="color:#e74c3c;">🗑️</button>
+                  <button class="btn btn-ghost btn-sm" onclick="deletePayment('${p.id}')" style="color:var(--red);">🗑️</button>
                 </td>
               </tr>`;
             }).join('')}
@@ -1120,14 +1120,14 @@ function renderContracts() {
               <td style="text-align:center;">วันที่ ${c.billingDay}</td>
               <td>
                 <span style="font-size:12px;">${nextBill}</span>
-                <span style="font-size:11px;color:${daysUntil<=3?'#e74c3c':daysUntil<=7?'#e67e22':'var(--text3)'};">
+                <span style="font-size:11px;color:${daysUntil<=3?'var(--red)':daysUntil<=7?'#f5a453':'var(--text3)'};">
                   (${daysUntil<=0?'ถึงกำหนดแล้ว!':daysUntil+' วัน'})
                 </span>
               </td>
               <td style="white-space:nowrap;">
                 <button class="btn btn-primary btn-sm" onclick="generateContractInvoice('${c.id}')">🧾 ออกบิล</button>
                 <button class="btn btn-ghost btn-sm" onclick="openAddContractModal('${c.id}')">✏️</button>
-                <button class="btn btn-ghost btn-sm" onclick="deleteContract('${c.id}')" style="color:#e74c3c;">🗑️</button>
+                <button class="btn btn-ghost btn-sm" onclick="deleteContract('${c.id}')" style="color:var(--red);">🗑️</button>
               </td>
             </tr>`;
           }).join('')}
@@ -1273,13 +1273,13 @@ function printReceiptData(p) {
     <style>
       @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&display=swap');
       * { margin:0;padding:0;box-sizing:border-box; }
-      body { font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;color:#1a1a1a;padding:24px; }
-      .logo { font-size:18px;font-weight:700;color:#2d4a38;text-align:center;margin-bottom:4px; }
+      body { font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;color:#1e2533;padding:24px; }
+      .logo { font-size:18px;font-weight:700;color:#1e2533;text-align:center;margin-bottom:4px; }
       .center { text-align:center; }
       .divider { border:none;border-top:1px dashed #ccc;margin:12px 0; }
       .row { display:flex;justify-content:space-between;padding:3px 0;font-size:13px; }
-      .total-row { display:flex;justify-content:space-between;padding:6px 0;font-size:16px;font-weight:700;color:#2d4a38; }
-      .badge { background:#f0fff4;border:1px solid #27ae60;border-radius:6px;padding:6px 12px;text-align:center;margin:12px 0;color:#27ae60;font-weight:700; }
+      .total-row { display:flex;justify-content:space-between;padding:6px 0;font-size:16px;font-weight:700;color:#1e2533; }
+      .badge { background:#e0f7ec;border:1px solid #5ecba1;border-radius:6px;padding:6px 12px;text-align:center;margin:12px 0;color:#5ecba1;font-weight:700; }
       @media print { body { padding:0; } }
     </style>
   </head><body>
@@ -1371,7 +1371,7 @@ function renderExpenseItems() {
       <td style="padding:4px 6px;"><input type="number" value="${it.qty||1}" min="0" oninput="updateExpItem(${idx},'qty',this.value)" style="width:60px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:12px;"></td>
       <td style="padding:4px 6px;"><input type="number" value="${it.price||0}" min="0" oninput="updateExpItem(${idx},'price',this.value)" style="width:85px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:12px;"></td>
       <td style="padding:4px 6px;text-align:right;font-weight:600;" id="exp-row-${idx}">${formatThb((it.qty||1)*(it.price||0))}</td>
-      <td><button onclick="removeExpItem(${idx})" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>
+      <td><button onclick="removeExpItem(${idx})" style="border:none;background:none;cursor:pointer;color:var(--red);font-size:13px;">✕</button></td>
     </tr>`).join('')}
     </tbody></table>`;
   document.getElementById('exp-items-total').textContent=formatThb(items.reduce((s,it)=>s+(it.qty||1)*(it.price||0),0));
@@ -1561,10 +1561,10 @@ function buildInvoiceHTML(id, copyMode=false) {
   const LABELS  = {invoice:'ใบวางบิล / ใบแจ้งหนี้', receipt:'ใบเสร็จรับเงิน', quotation:'ใบเสนอราคา', tax_invoice:'ใบกำกับภาษี'};
   const ENG_LBL = {invoice:'Invoice', receipt:'Official Receipt', quotation:'Quotation', tax_invoice:'Tax Invoice'};
   const THEMES  = {
-    invoice:     {orig:'#2d4a38',copy:'#1a6b4a',origL:'#e8f5ee',copyL:'#e9f7ef',origB:'#c8e6d5',copyB:'#a9dfbf'},
-    receipt:     {orig:'#1a5276',copy:'#117a8b',origL:'#eaf3fb',copyL:'#e8f8f5',origB:'#aed6f1',copyB:'#a2d9ce'},
-    quotation:   {orig:'#b94000',copy:'#c0770a',origL:'#fef0e7',copyL:'#fef9e7',origB:'#f0b27a',copyB:'#f9e79f'},
-    tax_invoice: {orig:'#6c3483',copy:'#9b59b6',origL:'#f5eef8',copyL:'#fdf2ff',origB:'#d2b4de',copyB:'#dda0dd'},
+    invoice:     {orig:'#1e2533',copy:'#0d6b5c',origL:'#e0f7ec',copyL:'#e0f7ec',origB:'#f4a7b9',copyB:'#f4a7b9'},
+    receipt:     {orig:'#0c2840',copy:'#0d6b5c',origL:'var(--blue-light)',copyL:'#e0f7ec',origB:'#7ab8d4',copyB:'#a2d9ce'},
+    quotation:   {orig:'#c05500',copy:'#b06500',origL:'#fef0e7',copyL:'#fef9e7',origB:'#f5c842',copyB:'#f5c842'},
+    tax_invoice: {orig:'#2d1b5e',copy:'#b39ddb',origL:'#ede9fe',copyL:'#ede9fe',origB:'#b39ddb',copyB:'#b39ddb'},
   };
   const th = THEMES[inv.type] || THEMES.invoice;
   const logoSrc = 'img/logo.png';
@@ -1612,15 +1612,15 @@ function buildInvoiceHTML(id, copyMode=false) {
     (inv.otherItems||[]).filter(it=>(it.price||0)>0).forEach(it=>rows.push({name:it.name, qty:it.qty||1, unit:it.unit||'', price:it.price||0, total:(it.qty||1)*(it.price||0)}));
 
     const rowsHtml = rows.map((r,i)=>`<tr>
-      <td style="border-bottom:1px solid #f0f0f0;padding:8px 11px;text-align:center;color:#999;">${i+1}</td>
-      <td style="border-bottom:1px solid #f0f0f0;padding:8px 11px;font-weight:500;">${r.name}${r.sub?`<span style="margin-left:6px;font-size:10px;color:#888;font-weight:400;">${r.sub}</span>`:''}</td>
-      <td style="border-bottom:1px solid #f0f0f0;padding:8px 11px;text-align:center;font-family:monospace;">${r.qty}${r.unit?' '+r.unit:''}</td>
-      <td style="border-bottom:1px solid #f0f0f0;padding:8px 11px;text-align:right;font-family:monospace;">${(r.price||0).toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
-      <td style="border-bottom:1px solid #f0f0f0;padding:8px 11px;text-align:right;font-family:monospace;font-weight:700;">${(r.total||0).toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
+      <td style="border-bottom:1px solid var(--surface2);padding:8px 11px;text-align:center;color:#999;">${i+1}</td>
+      <td style="border-bottom:1px solid var(--surface2);padding:8px 11px;font-weight:500;">${r.name}${r.sub?`<span style="margin-left:6px;font-size:10px;color:#888;font-weight:400;">${r.sub}</span>`:''}</td>
+      <td style="border-bottom:1px solid var(--surface2);padding:8px 11px;text-align:center;font-family:monospace;">${r.qty}${r.unit?' '+r.unit:''}</td>
+      <td style="border-bottom:1px solid var(--surface2);padding:8px 11px;text-align:right;font-family:monospace;">${(r.price||0).toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
+      <td style="border-bottom:1px solid var(--surface2);padding:8px 11px;text-align:right;font-family:monospace;font-weight:700;">${(r.total||0).toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
     </tr>`).join('') || `<tr><td colspan="5" style="padding:16px;text-align:center;color:#999;">ไม่มีรายการ</td></tr>`;
 
     const vatLine = (inv.vatRate||0)>0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:${c}">VAT ${inv.vatRate}%</span><span style="font-family:monospace">${formatThb(inv.vatAmt||0)}</span></div>` : '';
-    const whtLine = (inv.whtRate||0)>0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:#c0392b">หัก ณ ที่จ่าย ${inv.whtRate}%</span><span style="font-family:monospace;color:#c0392b">-${formatThb(inv.whtAmt||0)}</span></div>` : '';
+    const whtLine = (inv.whtRate||0)>0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:var(--red)">หัก ณ ที่จ่าย ${inv.whtRate}%</span><span style="font-family:monospace;color:var(--red)">-${formatThb(inv.whtAmt||0)}</span></div>` : '';
     const dueRow  = inv.dueDate ? `<tr><td style="color:#999;padding:3px 8px;text-align:right;">กำหนดชำระ</td><td style="font-weight:600;font-family:monospace;">${inv.dueDate}</td></tr>` : '';
 
     return `<div style="font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;color:#222;background:white;overflow:hidden;border-radius:4px;">
@@ -1750,16 +1750,16 @@ function buildExpenseHTML(id) {
 
   return `
   <div style="font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;color:#222;">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #5a9e7a;padding-bottom:14px;margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #2ec4b6;padding-bottom:14px;margin-bottom:16px;">
       <div>
-        <div style="font-size:16px;font-weight:700;color:#2d4a38;">${bs.company||'นวศรี เนอร์สซิ่งโฮม'}</div>
+        <div style="font-size:16px;font-weight:700;color:#1e2533;">${bs.company||'นวศรี เนอร์สซิ่งโฮม'}</div>
         <div style="font-size:11px;color:#555;line-height:1.7;margin-top:4px;">
           ${bs.taxId?`เลขประจำตัวผู้เสียภาษี ${bs.taxId}<br>`:''}
           ${bs.phone?`โทร. ${bs.phone}<br>`:''}${bs.email?`อีเมล ${bs.email}`:''}
         </div>
       </div>
       <div style="text-align:right;">
-        <div style="font-size:20px;font-weight:700;color:#2d4a38;">บันทึกค่าใช้จ่าย</div>
+        <div style="font-size:20px;font-weight:700;color:#1e2533;">บันทึกค่าใช้จ่าย</div>
         <div style="font-size:11px;color:#777;font-style:italic;">Expense Note</div>
         <table style="margin-top:6px;font-size:12px;border-collapse:collapse;">
           <tr><td style="color:#777;padding:2px 8px;">เลขที่</td><td style="font-weight:600;font-family:monospace;">${exp.docNo||'-'}</td></tr>
@@ -1770,7 +1770,7 @@ function buildExpenseHTML(id) {
       </div>
     </div>
 
-    ${exp.vendorName?`<div style="background:#f9f9f9;border:1px solid #e8e8e8;border-radius:6px;padding:12px;margin-bottom:14px;">
+    ${exp.vendorName?`<div style="background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:14px;">
       <div style="font-size:11px;color:#999;text-transform:uppercase;margin-bottom:4px;">ผู้จำหน่าย / Vendor</div>
       <div style="font-weight:700;font-size:14px;">${exp.vendorName}</div>
       ${exp.vendorAddr?`<div style="font-size:11px;color:#666;margin-top:2px;">${exp.vendorAddr}</div>`:''}
@@ -1778,7 +1778,7 @@ function buildExpenseHTML(id) {
     </div>`:''}
 
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
-      <thead><tr style="background:#2d4a38;color:white;">
+      <thead><tr style="background:#1e2533;color:white;">
         <th style="padding:8px 10px;font-size:12px;width:36px;text-align:center;">#</th>
         <th style="padding:8px 10px;font-size:12px;text-align:left;">รายละเอียด</th>
         <th style="padding:8px 10px;font-size:12px;text-align:left;width:150px;">หมวดหมู่</th>
@@ -1794,12 +1794,12 @@ function buildExpenseHTML(id) {
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;"><span style="color:#555;">ราคาไม่รวม VAT</span><span>${formatThb(exp.subtotal||0)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;"><span style="color:#555;">VAT 7%</span><span>${formatThb(exp.vatAmt||0)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px;font-weight:700;border-top:1px solid #ddd;margin-top:4px;"><span>จำนวนเงินรวมทั้งสิ้น</span><span>${formatThb(exp.totalVat||0)}</span></div>
-        ${(exp.whtRate||0)>0?`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;"><span style="color:#c0392b;">หัก ณ ที่จ่าย ${exp.whtRate}%</span><span style="color:#c0392b;">${formatThb(exp.whtAmt||0)}</span></div>`:''}
-        <div style="display:flex;justify-content:space-between;padding:10px 12px;font-size:15px;font-weight:700;background:#2d4a38;color:white;border-radius:6px;margin-top:6px;"><span>ยอดชำระ</span><span>${formatThb(exp.net||0)}</span></div>
+        ${(exp.whtRate||0)>0?`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;"><span style="color:var(--red);">หัก ณ ที่จ่าย ${exp.whtRate}%</span><span style="color:var(--red);">${formatThb(exp.whtAmt||0)}</span></div>`:''}
+        <div style="display:flex;justify-content:space-between;padding:10px 12px;font-size:15px;font-weight:700;background:#1e2533;color:white;border-radius:6px;margin-top:6px;"><span>ยอดชำระ</span><span>${formatThb(exp.net||0)}</span></div>
       </div>
     </div>
 
-    <div style="background:#f8f8f8;border:1px solid #e8e8e8;border-radius:6px;padding:12px;margin-bottom:14px;font-size:12px;">
+    <div style="background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:14px;font-size:12px;">
       <strong>การชำระเงิน:</strong>
       ${PAY[exp.payMethod]||exp.payMethod||'-'}
       ${exp.bank?` | ธนาคาร: ${exp.bank}`:''}
@@ -2125,10 +2125,10 @@ function checkDocNoDuplicate(val, pool) {
   const old = document.getElementById(warnId);
   if (old) old.remove();
   if (dup) {
-    inputEl.style.borderColor = '#e74c3c';
+    inputEl.style.borderColor = 'var(--red)';
     const warn = document.createElement('div');
     warn.id = warnId;
-    warn.style.cssText = 'color:#e74c3c;font-size:11px;margin-top:3px;';
+    warn.style.cssText = 'color:var(--red);font-size:11px;margin-top:3px;';
     warn.textContent = `⚠️ เลขที่ซ้ำกับ: ${dup.patientName||dup.vendorName||dup.job||'-'} (${dup.date||'-'})`;
     inputEl.parentNode.appendChild(warn);
   } else {
@@ -2236,31 +2236,31 @@ function printInvoice(id) {
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;color:#222;background:#fff;padding:28px;max-width:820px;margin:0 auto;}
-    .print-btn{position:fixed;top:12px;right:12px;background:#5a9e7a;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;z-index:99;}
-    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #5a9e7a;padding-bottom:16px;margin-bottom:18px;}
-    .co-name{font-size:16px;font-weight:700;color:#2d4a38;margin-bottom:4px;}
+    .print-btn{position:fixed;top:12px;right:12px;background:#2ec4b6;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;z-index:99;}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #2ec4b6;padding-bottom:16px;margin-bottom:18px;}
+    .co-name{font-size:16px;font-weight:700;color:#1e2533;margin-bottom:4px;}
     .co-sub{font-size:11px;color:#555;line-height:1.7;}
     .doc-box{text-align:right;}
-    .doc-title{font-size:22px;font-weight:700;color:#2d4a38;}
+    .doc-title{font-size:22px;font-weight:700;color:#1e2533;}
     .doc-sub{font-size:11px;color:#777;margin-top:2px;font-style:italic;}
     .meta-table{width:100%;font-size:12px;margin-bottom:4px;}
     .meta-table td{padding:2px 6px;}
     .meta-label{color:#777;white-space:nowrap;width:90px;}
     .meta-val{font-weight:600;}
-    .to-box{background:#f8f8f8;border:1px solid #e8e8e8;border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;}
+    .to-box{background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;}
     .to-label{font-size:11px;color:#999;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
     .to-name{font-weight:700;font-size:15px;margin-bottom:3px;}
     .to-sub{font-size:11px;color:#666;}
     .items-table{width:100%;border-collapse:collapse;margin-bottom:16px;}
-    .items-table th{background:#2d4a38;color:#fff;padding:8px 10px;font-size:12px;font-weight:600;}
+    .items-table th{background:#1e2533;color:#fff;padding:8px 10px;font-size:12px;font-weight:600;}
     .items-table td{border:1px solid #ddd;padding:7px 10px;font-size:13px;vertical-align:top;}
-    .items-table tr:nth-child(even) td{background:#fafafa;}
+    .items-table tr:nth-child(even) td{background:#f8fafc;}
     .totals-wrap{display:flex;justify-content:flex-end;margin-bottom:16px;}
     .totals-box{width:300px;}
     .tot-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;}
     .tot-row.sep{border-top:1px solid #ddd;margin-top:4px;padding-top:8px;}
-    .tot-row.grand{font-weight:700;font-size:15px;color:#2d4a38;}
-    .tot-row.net{font-weight:700;font-size:16px;background:#2d4a38;color:#fff;padding:8px 12px;border-radius:6px;margin-top:6px;}
+    .tot-row.grand{font-weight:700;font-size:15px;color:#1e2533;}
+    .tot-row.net{font-weight:700;font-size:16px;background:#1e2533;color:#fff;padding:8px 12px;border-radius:6px;margin-top:6px;}
     .amount-words{font-size:12px;color:#555;margin-bottom:16px;font-style:italic;}
     .note-box{border-top:1px solid #eee;padding-top:10px;margin-bottom:20px;font-size:12px;color:#666;}
     .sign-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:44px;}
@@ -2319,7 +2319,7 @@ function printInvoice(id) {
       <div class="tot-row"><span>รวมเป็นเงิน</span><span>${formatThb(inv.subtotal||0)}</span></div>
       ${(inv.vatRate||0)>0?`<div class="tot-row"><span>ภาษีมูลค่าเพิ่ม ${inv.vatRate}%</span><span>${formatThb(inv.vatAmt||0)}</span></div>`:''}
       <div class="tot-row sep grand"><span>จำนวนเงินรวมทั้งสิ้น</span><span>${formatThb(inv.beforeWht||inv.grandTotal||0)}</span></div>
-      ${(inv.whtRate||0)>0?`<div class="tot-row"><span style="color:#c0392b;">หัก ณ ที่จ่าย ${inv.whtRate}%</span><span style="color:#c0392b;">${formatThb(inv.whtAmt||0)}</span></div>`:''}
+      ${(inv.whtRate||0)>0?`<div class="tot-row"><span style="color:var(--red);">หัก ณ ที่จ่าย ${inv.whtRate}%</span><span style="color:var(--red);">${formatThb(inv.whtAmt||0)}</span></div>`:''}
       <div class="tot-row net"><span>ยอดชำระ</span><span>${formatThb(inv.grandTotal||0)}</span></div>
     </div>
   </div>
@@ -2359,25 +2359,25 @@ function printExpense(id) {
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;color:#222;background:#fff;padding:28px;max-width:820px;margin:0 auto;}
-    .print-btn{position:fixed;top:12px;right:12px;background:#5a9e7a;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;}
-    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #5a9e7a;padding-bottom:16px;margin-bottom:18px;}
-    .co-name{font-size:16px;font-weight:700;color:#2d4a38;margin-bottom:4px;}
+    .print-btn{position:fixed;top:12px;right:12px;background:#2ec4b6;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #2ec4b6;padding-bottom:16px;margin-bottom:18px;}
+    .co-name{font-size:16px;font-weight:700;color:#1e2533;margin-bottom:4px;}
     .co-sub{font-size:11px;color:#555;line-height:1.7;}
     .doc-box{text-align:right;}
-    .doc-title{font-size:22px;font-weight:700;color:#2d4a38;}
+    .doc-title{font-size:22px;font-weight:700;color:#1e2533;}
     .doc-sub{font-size:11px;color:#777;margin-top:2px;font-style:italic;}
     .meta-table{width:100%;font-size:12px;margin-top:8px;}
     .meta-table td{padding:2px 6px;}
     .items-table{width:100%;border-collapse:collapse;margin:14px 0;}
-    .items-table th{background:#2d4a38;color:#fff;padding:8px 10px;font-size:12px;font-weight:600;}
+    .items-table th{background:#1e2533;color:#fff;padding:8px 10px;font-size:12px;font-weight:600;}
     .items-table td{border:1px solid #ddd;padding:7px 10px;font-size:13px;}
-    .items-table tr:nth-child(even) td{background:#fafafa;}
+    .items-table tr:nth-child(even) td{background:#f8fafc;}
     .totals-wrap{display:flex;justify-content:flex-end;}
     .totals-box{width:280px;}
     .tot-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;}
     .tot-row.sep{border-top:1px solid #ddd;margin-top:4px;padding-top:8px;}
-    .tot-row.net{font-weight:700;font-size:15px;background:#2d4a38;color:#fff;padding:8px 12px;border-radius:6px;margin-top:6px;}
-    .pay-section{background:#f8f8f8;border:1px solid #e8e8e8;border-radius:6px;padding:12px 16px;margin-top:16px;font-size:13px;}
+    .tot-row.net{font-weight:700;font-size:15px;background:#1e2533;color:#fff;padding:8px 12px;border-radius:6px;margin-top:6px;}
+    .pay-section{background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-top:16px;font-size:13px;}
     .sign-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:44px;}
     .sign-box{text-align:center;width:180px;}
     .sign-line{border-top:1.5px solid #444;margin-top:56px;padding-top:8px;}
@@ -2408,7 +2408,7 @@ function printExpense(id) {
     </div>
   </div>
 
-  ${exp.vendorName?`<div style="background:#f8f8f8;border:1px solid #e8e8e8;border-radius:6px;padding:12px 16px;margin-bottom:14px;">
+  ${exp.vendorName?`<div style="background:#f8fafc;border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:14px;">
     <div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">ผู้จำหน่าย / Vendor</div>
     <div style="font-weight:700;font-size:14px;">${exp.vendorName}</div>
     ${exp.vendorAddr?`<div style="font-size:12px;color:#666;margin-top:2px;">${exp.vendorAddr}</div>`:''}
@@ -2432,7 +2432,7 @@ function printExpense(id) {
       <div class="tot-row"><span>ราคาไม่รวม VAT</span><span>${formatThb(exp.subtotal||0)}</span></div>
       <div class="tot-row"><span>ภาษีมูลค่าเพิ่ม 7%</span><span>${formatThb(exp.vatAmt||0)}</span></div>
       <div class="tot-row sep" style="font-weight:600;"><span>จำนวนเงินรวมทั้งสิ้น</span><span>${formatThb(exp.totalVat||0)}</span></div>
-      ${(exp.whtRate||0)>0?`<div class="tot-row"><span style="color:#c0392b;">หัก ณ ที่จ่าย ${exp.whtRate}%</span><span style="color:#c0392b;">${formatThb(exp.whtAmt||0)}</span></div>`:''}
+      ${(exp.whtRate||0)>0?`<div class="tot-row"><span style="color:var(--red);">หัก ณ ที่จ่าย ${exp.whtRate}%</span><span style="color:var(--red);">${formatThb(exp.whtAmt||0)}</span></div>`:''}
       <div class="tot-row net"><span>ยอดชำระ</span><span>${formatThb(exp.net||0)}</span></div>
     </div>
   </div>
@@ -2863,9 +2863,9 @@ function printDietaryReport() {
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบจัดอาหารประจำวัน</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
   <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;padding:24px;}
-  h1{font-size:18px;color:#2d4a38;margin-bottom:4px;}h2{font-size:12px;color:#888;margin-bottom:16px;font-weight:400;}
-  table{width:100%;border-collapse:collapse;}th{background:#2d4a38;color:#fff;padding:8px 10px;font-size:12px;}
-  td{border:1px solid #ddd;padding:7px 10px;}.print-btn{position:fixed;top:12px;right:12px;background:#5a9e7a;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;}
+  h1{font-size:18px;color:#1e2533;margin-bottom:4px;}h2{font-size:12px;color:#888;margin-bottom:16px;font-weight:400;}
+  table{width:100%;border-collapse:collapse;}th{background:#1e2533;color:#fff;padding:8px 10px;font-size:12px;}
+  td{border:1px solid #ddd;padding:7px 10px;}.print-btn{position:fixed;top:12px;right:12px;background:#2ec4b6;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;}
   @media print{.print-btn{display:none;}}</style></head><body>
   <button class="print-btn" onclick="window.print()">🖨️ พิมพ์</button>
   <h1>🍽️ ใบจัดอาหารประจำวัน — นวศรี เนอร์สซิ่งโฮม</h1>
