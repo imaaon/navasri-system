@@ -934,11 +934,11 @@
           </div>
           <button class="btn btn-primary" onclick="openQuickInvoiceModal()">🧾 สร้างใบวางบิล</button>
           <button class="btn btn-ghost" onclick="openCreateInvoiceModal()" style="border:1px solid var(--border);">+ เอกสารทั่วไป</button>
-          <button class="btn btn-ghost" onclick="openExpenseModal()" style="background:rgba(230,126,34,.1);color:#e67e22;border-color:#e67e22;">📋 ค่าใช้จ่าย</button>
-          <button class="btn btn-ghost" onclick="runAutoBilling()" style="background:rgba(90,158,122,.1);color:var(--accent);border-color:var(--accent);">🤖 ออกบิลอัตโนมัติ</button>
+          <button class="btn btn-ghost" onclick="openExpenseModal()" style="background:rgba(94,203,161,0.1);color:#f5a453;border-color:#f5a453;">📋 ค่าใช้จ่าย</button>
+          <button class="btn btn-ghost" onclick="runAutoBilling()" style="background:rgba(46,196,182,0.12);color:var(--accent);border-color:var(--accent);">🤖 ออกบิลอัตโนมัติ</button>
           <button class="btn btn-ghost" onclick="openInvoiceResetLogModal()" style="color:#8e44ad;border-color:#8e44ad;">📋 ประวัติการ Reset</button>
           <button class="btn btn-ghost" onclick="showPage('billing-settings')">⚙️ ตั้งค่า</button>
-<button class="btn btn-ghost" onclick="exportBillingExcel()" style="color:#27ae60;border-color:#27ae60;">📥 Export บิล</button>
+<button class="btn btn-ghost" onclick="exportBillingExcel()" style="color:#0a3626;border-color:#5ecba1;">📥 Export บิล</button>
         </div>
 
         <!-- Tabs: Invoices / Contracts / Payments -->
@@ -979,14 +979,14 @@
               <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">ยอดรวมทั้งหมด</div>
               <div id="billing-total-amount" style="font-size:18px;font-weight:700;color:var(--accent);">0 ฿</div>
             </div>
-            <div style="background:#fff8f0;border:1px solid #f39c12;border-radius:10px;padding:14px;text-align:center;cursor:pointer;" onclick="document.getElementById('billing-filter-status').value='sent';renderBilling()">
-              <div style="font-size:11px;color:#e67e22;margin-bottom:4px;">⏳ รอชำระ / ค้างชำระ</div>
-              <div id="billing-pending-amount" style="font-size:18px;font-weight:700;color:#e67e22;">0 ฿</div>
-              <div id="billing-overdue-count" style="font-size:11px;color:#e74c3c;margin-top:2px;"></div>
+            <div style="background:#fff3e0;border:1px solid #f5c842;border-radius:10px;padding:14px;text-align:center;cursor:pointer;" onclick="document.getElementById('billing-filter-status').value='sent';renderBilling()">
+              <div style="font-size:11px;color:#f5a453;margin-bottom:4px;">⏳ รอชำระ / ค้างชำระ</div>
+              <div id="billing-pending-amount" style="font-size:18px;font-weight:700;color:#f5a453;">0 ฿</div>
+              <div id="billing-overdue-count" style="font-size:11px;color:var(--red);margin-top:2px;"></div>
             </div>
-            <div style="background:#f0fff4;border:1px solid #27ae60;border-radius:10px;padding:14px;text-align:center;">
-              <div style="font-size:11px;color:#27ae60;margin-bottom:4px;">✅ ชำระแล้ว</div>
-              <div id="billing-paid-amount" style="font-size:18px;font-weight:700;color:#27ae60;">0 ฿</div>
+            <div style="background:#e0f7ec;border:1px solid #5ecba1;border-radius:10px;padding:14px;text-align:center;">
+              <div style="font-size:11px;color:#0a3626;margin-bottom:4px;">✅ ชำระแล้ว</div>
+              <div id="billing-paid-amount" style="font-size:18px;font-weight:700;color:#0a3626;">0 ฿</div>
             </div>
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
               <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">จำนวนเอกสาร</div>
@@ -994,7 +994,7 @@
             </div>
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
               <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">ค่าใช้จ่ายรวม</div>
-              <div id="billing-exp-amount" style="font-size:18px;font-weight:700;color:#e67e22;">0 ฿</div>
+              <div id="billing-exp-amount" style="font-size:18px;font-weight:700;color:#f5a453;">0 ฿</div>
             </div>
           </div>
           <!-- Table -->
