@@ -1271,8 +1271,8 @@
               <div class="card-title" style="display:flex;align-items:center;gap:10px;">
                 <span style="font-size:22px;">🧾</span>
                 <div>
-                  <div>ข้อมูลผู้ให้บริการ (ใบแจ้งหนี้)</div>
-                  <div style="font-size:11px;font-weight:400;color:var(--text2);margin-top:1px;">ข้อมูลที่แสดงบนใบแจ้งหนี้ ใบเสร็จ และเอกสารทางการเงิน</div>
+                  <div>ข้อมูลผู้ให้บริการ</div>
+                  <div style="font-size:11px;font-weight:400;color:var(--text2);margin-top:1px;">ข้อมูลที่แสดงบนเอกสารทุกประเภทของสถานประกอบการ</div>
                 </div>
               </div>
             </div>
@@ -1301,22 +1301,12 @@
                   <input class="form-control" id="bs-email" placeholder="เช่น info@navasrinursinghome.com">
                 </div>
               </div>
-              <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;">
-                <div style="font-weight:600;font-size:13px;margin-bottom:12px;">ข้อมูลธนาคาร (สำหรับระบุในใบแจ้งหนี้)</div>
-                <div class="form-grid">
-                  <div class="form-group">
-                    <label class="form-label">ธนาคาร</label>
-                    <input class="form-control" id="bs-bank-name" placeholder="เช่น ธ.กสิกรไทย">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">เลขบัญชี</label>
-                    <input class="form-control" id="bs-bank-no" placeholder="เช่น 123-4-56789-0">
-                  </div>
+              <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                  <div style="font-weight:600;font-size:13px;">บัญชีธนาคาร</div>
+                  <button class="btn btn-ghost btn-sm" onclick="bsAddBank()">+ เพิ่มธนาคาร</button>
                 </div>
-                <div class="form-group" style="margin-bottom:0;">
-                  <label class="form-label">ชื่อบัญชี</label>
-                  <input class="form-control" id="bs-bank-account-name" placeholder="เช่น นวศรี เนอร์สซิ่งโฮม">
-                </div>
+                <div id="bs-banks-list"></div>
               </div>
               <div style="margin-top:16px;display:flex;gap:8px;align-items:center;">
                 <button class="btn btn-primary" onclick="saveBillingSettings()">💾 บันทึก</button>
