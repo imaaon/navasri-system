@@ -246,7 +246,7 @@
   .tabs { display: flex; gap: 2px; background: var(--surface2); padding: 4px; border-radius: 8px; margin-bottom: 20px; }
   .tab { padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text2); transition: all 0.15s; }
   .tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
-  .tab.tab-alert { color: #c0392b; font-weight: 700; }
+  .tab.tab-alert { color: var(--red); font-weight: 700; }
 
   /* Category color dots */
   .cat-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
@@ -317,14 +317,14 @@
   /* ── LOGIN SCREEN ── */
   #loginScreen {
     position: fixed; inset: 0; z-index: 9000;
-    background: radial-gradient(ellipse at center, #2d4a38 0%, #1a2e20 70%);
+    background: radial-gradient(ellipse at center, #1a2535 0%, #0f172a 70%);
     display: flex; align-items: center; justify-content: center;
   }
   .login-box {
     background: var(--surface); border-radius: 16px;
     padding: 40px 44px; width: 400px; max-width: 95vw;
-    box-shadow: 0 24px 64px rgba(0,0,0,0.4), 0 0 0 1px rgba(90,158,122,0.25);
-    border-top: 3px solid var(--sage);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.4), 0 0 0 1px rgba(46,196,182,0.2);
+    border-top: 3px solid var(--accent);
   }
   .login-logo {
     text-align: center; margin-bottom: 28px;
@@ -355,7 +355,7 @@
   }
   .user-chip:hover { background: var(--border); }
   .user-avatar {
-    width: 26px; height: 26px; border-radius: 50%; background: var(--sage);
+    width: 26px; height: 26px; border-radius: 50%; background: var(--accent);
     color: white; display: flex; align-items: center; justify-content: center;
     font-size: 12px; font-weight: 700; flex-shrink: 0;
   }
