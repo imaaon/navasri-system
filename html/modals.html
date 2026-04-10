@@ -416,8 +416,8 @@
       </div>
       <hr class="divider">
       <div class="form-group" style="margin:0;">
-        <label class="form-label" style="color:#c0392b;font-size:13px;">📢 บันทึกส่งเวร (สำหรับพยาบาลกะต่อไป)</label>
-        <textarea class="form-control" id="nursing-handover" rows="3" placeholder="ระบุสิ่งสำคัญที่ต้องติดตาม, ยาพิเศษ, อาการที่ต้องเฝ้าระวัง..." style="resize:vertical;border-color:#e74c3c;"></textarea>
+        <label class="form-label" style="color:var(--red);font-size:13px;">📢 บันทึกส่งเวร (สำหรับพยาบาลกะต่อไป)</label>
+        <textarea class="form-control" id="nursing-handover" rows="3" placeholder="ระบุสิ่งสำคัญที่ต้องติดตาม, ยาพิเศษ, อาการที่ต้องเฝ้าระวัง..." style="resize:vertical;border-color:var(--red);"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -1013,7 +1013,7 @@
       <button class="modal-close" onclick="closeModal('modal-dnr')">✕</button>
     </div>
     <div class="modal-body">
-      <div style="background:#fff5f5;border:1.5px solid #c0392b44;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#c0392b;">
+      <div style="background:var(--red-light);border:1.5px solid rgba(224,90,106,0.25);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--red);">
         ⚠️ ข้อมูลนี้เป็นความประสงค์ทางการแพทย์ที่สำคัญ กรุณาบันทึกหลังได้รับการยินยอมจากผู้ป่วย/ญาติเท่านั้น
       </div>
       <div class="form-group">
@@ -1078,7 +1078,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-dnr')">ยกเลิก</button>
-      <button class="btn" style="background:#c0392b;color:#fff;" onclick="saveDnr()">⚖️ บันทึก DNR & Consent</button>
+      <button class="btn" style="background:var(--red);color:#fff;" onclick="saveDnr()">⚖️ บันทึก DNR & Consent</button>
     </div>
   </div>
 </div>
@@ -1100,7 +1100,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-reject-req')">ยกเลิก</button>
-      <button class="btn" style="background:#e74c3c;color:#fff;" onclick="confirmRejectReq()">❌ ยืนยันไม่อนุมัติ</button>
+      <button class="btn" style="background:var(--red);color:#fff;" onclick="confirmRejectReq()">❌ ยืนยันไม่อนุมัติ</button>
     </div>
   </div>
 </div>
@@ -1487,7 +1487,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-discharge')">ยกเลิก</button>
-      <button class="btn btn-danger" onclick="saveDischarge()" style="background:#c0392b;color:#fff;">🚪 ยืนยันการจำหน่าย</button>
+      <button class="btn btn-danger" onclick="saveDischarge()" style="background:var(--red);color:#fff;">🚪 ยืนยันการจำหน่าย</button>
     </div>
   </div>
 </div>
@@ -1502,8 +1502,8 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="reset-invoice-id">
-      <div style="background:#fff3e0;border:1px solid #e67e22;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
-        <div style="font-weight:700;color:#e67e22;margin-bottom:4px;">⚠️ คำเตือน</div>
+      <div style="background:#fff3e0;border:1px solid #f5a453;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-weight:700;color:#f5a453;margin-bottom:4px;">⚠️ คำเตือน</div>
         <div style="font-size:13px;color:#7d4e00;">การ Reset จะบันทึก Log ไว้ทุกครั้ง และจะแสดงในประวัติการ Reset ครับ</div>
       </div>
       <div class="form-group">
@@ -1579,7 +1579,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-add-allergy')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveAllergy()" style="background:#c0392b;">🚨 บันทึก</button>
+      <button class="btn btn-primary" onclick="saveAllergy()" style="background:var(--red);">🚨 บันทึก</button>
     </div>
   </div>
 </div>
@@ -2203,8 +2203,8 @@
       </div>
 
       <!-- Payload format -->
-      <div style="background:#1a1714;border-radius:8px;padding:16px;color:#e0ddd8;">
-        <div style="font-size:12px;color:#a09890;margin-bottom:8px;font-weight:600;">📦 รูปแบบ JSON ที่ระบบนี้ส่งไป (Webhook Payload)</div>
+      <div style="background:#0f172a;border-radius:8px;padding:16px;color:#d0d8e4;">
+        <div style="font-size:12px;color:#8a96aa;margin-bottom:8px;font-weight:600;">📦 รูปแบบ JSON ที่ระบบนี้ส่งไป (Webhook Payload)</div>
         <pre style="font-family:monospace;font-size:12px;line-height:1.7;white-space:pre-wrap;">{
   "event": "new_requisition",
   "message": "📋 ใบเบิกใหม่ #REQ-0001\n👤 ผู้รับบริการ: นาง สมใจ ใจดี\n📦 รายการ: 3 รายการ\n👨‍⚕️ เบิกโดย: น.ส.ปิยะวรรณ\n🕐 เวลา: 14:32",
@@ -2486,7 +2486,7 @@
                 <option value="3">3%</option>
               </select>
             </span>
-            <span id="inv-wht-amount" style="color:#e74c3c;">0.00 ฿</span>
+            <span id="inv-wht-amount" style="color:var(--red);">0.00 ฿</span>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;background:var(--accent);color:white;padding:10px 12px;border-radius:6px;">
             <span>ยอดชำระ</span>
@@ -3371,7 +3371,7 @@
   <div class="modal" style="max-width:640px;max-height:92vh;display:flex;flex-direction:column;">
     <div class="modal-header">
       <div class="modal-title">🔍 รายละเอียดใบแจ้งหนี้</div>
-      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#E1F5EE;color:#0F6E56;font-weight:500;">ดูข้อมูลเท่านั้น</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#e0f7ec;color:#0a3626;font-weight:500;">ดูข้อมูลเท่านั้น</span>
       <button class="modal-close" onclick="closeModal('modal-view-supinv')">&#x2715;</button>
     </div>
     <div class="modal-body" style="overflow-y:auto;flex:1;">
@@ -3388,7 +3388,7 @@
   <div class="modal" style="max-width:640px;max-height:92vh;display:flex;flex-direction:column;">
     <div class="modal-header">
       <div class="modal-title">🔍 รายละเอียดผู้จำหน่าย</div>
-      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#E1F5EE;color:#0F6E56;font-weight:500;">ดูข้อมูลเท่านั้น</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#e0f7ec;color:#0a3626;font-weight:500;">ดูข้อมูลเท่านั้น</span>
       <button class="modal-close" onclick="closeModal('modal-view-supplier')">&#x2715;</button>
     </div>
     <div class="modal-body" style="overflow-y:auto;flex:1;">
@@ -3405,7 +3405,7 @@
   <div class="modal" style="max-width:640px;max-height:92vh;display:flex;flex-direction:column;">
     <div class="modal-header">
       <div class="modal-title">🔍 รายละเอียดคำขอซื้อ</div>
-      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#E1F5EE;color:#0F6E56;font-weight:500;">ดูข้อมูลเท่านั้น</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#e0f7ec;color:#0a3626;font-weight:500;">ดูข้อมูลเท่านั้น</span>
       <button class="modal-close" onclick="closeModal('modal-view-pr')">&#x2715;</button>
     </div>
     <div class="modal-body" style="overflow-y:auto;flex:1;">
