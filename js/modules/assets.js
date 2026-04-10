@@ -57,10 +57,10 @@ function renderAssets() {
 
   const today2 = today.toISOString().slice(0,10);
   tb.innerHTML = list.map(a=>{
-    const nmCls = a.nextMaintenanceDate && a.nextMaintenanceDate <= today2 ? 'color:#c0392b;font-weight:700' : (a.nextMaintenanceDate&&a.nextMaintenanceDate<=soon7.toISOString().slice(0,10)?'color:#e67e22;font-weight:600':'');
-    const weCls = a.warrantyExpiry && a.warrantyExpiry <= soon30.toISOString().slice(0,10) ? 'color:#e67e22' : '';
+    const nmCls = a.nextMaintenanceDate && a.nextMaintenanceDate <= today2 ? 'color:var(--red);font-weight:700' : (a.nextMaintenanceDate&&a.nextMaintenanceDate<=soon7.toISOString().slice(0,10)?'color:#f5a453;font-weight:600':'');
+    const weCls = a.warrantyExpiry && a.warrantyExpiry <= soon30.toISOString().slice(0,10) ? 'color:#f5a453' : '';
     return `<tr>
-      <td style="font-family:monospace;font-size:12px;">${a.assetNo||'-'}${a.isCritical?'<span style="color:#c0392b;margin-left:4px;" title="อุปกรณ์สำคัญ">⚠️</span>':''}</td>
+      <td style="font-family:monospace;font-size:12px;">${a.assetNo||'-'}${a.isCritical?'<span style="color:var(--red);margin-left:4px;" title="อุปกรณ์สำคัญ">⚠️</span>':''}</td>
       <td style="font-weight:500;">${a.name}<br><span style="font-size:11px;color:var(--text3);">${a.brand||''} ${a.model||''}</span></td>
       <td><span class="badge" style="background:var(--surface2);color:var(--text2);">${ASSET_CAT_LABEL[a.category]||a.category}</span></td>
       <td style="font-size:12px;">${a.location||'-'}</td>
