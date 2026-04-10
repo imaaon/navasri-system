@@ -327,7 +327,7 @@
   /* ── LOGIN SCREEN ── */
   #loginScreen {
     position: fixed; inset: 0; z-index: 9000;
-    background: radial-gradient(ellipse at center, #1a5c38 0%, #0d3320 70%);
+    background: #2e6b4f;
     display: flex; align-items: center; justify-content: center;
   }
   .login-box {
