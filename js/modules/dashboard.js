@@ -42,11 +42,11 @@ function renderNurseDashboard() {
         <div style="font-size:12px;color:var(--text2);margin-top:4px;">👥 ผู้รับบริการปัจจุบัน</div>
       </div>
       <div class="card" style="padding:18px;text-align:center;">
-        <div style="font-size:28px;font-weight:800;color:#e67e22;">${upcomingAppts.length}</div>
+        <div style="font-size:28px;font-weight:800;color:#f5a453;">${upcomingAppts.length}</div>
         <div style="font-size:12px;color:var(--text2);margin-top:4px;">📅 นัดหมายสัปดาห์นี้</div>
       </div>
       <div class="card" style="padding:18px;text-align:center;">
-        <div style="font-size:28px;font-weight:800;color:#c0392b;">${missedMeds.length}</div>
+        <div style="font-size:28px;font-weight:800;color:var(--red);">${missedMeds.length}</div>
         <div style="font-size:12px;color:var(--text2);margin-top:4px;">💊 ยาที่ยังไม่บันทึกวันนี้</div>
       </div>
     </div>
@@ -70,18 +70,18 @@ function renderNurseDashboard() {
 
     ${missedMeds.length > 0 ? `
     <div class="card">
-      <div class="card-header"><div class="card-title" style="color:#c0392b;">💊 ยาที่ยังไม่บันทึกวันนี้</div></div>
+      <div class="card-header"><div class="card-title" style="color:var(--red);">💊 ยาที่ยังไม่บันทึกวันนี้</div></div>
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead><tr style="background:#fff5f5;">
+        <thead><tr style="background:var(--red-light);">
           <th style="padding:8px 12px;text-align:left;">ผู้รับบริการ</th>
           <th style="padding:8px 12px;text-align:left;">ยา</th>
         </tr></thead>
         <tbody>${missedMeds.slice(0,15).map(m => `<tr style="border-top:1px solid var(--border);">
           <td style="padding:8px 12px;font-weight:600;">${m.patient}</td>
-          <td style="padding:8px 12px;color:#c0392b;">💊 ${m.med}</td>
+          <td style="padding:8px 12px;color:var(--red);">💊 ${m.med}</td>
         </tr>`).join('')}</tbody>
       </table>
-    </div>` : `<div class="card" style="padding:20px;text-align:center;color:#27ae60;">✅ บันทึกการให้ยาครบทุกรายการแล้ววันนี้</div>`}
+    </div>` : `<div class="card" style="padding:20px;text-align:center;color:#0a3626;">✅ บันทึกการให้ยาครบทุกรายการแล้ววันนี้</div>`}
   `;
 }
 
@@ -119,7 +119,7 @@ function renderAdminDashboard() {
     tl.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">ยังไม่มีการเบิก</div></div>';
   } else {
     tl.innerHTML = recent.map(r => {
-      const catColors = { ยา:'#e05050', เวชภัณฑ์:'#e07040', ของใช้:'#4070c0', บริการ:'#9060c0' };
+      const catColors = { ยา:'#f4a7b9', เวชภัณฑ์:'#f5a453', ของใช้:'#7ab8d4', บริการ:'#b39ddb' };
       // รองรับทั้ง schema ใหม่ (lines[]) และเก่า (itemId/itemName)
       const displayLines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName, qty: r.qty, unit: r.unit, itemId: r.itemId }];
       const firstLine = displayLines[0] || {};
@@ -155,12 +155,12 @@ function renderAdminDashboard() {
       const exp   = new Date(lot.expiryDate);
       const diff  = Math.ceil((exp - today) / 86400000);
       const diffTxt = diff < 0 ? `เกินมา ${Math.abs(diff)} วัน` : `อีก ${diff} วัน`;
-      return `<tr style="${status==='expired'?'background:#fff5f5':'background:#fff8f0'}">
+      return `<tr style="${status==='expired'?'background:var(--red-light)':'background:var(--orange-light)'}">
         <td style="font-weight:600;">${item?.name||'-'}</td>
         <td style="font-family:monospace;font-size:12px;">${lot.lotNumber||'-'}</td>
         <td class="number">${lot.qtyRemaining}</td>
         <td>${item?.dispenseUnit||item?.unit||''}</td>
-        <td style="font-family:monospace;">${lot.expiryDate} <span style="font-size:11px;color:${status==='expired'?'#c0392b':'#e67e22'};">(${diffTxt})</span></td>
+        <td style="font-family:monospace;">${lot.expiryDate} <span style="font-size:11px;color:${status==='expired'?'var(--red)':'#f5a453'};">(${diffTxt})</span></td>
         <td>${badge}</td>
       </tr>`;
     }).join('');
@@ -277,7 +277,7 @@ function renderAdminDashboard() {
     } else {
       _maintEl.innerHTML = _due.slice(0,5).map(a=>{
         const d = Math.ceil((new Date(a.next_maintenance_date)-_today)/864e5);
-        const col = d<0?'#e74c3c':d<=7?'#e67e22':'#f39c12';
+        const col = d<0?'var(--red)':d<=7?'#f5a453':'#f5c842';
         const lbl = d<0?'เลยกำหนด '+Math.abs(d)+' วัน':'อีก '+d+' วัน';
         return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:13px;cursor:pointer;" onclick="showPage(\'assets\')">'+
           '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+a.asset_no+' '+a.name+'</span>'+
@@ -309,20 +309,20 @@ function renderIncidentWidget() {
   const prevCount = incidents.filter(r => (r.date||'').startsWith(prevStr)).length;
   const diff = monthInc.length - prevCount;
   const diffTxt = diff === 0 ? 'เท่ากับเดือนก่อน' : (diff > 0 ? '▲ เพิ่มขึ้น '+diff : '▼ ลดลง '+Math.abs(diff));
-  const diffColor = diff > 0 ? '#e74c3c' : diff < 0 ? '#27ae60' : '#888';
-  const numColor = monthInc.length === 0 ? '#27ae60' : '#e74c3c';
+  const diffColor = diff > 0 ? 'var(--red)' : diff < 0 ? '#5ecba1' : '#888';
+  const numColor = monthInc.length === 0 ? '#5ecba1' : 'var(--red)';
 
   // --- Card 2: วันที่ไม่เกิดอุบัติเหตุ ---
   const sorted = [...incidents].filter(r=>r.date).sort((a,b)=>b.date.localeCompare(a.date));
   const lastInc = sorted[0];
-  let streakDays = 0, lastIncDate = '-', streakColor = '#27ae60', streakBorder = '#27ae60';
+  let streakDays = 0, lastIncDate = '-', streakColor = '#5ecba1', streakBorder = '#5ecba1';
   if (lastInc) {
     const last = new Date(lastInc.date + 'T00:00:00+07:00');
     const today = new Date(todayStr + 'T00:00:00+07:00');
     streakDays = Math.max(0, Math.floor((today - last) / 86400000));
     lastIncDate = lastInc.date;
-    if (streakDays === 0) { streakColor = '#e74c3c'; streakBorder = '#e74c3c'; }
-    else if (streakDays < 7) { streakColor = '#e67e22'; streakBorder = '#e67e22'; }
+    if (streakDays === 0) { streakColor = 'var(--red)'; streakBorder = 'var(--red)'; }
+    else if (streakDays < 7) { streakColor = '#f5a453'; streakBorder = '#f5a453'; }
   } else {
     // ไม่เคยมีอุบัติเหตุ — นับตั้งแต่ admit แรกสุด หรือ 0
     streakDays = 0;
@@ -339,8 +339,8 @@ function renderIncidentWidget() {
 
   const barHtml = barData.map(b => {
     const pct = Math.round((b.count / maxBar) * 100);
-    const color = b.count === 0 ? 'var(--surface2)' : '#e74c3c';
-    const numColor2 = b.count === 0 ? '#27ae60' : '#e74c3c';
+    const color = b.count === 0 ? 'var(--surface2)' : 'var(--red)';
+    const numColor2 = b.count === 0 ? '#5ecba1' : 'var(--red)';
     return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;">'
       +'<span style="width:30px;color:var(--text3);">'+b.label+'</span>'
       +'<div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;">'
@@ -350,7 +350,7 @@ function renderIncidentWidget() {
       +'</div>';
   }).join('');
 
-  const streakBg = streakDays === 0 ? '#fff5f5' : streakDays < 7 ? '#fff8f0' : '#f0fff4';
+  const streakBg = streakDays === 0 ? 'var(--red-light)' : streakDays < 7 ? 'var(--orange-light)' : '#e0f7ec';
   el.innerHTML =
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">'
     // card รายเดือน
@@ -371,7 +371,7 @@ function renderIncidentWidget() {
     +'</div>'
     +'<div>'
     +'<div style="font-size:12px;color:var(--text2);">นับตั้งแต่ครั้งล่าสุด</div>'
-    +(lastIncDate !== '-' ? '<div style="font-size:11px;color:var(--text3);">'+lastIncDate+'</div>' : '<div style="font-size:11px;color:#27ae60;">ยังไม่เคยมีบันทึก</div>')
+    +(lastIncDate !== '-' ? '<div style="font-size:11px;color:var(--text3);">'+lastIncDate+'</div>' : '<div style="font-size:11px;color:#5ecba1;">ยังไม่เคยมีบันทึก</div>')
     +'</div></div></div>'
     +'</div>'
     // bar chart
