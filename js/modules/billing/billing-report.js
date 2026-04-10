@@ -8,11 +8,12 @@ function openQuickInvoiceModal() {
   }
   initBilling();
 
-  // Populate patient dropdown
-  const sel = document.getElementById('qi-patient');
-  sel.innerHTML = '<option value="">-- เลือกผู้รับบริการ --</option>' +
-    db.patients.filter(p=>p.status==='active')
-      .map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  // Reset typeahead patient
+  const qiInp = document.getElementById('ta-qi-inp');
+  const qiHid = document.getElementById('ta-qi-id');
+  if(qiInp) qiInp.value = '';
+  if(qiHid) qiHid.value = '';
+  if(typeof makeTypeahead==='function') makeTypeahead({inputId:'ta-qi-inp',listId:'ta-qi-list',hiddenId:'ta-qi-id',dataFn:()=>taPatients(true)});
 
   // Default date range = current month
   const now   = new Date();
