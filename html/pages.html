@@ -1,7 +1,7 @@
       <!-- DASHBOARD -->
       <div id="page-dashboard">
         <div class="stats-grid">
-          <div class="stat-card orange">
+          <div class="stat-card teal">
             <div class="stat-label">รายการสินค้าทั้งหมด</div>
             <div class="stat-value number" id="stat-total">0</div>
             <div class="stat-sub">รายการในคลัง</div>
@@ -13,7 +13,7 @@
             <div class="stat-sub">ต้องสั่งเพิ่ม</div>
             <div class="stat-icon">⚠️</div>
           </div>
-          <div class="stat-card green" onclick="showPage('requisition'); setTimeout(()=>switchHistoryTab('approval'),100);" style="cursor:pointer;" title="คลิกดูรายการรออนุมัติ">
+          <div class="stat-card yellow" onclick="showPage('requisition'); setTimeout(()=>switchHistoryTab('approval'),100);" style="cursor:pointer;" title="คลิกดูรายการรออนุมัติ">
             <div class="stat-label">เบิกวันนี้</div>
             <div class="stat-value number" id="stat-today">0</div>
             <div class="stat-sub">รายการ · <span style="text-decoration:underline;opacity:.7;cursor:pointer;" onclick="event.stopPropagation();showPage('history');">ดูประวัติ →</span></div>
@@ -31,19 +31,19 @@
             <div class="stat-sub">คนในระบบ</div>
             <div class="stat-icon">👤</div>
           </div>
-          <div class="stat-card orange">
+          <div class="stat-card green">
             <div class="stat-label">ใกล้หมดอายุ</div>
             <div class="stat-value number" id="stat-expiry">0</div>
             <div class="stat-sub">Lot ที่ต้องระวัง</div>
             <div class="stat-icon">📅</div>
           </div>
-          <div class="stat-card green">
+          <div class="stat-card powder">
             <div class="stat-label">รับเข้าเดือนนี้</div>
             <div class="stat-value number" id="stat-recv-month">0</div>
             <div class="stat-sub">ครั้ง</div>
             <div class="stat-icon">📥</div>
           </div>
-          <div class="stat-card blue">
+          <div class="stat-card orange">
             <div class="stat-label">คำขอซื้อค้างอนุมัติ</div>
             <div class="stat-value number" id="stat-pr-pending">0</div>
             <div class="stat-sub">รายการ</div>
