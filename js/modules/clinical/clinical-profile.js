@@ -310,6 +310,11 @@ function switchPatTab(tab) {
     var depPid = depEl ? depEl.id.replace('pat-deposits-list-','') : null;
     if (depPid && typeof loadPatDeposits === 'function') setTimeout(function(){ loadPatDeposits(depPid); }, 100);
   }
+  if (tab === 'lab') {
+    var labEl = document.querySelector('[id^="lab-list-"]');
+    var labPid = labEl ? labEl.id.replace('lab-list-','') : null;
+    if (labPid && typeof renderLabTab === 'function') renderLabTab(labPid);
+  }
 }
 
 async function loadPatDispense(patId) {
