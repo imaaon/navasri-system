@@ -467,3 +467,146 @@ function loadPatDeposits(patId) {
         '</table></div>';
     });
 }
+
+
+// ═══════════════════════════════════════════
+// LAB RESULTS — moved from fix-features.js
+// ═══════════════════════════════════════════
+
+function renderLabTab(patientId) {
+  var el = document.getElementById('lab-list-' + patientId);
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px;">กำลังโหลด...</div>';
+  supa.from('patient_lab_results').select('*').eq('patient_id', patientId)
+    .order('test_date', { ascending: false })
+    .then(function(res) {
+      var rows = res.data || [];
+      if (!rows.length) {
+        el.innerHTML = '<div class="card"><div class="card-header"><div class="card-title">🧪 ผลแล็บ</div>' +
+          '<button class="btn btn-primary btn-sm" onclick="openAddLabModal(\''+patientId+'\')" style="margin-left:auto;">+ บันทึก</button></div>' +
+          '<div style="padding:32px;text-align:center;">ยังไม่มีผลแล็บ</div></div>';
+        return;
+      }
+      var html = '<div class="card"><div class="card-header"><div class="card-title">🧪 ผลแล็บ (' + rows.length + ')</div>' +
+        '<button class="btn btn-primary btn-sm" onclick="openAddLabModal(\''+patientId+'\')" style="margin-left:auto;">+ บันทึก</button></div><div style="padding:0 16px;">';
+      rows.forEach(function(r) {
+        var results = [];
+        try { results = typeof r.results === 'string' ? JSON.parse(r.results) : (r.results || []); } catch(e) {}
+        var abn = results.filter(function(x) { return x.status === 'high' || x.status === 'low'; });
+        html += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">' +
+          '<div style="display:flex;justify-content:space-between;">' +
+          '<div><div style="font-weight:600;">📅 ' + (r.test_date||'-') + ' ' +
+          (r.hospital ? '<span style="font-size:12px;color:var(--text2);">' + r.hospital + '</span>' : '') + '</div>' +
+          (r.summary ? '<div style="font-size:12px;color:var(--text2);">' + r.summary + '</div>' : '') + '</div>' +
+          '<div><button class="btn btn-ghost btn-sm" onclick="openEditLabModal(\'' + r.id + '\',\'' + patientId + '\')">✏️</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="deleteLabResult(\'' + r.id + '\',\'' + patientId + '\')" style="color:#e74c3c;">🗑️</button></div></div>' +
+          (abn.length ? '<div style="margin-top:4px;">' + abn.map(function(x) {
+            return '<span style="font-size:11px;padding:2px 6px;border-radius:10px;background:' +
+              (x.status==='high'?'#fde8e8':'#fff3e0') + ';color:' + (x.status==='high'?'#c0392b':'#d35400') + '">' +
+              x.test_name + ': ' + x.value + '</span>';
+          }).join(' ') + '</div>' : '') +
+          (results.length ? '<details style="margin-top:4px;"><summary style="font-size:12px;color:var(--text2);cursor:pointer;">ดูทั้งหมด (' + results.length + ')</summary>' +
+          '<div style="margin-top:4px;">' + results.map(function(x) {
+            var sc = x.status==='high'?'#e74c3c':x.status==='low'?'#e67e22':'#27ae60';
+            return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 6px;background:var(--surface2);border-radius:4px;margin-bottom:2px;">' +
+              '<span>' + x.test_name + '</span><span style="color:' + sc + '">' + x.value + ' ' + (x.unit||'') +
+              (x.reference_range ? ' (' + x.reference_range + ')' : '') + '</span></div>';
+          }).join('') + '</div></details>' : '') + '</div>';
+      });
+      html += '</div></div>';
+      el.innerHTML = html;
+    });
+}
+
+function _renderLabRows() {
+  var rows = window._labRows || [];
+  var c = document.getElementById('lab-results-container');
+  if (!c) return;
+  if (!rows.length) { c.innerHTML = '<div style="text-align:center;padding:12px;">กด + เพิ่ม</div>'; return; }
+  c.innerHTML = rows.map(function(row, i) {
+    var sc = row.status==='high' ? 'border-left:3px solid #e74c3c;' : row.status==='low' ? 'border-left:3px solid #e67e22;' : 'border-left:3px solid #27ae60;';
+    return '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr auto auto;gap:6px;align-items:center;padding:6px 8px;background:var(--surface2);border-radius:6px;margin-bottom:6px;' + sc + '">' +
+      '<input class="form-control" style="font-size:12px;" placeholder="ชื่อ" value="' + (row.test_name||'') + '" oninput="window._labRows[' + i + '].test_name=this.value">' +
+      '<input class="form-control" style="font-size:12px;" placeholder="ค่า" value="' + (row.value||'') + '" oninput="window._labRows[' + i + '].value=this.value">' +
+      '<input class="form-control" style="font-size:12px;" placeholder="หน่วย" value="' + (row.unit||'') + '" oninput="window._labRows[' + i + '].unit=this.value">' +
+      '<input class="form-control" style="font-size:12px;" placeholder="อ้างอิง" value="' + (row.reference_range||'') + '" oninput="window._labRows[' + i + '].reference_range=this.value">' +
+      '<select class="form-control" style="font-size:12px;" onchange="window._labRows[' + i + '].status=this.value;window._renderLabRows()">' +
+      '<option value="normal"' + (row.status==='normal'?' selected':'') + '>N</option>' +
+      '<option value="high"' + (row.status==='high'?' selected':'') + '>H</option>' +
+      '<option value="low"' + (row.status==='low'?' selected':'') + '>L</option></select>' +
+      '<button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="window._labRows.splice(' + i + ',1);window._renderLabRows()">✕</button></div>';
+  }).join('');
+}
+window._renderLabRows = _renderLabRows;
+
+function openAddLabModalBase(patientId) {
+  document.getElementById('lab-edit-id').value = '';
+  document.getElementById('lab-patient-id').value = patientId;
+  document.getElementById('lab-test-date').value = '';
+  document.getElementById('lab-hospital').value = '';
+  document.getElementById('lab-doctor').value = '';
+  document.getElementById('lab-summary').value = '';
+  document.getElementById('lab-note').value = '';
+  window._labRows = [];
+  window._renderLabRows();
+  document.getElementById('modal-add-lab-title').textContent = '🧪 บันทึกผลแล็บ';
+  openModal('modal-add-lab');
+}
+window.openAddLabModal = openAddLabModalBase;
+
+function openEditLabModal(labId, patientId) {
+  supa.from('patient_lab_results').select('*').eq('id', labId).single().then(function(res) {
+    var r = res.data;
+    if (!r) return;
+    document.getElementById('lab-edit-id').value = labId;
+    document.getElementById('lab-patient-id').value = patientId;
+    document.getElementById('lab-test-date').value = r.test_date || '';
+    document.getElementById('lab-hospital').value = r.hospital || '';
+    document.getElementById('lab-doctor').value = r.doctor || '';
+    document.getElementById('lab-summary').value = r.summary || '';
+    document.getElementById('lab-note').value = r.note || '';
+    try { window._labRows = typeof r.results === 'string' ? JSON.parse(r.results) : (r.results || []); }
+    catch(e) { window._labRows = []; }
+    window._renderLabRows();
+    document.getElementById('modal-add-lab-title').textContent = '✏️ แก้ไขผลแล็บ';
+    openModal('modal-add-lab');
+  });
+}
+
+function addLabResultRow(prefill) {
+  if (!window._labRows) window._labRows = [];
+  window._labRows.push(prefill || { test_name: '', value: '', unit: '', reference_range: '', status: 'normal' });
+  window._renderLabRows();
+}
+
+async function saveLabResult() {
+  var editId    = document.getElementById('lab-edit-id').value;
+  var patientId = document.getElementById('lab-patient-id').value;
+  var testDate  = document.getElementById('lab-test-date').value;
+  if (!testDate) { toast('กรุณาระบุวันที่', 'warning'); return; }
+  var payload = {
+    patient_id: patientId,
+    test_date:  testDate,
+    hospital:   document.getElementById('lab-hospital').value.trim() || null,
+    doctor:     document.getElementById('lab-doctor').value.trim() || null,
+    summary:    document.getElementById('lab-summary').value.trim() || null,
+    results:    JSON.stringify(window._labRows || []),
+    note:       document.getElementById('lab-note').value.trim() || null,
+    created_by: (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : null,
+  };
+  var res = editId
+    ? await supa.from('patient_lab_results').update(payload).eq('id', editId)
+    : await supa.from('patient_lab_results').insert(payload);
+  if (res.error) { toast('บันทึกไม่สำเร็จ: ' + res.error.message, 'error'); return; }
+  toast('บันทึกเรียบร้อย', 'success');
+  closeModal('modal-add-lab');
+  renderLabTab(patientId);
+}
+
+async function deleteLabResult(labId, patientId) {
+  if (!confirm('ลบผลแล็บ?')) return;
+  var res = await supa.from('patient_lab_results').delete().eq('id', labId);
+  if (res.error) { toast('ลบไม่สำเร็จ: ' + res.error.message, 'error'); return; }
+  toast('ลบเรียบร้อย', 'success');
+  renderLabTab(patientId);
+}
