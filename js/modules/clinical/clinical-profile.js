@@ -608,6 +608,8 @@ function renderPatientTabBar(p, totalReqs) {
     { k:'lab',        perm:'lab',           label:'🧪 ผลแล็บ' },
     { k:'nursing',    perm:'nursing',       label:'📋 บันทึกพยาบาล' },
     { k:'appts',      perm:'appointments',  label:'🚐 นัดหมายแพทย์' },
+    { k:'incident',   perm:'incident',     label:'🚨 อุบัติการณ์' },
+    { k:'dietary',    perm:'dietary',      label:'🥦 โภชนาการ' },
     { k:'belongings', perm:'belongings',    label:'🧳 ทรัพย์สิน' },
     { k:'dnr',        perm:'dnr',           label:'⚖️ DNR & Consent' },
     { k:'physio',     perm:'physio',        label:'🤻 กายภาพบำบัด' },
