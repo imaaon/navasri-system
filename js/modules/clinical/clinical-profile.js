@@ -207,7 +207,7 @@ async function openPatientProfile(id, activeTab) {
         <div class="card">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;">🚐 นัดหมายแพทย์ / ส่งต่อโรงพยาบาล</div>
-            <button class="btn btn-primary btn-sm" onclick="openApptModal(null,'${p.id}','${p.name}')">+ เพิ่มนัด</button>
+            <button class="btn btn-primary btn-sm" onclick="openApptModal(null,'${p.id}')">+ เพิ่มนัด</button>
           </div>
           <div id="appt-list-${p.id}">
             ${renderApptList(p.id)}
@@ -219,7 +219,7 @@ async function openPatientProfile(id, activeTab) {
         <div class="card">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;">🧳 ทรัพย์สินของมีค่า</div>
-            <button class="btn btn-primary btn-sm" onclick="openBelongingModal(null,'${p.id}','${p.name}')">+ บันทึกสิ่งของ</button>
+            <button class="btn btn-primary btn-sm" onclick="openBelongingModal(null,'${p.id}')">+ บันทึกสิ่งของ</button>
           </div>
           <div id="belonging-list-${p.id}">
             ${renderBelongingList(p.id)}
@@ -241,7 +241,7 @@ async function openPatientProfile(id, activeTab) {
               <select id="physio-month-filter" class="form-control" style="width:160px;font-size:13px;" onchange="renderPhysioTab('${p.id}')">
               </select>
               <button class="btn btn-ghost btn-sm" onclick="exportPhysioExcel()" title="ส่งออก Excel">📥 Excel</button>
-              <button class="btn btn-primary btn-sm" onclick="openPhysioSessionModal('${p.id}','${p.name}')">+ บันทึก Session</button>
+              <button class="btn btn-primary btn-sm" onclick="openPhysioSessionModal('${p.id}')">+ บันทึก Session</button>
             </div>
           </div>
           <div id="physio-summary-${p.id}" style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
@@ -270,7 +270,7 @@ async function openPatientProfile(id, activeTab) {
         <div class="card">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;">💰 มัดจำ & เงินประกัน</div>
-            <button class="btn btn-primary btn-sm" onclick="openDepositModal('${p.id}','${p.name}')">+ บันทึกมัดจำ</button>
+            <button class="btn btn-primary btn-sm" onclick="openDepositModal('${p.id}')">+ บันทึกมัดจำ</button>
           </div>
           <div id="pat-deposits-list-${p.id}">
             <div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div>
