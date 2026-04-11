@@ -78,24 +78,7 @@ async function openPatientProfile(id, activeTab) {
     <!-- RIGHT: Tabs -->
     <div>
       ${renderAllergyBanner(p)}
-      <div class="tabs" id="patprofileTabs" style="margin-bottom:16px;">
-        <div class="tab" onclick="switchPatTab('history')">📦 ประวัติเบิก (${totalReqs})</div>
-        <div class="tab" onclick="switchPatTab('medical')">🏥 ประวัติการรักษา</div>
-        <div class="tab" onclick="switchPatTab('meds')">💊 ยาประจำ</div>
-        <div class="tab${p.allergies?.length ? ' tab-alert' : ''}" onclick="switchPatTab('allergy')">🚨 แพ้ยา/อาหาร ${p.allergies?.length ? `<span style="background:#c0392b;color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">${p.allergies.length}</span>` : ''}</div>
-        <div class="tab${p.contacts?.length ? '' : ''}" onclick="switchPatTab('contacts')">👥 ผู้ติดต่อ ${p.contacts?.length ? `<span style="background:var(--accent);color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">${p.contacts.length}</span>` : ''}</div>
-        <div class="tab" onclick="switchPatTab('notes')">📝 หมายเหตุ</div>
-        <div class="tab" onclick="switchPatTab('mar')">💊 MAR ยาประจำวัน</div>
-        <div class="tab" onclick="switchPatTab('vitals')">📊 Vital Signs</div>
-        <div class="tab" onclick="switchPatTab('lab')">🧪 ผลแล็บ</div>
-        <div class="tab" onclick="switchPatTab('nursing')">📋 บันทึกพยาบาล</div>
-        <div class="tab" onclick="switchPatTab('appts')">🚐 นัดหมายแพทย์</div>
-        <div class="tab" onclick="switchPatTab('belongings')">🧳 ทรัพย์สิน</div>
-        <div class="tab" onclick="switchPatTab('dnr')">⚖️ DNR & Consent</div>
-        <div class="tab" onclick="switchPatTab('physio')">🤸 กายภาพบำบัด</div>
-<div class="tab" onclick="switchPatTab('dispense')">💊 เบิกสินค้า</div>
-        ${(ROLE_PAGES[currentUser?.role]||[]).includes('deposits') ? `<div class="tab" onclick="switchPatTab('deposits')">💰 มัดจำ</div>` : ''}
-      </div>
+      ${renderPatientTabBar(p, totalReqs)}
       <div id="patprofile-tab-history">
         <div class="card">
           <div class="table-wrap">
@@ -609,4 +592,31 @@ async function deleteLabResult(labId, patientId) {
   if (res.error) { toast('ลบไม่สำเร็จ: ' + res.error.message, 'error'); return; }
   toast('ลบเรียบร้อย', 'success');
   renderLabTab(patientId);
+}
+
+// ─── Patient Profile Tab Bar (role-aware) ────────────────────
+function renderPatientTabBar(p, totalReqs) {
+  const allTabs = [
+    { k:'history',    perm:'history',       label:'📦 ประวัติเบิก (' + totalReqs + ')' },
+    { k:'medical',    perm:'nursing',       label:'🏥 ประวัติการรักษา' },
+    { k:'meds',       perm:'mar',           label:'💊 ยาประจำ' },
+    { k:'allergy',    perm:'allergies',     label:'🚨 แพ้ยา/อาหาร' + (p.allergies?.length ? '<span style="background:#c0392b;color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">' + p.allergies.length + '</span>' : '') },
+    { k:'contacts',   perm:'contacts',      label:'👥 ผู้ติดต่อ' + (p.contacts?.length ? '<span style="background:var(--accent);color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">' + p.contacts.length + '</span>' : '') },
+    { k:'notes',      perm:'nursing',       label:'📝 หมายเหตุ' },
+    { k:'mar',        perm:'mar',           label:'💊 MAR ยาประจำวัน' },
+    { k:'vitals',     perm:'vitals',        label:'📊 Vital Signs' },
+    { k:'lab',        perm:'lab',           label:'🧪 ผลแล็บ' },
+    { k:'nursing',    perm:'nursing',       label:'📋 บันทึกพยาบาล' },
+    { k:'appts',      perm:'appointments',  label:'🚐 นัดหมายแพทย์' },
+    { k:'belongings', perm:'belongings',    label:'🧳 ทรัพย์สิน' },
+    { k:'dnr',        perm:'dnr',           label:'⚖️ DNR & Consent' },
+    { k:'physio',     perm:'physio',        label:'🤻 กายภาพบำบัด' },
+    { k:'dispense',   perm:'history',       label:'💊 เบิกสินค้า' },
+    { k:'deposits',   perm:'deposits',      label:'💰 มัดจำ' },
+  ];
+  const visibleTabs = allTabs.filter(t => canSeePatientTab(t.perm));
+  const tabsHtml = visibleTabs.map(t =>
+    '<div class="tab" onclick="switchPatTab(\'' + t.k + '\')">' + t.label + '</div>'
+  ).join('\n        ');
+  return '<div class="tabs" id="patprofileTabs" style="margin-bottom:16px;">\n        ' + tabsHtml + '\n      </div>';
 }
