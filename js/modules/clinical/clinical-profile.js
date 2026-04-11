@@ -304,14 +304,27 @@ function switchPatTab(tab) {
     if (labPid && typeof renderLabTab === 'function') renderLabTab(labPid);
   }
   if (tab === 'incident') {
-    var incEl = document.querySelector('[id^="pat-incident-list-"]');
-    var incPid = incEl ? incEl.id.replace('pat-incident-list-','') : null;
-    if (incPid) {
-      var incItems = (db.incidents||[]).filter(function(x){return String(x.patient_id)===incPid||String(x.patientId)===incPid;});
-      var wItems   = (db.wounds||[]).filter(function(x){return String(x.patient_id)===incPid||String(x.patientId)===incPid;});
-      incEl.innerHTML = (incItems.length===0&&wItems.length===0) ? '<div style="padding:20px;text-align:center;color:var(--text3);">ไม่มีข้อมูล</div>'
-        : incItems.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px"><div style="font-weight:600;">' + (x.type||'') + '</div><div style="font-size:13px;color:var(--text2);">' + (x.date||'') + ' | ' + (x.severity||'') + '</div><div style="font-size:13px;margin-top:4px;">' + (x.detail||'') + '</div></div>';}).join('') +
-          wItems.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px;border-left:3px solid #e67e22"><div style="font-weight:600;">🩹 ' + (x.location||'') + ' Stage '+(x.stage||'')+' </div><div style="font-size:13px;color:var(--text2);">' + (x.woundDate||x.wound_date||'') + '</div></div>';}).join('');
+    var _ie=document.querySelector('[id^="pat-incident-list-"]');
+    var _ip=_ie?_ie.id.replace('pat-incident-list-',''):null;
+    if(_ip&&_ie){
+      _ie.innerHTML='<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
+      Promise.all([supa.from('incident_reports').select('*').eq('patient_id',_ip).order('date',{ascending:false}),supa.from('patient_wounds').select('*').eq('patient_id',_ip).order('wound_date',{ascending:false})]).then(function(rs){
+        var iD=rs[0].data||[],wD=rs[1].data||[];
+        if(!iD.length&&!wD.length){_ie.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3)">ไม่มีข้อมูล</div>';return;}
+        _ie.innerHTML=iD.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px"><b>'+x.type+'</b><div style="font-size:13px;color:var(--text2)">'+x.date+' | '+(x.severity||'')+'</div><div style="font-size:13px">'+(x.detail||'')+'</div></div>';}).join('')+wD.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px;border-left:3px solid #e67e22"><b>🩹 '+(x.location||'')+' Stage '+(x.stage||'')+'</b><div style="font-size:13px;color:var(--text2)">'+(x.wound_date||'')+'</div></div>';}).join('');
+      });
+    }
+  }
+  if (tab === 'dietary') {
+    var _de=document.querySelector('[id^="pat-dietary-list-"]');
+    var _dp=_de?_de.id.replace('pat-dietary-list-',''):null;
+    if(_dp&&_de){
+      _de.innerHTML='<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
+      Promise.all([supa.from('patient_diets').select('*').eq('patient_id',_dp).order('updated_at',{ascending:false}),supa.from('tube_feedings').select('*').eq('patient_id',_dp).order('created_at',{ascending:false})]).then(function(rs){
+        var dD=rs[0].data||[],tD=rs[1].data||[];
+        if(!dD.length&&!tD.length){_de.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3)">ไม่มีข้อมูล</div>';return;}
+        _de.innerHTML=dD.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px"><b>'+(x.diet_type||'')+'</b><div style="font-size:13px;color:var(--text2)">'+(x.meals||'')+'</div></div>';}).join('')+tD.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px;border-left:3px solid #27ae60"><b>🧪 สายให้อาหาร</b><div style="font-size:13px;color:var(--text2)">'+(x.date||'')+'</div></div>';}).join('');
+      });
     }
   }
   if (tab === 'dietary') {
