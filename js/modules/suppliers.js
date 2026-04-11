@@ -1312,43 +1312,47 @@ async function confirmInvoiceStock(id) {
   if (!confirm('ยืนยันรับสินค้าและเพิ่มสต็อก? ไม่สามารถยกเลิกได้')) return;
   const inv = db.supplierInvoices.find(x => x.id == id);
   if (!inv) return;
-  const { error } = await supa.from('supplier_invoices')
-    .update({ status: 'confirmed', is_stock_updated: true, received_date: new Date().toISOString().slice(0,10) })
-    .eq('id', id);
-  if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
-  inv.status = 'confirmed'; inv.isStockUpdated = true;
-  // update stock จาก invoice lines ที่มีอยู่
-  const { data: invLines } = await supa.from('supplier_invoice_lines')
-    .select('*').eq('invoice_id', id).eq('update_stock', false).eq('line_type', 'product');
-  if (invLines?.length) {
-    let _failCount = 0;
-    for (const line of invLines) {
-      if (!line.item_id) continue;
-      const item = db.items.find(x => x.id === line.item_id);
-      const beforeQty = parseFloat(item?.qty) || 0;
-      const afterQty  = beforeQty + parseFloat(line.qty);
-      const { error: _movErr } = await supa.from('stock_movements').insert({
-        item_id: line.item_id, movement_type: 'receive',
-        quantity: line.qty, before_qty: beforeQty, after_qty: afterQty,
-        supplier_invoice_id: id, cost: line.unit_price || 0,
-        ref_id: id, ref_type: 'supplier_invoice',
-        created_by: currentUser?.username || '',
-      if (_movErr) { console.error('[navasri] stock_movement insert fail:', _movErr.message); _failCount++; }
-      });
-      const { error: _lineErr } = await supa.from('supplier_invoice_lines').update({ update_stock: true }).eq('id', line.id);
-      if (_lineErr) { console.error('[navasri] invoice_line update fail:', _lineErr.message); }
-      if (item) item.qty = afterQty;
+
+  showLoadingOverlay(true);
+  try {
+    const { data: rpcResult, error: rpcErr } = await supa.rpc('confirm_invoice_stock', {
+      p_invoice_id: parseInt(id),
+      p_created_by: currentUser?.username || '',
+    });
+
+    if (rpcErr || !rpcResult?.ok) {
+      const msg = rpcErr?.message || rpcResult?.error || 'unknown error';
+      toast('เกิดข้อผิดพลาด: ' + msg, 'error');
+      console.error('[confirm_invoice_stock] RPC error:', msg);
+      return;
     }
+
+    // sync local cache หลัง DB สำเร็จ
+    inv.status = 'confirmed';
+    inv.isStockUpdated = true;
+
+    // sync item qty จาก DB
+    const { data: updItems } = await supa.from('items').select('id,qty');
+    if (updItems) updItems.forEach(ui => {
+      const item = db.items.find(x => x.id === ui.id);
+      if (item) item.qty = parseFloat(ui.qty) || 0;
+    });
+    if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
+
+    const added   = rpcResult.added   || 0;
+    const skipped = rpcResult.skipped || 0;
+    const skippedNames = rpcResult.skipped_names || [];
+
+    if (skipped > 0) {
+      const names = skippedNames.map(n => '  \u2022 ' + n).join('\n');
+      alert('\u2705 เพิ่มสต็อกแล้ว: ' + added + ' รายการ\n\u26a0\ufe0f ไม่ได้เพิ่มสต็อก (พิมพ์ชื่อเอง): ' + skipped + ' รายการ\n' + names + '\n\n\u2192 กรุณาไปเพิ่มสต็อคด้วยตนเองที่ \ud83d\udce6 คลังสต็อค');
+    }
+
+    toast('เพิ่มสต็อกเรียบร้อย' + (skipped > 0 ? ' (' + skipped + ' รายการข้ามไป)' : ''), skipped > 0 ? 'warning' : 'success');
+    renderSupplierInvoices();
+  } finally {
+    showLoadingOverlay(false);
   }
-  // สรุปผลการเพิ่มสต็อก
-  const _added   = (invLines||[]).filter(l=>l.update_stock&&l.item_id);
-  const _skipped = (invLines||[]).filter(l=>l.line_type==='product'&&!l.item_id);
-  if (_skipped.length > 0) {
-    const names = _skipped.map(l=>'  • '+(l.item_name||'?ไม่ระบุ')).join('\n');
-    alert('✅ เพิ่มสต็อกแล้ว: '+_added.length+' รายการ\n⚠️ ไม่ได้เพิ่มสต็อก (พิมพ์ชื่อเอง): '+_skipped.length+' รายการ\n'+names+'\n\n→ กรุณาไปเพิ่มสต็อคด้วยตนเองที่ 📦 คลังสต็อค');
-  }
-  toast(_failCount>0 ? `เพิ่มสต็อกเรียบร้อย (${_failCount} รายการบันทึก log ไม่ได้)` : 'เพิ่มสต็อกเรียบร้อย', _failCount>0 ? 'warning' : 'success');
-  renderSupplierInvoices();
 }
 
 async function deleteSupplierInvoice(id, invoiceNo) {
