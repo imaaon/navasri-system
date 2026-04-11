@@ -81,6 +81,8 @@ async function saveAppt() {
     status: document.getElementById('appt-status').value,
     note: document.getElementById('appt-note').value.trim(),
     created_by: actor,
+coverage: (document.getElementById('appt-coverage') || {}).value || null,
+orders:   (document.getElementById('appt-orders') || {}).value || null,
   };
   if (_apptEditId) {
     const { error } = await supa.from('patient_appointments').update(row).eq('id',_apptEditId);
