@@ -804,7 +804,6 @@ async function savePayment() {
     if (_statusErr) { console.error('[billing] invoice status update fail:', _statusErr.message); }
     else { inv.status = newStatus; }
   }
-  }
 
   toast(`✅ รับชำระ ${formatThb(amount)} (${receiptNo}) เรียบร้อย`, 'success');
   closeModal('modal-record-payment');
