@@ -441,7 +441,7 @@ async function receiveItem() {
   showLoadingOverlay(true);
   try {
     // ใช้ RPC atomic (single transaction)
-    const { data: rpcResult, error: rpcErr } = await supa.rpc('receive_stock_atomic', {
+    const { data: rpcResult, error: rpcErr } = await supa.rpc('receive_stock_v2', {
       p_item_id:      item.id,
       p_qty_purchase: qty,
       p_qty_dispense: qtyDispense,
@@ -463,7 +463,7 @@ async function receiveItem() {
       const rpcMissing = errMsg.includes('does not exist') || errMsg.includes('Could not find');
       if (rpcMissing) {
         // RPC ยังไม่ได้รัน — แจ้ง admin และใช้ fallback พร้อม warning
-        console.warn('[receiveItem] RPC receive_stock_atomic ไม่พบ — ใช้ fallback (รัน receive_stock_atomic_rpc.sql ใน Supabase)');
+        console.warn('[receiveItem] RPC receive_stock_v2 ไม่พบ — ใช้ fallback (รัน receive_stock_v2 ใน Supabase)');
         toast('⚠️ กำลังใช้ fallback mode — กรุณารัน receive_stock_atomic_rpc.sql ใน Supabase', 'warning');
         await _receiveItemFallback(item, qty, qtyDispense, cost, lotNum, mfgDate, expiry, recvDate, po, supplier, note);
       } else {
