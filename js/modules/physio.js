@@ -97,6 +97,13 @@ async function savePhysioSession() {
   toast(sessionId ? "แก้ไขเรียบร้อย" : "บันทึกเรียบร้อย", "success");
   closeModal("modal-physio-session");
   renderPhysioTab(patientId);
+  // delayed re-render เพื่อ handle filter dropdown ที่อาจยังไม่ load
+  setTimeout(function(){
+    var listEl=document.getElementById('physio-list-'+patientId);
+    if(!listEl) return;
+    var filterEl=document.getElementById('physio-month-filter');
+    if(filterEl&&filterEl.options.length>0) renderPhysioTab(patientId);
+  }, 500);
 }
 
 async function renderPhysioTab(patientId) {
