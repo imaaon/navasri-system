@@ -510,7 +510,7 @@ async function _receiveItemFallback(item, qty, qtyDispense, cost, lotNum, mfgDat
     received_date: recvDate, notes: note,
   };
   const { data: lotInserted, error: errLot } = await supa.from('item_lots').insert(lotData).select().single();
-  if (errLot) console.warn('item_lots insert failed:', errLot.message);
+  if (errLot) { toast('⚠️ บันทึก lot ไม่สำเร็จ (fallback): ' + errLot.message, 'warning'); }
   else if (lotInserted) db.itemLots.push(mapLot(lotInserted));
 
   const purchaseData = {
@@ -520,7 +520,8 @@ async function _receiveItemFallback(item, qty, qtyDispense, cost, lotNum, mfgDat
     by_user: currentUser?.username || '',
   };
   const { data: pInserted, error: errP } = await supa.from('purchases').insert(purchaseData).select().single();
-  if (!errP && pInserted) db.purchases.unshift(mapPurchase(pInserted));
+  if (errP) { toast('⚠️ บันทึก purchase ไม่สำเร็จ (fallback): ' + errP.message, 'warning'); }
+  else if (pInserted) db.purchases.unshift(mapPurchase(pInserted));
 
   const movData = {
     item_id: item.id, barcode: item.barcode || null,
@@ -532,8 +533,8 @@ async function _receiveItemFallback(item, qty, qtyDispense, cost, lotNum, mfgDat
     ref_type: 'purchase', created_by: currentUser?.username || '',
   };
   const { data: movInserted, error: _movErr1 } = await supa.from('stock_movements').insert(movData).select().single();
-  if (_movErr1) console.error('[navasri] stock_movement insert fail (receive):', _movErr1.message);
-  if (movInserted) db.stockMovements.unshift(mapStockMovement(movInserted));
+  if (_movErr1) { toast('⚠️ บันทึก stock movement ไม่สำเร็จ (fallback): ' + _movErr1.message, 'warning'); }
+  else if (movInserted) db.stockMovements.unshift(mapStockMovement(movInserted));
 
   item.qty = newQty;
   if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
