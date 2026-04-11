@@ -181,7 +181,7 @@ function canViewAccounts() {
 }
 
 function canManageAccounting() {
-  return hasRole('admin', 'manager', 'accounting');
+  return hasRole('admin', 'manager');
 }
 
 function canResetInvoice() {
