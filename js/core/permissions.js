@@ -39,7 +39,7 @@ const ROLE_PAGES = {
   caregiver: ['dashboard','patients','requisition','history','incident','dietary'],
 
   // พนักงานผู้ช่วยฯ (ตรวจสต็อค): สต็อค + เบิกของ + ประวัติ
-  warehouse: ['dashboard','stock','requisition','history','report','patients',
+  warehouse: ['dashboard','stock','requisition','history','report',
                'items','purchasehistory','suppliers','purchaserequests','stockreport'],
 
   // Legacy
@@ -86,7 +86,7 @@ const PATIENT_TAB_WRITE = {
   allergies:    ['admin','manager','officer','nurse','parttime_nurse'],
   vitals:       ['admin','manager','officer','nurse','parttime_nurse',
                  'physical_therapist','dietitian','caregiver'],
-  mar:          ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
+  mar:          ['admin','manager','officer','nurse','parttime_nurse'],
   lab:          ['admin','manager','officer','nurse','parttime_nurse'],
   physio:       ['admin','manager','officer','nurse','parttime_nurse','physical_therapist'],
   nursing:      ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
