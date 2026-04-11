@@ -264,6 +264,9 @@ async function openPatientProfile(id, activeTab) {
     </div>
   </div>`;
   switchPatTab(activeTab || 'history');
+  if(typeof window._injectStatusBtn==='function'){
+    setTimeout(function(){window._injectStatusBtn(String(id));},200);
+  }
   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
