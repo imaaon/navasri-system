@@ -242,7 +242,7 @@ function updateTransferBeds() {
 }
 
 async function saveTransferRoom() {
-  const patId   = document.getElementById('transfer-patient-id').value;
+  const patId    = document.getElementById('transfer-patient-id').value;
   const newRoomId = document.getElementById('transfer-room-id').value;
   const newBedId  = document.getElementById('transfer-bed-id').value;
   const date      = document.getElementById('transfer-date').value;
@@ -255,56 +255,49 @@ async function saveTransferRoom() {
   const p = db.patients.find(x => x.id == patId);
   if (!p) return;
 
-  const oldBed  = db.beds.find(b => b.id == p.currentBedId);
-  const oldRoom = db.rooms.find(r => r.id == (oldBed?.roomId || p.currentRoomId));
-  const newBed  = db.beds.find(b => b.id == newBedId);
-  const newRoom = db.rooms.find(r => r.id == newRoomId);
+  showLoadingOverlay(true);
+  try {
+    const { data: rpcResult, error: rpcErr } = await supa.rpc('transfer_bed', {
+      p_patient_id:    patId,
+      p_new_bed_id:    parseInt(newBedId),
+      p_new_room_id:   parseInt(newRoomId),
+      p_transfer_date: date,
+      p_note:          note || '',
+      p_created_by:    currentUser?.displayName || currentUser?.username || '',
+    });
 
-  // บันทึกประวัติย้ายห้องใน Supabase
-  const histData = {
-    patient_id:   patId,
-    patient_name: p.name,
-    from_room_id: oldBed?.roomId || p.currentRoomId || null,
-    from_room:    oldRoom?.name || '-',
-    from_bed_id:  p.currentBedId || null,
-    from_bed:     oldBed?.bedCode || '-',
-    to_room_id:   newRoomId,
-    to_room:      newRoom?.name || '-',
-    to_bed_id:    newBedId,
-    to_bed:       newBed?.bedCode || '-',
-    transfer_date: date,
-    note:         note,
-    created_by:   currentUser?.displayName || currentUser?.username || ''
-  };
-  const { error: histErr } = await supa.from('patient_room_history').insert(histData);
-  if (histErr) console.warn('room history insert:', histErr.message);
+    if (rpcErr || !rpcResult?.ok) {
+      const msg = rpcErr?.message || rpcResult?.error || 'unknown error';
+      toast('❌ ย้ายห้องไม่สำเร็จ: ' + msg, 'error');
+      console.error('[transfer_bed] RPC error:', msg);
+      return;
+    }
 
-  // อัปเดตสถานะเตียงเดิม → ว่าง
-  if (p.currentBedId && p.currentBedId != newBedId) {
-    await supa.from('beds').update({ status: 'available', patient_id: null }).eq('id', p.currentBedId);
-    const oldBedObj = db.beds.find(b => b.id == p.currentBedId);
-    if (oldBedObj) { oldBedObj.status = 'available'; oldBedObj.patientId = null; }
+    // sync local cache หลัง DB สำเร็จ
+    const oldBed = db.beds.find(b => b.id == p.currentBedId);
+    if (oldBed && p.currentBedId != newBedId) {
+      oldBed.status = 'available'; oldBed.patientId = null;
+    }
+    const newBed = db.beds.find(b => b.id == newBedId);
+    if (newBed) { newBed.status = 'occupied'; newBed.patientId = patId; }
+
+    p.currentRoomId = parseInt(newRoomId);
+    p.currentBedId  = parseInt(newBedId);
+
+    if (!db.roomHistory) db.roomHistory = [];
+    db.roomHistory.unshift({
+      patient_id: patId, patient_name: p.name,
+      from_bed: rpcResult.from_bed, from_room: rpcResult.from_room,
+      to_bed: rpcResult.to_bed, to_room: rpcResult.to_room,
+      transfer_date: date, note, id: Date.now()
+    });
+
+    toast(`✅ ย้ายห้องเรียบร้อย → ห้อง ${rpcResult.to_room} เตียง ${rpcResult.to_bed}`, 'success');
+    closeModal('modal-transfer-room');
+    renderRooms();
+  } finally {
+    showLoadingOverlay(false);
   }
-
-  // อัปเดตสถานะเตียงใหม่ → มีผู้พัก
-  await supa.from('beds').update({ status: 'occupied', patient_id: patId }).eq('id', newBedId);
-  if (newBed) { newBed.status = 'occupied'; newBed.patientId = patId; }
-
-  // อัปเดตข้อมูลคนไข้
-  await supa.from('patients').update({
-    room_id: newRoomId,
-    bed_id:  newBedId
-  }).eq('id', patId);
-  p.currentRoomId = newRoomId;
-  p.currentBedId  = newBedId;
-
-  // บันทึก local history
-  if (!db.roomHistory) db.roomHistory = [];
-  db.roomHistory.unshift({ ...histData, id: Date.now() });
-
-  toast(`✅ ย้ายห้องเรียบร้อย → ห้อง ${newRoom?.name} เตียง ${newBed?.bedCode}`, 'success');
-  closeModal('modal-transfer-room');
-  renderRooms();
 }
 
 function openRoomHistoryModal() {
