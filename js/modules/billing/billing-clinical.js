@@ -748,3 +748,39 @@ async function loadNewTables() {
   }
 }
 // loadNewTables ถูกเรียกจาก loadDB ใน db.js แล้ว
+
+// ─────────────────────────────────────────────────────
+// ── DEPOSIT FROM PATIENT PROFILE ─────────────────────
+// ─────────────────────────────────────────────────────
+function openDepositModalFromProfile(depId, patId) {
+  openDepositModal(depId || '');
+  setTimeout(function() {
+    const hidEl = document.getElementById('ta-dep-id');
+    const inpEl = document.getElementById('ta-dep-inp');
+    if (!depId && hidEl && inpEl && patId) {
+      hidEl.value = String(patId);
+      const p = (db.patients || []).find(x => String(x.id) === String(patId));
+      if (p) inpEl.value = p.name || '';
+    }
+    const _origSave = window.saveDeposit;
+    window.saveDeposit = function() {
+      _origSave.apply(this, arguments);
+      setTimeout(function() {
+        const el = document.querySelector('[id^="pat-deposits-list-"]');
+        const pid = el ? el.id.replace('pat-deposits-list-', '') : patId;
+        if (pid && typeof loadPatDeposits === 'function') loadPatDeposits(pid);
+      }, 600);
+      window.saveDeposit = _origSave;
+    };
+  }, 300);
+}
+
+async function deleteDepositFromProfile(depId, patId) {
+  if (!confirm('ลบรายการมัดจำนี้?')) return;
+  const { error } = await supa.from('patient_deposits').delete().eq('id', depId);
+  if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  if (db.deposits) db.deposits = (db.deposits || []).filter(x => x.id != depId);
+  if (typeof renderDeposits === 'function') renderDeposits();
+  if (typeof loadPatDeposits === 'function') loadPatDeposits(patId);
+  toast('ลบแล้ว', 'success');
+}
