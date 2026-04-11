@@ -261,10 +261,30 @@ async function openPatientProfile(id) {
 </div>
     </div>
   </div>`;
+  // กรอง tabs ตาม role permission
+  if (typeof canSeePatientTab === 'function') {
+    document.querySelectorAll('#patprofileTabs .tab').forEach(function(tab) {
+      var m = (tab.getAttribute('onclick')||'').match(/switchPatTab\('([^']+)'\)/);
+      if (!m) return;
+      tab.style.display = canSeePatientTab(m[1]) ? '' : 'none';
+    });
+    // ถ้า active tab ถูกซ่อน ให้เปลี่ยนไป tab แรกที่มีสิทธิ์
+    var activeTab = document.querySelector('#patprofileTabs .tab.active');
+    if (activeTab && activeTab.style.display === 'none') {
+      var firstAllowed = document.querySelector('#patprofileTabs .tab:not([style*="display: none"])');
+      if (firstAllowed) firstAllowed.click();
+    }
+  }
   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
 function switchPatTab(tab) {
+  // ตรวจ permission ก่อน switch
+  if (typeof canSeePatientTab === 'function' && !canSeePatientTab(tab)) {
+    var firstAllowed = document.querySelector('#patprofileTabs .tab:not([style*="display: none"])');
+    if (firstAllowed) { var m2 = (firstAllowed.getAttribute('onclick')||'').match(/'([^']+)'/); if(m2) tab = m2[1]; else return; }
+    else return;
+  }
   const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','lab','nursing','appts','belongings','dnr','physio','dispense'];
   tabs.forEach(t => {
     const el = document.getElementById('patprofile-tab-'+t);
