@@ -266,14 +266,14 @@ async function savePatient() {
     physio_hours_per_day: data.physioHoursPerDay,
   };
   if (editId) {
-    // If bed changed, update old bed back to available
-    const oldPatient = db.patients.find(p => p.id == editId);
-    if (oldPatient?.currentBedId && oldPatient.currentBedId != bedId) {
-      const { error: _oldBedErr } = await supa.from('beds').update({ status: 'available' }).eq('id', oldPatient.currentBedId);
-      if (_oldBedErr) console.error('[navasri] old bed release fail:', _oldBedErr.message);
-      const ob = db.beds.find(b => b.id == oldPatient.currentBedId);
-      if (ob) ob.status = 'available';
-    }
+
+
+
+
+
+
+
+
     const { error } = await supa.from('patients').update(row).eq('id', editId);
     if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
     // บันทึก status log ถ้า status เปลี่ยน
@@ -295,14 +295,23 @@ async function savePatient() {
     if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
     db.patients.push({ ...data, id: ins.id, medicalLog: [], medsLog: [], allergies: [], contacts: [] });
   }
-  // Mark bed as occupied
+  // Mark bed as occupied — atomic via admit_patient RPC
   if (bedId) {
-    const { error: _newBedErr } = await supa.from('beds').update({ status: 'occupied' }).eq('id', bedId);
-    if (_newBedErr) { toast('บันทึกข้อมูลสำเร็จ แต่อัปเดตสถานะเตียงไม่ได้: ' + _newBedErr.message, 'warning'); }
-    const nb = db.beds.find(b => b.id == bedId);
-    if (nb) nb.status = 'occupied';
+    const _oldBedId = editId ? (db.patients.find(p=>p.id==editId)?.currentBedId||null) : null;
+    const _patId = editId || db.patients[db.patients.length-1]?.id;
+    const { data: _rpcBed, error: _rpcBedErr } = await supa.rpc('admit_patient', {
+      p_patient_id: _patId,
+      p_bed_id:     parseInt(bedId),
+      p_old_bed_id: _oldBedId ? parseInt(_oldBedId) : null,
+      p_created_by: currentUser?.username || '',
+    });
+    if (_rpcBedErr || !_rpcBed?.ok) {
+      toast('⚠️ บันทึกสำเร็จ แต่อัปเดตเตียงไม่สำเร็จ: ' + (_rpcBedErr?.message||_rpcBed?.error||'unknown'), 'warning');
+    } else {
+      const _nb = db.beds.find(b=>b.id==bedId); if(_nb) _nb.status='occupied';
+      const _ob = db.beds.find(b=>b.id==_oldBedId); if(_ob&&_oldBedId!=bedId) _ob.status='available';
+    }
   }
-  toast(editId ? 'แก้ไขข้อมูลเรียบร้อย' : 'เพิ่มผู้รับบริการเรียบร้อย', 'success');
   logAudit(AUDIT_MODULES.PATIENT,
     editId ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
     editId || 'new', { name: data.name || data.first_name });
