@@ -75,6 +75,8 @@ const PATIENT_TAB_ACCESS = {
   deposits:     ['admin','manager','officer','nurse'],
   dnr:          ['admin','manager','officer','nurse','parttime_nurse'],
   consent:      ['admin','manager','officer','nurse','parttime_nurse'],
+  history:      ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
+  dispense:     ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
 };
 
 // tab ที่แก้ไขได้ (ไม่ใช่แค่ดู) สำหรับแต่ละ role
@@ -96,6 +98,8 @@ const PATIENT_TAB_WRITE = {
   deposits:     ['admin','manager','officer','nurse'],
   dnr:          ['admin','manager','officer','nurse','parttime_nurse'],
   consent:      ['admin','manager','officer','nurse','parttime_nurse'],
+  history:      ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
+  dispense:     ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
 };
 
 function canSeeAllHistory() {
