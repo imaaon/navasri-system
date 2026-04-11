@@ -49,62 +49,22 @@ const ROLE_PAGES = {
 // ── Tab access per role (patient profile tabs) ─────────────────
 // กำหนด tab ในโปรไฟล์คนไข้ที่แต่ละ role เห็นได้
 const PATIENT_TAB_ACCESS = {
-  // tab: [roles ที่เห็นได้]
-  general:      ['admin','manager','officer','nurse','parttime_nurse','doctor',
-                 'physical_therapist','dietitian','caregiver'],
-  contacts:     ['admin','manager','officer','nurse','parttime_nurse',
-                 'physical_therapist','dietitian','caregiver'],
-  allergies:    ['admin','manager','officer','nurse','parttime_nurse','doctor',
-                 'physical_therapist','dietitian','caregiver'],
-  vitals:       ['admin','manager','officer','nurse','parttime_nurse','doctor',
-                 'physical_therapist','dietitian','caregiver'],
-  mar:          ['admin','manager','officer','nurse','parttime_nurse','doctor',
-                 'dietitian','caregiver'],
-  lab:          ['admin','manager','officer','nurse','parttime_nurse','doctor',
-                 'physical_therapist','dietitian'],
-  physio:       ['admin','manager','officer','nurse','parttime_nurse','doctor',
-                 'physical_therapist'],
-  nursing:      ['admin','manager','officer','nurse','parttime_nurse','doctor',
-                 'physical_therapist','dietitian','caregiver'],
-  dietary:      ['admin','manager','officer','nurse','parttime_nurse',
-                 'dietitian','caregiver'],
-  incident:     ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
-  appointments: ['admin','manager','officer','nurse','parttime_nurse'],
-  belongings:   ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
-  assets:       ['admin','manager','officer','nurse'],
-  deposits:     ['admin','manager','officer','nurse'],
-  dnr:          ['admin','manager','officer','nurse','parttime_nurse'],
-  consent:      ['admin','manager','officer','nurse','parttime_nurse'],
-  history:      ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
-  dispense:     ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
-};
-
-// tab ที่แก้ไขได้ (ไม่ใช่แค่ดู) สำหรับแต่ละ role
-const PATIENT_TAB_WRITE = {
-  general:      ['admin','manager','officer','nurse','parttime_nurse'],
-  contacts:     ['admin','manager','officer','nurse'],
-  allergies:    ['admin','manager','officer','nurse','parttime_nurse'],
-  vitals:       ['admin','manager','officer','nurse','parttime_nurse',
-                 'physical_therapist','dietitian','caregiver'],
-  mar:          ['admin','manager','officer','nurse','parttime_nurse'],
-  lab:          ['admin','manager','officer','nurse','parttime_nurse'],
-  physio:       ['admin','manager','officer','nurse','parttime_nurse','physical_therapist'],
-  nursing:      ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
-  dietary:      ['admin','manager','officer','nurse','parttime_nurse','dietitian','caregiver'],
-  incident:     ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
-  appointments: ['admin','manager','officer','nurse','parttime_nurse'],
-  belongings:   ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
-  assets:       ['admin','manager','officer','nurse'],
-  deposits:     ['admin','manager','officer','nurse'],
-  dnr:          ['admin','manager','officer','nurse','parttime_nurse'],
-  consent:      ['admin','manager','officer','nurse','parttime_nurse'],
-  history:      ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
-  dispense:     ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
-};
-
-function canSeeAllHistory() {
-  return currentUser && !['caregiver','physical_therapist','staff','doctor',
-                           'parttime_nurse','dietitian'].includes(currentUser.role);
+  // key ตรงกับ HTML switchPatTab() keys ใน clinical-profile.js
+  history:     ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
+  medical:     ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist','dietitian','caregiver'],
+  meds:        ['admin','manager','officer','nurse','parttime_nurse','doctor','dietitian','caregiver'],
+  allergy:     ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist','dietitian','caregiver'],
+  contacts:    ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver'],
+  notes:       ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist','dietitian','caregiver'],
+  mar:         ['admin','manager','officer','nurse','parttime_nurse','doctor','dietitian','caregiver'],
+  vitals:      ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist','dietitian','caregiver'],
+  lab:         ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist','dietitian'],
+  nursing:     ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist','dietitian','caregiver'],
+  appts:       ['admin','manager','officer','nurse','parttime_nurse'],
+  belongings:  ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
+  dnr:         ['admin','manager','officer','nurse','parttime_nurse'],
+  physio:      ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist'],
+  dispense:    ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
 }
 
 function canSeePatientTab(tab) {
