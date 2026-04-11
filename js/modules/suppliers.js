@@ -296,7 +296,8 @@ async function savePR(status = 'draft') {
         reject_reason: pr.rejectReason, created_by: pr.createdBy, created_at: pr.createdAt}));
     }
     refNo = db.purchaseRequests.find(r => r.id == editId)?.refNo || String(editId);
-    await supa.from('purchase_request_lines').delete().eq('request_id', editId);
+  const { error: delPRLErr } = await supa.from('purchase_request_lines').delete().eq('request_id', editId);
+  if (delPRLErr) { toast('ลบ line items เดิมไม่สำเร็จ: ' + delPRLErr.message, 'error'); return; }
   } else {
     const { data: refData } = await supa.rpc('next_pr_ref_no').then(r => r).catch(() => ({ data: null }));
     refNo = refData || ('PR-' + Date.now());
@@ -316,7 +317,8 @@ async function savePR(status = 'draft') {
     qty_requested: it.qty,
     unit: it.unit || '',
   }));
-  await supa.from('purchase_request_lines').insert(linesData);
+  const { error: insPRLErr } = await supa.from('purchase_request_lines').insert(linesData);
+  if (insPRLErr) { toast('บันทึก line items ไม่สำเร็จ: ' + insPRLErr.message, 'error'); return; }
   toast('บันทึกคำขอซื้อ ' + refNo + ' เรียบร้อย', 'success');
   closeModal('modal-addPR');
   renderPurchaseRequests();
@@ -343,7 +345,8 @@ async function deletePR(id) {
     toast('เฉพาะผู้มีสิทธิ์อนุมัติเท่านั้นที่ลบคำขอที่อนุมัติแล้วได้', 'error'); return;
   }
   if (!confirm('ลบคำขอซื้อ ' + (pr.refNo || id) + '?')) return;
-  await supa.from('purchase_request_lines').delete().eq('request_id', id);
+  const { error: delLinesErr } = await supa.from('purchase_request_lines').delete().eq('request_id', id);
+  if (delLinesErr) { toast('ลบ line items ไม่สำเร็จ: ' + delLinesErr.message, 'error'); return; }
   const { error } = await supa.from('purchase_requests').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.purchaseRequests = db.purchaseRequests.filter(r => r.id != id);
@@ -960,10 +963,11 @@ async function saveSupplierInvoice(andConfirm = false) {
     await saveSupInvLines(invoiceId, andConfirm);
     // ถ้ามี PO ให้ link ด้วย
     if (prId && !editId) {
-      await supa.from('supplier_invoice_links').upsert(
-        { invoice_id: invoiceId, purchase_request_id: prId, linked_by: currentUser?.username || '' },
-        { onConflict: 'invoice_id,purchase_request_id', ignoreDuplicates: true }
-      );
+  const { error: silErr } = await supa.from('supplier_invoice_links').upsert(
+    { invoice_id: invoiceId, purchase_request_id: prId, linked_by: currentUser?.username || '' },
+    { onConflict: 'invoice_id,purchase_request_id', ignoreDuplicates: true }
+  );
+  if (silErr) { toast('เชื่อมโยง PO ไม่สำเร็จ: ' + silErr.message, 'warning'); }
     }
   }
   toast(editId ? 'แก้ไขใบแจ้งหนี้เรียบร้อย' : (andConfirm ? 'บันทึกและเพิ่มสต็อกเรียบร้อย' : 'บันทึกร่างเรียบร้อย'), 'success');
