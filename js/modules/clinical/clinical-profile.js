@@ -262,6 +262,8 @@ async function openPatientProfile(id, activeTab) {
       </div>
       ` : ''}
     </div>
+<div id="patprofile-tab-incident" style="display:none"><div id="pat-incident-list-${pid}"><div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div></div></div>
+<div id="patprofile-tab-dietary" style="display:none"><div id="pat-dietary-list-${pid}"><div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div></div></div>
   </div>`;
   switchPatTab(activeTab || 'history');
   if(typeof window._injectStatusBtn==='function'){
@@ -271,7 +273,7 @@ async function openPatientProfile(id, activeTab) {
 }
 
 function switchPatTab(tab) {
-  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','lab','nursing','appts','belongings','dnr','physio','dispense','deposits'];
+  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','lab','nursing','appts','belongings','dnr','physio','dispense','deposits','incident','dietary'];
   tabs.forEach(t => {
     const el = document.getElementById('patprofile-tab-'+t);
     if(el) el.style.display = t===tab ? '' : 'none';
@@ -300,6 +302,28 @@ function switchPatTab(tab) {
     var labEl = document.querySelector('[id^="lab-list-"]');
     var labPid = labEl ? labEl.id.replace('lab-list-','') : null;
     if (labPid && typeof renderLabTab === 'function') renderLabTab(labPid);
+  }
+  if (tab === 'incident') {
+    var incEl = document.querySelector('[id^="pat-incident-list-"]');
+    var incPid = incEl ? incEl.id.replace('pat-incident-list-','') : null;
+    if (incPid) {
+      var incItems = (db.incidents||[]).filter(function(x){return String(x.patient_id)===incPid||String(x.patientId)===incPid;});
+      var wItems   = (db.wounds||[]).filter(function(x){return String(x.patient_id)===incPid||String(x.patientId)===incPid;});
+      incEl.innerHTML = (incItems.length===0&&wItems.length===0) ? '<div style="padding:20px;text-align:center;color:var(--text3);">ไม่มีข้อมูล</div>'
+        : incItems.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px"><div style="font-weight:600;">' + (x.type||'') + '</div><div style="font-size:13px;color:var(--text2);">' + (x.date||'') + ' | ' + (x.severity||'') + '</div><div style="font-size:13px;margin-top:4px;">' + (x.detail||'') + '</div></div>';}).join('') +
+          wItems.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px;border-left:3px solid #e67e22"><div style="font-weight:600;">🩹 ' + (x.location||'') + ' Stage '+(x.stage||'')+' </div><div style="font-size:13px;color:var(--text2);">' + (x.woundDate||x.wound_date||'') + '</div></div>';}).join('');
+    }
+  }
+  if (tab === 'dietary') {
+    var dietEl = document.querySelector('[id^="pat-dietary-list-"]');
+    var dietPid = dietEl ? dietEl.id.replace('pat-dietary-list-','') : null;
+    if (dietPid) {
+      var dietItems = (db.diets||[]).filter(function(x){return String(x.patient_id)===dietPid||String(x.patientId)===dietPid;});
+      var tubeItems = (db.tubeFeedings||db.tube_feedings||[]).filter(function(x){return String(x.patient_id)===dietPid||String(x.patientId)===dietPid;});
+      dietEl.innerHTML = (dietItems.length===0&&tubeItems.length===0) ? '<div style="padding:20px;text-align:center;color:var(--text3);">ไม่มีข้อมูล</div>'
+        : dietItems.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px"><div style="font-weight:600;">' + (x.dietType||x.diet_type||'') + '</div><div style="font-size:13px;color:var(--text2);">' + (x.meals||'') + '</div></div>';}).join('') +
+          tubeItems.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px;border-left:3px solid #27ae60"><div style="font-weight:600;">🧪 สายให้อาหาร</div><div style="font-size:13px;color:var(--text2);">' + (x.date||'') + ' | ' + (x.formula||'') + '</div></div>';}).join('');
+    }
   }
 }
 
