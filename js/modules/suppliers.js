@@ -944,14 +944,14 @@ async function saveSupplierInvoice(andConfirm = false) {
     const inv = db.supplierInvoices.find(x => x.id == editId);
     if (inv) Object.assign(inv, mapSupplierInvoice({ ...data, id: editId, created_at: inv.createdAt }));
     if (typeof logAudit === 'function') logAudit('supplier', 'update', editId, { invoice_no: data.invoice_no, total: data.total });
-    toast('แก้ไขใบแจ้งหนี้เรียบร้อย', 'success');
+
   } else {
     data.created_by = currentUser?.username || '';
     const { data: inserted, error } = await supa.from('supplier_invoices').insert(data).select().single();
     if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
     if (inserted) { db.supplierInvoices.unshift(mapSupplierInvoice(inserted)); invoiceId = inserted.id; }
     if (typeof logAudit === 'function') logAudit('supplier', 'create', inserted?.id || 'new', { invoice_no: data.invoice_no, total: data.total });
-    toast(andConfirm ? 'บันทึกและเพิ่มสต็อกเรียบร้อย' : 'บันทึกร่างเรียบร้อย', 'success');
+
   }
 
   // บันทึก invoice lines (ถ้ามี) และ stock movements (ถ้า confirm)
@@ -965,7 +965,7 @@ async function saveSupplierInvoice(andConfirm = false) {
       );
     }
   }
-
+  toast(editId ? 'แก้ไขใบแจ้งหนี้เรียบร้อย' : (andConfirm ? 'บันทึกและเพิ่มสต็อกเรียบร้อย' : 'บันทึกร่างเรียบร้อย'), 'success');
   closeModal('modal-addSupInv');
   renderSupplierInvoices();
 }
@@ -977,7 +977,8 @@ async function saveSupInvLines(invoiceId, updateStock) {
   if (!rows.length) return;
 
   // ลบ lines เดิมของ invoice นี้ก่อน (ถ้ามี)
-  await supa.from('supplier_invoice_lines').delete().eq('invoice_id', invoiceId);
+  const { error: delLinesErr } = await supa.from('supplier_invoice_lines').delete().eq('invoice_id', invoiceId);
+  if (delLinesErr) { toast('❌ ลบรายการเดิมไม่สำเร็จ: ' + delLinesErr.message, 'error'); return; }
 
   const linesToInsert = [];
   rows.forEach(row => {
@@ -1017,7 +1018,7 @@ async function saveSupInvLines(invoiceId, updateStock) {
       const afterQty  = beforeQty + parseFloat(line.qty);
 
       // สร้าง stock_movement (trigger จะ sync items.qty อัตโนมัติ)
-      await supa.from('stock_movements').insert({
+      const { error: mvErr } = await supa.from('stock_movements').insert({
         item_id:             line.item_id,
         movement_type:       'receive',
         quantity:            line.qty,
@@ -1032,10 +1033,11 @@ async function saveSupInvLines(invoiceId, updateStock) {
         created_by:          currentUser?.username || '',
         note:                'รับสินค้าจาก invoice ' + (document.getElementById('supinv-no')?.value || ''),
       });
+      if (mvErr) { toast('❌ บันทึก stock movement ไม่สำเร็จ: ' + mvErr.message, 'error'); return; }
 
       // สร้าง item_lot
       if (line.lot_number || line.expiry_date) {
-        await supa.from('item_lots').insert({
+        const { error: lotErr } = await supa.from('item_lots').insert({
           item_id:            line.item_id,
           lot_number:         line.lot_number || ('LOT-' + Date.now()),
           expiry_date:        line.expiry_date || null,
@@ -1047,6 +1049,7 @@ async function saveSupInvLines(invoiceId, updateStock) {
           received_by:        currentUser?.username || '',
           received_date:      new Date().toISOString().slice(0,10),
         });
+        if (lotErr) { toast('❌ บันทึก lot ไม่สำเร็จ: ' + lotErr.message, 'error'); return; }
       }
 
       // update local db.items
