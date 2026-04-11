@@ -90,13 +90,13 @@ function renderAdminDashboard() {
   const todayStr = new Date().toISOString().split('T')[0];
   const todayReqs = db.requisitions.filter(r => r.date === todayStr);
 
-  document.getElementById('stat-total').textContent = db.items.length;
-  document.getElementById('stat-low').textContent = lowItems.length;
-  document.getElementById('stat-today').textContent = todayReqs.length;
-  document.getElementById('stat-patients').textContent = db.patients.filter(p => p.status === 'active').length;
+  const _st=document.getElementById('stat-total'); if(_st) _st.textContent = db.items.length;
+  const _sl=document.getElementById('stat-low'); if(_sl) _sl.textContent = lowItems.length;
+  const _sd=document.getElementById('stat-today'); if(_sd) _sd.textContent = todayReqs.length;
+  const _sp=document.getElementById('stat-patients'); if(_sp) _sp.textContent = db.patients.filter(p => p.status === 'active').length;
 
   // Low stock table
-  const lowTb = document.getElementById('lowStockTable');
+  const lowTb = document.getElementById('lowStockTable'); if(!lowTb) return;
   if (lowItems.length === 0) {
     lowTb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px;">✅ ไม่มีสินค้าใกล้หมด</td></tr>';
   } else {
