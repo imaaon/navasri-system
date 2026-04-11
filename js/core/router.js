@@ -42,7 +42,7 @@ function renderPage(page) {
   else if (page === 'rooms') renderRooms();
   else if (page === 'patients') renderPatients();
   else if (page === 'staff') renderStaff();
-  else if (page === 'settings') { loadLineSettingsUI(); renderLineLog(); }
+else if (page === 'settings') { loadLineSettingsUI(); renderLineLog(); if(typeof window.loadBillingSettings==='function') window.loadBillingSettings(); }
   else if (page === 'requisition') initReq();
   // reqform is populated by openReqForm() before showPage('reqform') is called
   // profiles are populated before showPage() is called
