@@ -550,7 +550,7 @@ async function _receiveItemFallback(item, qty, qtyDispense, cost, lotNum, mfgDat
 
 // ===== PURCHASE / RECEIVE HELPERS =====
 function onRecvItemChange() {
-  const id = document.getElementById('recv-item').value;
+const recvItemEl = document.getElementById('recv-item'); if (!recvItemEl) return; const id = recvItemEl.value;
   const item = db.items.find(i => i.id == id);
   if (!item) return;
   if (item.cost) document.getElementById('recv-cost').value = item.cost;
