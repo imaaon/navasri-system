@@ -207,6 +207,7 @@ function openAddPRModal() {
   const rdEl = document.getElementById('pr-required-date'); if(rdEl) rdEl.value = '';
   const rsEl = document.getElementById('pr-reason'); if(rsEl) rsEl.value = '';
   ensureSuppliersLoaded('ta-prs-inp','ta-prs-list','ta-prs-id');
+  if(typeof fixPRRequester==='function'){setTimeout(function(){var inp=document.getElementById('pr-requester');if(inp)inp.value='';fixPRRequester();},100);}
   openModal('modal-addPR');
 }
 
