@@ -531,7 +531,8 @@ async function _receiveItemFallback(item, qty, qtyDispense, cost, lotNum, mfgDat
     ref_id: (!errP && pInserted) ? pInserted.id : null,
     ref_type: 'purchase', created_by: currentUser?.username || '',
   };
-  const { data: movInserted } = await supa.from('stock_movements').insert(movData).select().single();
+  const { data: movInserted, error: _movErr1 } = await supa.from('stock_movements').insert(movData).select().single();
+  if (_movErr1) console.error('[navasri] stock_movement insert fail (receive):', _movErr1.message);
   if (movInserted) db.stockMovements.unshift(mapStockMovement(movInserted));
 
   item.qty = newQty;
@@ -883,7 +884,8 @@ async function _saveQuickDispenseFallback(item, patient, staff, qty, note, actor
     ref_type:      'quick_dispense',
     created_by:    actor,
   };
-  const { data: movInserted } = await supa.from('stock_movements').insert(movData).select().single();
+  const { data: movInserted, error: _movErr2 } = await supa.from('stock_movements').insert(movData).select().single();
+  if (_movErr2) console.error('[navasri] stock_movement insert fail (quick_dispense):', _movErr2.message);
   if (movInserted) db.stockMovements.unshift(mapStockMovement(movInserted));
 
   item.qty = afterQty;
