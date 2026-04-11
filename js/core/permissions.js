@@ -65,6 +65,10 @@ const PATIENT_TAB_ACCESS = {
   dnr:         ['admin','manager','officer','nurse','parttime_nurse'],
   physio:      ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist'],
   dispense:    ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
+  incident:    ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
+  dietary:     ['admin','manager','officer','nurse','parttime_nurse','dietitian','caregiver'],
+  dispense:    ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
+  deposits:    ['admin','manager','officer','nurse'],
 }
 
 function canSeePatientTab(tab) {
