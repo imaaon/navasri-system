@@ -79,7 +79,7 @@ async function openPatientProfile(id) {
         <div class="tab active" onclick="switchPatTab('history')">📦 ประวัติเบิก (${totalReqs})</div>
         <div class="tab" onclick="switchPatTab('medical')">🏥 ประวัติการรักษา</div>
         <div class="tab" onclick="switchPatTab('meds')">💊 ยาประจำ</div>
-        <div class="tab${p.allergies?.length ? ' tab-alert' : ''}" onclick="switchPatTab('allergy')">🚨 แพ้ยา/อาหาร ${p.allergies?.length ? `<span style="background:#c0392b;color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">${p.allergies.length}</span>` : ''}</div>
+        <div class="tab${p.allergies?.length ? ' tab-alert' : ''}" onclick="switchPatTab('allergy')">🚨 แพ้ยา/อาหาร ${p.allergies?.length ? '<span style="background:#c0392b;color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">' + p.allergies.length + '</span>' : ''}</div>
         <div class="tab${p.contacts?.length ? '' : ''}" onclick="switchPatTab('contacts')">👥 ผู้ติดต่อ ${p.contacts?.length ? `<span style="background:var(--accent);color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">${p.contacts.length}</span>` : ''}</div>
         <div class="tab" onclick="switchPatTab('notes')">📝 หมายเหตุ</div>
         <div class="tab" onclick="switchPatTab('mar')">💊 MAR ยาประจำวัน</div>
