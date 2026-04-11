@@ -1405,7 +1405,7 @@ async function editSupplierInvoice(id) {
   document.getElementById('supinv-job-name').value       = inv.jobName || '';
   document.getElementById('supinv-wht-rate').value       = inv.whtRate || 0;
   document.getElementById('supinv-net-payable').value    = inv.netPayable != null ? inv.netPayable : '';
-  (function(){var _v=inv.supplierName || '';var _h=document.getElementById("ta-sis-id");if(_h)_h.value=_v||"";var _i=document.getElementById("ta-sis-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
+  (function(){var _v=inv.supplierId || '';var _h=document.getElementById("ta-sis-id");if(_h)_h.value=_v||"";var _i=document.getElementById("ta-sis-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
   document.getElementById('supinv-received-date').value  = inv.receivedDate || '';
   document.getElementById('supinv-received-by').value    = inv.receivedBy || '';
   // populate supplier dropdown
