@@ -1321,19 +1321,22 @@ async function confirmInvoiceStock(id) {
   const { data: invLines } = await supa.from('supplier_invoice_lines')
     .select('*').eq('invoice_id', id).eq('update_stock', false).eq('line_type', 'product');
   if (invLines?.length) {
+    let _failCount = 0;
     for (const line of invLines) {
       if (!line.item_id) continue;
       const item = db.items.find(x => x.id === line.item_id);
       const beforeQty = parseFloat(item?.qty) || 0;
       const afterQty  = beforeQty + parseFloat(line.qty);
-      await supa.from('stock_movements').insert({
+      const { error: _movErr } = await supa.from('stock_movements').insert({
         item_id: line.item_id, movement_type: 'receive',
         quantity: line.qty, before_qty: beforeQty, after_qty: afterQty,
         supplier_invoice_id: id, cost: line.unit_price || 0,
         ref_id: id, ref_type: 'supplier_invoice',
         created_by: currentUser?.username || '',
+      if (_movErr) { console.error('[navasri] stock_movement insert fail:', _movErr.message); _failCount++; }
       });
-      await supa.from('supplier_invoice_lines').update({ update_stock: true }).eq('id', line.id);
+      const { error: _lineErr } = await supa.from('supplier_invoice_lines').update({ update_stock: true }).eq('id', line.id);
+      if (_lineErr) { console.error('[navasri] invoice_line update fail:', _lineErr.message); }
       if (item) item.qty = afterQty;
     }
   }
@@ -1344,7 +1347,7 @@ async function confirmInvoiceStock(id) {
     const names = _skipped.map(l=>'  • '+(l.item_name||'?ไม่ระบุ')).join('\n');
     alert('✅ เพิ่มสต็อกแล้ว: '+_added.length+' รายการ\n⚠️ ไม่ได้เพิ่มสต็อก (พิมพ์ชื่อเอง): '+_skipped.length+' รายการ\n'+names+'\n\n→ กรุณาไปเพิ่มสต็อคด้วยตนเองที่ 📦 คลังสต็อค');
   }
-  toast('เพิ่มสต็อกเรียบร้อย', 'success');
+  toast(_failCount>0 ? `เพิ่มสต็อกเรียบร้อย (${_failCount} รายการบันทึก log ไม่ได้)` : 'เพิ่มสต็อกเรียบร้อย', _failCount>0 ? 'warning' : 'success');
   renderSupplierInvoices();
 }
 
