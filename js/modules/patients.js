@@ -269,7 +269,8 @@ async function savePatient() {
     // If bed changed, update old bed back to available
     const oldPatient = db.patients.find(p => p.id == editId);
     if (oldPatient?.currentBedId && oldPatient.currentBedId != bedId) {
-      await supa.from('beds').update({ status: 'available' }).eq('id', oldPatient.currentBedId);
+      const { error: _oldBedErr } = await supa.from('beds').update({ status: 'available' }).eq('id', oldPatient.currentBedId);
+      if (_oldBedErr) console.error('[navasri] old bed release fail:', _oldBedErr.message);
       const ob = db.beds.find(b => b.id == oldPatient.currentBedId);
       if (ob) ob.status = 'available';
     }
@@ -278,29 +279,30 @@ async function savePatient() {
     // บันทึก status log ถ้า status เปลี่ยน
     const oldPat = db.patients.find(p => p.id == editId);
     if (oldPat && oldPat.status !== data.status) {
-      await supa.from('patient_status_logs').insert({
+      const { error: _logErr } = await supa.from('patient_status_logs').insert({
         patient_id: editId,
         old_status: oldPat.status,
         new_status: data.status,
         changed_by: currentUser?.displayName || currentUser?.username || '',
         note: `เปลี่ยนจาก ${oldPat.status === 'active' ? 'พักอยู่' : oldPat.status === 'hospital' ? 'อยู่โรงพยาบาล' : 'ออกแล้ว'} เป็น ${data.status === 'active' ? 'พักอยู่' : data.status === 'hospital' ? 'อยู่โรงพยาบาล' : 'ออกแล้ว'}`,
       });
+      if (_logErr) console.error('[navasri] status_log insert fail:', _logErr.message);
     }
     const idx = db.patients.findIndex(p => p.id == editId);
     if (idx >= 0) db.patients[idx] = { ...db.patients[idx], ...data };
-    toast('แก้ไขข้อมูลเรียบร้อย','success');
   } else {
     const { data: ins, error } = await supa.from('patients').insert(row).select().single();
     if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
     db.patients.push({ ...data, id: ins.id, medicalLog: [], medsLog: [], allergies: [], contacts: [] });
-    toast('เพิ่มผู้รับบริการเรียบร้อย', 'success');
   }
   // Mark bed as occupied
   if (bedId) {
-    await supa.from('beds').update({ status: 'occupied' }).eq('id', bedId);
+    const { error: _newBedErr } = await supa.from('beds').update({ status: 'occupied' }).eq('id', bedId);
+    if (_newBedErr) { toast('บันทึกข้อมูลสำเร็จ แต่อัปเดตสถานะเตียงไม่ได้: ' + _newBedErr.message, 'warning'); }
     const nb = db.beds.find(b => b.id == bedId);
     if (nb) nb.status = 'occupied';
   }
+  toast(editId ? 'แก้ไขข้อมูลเรียบร้อย' : 'เพิ่มผู้รับบริการเรียบร้อย', 'success');
   logAudit(AUDIT_MODULES.PATIENT,
     editId ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
     editId || 'new', { name: data.name || data.first_name });
