@@ -1,41 +1,118 @@
 // ===== PERMISSIONS =====
 
 // ===== ROLE-BASED ACCESS CONTROL =====
-// Pages each role can see in sidebar
 const ROLE_PAGES = {
-  admin:             ['dashboard','stock','requisition','history','report','patients','rooms','staff',
-                      'healthreport','items','purchasehistory','accounts','settings','billing','billing-settings',
-                      'suppliers','supplierinvoices','purchaserequests','stockreport',
-                      'incident','dietary','deposits','bi','expenses','assets','audit'],
-  // Manager = เหมือน admin ทุกอย่าง รวม accounts
-  manager:           ['dashboard','stock','requisition','history','report','patients','rooms','staff',
-                      'healthreport','items','purchasehistory','accounts','settings','billing','billing-settings',
-                      'suppliers','supplierinvoices','purchaserequests','stockreport',
-                      'incident','dietary','deposits','bi','expenses','assets','audit'],
-  officer:           ['dashboard','stock','requisition','history','report','patients','rooms','staff',
-                      'healthreport','items','purchasehistory','billing','billing-settings',
-                      'suppliers','supplierinvoices','purchaserequests','stockreport',
-                      'incident','dietary','deposits','bi','expenses','assets'],
-  accounting:        ['dashboard','billing','billing-settings','report','history',
-                      'supplierinvoices','deposits','purchasehistory','bi'],
-  nurse:             ['dashboard','requisition','history','report','patients','rooms',
-                      'healthreport','incident','dietary'],
-  // Caregiver: ดูข้อมูลผู้ป่วย + บันทึก vital ได้ แต่ไม่แก้ไขข้อมูลหลัก
-  caregiver:         ['dashboard','patients','requisition','history'],
-  // Physical Therapist: ดูผู้ป่วย + บันทึก vital + จัดการ physio เท่านั้น
-  physical_therapist:['dashboard','patients'],
-  // Legacy roles (backward compat)
-  supervisor:        ['dashboard','requisition','history','report','patients','rooms'],
-  warehouse:         ['dashboard','stock','requisition','history','report','patients',
-                      'items','purchasehistory','settings',
-                      'suppliers','purchaserequests','stockreport'],
+  admin: ['dashboard','stock','requisition','history','report','patients','rooms','staff',
+          'healthreport','items','purchasehistory','accounts','settings','billing','billing-settings',
+          'suppliers','supplierinvoices','purchaserequests','stockreport',
+          'incident','dietary','deposits','bi','expenses','assets','audit'],
+
+  manager: ['dashboard','stock','requisition','history','report','patients','rooms','staff',
+             'healthreport','items','purchasehistory','accounts','settings','billing','billing-settings',
+             'suppliers','supplierinvoices','purchaserequests','stockreport',
+             'incident','dietary','deposits','bi','expenses','assets','audit'],
+
+  // ธุรการ: เห็นหมด ยกเว้น accounts/audit/settings + อนุมัติใบเบิก
+  officer: ['dashboard','stock','requisition','history','report','patients','rooms','staff',
+             'healthreport','items','purchasehistory','billing','billing-settings',
+             'suppliers','supplierinvoices','purchaserequests','stockreport',
+             'incident','dietary','deposits','bi','expenses','assets'],
+
+  // พยาบาลวิชาชีพ: ดูแลคนไข้ครบ + deposits + เบิกของ + PR + สต็อค(ดูอย่างเดียว)
+  nurse: ['dashboard','requisition','history','report','patients','rooms',
+           'healthreport','incident','dietary','deposits','stock','purchaserequests'],
+
+  // พยาบาลพาร์ทไทม์: เหมือน nurse ยกเว้น deposits + staff
+  parttime_nurse: ['dashboard','requisition','history','report','patients','rooms',
+                    'healthreport','incident','dietary','stock','purchaserequests'],
+
+  // หมอ (จากภายนอก): เฉพาะข้อมูลคนไข้ tab คลินิก
+  doctor: ['dashboard','patients'],
+
+  // นักกายภาพบำบัด: ข้อมูลคนไข้ + physio + เบิกของ
+  physical_therapist: ['dashboard','patients','requisition','history'],
+
+  // นักโภชนาการ: ข้อมูลคนไข้(บางส่วน) + dietary + เบิกของ
+  dietitian: ['dashboard','patients','dietary','requisition','history'],
+
+  // ผู้ช่วยพยาบาล / พนักงานผู้ช่วยเหลือคนไข้: vital + เบิกของ + ประวัติ
+  caregiver: ['dashboard','patients','requisition','history','incident','dietary'],
+
+  // พนักงานผู้ช่วยฯ (ตรวจสต็อค): สต็อค + เบิกของ + ประวัติ
+  warehouse: ['dashboard','stock','requisition','history','report','patients',
+               'items','purchasehistory','suppliers','purchaserequests','stockreport'],
+
+  // Legacy
+  supervisor: ['dashboard','requisition','history','report','patients','rooms'],
 };
 
-// Data each role can see in history/report
-// caregiver = own records only; others = all
+// ── Tab access per role (patient profile tabs) ─────────────────
+// กำหนด tab ในโปรไฟล์คนไข้ที่แต่ละ role เห็นได้
+const PATIENT_TAB_ACCESS = {
+  // tab: [roles ที่เห็นได้]
+  general:      ['admin','manager','officer','nurse','parttime_nurse','doctor',
+                 'physical_therapist','dietitian','caregiver'],
+  contacts:     ['admin','manager','officer','nurse','parttime_nurse',
+                 'physical_therapist','dietitian','caregiver'],
+  allergies:    ['admin','manager','officer','nurse','parttime_nurse','doctor',
+                 'physical_therapist','dietitian','caregiver'],
+  vitals:       ['admin','manager','officer','nurse','parttime_nurse','doctor',
+                 'physical_therapist','dietitian','caregiver'],
+  mar:          ['admin','manager','officer','nurse','parttime_nurse','doctor',
+                 'dietitian','caregiver'],
+  lab:          ['admin','manager','officer','nurse','parttime_nurse','doctor',
+                 'physical_therapist','dietitian'],
+  physio:       ['admin','manager','officer','nurse','parttime_nurse','doctor',
+                 'physical_therapist'],
+  nursing:      ['admin','manager','officer','nurse','parttime_nurse','doctor',
+                 'physical_therapist','dietitian','caregiver'],
+  dietary:      ['admin','manager','officer','nurse','parttime_nurse',
+                 'dietitian','caregiver'],
+  incident:     ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
+  appointments: ['admin','manager','officer','nurse','parttime_nurse'],
+  belongings:   ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
+  assets:       ['admin','manager','officer','nurse'],
+  deposits:     ['admin','manager','officer','nurse'],
+  dnr:          ['admin','manager','officer','nurse','parttime_nurse'],
+  consent:      ['admin','manager','officer','nurse','parttime_nurse'],
+};
+
+// tab ที่แก้ไขได้ (ไม่ใช่แค่ดู) สำหรับแต่ละ role
+const PATIENT_TAB_WRITE = {
+  general:      ['admin','manager','officer','nurse','parttime_nurse'],
+  contacts:     ['admin','manager','officer','nurse'],
+  allergies:    ['admin','manager','officer','nurse','parttime_nurse'],
+  vitals:       ['admin','manager','officer','nurse','parttime_nurse',
+                 'physical_therapist','dietitian','caregiver'],
+  mar:          ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
+  lab:          ['admin','manager','officer','nurse','parttime_nurse'],
+  physio:       ['admin','manager','officer','nurse','parttime_nurse','physical_therapist'],
+  nursing:      ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
+  dietary:      ['admin','manager','officer','nurse','parttime_nurse','dietitian','caregiver'],
+  incident:     ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
+  appointments: ['admin','manager','officer','nurse','parttime_nurse'],
+  belongings:   ['admin','manager','officer','nurse','parttime_nurse','caregiver'],
+  assets:       ['admin','manager','officer','nurse'],
+  deposits:     ['admin','manager','officer','nurse'],
+  dnr:          ['admin','manager','officer','nurse','parttime_nurse'],
+  consent:      ['admin','manager','officer','nurse','parttime_nurse'],
+};
+
 function canSeeAllHistory() {
-  // caregiver และ physical_therapist เห็นเฉพาะรายการของตัวเอง
-  return currentUser && !['caregiver','physical_therapist','staff'].includes(currentUser.role);
+  return currentUser && !['caregiver','physical_therapist','staff','doctor',
+                           'parttime_nurse','dietitian'].includes(currentUser.role);
+}
+
+function canSeePatientTab(tab) {
+  if (!currentUser) return false;
+  const allowed = PATIENT_TAB_ACCESS[tab] || [];
+  return allowed.includes(currentUser.role);
+}
+
+function canWritePatientTab(tab) {
+  if (!currentUser) return false;
+  const allowed = PATIENT_TAB_WRITE[tab] || [];
+  return allowed.includes(currentUser.role);
 }
 
 function updateSidebarForRole() {
@@ -48,13 +125,10 @@ function updateSidebarForRole() {
     const pageId = match[1];
     n.style.display = allowed.includes(pageId) ? '' : 'none';
   });
-  // Hide staff-filter dropdown in history if caregiver (they only see own)
   const staffFilterWrap = document.getElementById('histStaffWrap');
   if (staffFilterWrap) staffFilterWrap.style.display = canSeeAllHistory() ? '' : 'none';
-  // Show/hide account nav (admin only)
   const accNav = document.getElementById('nav-accounts');
   if (accNav) accNav.style.display = ['admin','manager'].includes(currentUser.role) ? '' : 'none';
-  // Show/hide billing nav section header
   const billingSection = document.getElementById('nav-section-billing');
   if (billingSection) billingSection.style.display = allowed.includes('billing') ? '' : 'none';
 }
@@ -73,23 +147,21 @@ function canManageBilling() {
 }
 
 function canManagePatients() {
-  // แก้ไขข้อมูลผู้ป่วยได้: admin, manager, officer, nurse
-  // caregiver และ physical_therapist ดูได้อย่างเดียว
-  return hasRole('admin', 'manager', 'officer', 'nurse');
+  return hasRole('admin', 'manager', 'officer', 'nurse', 'parttime_nurse');
 }
 
 function canViewPatients() {
-  return hasRole('admin','manager','officer','nurse','caregiver','physical_therapist','warehouse');
+  return hasRole('admin','manager','officer','nurse','parttime_nurse',
+                 'doctor','physical_therapist','dietitian','caregiver','warehouse');
 }
 
 function canManagePhysio() {
-  // บันทึกและจัดการ physio sessions
-  return hasRole('admin','manager','officer','nurse','physical_therapist');
+  return hasRole('admin','manager','officer','nurse','parttime_nurse','physical_therapist');
 }
 
 function canManageVitals() {
-  // บันทึก vital signs และสุขภาพ
-  return hasRole('admin','manager','officer','nurse','caregiver','physical_therapist');
+  return hasRole('admin','manager','officer','nurse','parttime_nurse',
+                 'caregiver','physical_therapist','dietitian');
 }
 
 function canManageInventory() {
@@ -113,5 +185,35 @@ function canResetInvoice() {
 }
 
 function canDischargePatient() {
-  return hasRole('admin', 'manager', 'nurse');
+  return hasRole('admin', 'manager', 'nurse', 'parttime_nurse');
+}
+
+function canSubmitRequisition() {
+  return hasRole('admin','manager','officer','nurse','parttime_nurse',
+                 'physical_therapist','dietitian','caregiver','warehouse');
+}
+
+function canViewStock() {
+  return hasRole('admin','manager','officer','nurse','parttime_nurse',
+                 'physical_therapist','dietitian','caregiver','warehouse');
+}
+
+function canWriteStock() {
+  return hasRole('admin','manager','officer','warehouse');
+}
+
+function canViewSuppliers() {
+  return hasRole('admin','manager','officer','warehouse');
+}
+
+function canWriteSuppliers() {
+  return hasRole('admin','manager','officer');
+}
+
+function isDoctor() {
+  return hasRole('doctor');
+}
+
+function isDietitian() {
+  return hasRole('dietitian');
 }
