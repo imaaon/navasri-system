@@ -63,9 +63,9 @@ function renderBelongingList(patientId) {
 }
 
 let _belongingEditPatId=null, _belongingEditPatName=null;
-function openBelongingModal(id, patientId, patientName) {
+function openBelongingModal(id, patientId) {
   _belongingEditPatId   = patientId;
-  _belongingEditPatName = patientName;
+  _belongingEditPatName = (db.patients||[]).find(p=>String(p.id)===String(patientId))?.name || '';
   const actor = currentUser?.displayName || currentUser?.username || '';
   document.getElementById('belonging-item-name').value = '';
   document.getElementById('belonging-qty').value = 1;
