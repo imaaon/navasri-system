@@ -60,7 +60,7 @@ async function doLogin() {
     // ดึง profile จาก app_users — เฉพาะ record ของตัวเอง (RLS บังคับ)
     const { data: profile, error: profErr } = await supa.from('app_users')
       .select('username, display_name, name, role, position, auth_id')
-      .eq('username', u)
+      .eq('auth_id', data.user.id)
       .single();
 
     if (profErr || !profile) {
