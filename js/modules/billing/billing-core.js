@@ -800,8 +800,10 @@ async function savePayment() {
   const newBalance = getInvoiceBalance(inv);
   const newStatus  = newBalance <= 0 ? 'paid' : 'partial';
   if (inv && inv.status !== newStatus) {
-    inv.status = newStatus;
-    await supa.from('invoices').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', inv.id);
+    const { error: _statusErr } = await supa.from('invoices').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', inv.id);
+    if (_statusErr) { console.error('[billing] invoice status update fail:', _statusErr.message); }
+    else { inv.status = newStatus; }
+  }
   }
 
   toast(`✅ รับชำระ ${formatThb(amount)} (${receiptNo}) เรียบร้อย`, 'success');
