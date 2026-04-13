@@ -100,34 +100,17 @@ async function openPatientProfile(id, activeTab) {
         </div>
       </div>
       <div id="patprofile-tab-medical" style="display:none;">
-        <div class="card" style="margin-bottom:12px;">
+        <div class="card" style="margin-bottom:12px;" id="diag-card-${p.id}">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;">🏥 โรคประจำตัว</div>
-            <button class="btn btn-ghost btn-sm" id="diagnosis-edit-btn-${p.id}" onclick="(function(){
-              var cur=document.getElementById('diagnosis-display-${p.id}');
-              var inp=document.getElementById('diagnosis-input-${p.id}');
-              var btn=document.getElementById('diagnosis-edit-btn-${p.id}');
-              var saveBtn=document.getElementById('diagnosis-save-btn-${p.id}');
-              cur.style.display='none'; inp.style.display=''; inp.focus();
-              btn.style.display='none'; saveBtn.style.display='';
-            })()">✏️ แก้ไข</button>
-            <button class="btn btn-primary btn-sm" id="diagnosis-save-btn-${p.id}" style="display:none;" onclick="(async function(){
-              var val=document.getElementById('diagnosis-input-${p.id}').value;
-              var {error}=await supa.from('patients').update({diagnosis:val}).eq('id','${p.id}');
-              if(error){toast('บันทึกไม่สำเร็จ: '+error.message,'error');return;}
-              document.getElementById('diagnosis-display-${p.id}').textContent=val||'-';
-              document.getElementById('diagnosis-display-${p.id}').style.display='';
-              document.getElementById('diagnosis-input-${p.id}').style.display='none';
-              document.getElementById('diagnosis-edit-btn-${p.id}').style.display='';
-              document.getElementById('diagnosis-save-btn-${p.id}').style.display='none';
-              var pat=db.patients?.find(x=>x.id==='${p.id}'); if(pat) pat.diagnosis=val;
-              toast('บันทึกโรคประจำตัวแล้ว','success');
-              logAudit('patients','update','${p.id}',{field:'diagnosis',value:val});
-            })()">💾 บันทึก</button>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-ghost btn-sm" id="diag-edit-${p.id}">✏️ แก้ไข</button>
+              <button class="btn btn-primary btn-sm" id="diag-save-${p.id}" style="display:none;">💾 บันทึก</button>
+            </div>
           </div>
           <div style="padding:14px 16px;">
-            <div id="diagnosis-display-${p.id}" style="font-size:14px;color:var(--text1);min-height:24px;">${p.diagnosis||'-'}</div>
-            <textarea id="diagnosis-input-${p.id}" style="display:none;width:100%;min-height:80px;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;resize:vertical;">${p.diagnosis||''}</textarea>
+            <div id="diag-disp-${p.id}" style="font-size:14px;min-height:24px;">${p.diagnosis||'-'}</div>
+            <textarea id="diag-inp-${p.id}" style="display:none;width:100%;min-height:80px;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;resize:vertical;box-sizing:border-box;">${p.diagnosis||''}</textarea>
           </div>
         </div>
         ${renderMedLogTab(p.id, 'medical')}
@@ -295,11 +278,216 @@ async function openPatientProfile(id, activeTab) {
 <div id="patprofile-tab-incident" style="display:none"><div id="pat-incident-list-${pid}"><div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div></div></div>
 <div id="patprofile-tab-dietary" style="display:none"><div id="pat-dietary-list-${pid}"><div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div></div></div>
   </div>`;
-  switchPatTab(activeTab || 'history');
+  switchPatTab(activeTab || 'medical');
+  // diagnosis edit/save handlers
+  (function(){
+    var editBtn=document.getElementById('diag-edit-'+pid);
+    var saveBtn=document.getElementById('diag-save-'+pid);
+    var disp=document.getElementById('diag-disp-'+pid);
+    var inp=document.getElementById('diag-inp-'+pid);
+    if(!editBtn||!saveBtn||!disp||!inp) return;
+    editBtn.addEventListener('click',function(){
+      disp.style.display='none'; inp.style.display='';
+      editBtn.style.display='none'; saveBtn.style.display='';
+      inp.focus();
+    });
+    saveBtn.addEventListener('click',function(){
+      var val=inp.value;
+      supa.from('patients').update({diagnosis:val}).eq('id',pid).then(function(res){
+        if(res.error){toast('บันทึกไม่สำเร็จ: '+res.error.message,'error');return;}
+        disp.textContent=val||'-';
+        disp.style.display=''; inp.style.display='none';
+        editBtn.style.display=''; saveBtn.style.display='none';
+        var pat=(db.patients||[]).find(function(x){return x.id===pid;});
+        if(pat) pat.diagnosis=val;
+        toast('บันทึกโรคประจำตัวแล้ว','success');
+        logAudit('patients','update',pid,{field:'diagnosis',value:val});
+      });
+    });
+  })();
   if(typeof window._injectStatusBtn==='function'){
     setTimeout(function(){window._injectStatusBtn(String(id));},200);
   }
   } catch(err) { console.error('openPatientProfile error:', err); toast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
+}
+
+
+function _renderPatIncidentTab(pid, listEl) {
+  if (!document.getElementById('pat-incident-btns-'+pid)) {
+    var wrap = document.createElement('div');
+    wrap.id = 'pat-incident-btns-'+pid;
+    wrap.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
+    var b1 = document.createElement('button');
+    b1.className = 'btn btn-primary btn-sm';
+    b1.textContent = '⚠️ + อุบัติเหตุ';
+    b1.addEventListener('click', function(){
+      if(typeof openIncidentModal!=='function') return;
+      openIncidentModal();
+      setTimeout(function(){
+        var h=document.getElementById('ta-inc-id');
+        var hn=document.getElementById('ta-inc-inp');
+        var pat=(db.patients||[]).find(function(x){return x.id===pid;});
+        if(h) h.value=pid;
+        if(hn&&pat) hn.value=pat.name||'';
+      },150);
+    });
+    var b2 = document.createElement('button');
+    b2.className = 'btn btn-secondary btn-sm';
+    b2.textContent = '🩹 + แผลกดทับ';
+    b2.addEventListener('click', function(){
+      if(typeof openWoundModal!=='function') return;
+      openWoundModal();
+      setTimeout(function(){
+        var h=document.getElementById('ta-wnd-id');
+        var hn=document.getElementById('ta-wnd-inp');
+        var pat=(db.patients||[]).find(function(x){return x.id===pid;});
+        if(h) h.value=pid;
+        if(hn&&pat) hn.value=pat.name||'';
+      },150);
+    });
+    wrap.appendChild(b1); wrap.appendChild(b2);
+    listEl.parentNode.insertBefore(wrap, listEl);
+  }
+  listEl.innerHTML = '<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
+  Promise.all([
+    supa.from('incident_reports').select('*').eq('patient_id',pid).order('date',{ascending:false}),
+    supa.from('patient_wounds').select('*').eq('patient_id',pid).order('wound_date',{ascending:false})
+  ]).then(function(rs){
+    var iD=rs[0].data||[], wD=rs[1].data||[];
+    if(!iD.length&&!wD.length){
+      listEl.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3)">ไม่มีข้อมูล</div>';
+      return;
+    }
+    var frag = document.createDocumentFragment();
+    iD.forEach(function(x){
+      var d=document.createElement('div');
+      d.className='card';
+      d.style.cssText='margin-bottom:8px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;';
+      var info=document.createElement('div');
+      info.innerHTML='<b>'+x.type+'</b><div style="font-size:13px;color:var(--text2)">'+x.date+' | '+(x.severity||'')+'</div><div style="font-size:13px">'+(x.detail||'')+'</div>';
+      var btns=document.createElement('div');
+      btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
+      var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
+      eb.addEventListener('click',function(){openIncidentModal(x.id);});
+      var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='#c0392b'; db2.textContent='🗑️';
+      db2.addEventListener('click',function(){
+        if(!confirm('ลบรายการนี้?')) return;
+        supa.from('incident_reports').delete().eq('id',x.id).then(function(){
+          switchPatTab('incident'); toast('ลบแล้ว','success');
+        });
+      });
+      btns.appendChild(eb); btns.appendChild(db2);
+      d.appendChild(info); d.appendChild(btns); frag.appendChild(d);
+    });
+    wD.forEach(function(x){
+      var d=document.createElement('div');
+      d.className='card';
+      d.style.cssText='margin-bottom:8px;padding:12px;border-left:3px solid #e67e22;display:flex;justify-content:space-between;align-items:flex-start;';
+      var info=document.createElement('div');
+      info.innerHTML='<b>🩹 '+(x.location||'')+' Stage '+(x.stage||'')+'</b><div style="font-size:13px;color:var(--text2)">'+(x.wound_date||'')+'</div><div style="font-size:13px">'+(x.appearance||'')+'</div>';
+      var btns=document.createElement('div');
+      btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
+      var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
+      eb.addEventListener('click',function(){openWoundModal(x.id);});
+      var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='#c0392b'; db2.textContent='🗑️';
+      db2.addEventListener('click',function(){
+        if(!confirm('ลบรายการนี้?')) return;
+        supa.from('patient_wounds').delete().eq('id',x.id).then(function(){
+          switchPatTab('incident'); toast('ลบแล้ว','success');
+        });
+      });
+      btns.appendChild(eb); btns.appendChild(db2);
+      d.appendChild(info); d.appendChild(btns); frag.appendChild(d);
+    });
+    listEl.innerHTML=''; listEl.appendChild(frag);
+  });
+}
+
+function _renderPatDietaryTab(pid, listEl) {
+  if (!document.getElementById('pat-dietary-btns-'+pid)) {
+    var wrap = document.createElement('div');
+    wrap.id = 'pat-dietary-btns-'+pid;
+    wrap.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
+    var b1 = document.createElement('button');
+    b1.className = 'btn btn-primary btn-sm';
+    b1.textContent = '🍽️ + กำหนดอาหาร';
+    b1.addEventListener('click', function(){
+      if(typeof openDietModal!=='function') return;
+      openDietModal();
+      setTimeout(function(){
+        var h=document.getElementById('ta-diet-id');
+        var hn=document.getElementById('ta-diet-inp');
+        var pat=(db.patients||[]).find(function(x){return x.id===pid;});
+        if(h) h.value=pid;
+        if(hn&&pat) hn.value=pat.name||'';
+      },150);
+    });
+    var b2 = document.createElement('button');
+    b2.className = 'btn btn-secondary btn-sm';
+    b2.textContent = '🧪 + สายให้อาหาร';
+    b2.addEventListener('click', function(){
+      if(typeof openTubeFeedModal!=='function') return;
+      openTubeFeedModal();
+      setTimeout(function(){
+        var h=document.getElementById('ta-tf-id');
+        var hn=document.getElementById('ta-tf-inp');
+        var pat=(db.patients||[]).find(function(x){return x.id===pid;});
+        if(h) h.value=pid;
+        if(hn&&pat) hn.value=pat.name||'';
+      },150);
+    });
+    wrap.appendChild(b1); wrap.appendChild(b2);
+    listEl.parentNode.insertBefore(wrap, listEl);
+  }
+  listEl.innerHTML = '<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
+  Promise.all([
+    supa.from('patient_diets').select('*').eq('patient_id',pid).order('updated_at',{ascending:false}),
+    supa.from('tube_feedings').select('*').eq('patient_id',pid).order('created_at',{ascending:false})
+  ]).then(function(rs){
+    var dD=rs[0].data||[], tD=rs[1].data||[];
+    if(!dD.length&&!tD.length){
+      listEl.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3)">ไม่มีข้อมูล</div>';
+      return;
+    }
+    var frag = document.createDocumentFragment();
+    dD.forEach(function(x){
+      var d=document.createElement('div'); d.className='card';
+      d.style.cssText='margin-bottom:8px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;';
+      var info=document.createElement('div');
+      info.innerHTML='<div style="font-weight:600;">'+(x.diet_type||'')+'</div><div style="font-size:13px;color:var(--text2);">'+(x.meals||'')+(x.calories?' | '+x.calories+' kcal':'')+'</div>';
+      var btns=document.createElement('div'); btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
+      var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
+      eb.addEventListener('click',function(){openDietModal(x.id);});
+      var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='#c0392b'; db2.textContent='🗑️';
+      db2.addEventListener('click',function(){
+        if(!confirm('ลบรายการนี้?')) return;
+        supa.from('patient_diets').delete().eq('id',x.id).then(function(){
+          switchPatTab('dietary'); toast('ลบแล้ว','success');
+        });
+      });
+      btns.appendChild(eb); btns.appendChild(db2);
+      d.appendChild(info); d.appendChild(btns); frag.appendChild(d);
+    });
+    tD.forEach(function(x){
+      var d=document.createElement('div'); d.className='card';
+      d.style.cssText='margin-bottom:8px;padding:12px;border-left:3px solid #27ae60;display:flex;justify-content:space-between;align-items:flex-start;';
+      var info=document.createElement('div');
+      info.innerHTML='<div style="font-weight:600;">🧪 สายให้อาหาร</div><div style="font-size:13px;color:var(--text2);">'+(x.date||'')+' | '+(x.formula||'')+'</div>';
+      var btns=document.createElement('div'); btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
+      var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
+      eb.addEventListener('click',function(){openTubeFeedModal(x.id);});
+      var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='#c0392b'; db2.textContent='🗑️';
+      db2.addEventListener('click',function(){
+        if(!confirm('ลบรายการนี้?')) return;
+        supa.from('tube_feedings').delete().eq('id',x.id).then(function(){
+          switchPatTab('dietary'); toast('ลบแล้ว','success');
+        });
+      });
+      btns.appendChild(eb); btns.appendChild(db2);
+      d.appendChild(info); d.appendChild(btns); frag.appendChild(d);
+    });
+    listEl.innerHTML=''; listEl.appendChild(frag);
+  });
 }
 
 function switchPatTab(tab) {
@@ -336,65 +524,12 @@ function switchPatTab(tab) {
   if (tab === 'incident') {
     var _ie=document.querySelector('[id^="pat-incident-list-"]');
     var _ip=_ie?_ie.id.replace('pat-incident-list-',''):null;
-    if(_ip&&_ie){
-      // เพิ่มปุ่ม Add ถ้ายังไม่มี
-      var _ibtn=document.getElementById('pat-incident-btns-'+_ip);
-      if(!_ibtn){
-        var _ibtnDiv=document.createElement('div');
-        _ibtnDiv.id='pat-incident-btns-'+_ip;
-        _ibtnDiv.style.cssText='display:flex;gap:8px;margin-bottom:12px;';
-        _ibtnDiv.innerHTML='<button class="btn btn-primary btn-sm" onclick="(function(){if(typeof openIncidentModal==='function'){openIncidentModal();setTimeout(function(){var h=document.getElementById('ta-inc-id');var hn=document.getElementById('ta-inc-inp');var pat=db.patients&&db.patients.find(function(x){return x.id===''+_ip+'';});if(h)h.value=''+_ip+'';if(hn&&pat)hn.value=pat.name||pat.patient_name||'';}),100);}})()">⚠️ + อุบัติเหตุ</button>'
-        +'<button class="btn btn-secondary btn-sm" onclick="(function(){if(typeof openWoundModal==='function'){openWoundModal();setTimeout(function(){var h=document.getElementById('ta-wnd-id');var hn=document.getElementById('ta-wnd-inp');var pat=db.patients&&db.patients.find(function(x){return x.id===''+_ip+'';});if(h)h.value=''+_ip+'';if(hn&&pat)hn.value=pat.name||pat.patient_name||'';}),100);}})()">🩹 + แผลกดทับ</button>';
-        _ie.parentNode.insertBefore(_ibtnDiv,_ie);
-      }
-      _ie.innerHTML='<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
-      Promise.all([supa.from('incident_reports').select('*').eq('patient_id',_ip).order('date',{ascending:false}),supa.from('patient_wounds').select('*').eq('patient_id',_ip).order('wound_date',{ascending:false})]).then(function(rs){
-        var iD=rs[0].data||[],wD=rs[1].data||[];
-        if(!iD.length&&!wD.length){_ie.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3)">ไม่มีข้อมูล</div>';return;}
-        _ie.innerHTML=iD.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;"><div><b>'+x.type+'</b><div style="font-size:13px;color:var(--text2)">'+x.date+' | '+(x.severity||'')+'</div><div style="font-size:13px">'+(x.detail||'')+'</div></div><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-ghost btn-sm" onclick="openIncidentModal('+x.id+')">✏️</button><button class="btn btn-ghost btn-sm" style="color:#c0392b" onclick="if(confirm('ลบรายการนี้?'))supa.from('incident_reports').delete().eq('id','+x.id+').then(function(){switchPatTab('incident');toast('ลบแล้ว','success');})">🗑️</button></div></div>';}).join('')+wD.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px;border-left:3px solid #e67e22;display:flex;justify-content:space-between;align-items:flex-start;"><div><b>🩹 '+(x.location||'')+' Stage '+(x.stage||'')+'</b><div style="font-size:13px;color:var(--text2)">'+(x.wound_date||'')+'</div><div style="font-size:13px">'+(x.appearance||'')+'</div></div><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-ghost btn-sm" onclick="openWoundModal('+x.id+')">✏️</button><button class="btn btn-ghost btn-sm" style="color:#c0392b" onclick="if(confirm('ลบรายการนี้?'))supa.from('patient_wounds').delete().eq('id','+x.id+').then(function(){switchPatTab('incident');toast('ลบแล้ว','success');})">🗑️</button></div></div>';}).join('');
-      });
-    }
+    if(_ip&&_ie){ _renderPatIncidentTab(_ip,_ie); }
   }
-    if (tab === 'dietary') {
-    var dietEl = document.querySelector('[id^="pat-dietary-list-"]');
-    var dietPid = dietEl ? dietEl.id.replace('pat-dietary-list-','') : null;
-    if (dietPid) {
-      // เพิ่มปุ่ม Add ถ้ายังไม่มี
-      var _dbtnDiv = document.getElementById('pat-dietary-btns-'+dietPid);
-      if (!_dbtnDiv) {
-        _dbtnDiv = document.createElement('div');
-        _dbtnDiv.id = 'pat-dietary-btns-'+dietPid;
-        _dbtnDiv.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
-        _dbtnDiv.innerHTML = '<button class="btn btn-primary btn-sm" onclick="(function(){if(typeof openDietModal==='function'){openDietModal();setTimeout(function(){var h=document.getElementById('ta-diet-id');var hn=document.getElementById('ta-diet-inp');var pat=db.patients&&db.patients.find(function(x){return x.id===''+dietPid+'';});if(h)h.value=''+dietPid+'';if(hn&&pat)hn.value=pat.name||pat.patient_name||'';}),100);}})()">🍽️ + กำหนดอาหาร</button>'
-          + '<button class="btn btn-secondary btn-sm" onclick="(function(){if(typeof openTubeFeedModal==='function'){openTubeFeedModal();setTimeout(function(){var h=document.getElementById('ta-tf-id');var hn=document.getElementById('ta-tf-inp');var pat=db.patients&&db.patients.find(function(x){return x.id===''+dietPid+'';});if(h)h.value=''+dietPid+'';if(hn&&pat)hn.value=pat.name||pat.patient_name||'';}),100);}})()">🧪 + สายให้อาหาร</button>';
-        dietEl.parentNode.insertBefore(_dbtnDiv, dietEl);
-      }
-      dietEl.innerHTML = '<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
-      Promise.all([
-        supa.from('patient_diets').select('*').eq('patient_id',dietPid).order('updated_at',{ascending:false}),
-        supa.from('tube_feedings').select('*').eq('patient_id',dietPid).order('created_at',{ascending:false})
-      ]).then(function(rs){
-        var dD=rs[0].data||[], tD=rs[1].data||[];
-        if(!dD.length&&!tD.length){dietEl.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);">ไม่มีข้อมูล</div>';return;}
-        dietEl.innerHTML = dD.map(function(x){
-          return '<div class="card" style="margin-bottom:8px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;">'
-            +'<div><div style="font-weight:600;">'+(x.diet_type||'')+'</div>'
-            +'<div style="font-size:13px;color:var(--text2);">'+(x.meals||'')+(x.calories?' | '+x.calories+' kcal':'')+'</div></div>'
-            +'<div style="display:flex;gap:4px;flex-shrink:0;">'
-            +'<button class="btn btn-ghost btn-sm" onclick="openDietModal('+x.id+')">✏️</button>'
-            +'<button class="btn btn-ghost btn-sm" style="color:#c0392b" onclick="if(confirm('ลบรายการนี้?'))supa.from('patient_diets').delete().eq('id','+x.id+').then(function(){switchPatTab('dietary');toast('ลบแล้ว','success');})">🗑️</button>'
-            +'</div></div>';
-        }).join('') + tD.map(function(x){
-          return '<div class="card" style="margin-bottom:8px;padding:12px;border-left:3px solid #27ae60;display:flex;justify-content:space-between;align-items:flex-start;">'
-            +'<div><div style="font-weight:600;">🧪 สายให้อาหาร</div>'
-            +'<div style="font-size:13px;color:var(--text2);">'+(x.date||'')+' | '+(x.formula||'')+'</div></div>'
-            +'<div style="display:flex;gap:4px;flex-shrink:0;">'
-            +'<button class="btn btn-ghost btn-sm" onclick="openTubeFeedModal('+x.id+')">✏️</button>'
-            +'<button class="btn btn-ghost btn-sm" style="color:#c0392b" onclick="if(confirm('ลบรายการนี้?'))supa.from('tube_feedings').delete().eq('id','+x.id+').then(function(){switchPatTab('dietary');toast('ลบแล้ว','success');})">🗑️</button>'
-            +'</div></div>';
-        }).join('');
-      });
-    }
+  if (tab === 'dietary') {
+    var _de=document.querySelector('[id^="pat-dietary-list-"]');
+    var _dp=_de?_de.id.replace('pat-dietary-list-',''):null;
+    if(_dp&&_de){ _renderPatDietaryTab(_dp,_de); }
   }
 }
 
@@ -701,7 +836,7 @@ function renderPatientTabBar(p, totalReqs) {
     { k:'nursing',    perm:'nursing',       label:'📋 บันทึกพยาบาล' },
     { k:'mar',        perm:'mar',           label:'💊 MAR ยาประจำวัน' },
     { k:'vitals',     perm:'vitals',        label:'📊 Vital Signs' },
-    { k:'physio',     perm:'physio',        label:'🤸 กายภาพบำบัด' },
+    { k:'physio',     perm:'physio',        label:'🧘 กายภาพบำบัด' },
     { k:'lab',        perm:'lab',           label:'🧪 ผลแล็บ' },
     { k:'appts',      perm:'appts',         label:'🚐 นัดหมายแพทย์' },
     { k:'incident',   perm:'incident',      label:'🚨 อุบัติเหตุ' },
