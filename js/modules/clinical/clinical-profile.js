@@ -100,6 +100,36 @@ async function openPatientProfile(id, activeTab) {
         </div>
       </div>
       <div id="patprofile-tab-medical" style="display:none;">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-header">
+            <div class="card-title" style="font-size:13px;">🏥 โรคประจำตัว</div>
+            <button class="btn btn-ghost btn-sm" id="diagnosis-edit-btn-${p.id}" onclick="(function(){
+              var cur=document.getElementById('diagnosis-display-${p.id}');
+              var inp=document.getElementById('diagnosis-input-${p.id}');
+              var btn=document.getElementById('diagnosis-edit-btn-${p.id}');
+              var saveBtn=document.getElementById('diagnosis-save-btn-${p.id}');
+              cur.style.display='none'; inp.style.display=''; inp.focus();
+              btn.style.display='none'; saveBtn.style.display='';
+            })()">✏️ แก้ไข</button>
+            <button class="btn btn-primary btn-sm" id="diagnosis-save-btn-${p.id}" style="display:none;" onclick="(async function(){
+              var val=document.getElementById('diagnosis-input-${p.id}').value;
+              var {error}=await supa.from('patients').update({diagnosis:val}).eq('id','${p.id}');
+              if(error){toast('บันทึกไม่สำเร็จ: '+error.message,'error');return;}
+              document.getElementById('diagnosis-display-${p.id}').textContent=val||'-';
+              document.getElementById('diagnosis-display-${p.id}').style.display='';
+              document.getElementById('diagnosis-input-${p.id}').style.display='none';
+              document.getElementById('diagnosis-edit-btn-${p.id}').style.display='';
+              document.getElementById('diagnosis-save-btn-${p.id}').style.display='none';
+              var pat=db.patients?.find(x=>x.id==='${p.id}'); if(pat) pat.diagnosis=val;
+              toast('บันทึกโรคประจำตัวแล้ว','success');
+              logAudit('patients','update','${p.id}',{field:'diagnosis',value:val});
+            })()">💾 บันทึก</button>
+          </div>
+          <div style="padding:14px 16px;">
+            <div id="diagnosis-display-${p.id}" style="font-size:14px;color:var(--text1);min-height:24px;">${p.diagnosis||'-'}</div>
+            <textarea id="diagnosis-input-${p.id}" style="display:none;width:100%;min-height:80px;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;resize:vertical;">${p.diagnosis||''}</textarea>
+          </div>
+        </div>
         ${renderMedLogTab(p.id, 'medical')}
       </div>
       <div id="patprofile-tab-meds" style="display:none;">
@@ -307,35 +337,63 @@ function switchPatTab(tab) {
     var _ie=document.querySelector('[id^="pat-incident-list-"]');
     var _ip=_ie?_ie.id.replace('pat-incident-list-',''):null;
     if(_ip&&_ie){
+      // เพิ่มปุ่ม Add ถ้ายังไม่มี
+      var _ibtn=document.getElementById('pat-incident-btns-'+_ip);
+      if(!_ibtn){
+        var _ibtnDiv=document.createElement('div');
+        _ibtnDiv.id='pat-incident-btns-'+_ip;
+        _ibtnDiv.style.cssText='display:flex;gap:8px;margin-bottom:12px;';
+        _ibtnDiv.innerHTML='<button class="btn btn-primary btn-sm" onclick="(function(){if(typeof openIncidentModal==='function'){openIncidentModal();setTimeout(function(){var h=document.getElementById('ta-inc-id');var hn=document.getElementById('ta-inc-inp');var pat=db.patients&&db.patients.find(function(x){return x.id===''+_ip+'';});if(h)h.value=''+_ip+'';if(hn&&pat)hn.value=pat.name||pat.patient_name||'';}),100);}})()">⚠️ + อุบัติเหตุ</button>'
+        +'<button class="btn btn-secondary btn-sm" onclick="(function(){if(typeof openWoundModal==='function'){openWoundModal();setTimeout(function(){var h=document.getElementById('ta-wnd-id');var hn=document.getElementById('ta-wnd-inp');var pat=db.patients&&db.patients.find(function(x){return x.id===''+_ip+'';});if(h)h.value=''+_ip+'';if(hn&&pat)hn.value=pat.name||pat.patient_name||'';}),100);}})()">🩹 + แผลกดทับ</button>';
+        _ie.parentNode.insertBefore(_ibtnDiv,_ie);
+      }
       _ie.innerHTML='<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
       Promise.all([supa.from('incident_reports').select('*').eq('patient_id',_ip).order('date',{ascending:false}),supa.from('patient_wounds').select('*').eq('patient_id',_ip).order('wound_date',{ascending:false})]).then(function(rs){
         var iD=rs[0].data||[],wD=rs[1].data||[];
         if(!iD.length&&!wD.length){_ie.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3)">ไม่มีข้อมูล</div>';return;}
-        _ie.innerHTML=iD.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px"><b>'+x.type+'</b><div style="font-size:13px;color:var(--text2)">'+x.date+' | '+(x.severity||'')+'</div><div style="font-size:13px">'+(x.detail||'')+'</div></div>';}).join('')+wD.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px;border-left:3px solid #e67e22"><b>🩹 '+(x.location||'')+' Stage '+(x.stage||'')+'</b><div style="font-size:13px;color:var(--text2)">'+(x.wound_date||'')+'</div></div>';}).join('');
+        _ie.innerHTML=iD.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;"><div><b>'+x.type+'</b><div style="font-size:13px;color:var(--text2)">'+x.date+' | '+(x.severity||'')+'</div><div style="font-size:13px">'+(x.detail||'')+'</div></div><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-ghost btn-sm" onclick="openIncidentModal('+x.id+')">✏️</button><button class="btn btn-ghost btn-sm" style="color:#c0392b" onclick="if(confirm('ลบรายการนี้?'))supa.from('incident_reports').delete().eq('id','+x.id+').then(function(){switchPatTab('incident');toast('ลบแล้ว','success');})">🗑️</button></div></div>';}).join('')+wD.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px;border-left:3px solid #e67e22;display:flex;justify-content:space-between;align-items:flex-start;"><div><b>🩹 '+(x.location||'')+' Stage '+(x.stage||'')+'</b><div style="font-size:13px;color:var(--text2)">'+(x.wound_date||'')+'</div><div style="font-size:13px">'+(x.appearance||'')+'</div></div><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-ghost btn-sm" onclick="openWoundModal('+x.id+')">✏️</button><button class="btn btn-ghost btn-sm" style="color:#c0392b" onclick="if(confirm('ลบรายการนี้?'))supa.from('patient_wounds').delete().eq('id','+x.id+').then(function(){switchPatTab('incident');toast('ลบแล้ว','success');})">🗑️</button></div></div>';}).join('');
       });
     }
   }
-  if (tab === 'dietary') {
-    var _de=document.querySelector('[id^="pat-dietary-list-"]');
-    var _dp=_de?_de.id.replace('pat-dietary-list-',''):null;
-    if(_dp&&_de){
-      _de.innerHTML='<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
-      Promise.all([supa.from('patient_diets').select('*').eq('patient_id',_dp).order('updated_at',{ascending:false}),supa.from('tube_feedings').select('*').eq('patient_id',_dp).order('created_at',{ascending:false})]).then(function(rs){
-        var dD=rs[0].data||[],tD=rs[1].data||[];
-        if(!dD.length&&!tD.length){_de.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3)">ไม่มีข้อมูล</div>';return;}
-        _de.innerHTML=dD.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px"><b>'+(x.diet_type||'')+'</b><div style="font-size:13px;color:var(--text2)">'+(x.meals||'')+'</div></div>';}).join('')+tD.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px;border-left:3px solid #27ae60"><b>🧪 สายให้อาหาร</b><div style="font-size:13px;color:var(--text2)">'+(x.date||'')+'</div></div>';}).join('');
-      });
-    }
-  }
-  if (tab === 'dietary') {
+    if (tab === 'dietary') {
     var dietEl = document.querySelector('[id^="pat-dietary-list-"]');
     var dietPid = dietEl ? dietEl.id.replace('pat-dietary-list-','') : null;
     if (dietPid) {
-      var dietItems = (db.diets||[]).filter(function(x){return String(x.patient_id)===dietPid||String(x.patientId)===dietPid;});
-      var tubeItems = (db.tubeFeedings||db.tube_feedings||[]).filter(function(x){return String(x.patient_id)===dietPid||String(x.patientId)===dietPid;});
-      dietEl.innerHTML = (dietItems.length===0&&tubeItems.length===0) ? '<div style="padding:20px;text-align:center;color:var(--text3);">ไม่มีข้อมูล</div>'
-        : dietItems.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px"><div style="font-weight:600;">' + (x.dietType||x.diet_type||'') + '</div><div style="font-size:13px;color:var(--text2);">' + (x.meals||'') + '</div></div>';}).join('') +
-          tubeItems.map(function(x){return '<div class="card" style="margin-bottom:8px;padding:12px;border-left:3px solid #27ae60"><div style="font-weight:600;">🧪 สายให้อาหาร</div><div style="font-size:13px;color:var(--text2);">' + (x.date||'') + ' | ' + (x.formula||'') + '</div></div>';}).join('');
+      // เพิ่มปุ่ม Add ถ้ายังไม่มี
+      var _dbtnDiv = document.getElementById('pat-dietary-btns-'+dietPid);
+      if (!_dbtnDiv) {
+        _dbtnDiv = document.createElement('div');
+        _dbtnDiv.id = 'pat-dietary-btns-'+dietPid;
+        _dbtnDiv.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
+        _dbtnDiv.innerHTML = '<button class="btn btn-primary btn-sm" onclick="(function(){if(typeof openDietModal==='function'){openDietModal();setTimeout(function(){var h=document.getElementById('ta-diet-id');var hn=document.getElementById('ta-diet-inp');var pat=db.patients&&db.patients.find(function(x){return x.id===''+dietPid+'';});if(h)h.value=''+dietPid+'';if(hn&&pat)hn.value=pat.name||pat.patient_name||'';}),100);}})()">🍽️ + กำหนดอาหาร</button>'
+          + '<button class="btn btn-secondary btn-sm" onclick="(function(){if(typeof openTubeFeedModal==='function'){openTubeFeedModal();setTimeout(function(){var h=document.getElementById('ta-tf-id');var hn=document.getElementById('ta-tf-inp');var pat=db.patients&&db.patients.find(function(x){return x.id===''+dietPid+'';});if(h)h.value=''+dietPid+'';if(hn&&pat)hn.value=pat.name||pat.patient_name||'';}),100);}})()">🧪 + สายให้อาหาร</button>';
+        dietEl.parentNode.insertBefore(_dbtnDiv, dietEl);
+      }
+      dietEl.innerHTML = '<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
+      Promise.all([
+        supa.from('patient_diets').select('*').eq('patient_id',dietPid).order('updated_at',{ascending:false}),
+        supa.from('tube_feedings').select('*').eq('patient_id',dietPid).order('created_at',{ascending:false})
+      ]).then(function(rs){
+        var dD=rs[0].data||[], tD=rs[1].data||[];
+        if(!dD.length&&!tD.length){dietEl.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);">ไม่มีข้อมูล</div>';return;}
+        dietEl.innerHTML = dD.map(function(x){
+          return '<div class="card" style="margin-bottom:8px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;">'
+            +'<div><div style="font-weight:600;">'+(x.diet_type||'')+'</div>'
+            +'<div style="font-size:13px;color:var(--text2);">'+(x.meals||'')+(x.calories?' | '+x.calories+' kcal':'')+'</div></div>'
+            +'<div style="display:flex;gap:4px;flex-shrink:0;">'
+            +'<button class="btn btn-ghost btn-sm" onclick="openDietModal('+x.id+')">✏️</button>'
+            +'<button class="btn btn-ghost btn-sm" style="color:#c0392b" onclick="if(confirm('ลบรายการนี้?'))supa.from('patient_diets').delete().eq('id','+x.id+').then(function(){switchPatTab('dietary');toast('ลบแล้ว','success');})">🗑️</button>'
+            +'</div></div>';
+        }).join('') + tD.map(function(x){
+          return '<div class="card" style="margin-bottom:8px;padding:12px;border-left:3px solid #27ae60;display:flex;justify-content:space-between;align-items:flex-start;">'
+            +'<div><div style="font-weight:600;">🧪 สายให้อาหาร</div>'
+            +'<div style="font-size:13px;color:var(--text2);">'+(x.date||'')+' | '+(x.formula||'')+'</div></div>'
+            +'<div style="display:flex;gap:4px;flex-shrink:0;">'
+            +'<button class="btn btn-ghost btn-sm" onclick="openTubeFeedModal('+x.id+')">✏️</button>'
+            +'<button class="btn btn-ghost btn-sm" style="color:#c0392b" onclick="if(confirm('ลบรายการนี้?'))supa.from('tube_feedings').delete().eq('id','+x.id+').then(function(){switchPatTab('dietary');toast('ลบแล้ว','success');})">🗑️</button>'
+            +'</div></div>';
+        }).join('');
+      });
     }
   }
 }
@@ -637,24 +695,24 @@ async function deleteLabResult(labId, patientId) {
 // ─── Patient Profile Tab Bar (role-aware) ────────────────────
 function renderPatientTabBar(p, totalReqs) {
   const allTabs = [
-    { k:'history',    perm:'history',       label:'📦 ประวัติเบิก (' + totalReqs + ')' },
-    { k:'medical',    perm:'nursing',       label:'🏥 ประวัติการรักษา' },
+    { k:'medical',    perm:'nursing',       label:'🏥 โรคประจำตัว/ประวัติการรักษา' },
     { k:'meds',       perm:'mar',           label:'💊 ยาประจำ' },
-    { k:'allergy',    perm:'allergy',     label:'🚨 แพ้ยา/อาหาร' + (p.allergies?.length ? '<span style="background:#c0392b;color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">' + p.allergies.length + '</span>' : '') },
-    { k:'contacts',   perm:'contacts',      label:'👥 ผู้ติดต่อ' + (p.contacts?.length ? '<span style="background:var(--accent);color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">' + p.contacts.length + '</span>' : '') },
-    { k:'notes',      perm:'nursing',       label:'📝 หมายเหตุ' },
+    { k:'allergy',    perm:'allergy',       label:'🚨 แพ้ยา/อาหาร' + (p.allergies?.length ? '<span style="background:#c0392b;color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">' + p.allergies.length + '</span>' : '') },
+    { k:'nursing',    perm:'nursing',       label:'📋 บันทึกพยาบาล' },
     { k:'mar',        perm:'mar',           label:'💊 MAR ยาประจำวัน' },
     { k:'vitals',     perm:'vitals',        label:'📊 Vital Signs' },
+    { k:'physio',     perm:'physio',        label:'🤸 กายภาพบำบัด' },
     { k:'lab',        perm:'lab',           label:'🧪 ผลแล็บ' },
-    { k:'nursing',    perm:'nursing',       label:'📋 บันทึกพยาบาล' },
-    { k:'appts',      perm:'appts',  label:'🚐 นัดหมายแพทย์' },
-    { k:'incident',   perm:'incident',     label:'🚨 อุบัติการณ์' },
-    { k:'dietary',    perm:'dietary',      label:'🥦 โภชนาการ' },
+    { k:'appts',      perm:'appts',         label:'🚐 นัดหมายแพทย์' },
+    { k:'incident',   perm:'incident',      label:'🚨 อุบัติเหตุ' },
+    { k:'dietary',    perm:'dietary',       label:'🥦 โภชนาการ' },
+    { k:'contacts',   perm:'contacts',      label:'👥 ผู้ติดต่อ' + (p.contacts?.length ? '<span style="background:var(--accent);color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">' + p.contacts.length + '</span>' : '') },
+    { k:'notes',      perm:'nursing',       label:'📝 หมายเหตุ' },
     { k:'belongings', perm:'belongings',    label:'🧳 ทรัพย์สิน' },
-    { k:'dnr',        perm:'dnr',           label:'⚖️ DNR & Consent' },
-    { k:'physio',     perm:'physio',        label:'🤻 กายภาพบำบัด' },
-    { k:'dispense',   perm:'dispense',       label:'💊 เบิกสินค้า' },
     { k:'deposits',   perm:'deposits',      label:'💰 มัดจำ' },
+    { k:'dnr',        perm:'dnr',           label:'⚖️ DNR & Consent' },
+    { k:'dispense',   perm:'dispense',      label:'💊 เบิกสินค้า' },
+    { k:'history',    perm:'history',       label:'📦 ประวัติเบิก (' + totalReqs + ')' },
   ];
   const visibleTabs = allTabs.filter(t => canSeePatientTab(t.perm));
   const tabsHtml = visibleTabs.map(t =>
