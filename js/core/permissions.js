@@ -110,6 +110,10 @@ function canApproveReq() {
   return hasRole('admin', 'manager', 'officer');
 }
 
+function canSeeAllHistory() {
+  return hasRole('admin', 'manager');
+}
+
 function canManageBilling() {
   return hasRole('admin', 'manager', 'officer');
 }
