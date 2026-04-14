@@ -114,6 +114,14 @@ function canSeeAllHistory() {
   return hasRole('admin', 'manager');
 }
 
+function canSeeExcretion() {
+  return hasRole('admin', 'manager', 'nurse', 'care');
+}
+
+function canEditExcretion() {
+  return hasRole('admin', 'manager', 'nurse', 'care');
+}
+
 function canManageBilling() {
   return hasRole('admin', 'manager', 'officer');
 }
