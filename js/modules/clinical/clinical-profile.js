@@ -492,7 +492,7 @@ function _renderPatDietaryTab(pid, listEl) {
 }
 
 function switchPatTab(tab) {
-  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','lab','nursing','appts','belongings','dnr','physio','dispense','deposits','incident','dietary'];
+  const tabs = ['history','medical','meds','allergy','contacts','notes','mar','vitals','excretion','lab','nursing','appts','belongings','dnr','physio','dispense','deposits','incident','dietary'];
   tabs.forEach(t => {
     const el = document.getElementById('patprofile-tab-'+t);
     if(el) el.style.display = t===tab ? '' : 'none';
