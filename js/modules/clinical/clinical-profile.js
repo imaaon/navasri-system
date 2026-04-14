@@ -188,9 +188,9 @@ async function openPatientProfile(id, activeTab) {
       </div>
       <!-- VITAL SIGNS TAB -->
       <div id="patprofile-tab-vitals" style="display:none;">
-  <div id="patprofile-tab-excretion"></div>
         ${renderVitalsTab(pid, p.id)}
       </div>
+      <div id="patprofile-tab-excretion" style="display:none;"></div>
       <!-- LAB RESULTS TAB -->
       <div id="patprofile-tab-lab" style="display:none;">
         <div id="lab-list-${p.id}"></div>
@@ -500,7 +500,7 @@ function switchPatTab(tab) {
   document.querySelectorAll('#patprofileTabs .tab').forEach(el => {
     const t = el.getAttribute('onclick')?.match(/'([^']+)'/)?.[1]; el.classList.toggle('active', t === tab);
   });
-    if (tab === 'excretion') { _renderExcretionTab(patId); return; }
+    if (tab === 'excretion') { const _exEl = document.getElementById('patprofile-tab-excretion'); if (_exEl && _exEl.dataset.patid) { _renderExcretionTab(_exEl.dataset.patid); return; } const _pEl = document.querySelector('[id^="diag-card-"]'); if (_pEl) { _renderExcretionTab(_pEl.id.replace('diag-card-','')); return; } }
   if (tab === 'physio') {
     const listEl = document.querySelector('[id^="physio-list-"]');
     if (listEl) {
@@ -864,6 +864,7 @@ function _renderExcretionTab(patId) {
   var el = document.getElementById('patprofile-tab-excretion');
   if (!el) return;
   el.innerHTML = '';
+  el.dataset.patid = patId;
 
   var canEdit = (typeof canEditExcretion === 'function') ? canEditExcretion() : false;
 
