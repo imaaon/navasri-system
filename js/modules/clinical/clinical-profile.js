@@ -885,8 +885,8 @@ function _renderExcretionTab(patId) {
 function _loadExcretionData(patId, el, canEdit) {
   var today = new Date().toISOString().slice(0, 10);
   Promise.all([
-    window._sb.from('patient_excretions').select('*').eq('patient_id', patId).gte('recorded_at', today + 'T00:00:00').order('recorded_at', {ascending: true}),
-    window._sb.from('patient_fluid_records').select('*').eq('patient_id', patId).gte('recorded_at', today + 'T00:00:00').order('recorded_at', {ascending: true})
+    supa.from('patient_excretions').select('*').eq('patient_id', patId).gte('recorded_at', today + 'T00:00:00').order('recorded_at', {ascending: true}),
+    supa.from('patient_fluid_records').select('*').eq('patient_id', patId).gte('recorded_at', today + 'T00:00:00').order('recorded_at', {ascending: true})
   ]).then(function(results) {
     var excretions = (results[0].data || []);
     var fluids = (results[1].data || []);
@@ -1207,8 +1207,8 @@ function _openExcretionModal(rec, patId, today) {
       recorded_by: user
     };
     var prom = isEdit
-      ? window._sb.from('patient_excretions').update(payload).eq('id', rec.id)
-      : window._sb.from('patient_excretions').insert(payload);
+      ? supa.from('patient_excretions').update(payload).eq('id', rec.id)
+      : supa.from('patient_excretions').insert(payload);
     prom.then(function(res) {
       if (res.error) { alert('บันทึกไม่สำเร็จ: ' + res.error.message); return; }
       document.body.removeChild(overlay);
@@ -1219,7 +1219,7 @@ function _openExcretionModal(rec, patId, today) {
 
 function _deleteExcretion(id, patId) {
   if (!confirm('ยืนยันลบรายการนี้?')) return;
-  window._sb.from('patient_excretions').delete().eq('id', id).then(function(res) {
+  supa.from('patient_excretions').delete().eq('id', id).then(function(res) {
     if (res.error) { alert('ลบไม่สำเร็จ: ' + res.error.message); return; }
     switchPatTab('excretion');
   });
@@ -1338,8 +1338,8 @@ function _openFluidModal(rec, patId, direction, today) {
       recorded_by: user
     };
     var prom = isEdit
-      ? window._sb.from('patient_fluid_records').update(payload).eq('id', rec.id)
-      : window._sb.from('patient_fluid_records').insert(payload);
+      ? supa.from('patient_fluid_records').update(payload).eq('id', rec.id)
+      : supa.from('patient_fluid_records').insert(payload);
     prom.then(function(res) {
       if (res.error) { alert('บันทึกไม่สำเร็จ: ' + res.error.message); return; }
       document.body.removeChild(overlay);
@@ -1350,7 +1350,7 @@ function _openFluidModal(rec, patId, direction, today) {
 
 function _deleteFluidRecord(id, patId) {
   if (!confirm('ยืนยันลบรายการนี้?')) return;
-  window._sb.from('patient_fluid_records').delete().eq('id', id).then(function(res) {
+  supa.from('patient_fluid_records').delete().eq('id', id).then(function(res) {
     if (res.error) { alert('ลบไม่สำเร็จ: ' + res.error.message); return; }
     switchPatTab('excretion');
   });
