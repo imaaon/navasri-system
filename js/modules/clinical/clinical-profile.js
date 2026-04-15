@@ -297,22 +297,30 @@ function _renderPatAllergyTab(pid, listEl) {
   listEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)">⏳ กำลังโหลด...</div>';
   supa.from('patient_allergies').select('*').eq('patient_id', pid).order('created_at', {ascending: false})
     .then(function(res) {
-      const rows = res.data || [];
+      var rows = res.data || [];
       if (!rows.length) {
         listEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)">✅ ไม่มีประวัติการแพ้ที่บันทึกไว้</div>';
         return;
       }
-      var html = '<table><thead><tr><th>สิ่งที่แพ้</th><th>ประเภท</th><th>อาการ</th><th>ความรุนแรง</th><th>การจัดการ</th></tr></thead><tbody>';
+      var html = '<table><thead><tr>' +
+        '<th>สิ่งที่แพ้</th>' +
+        '<th>ประเภท</th>' +
+        '<th>อาการ</th>' +
+        '<th>ความรุนแรง</th>' +
+        '<th>จัดการ</th>' +
+        '</tr></thead><tbody>';
       rows.forEach(function(r) {
-        html += '<tr>' +
-          '<td><b>' + (r.allergen||'') + '</b></td>' +
-          '<td>' + (r.allergy_type||'') + '</td>' +
-          '<td>' + (r.reaction||'') + '</td>' +
-          '<td>' + (r.severity||'') + '</td>' +
-          '<td style="white-space:nowrap">' +
-            '<button class="btn btn-ghost btn-sm" onclick="openEditAllergyModal(' + r.id + ','' + pid + '')">✏️</button>' +
-            '<button class="btn btn-ghost btn-sm" onclick="deleteAllergy(' + r.id + ','' + pid + '')">🗑️</button>' +
-          '</td></tr>';
+        var eid = r.id;
+        var row = '<tr>' +
+          '<td><b>' + (r.allergen || '') + '</b></td>' +
+          '<td>' + (r.allergy_type || '') + '</td>' +
+          '<td>' + (r.reaction || '') + '</td>' +
+          '<td>' + (r.severity || '') + '</td>' +
+          '<td style="white-space:nowrap">';
+        row += '<button class="btn btn-ghost btn-sm" onclick="openEditAllergyModal(' + eid + ',&quot;' + pid + '&quot;)">✏️</button>';
+        row += '<button class="btn btn-ghost btn-sm" onclick="deleteAllergy(' + eid + ',&quot;' + pid + '&quot;)">🗑️</button>';
+        row += '</td></tr>';
+        html += row;
       });
       html += '</tbody></table>';
       listEl.innerHTML = html;
