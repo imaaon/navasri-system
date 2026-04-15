@@ -493,7 +493,11 @@ const HR_GROUPS = [
     { id:"physio",  label:"กายภาพบำบัด",      sub:"วัน, นักกายภาพ, ระยะเวลา" },
     { id:"incident",label:"อุบัติเหตุ",           sub:"ประเภท, ความรุนแรง" },
   ]},
-];
+,
+  { label:"การดูแลสุขภาพรายวัน", items: [
+    { id:"excretion", label:"อึ้นี่/ปัสสาวะ", sub:"ปัสสาวะ, อุจจาระ, ปริมาณ" },
+    { id:"fluid",     label:"น้ำเข้าออก",    sub:"Intake/Output, Balance" },
+  ]}];
 
 let _hrChecked = new Set();
 let _hrRange = "30d";
@@ -590,7 +594,7 @@ async function generateHealthReport(){
     return data||[];
   };
   toast("กำลังโหลดข้อมูล...","info");
-  const[vitals,nursing,mar,meds,medlog,lab,appt,wounds,woundCare,physio,incidents,allergies]=await Promise.all([
+  const[vitals,nursing,mar,meds,medlog,lab,appt,wounds,woundCare,physio,incidents,allergies,excretions,fluidRecords]=await Promise.all([
     items.includes("vital")    ?q("vital_signs",   df("recorded_at")):Promise.resolve([]),
     items.includes("nursing")  ?q("nursing_notes", df("date")):Promise.resolve([]),
     items.includes("mar")      ?q("mar_records",   df("date")):Promise.resolve([]),
@@ -603,6 +607,8 @@ async function generateHealthReport(){
     items.includes("physio")   ?q("physio_sessions",df("session_date")):Promise.resolve([]),
     items.includes("incident") ?q("incident_reports",df("date")):Promise.resolve([]),
     items.includes("allergy")  ?q("patient_allergies",null):Promise.resolve([]),
+    items.includes("excretion")?q("patient_excretions",df("recorded_at")):Promise.resolve([]),
+    items.includes("fluid")    ?q("patient_fluid_records",df("recorded_at")):Promise.resolve([]),
   ]);
   closeModal("modal-healthReport");
   hrPrintReport({p,from,to,items,vitals,nursing,mar,meds,medlog,lab,appt,wounds,woundCare,physio,incidents,allergies});
@@ -618,6 +624,8 @@ function hrPrintReport(d){
   const tr=cells=>"<tr>"+cells.map(c=>"<td>"+(c||"-")+"</td>").join("")+"</tr>";
   let body="";
   if(items.includes("allergy")) body+=sec("⚠️ การแพ้ยา/อาหาร",tbl(["ประเภท","สิ่งที่แพ้","อาการ","ความรุนแรง"],allergies.map(r=>tr([r.allergy_type,r.allergen,r.reaction,r.severity]))));
+  if(items.includes("excretion")&&excretions.length) body+=sec("อึ้นี่/ปัสสาวะ",tbl(["วันที่-เวลา","เวร","ประเภท","จำนวน","ปริมาณ(ml)","ลักษณะ"],excretions.map(r=>tr([r.recorded_at?r.recorded_at.slice(0,16):'',r.shift||'',r.type==='urine'?'ปัสสาวะ':r.type==='stool'?'อุจจาระ':r.type||'',r.count||'',r.volume_ml||'',r.characteristics||'']))));
+  if(items.includes("fluid")&&fluidRecords.length) body+=sec("น้ำเข้าออก (Fluid)",tbl(["วันที่-เวลา","เวร","ทิศทาง","ประเภทน้ำ","ปริมาณ(ml)"],fluidRecords.map(r=>tr([r.recorded_at?r.recorded_at.slice(0,16):'',r.shift||'',r.direction==='intake'?'น้ำเข้า':r.direction==='output'?'น้ำออก':r.direction||'',r.fluid_type||'',r.volume_ml||'']))));
   if(items.includes("meds"))    body+=sec("💊 ยาประจำ",tbl(["ชื่อยา","ขนาด/หน่วย","วิธีใช้","สถานะ"],meds.filter(r=>r.is_active).map(r=>tr([r.name,(r.dose||"")+" "+(r.unit||""),r.route,"ใช้อยู่"]))));
   if(items.includes("vital"))   body+=sec("🩺 Vital Signs",tbl(["วันที่","เวลา","BP","ชีพจร","อุณหภูมิ","SpO2","DTX","น้ำหนัก"],vitals.sort((a,b)=>b.recorded_at>a.recorded_at?1:-1).map(r=>tr([fmtD(r.recorded_at?.slice(0,10)),r.recorded_at?.slice(11,16),(r.bp_sys&&r.bp_dia?r.bp_sys+"/"+r.bp_dia:""),r.hr,r.temp,r.spo2,r.dtx,r.weight]))));
   if(items.includes("nursing"))  body+=sec("📝 บันทึกพยาบาล",tbl(["วันที่","กะ","อาการทั่วไป","สติปัญญา","ส่งเวร"],nursing.sort((a,b)=>b.date>a.date?1:-1).map(r=>tr([fmtD(r.date),r.shift,r.general_condition,r.consciousness,r.handover_note]))));
