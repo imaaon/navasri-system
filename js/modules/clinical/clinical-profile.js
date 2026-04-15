@@ -112,30 +112,13 @@ async function openPatientProfile(id, activeTab) {
         ${renderMedLogTab(p.id, 'meds')}
       </div>
       <!-- ALLERGY TAB -->
-      <div id="patprofile-tab-allergy" style="display:none;">
+      <div id="patprofile-tab-allergy" style="display:none;" data-patid="${p.id}">
         <div class="card">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;">🚨 ประวัติการแพ้ยา / อาหาร</div>
             <button class="btn btn-primary btn-sm" onclick="openAddAllergyModal('${p.id}')">+ เพิ่ม</button>
           </div>
-          ${p.allergies?.length === 0 ? `<div style="padding:24px;text-align:center;color:var(--text3);">✅ ไม่มีประวัติการแพ้ที่บันทึกไว้</div>` :
-          `<table>
-            <thead><tr><th>สิ่งที่แพ้</th><th>ประเภท</th><th>ระดับความรุนแรง</th><th>อาการ</th><th></th></tr></thead>
-            <tbody>
-              ${(p.allergies||[]).map(a => {
-                return `<tr>
-                  <td style="font-weight:700;">${a.allergen}</td>
-                  <td><span class="badge badge-gray">${a.allergyType}</span></td>
-                  <td style="font-size:12px;color:var(--text2);">${a.severity||'-'}</td>
-                  <td style="font-size:12px;color:var(--text2);">${a.reaction||'-'}</td>
-                  <td>
-                    <button class="btn btn-ghost btn-sm" onclick="openEditAllergyModal('${p.id}','${a.id}')" title="แก้ไข">✏️</button>
-                    <button class="btn btn-ghost btn-sm" onclick="deleteAllergy('${p.id}','${a.id}')">🗑️</button>
-                  </td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>`}
+          ${'<div id="pat-allergy-list-'+p.id+'" style="padding:16px"><div style="padding:24px;text-align:center;color:var(--text3)">⏳ กำลังโหลด...</div></div>}
         </div>
       </div>
       <!-- CONTACTS TAB -->
@@ -310,6 +293,32 @@ async function openPatientProfile(id, activeTab) {
 }
 
 
+function _renderPatAllergyTab(pid, listEl) {
+  listEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)">⏳ กำลังโหลด...</div>';
+  supa.from('patient_allergies').select('*').eq('patient_id', pid).order('created_at', {ascending: false})
+    .then(function(res) {
+      const rows = res.data || [];
+      if (!rows.length) {
+        listEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)">✅ ไม่มีประวัติการแพ้ที่บันทึกไว้</div>';
+        return;
+      }
+      var html = '<table><thead><tr><th>สิ่งที่แพ้</th><th>ประเภท</th><th>อาการ</th><th>ความรุนแรง</th><th>การจัดการ</th></tr></thead><tbody>';
+      rows.forEach(function(r) {
+        html += '<tr>' +
+          '<td><b>' + (r.allergen||'') + '</b></td>' +
+          '<td>' + (r.allergy_type||'') + '</td>' +
+          '<td>' + (r.reaction||'') + '</td>' +
+          '<td>' + (r.severity||'') + '</td>' +
+          '<td style="white-space:nowrap">' +
+            '<button class="btn btn-ghost btn-sm" onclick="openEditAllergyModal(' + r.id + ','' + pid + '')">✏️</button>' +
+            '<button class="btn btn-ghost btn-sm" onclick="deleteAllergy(' + r.id + ','' + pid + '')">🗑️</button>' +
+          '</td></tr>';
+      });
+      html += '</tbody></table>';
+      listEl.innerHTML = html;
+    });
+}
+
 function _renderPatIncidentTab(pid, listEl) {
   if (!document.getElementById('pat-incident-btns-'+pid)) {
     var wrap=document.createElement('div');
@@ -473,6 +482,12 @@ function switchPatTab(tab) {
     const el = document.querySelector('[id^="pat-dispense-list-"]');
     const patId = el?.id?.replace('pat-dispense-list-','');
     if (patId) loadPatDispense(patId);
+  }
+  if (tab === 'allergy') {
+    const _aEl=document.getElementById('patprofile-tab-allergy');
+    const _ap=_aEl?.dataset?.patid;
+    const _ae=_ap?document.getElementById('pat-allergy-list-'+_ap):null;
+    if(_ap&&_ae){ _renderPatAllergyTab(_ap,_ae); }
   }
   if (tab === 'deposits') {
     var depEl = document.querySelector('[id^="pat-deposits-list-"]');
@@ -672,7 +687,7 @@ function renderLabTab(patientId) {
         '<button class="btn btn-primary btn-sm" onclick="openAddLabModal(\''+patientId+'\')" style="margin-left:auto;">+ บันทึก</button></div><div style="padding:0 16px;">';
       rows.forEach(function(r) {
         var results = [];
-        try { results = typeof r.results === 'string' ? JSON.parse(r.results) : (r.results || []); } catch(e) {}
+        try { results = typeof r.results === 'string' ? JSON.parse(r.results) : (Array.isArray(r.results) ? r.results : []); } catch(e) {}
         var abn = results.filter(function(x) { return x.status === 'high' || x.status === 'low'; });
         html += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">' +
           '<div style="display:flex;justify-content:space-between;">' +
