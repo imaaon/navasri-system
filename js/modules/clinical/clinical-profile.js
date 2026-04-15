@@ -308,39 +308,24 @@ async function openPatientProfile(id, activeTab) {
 
 function _renderPatIncidentTab(pid, listEl) {
   if (!document.getElementById('pat-incident-btns-'+pid)) {
-    var wrap = document.createElement('div');
-    wrap.id = 'pat-incident-btns-'+pid;
-    wrap.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
-    var b1 = document.createElement('button');
-    b1.className = 'btn btn-primary btn-sm';
-    b1.textContent = '⚠️ + อุบัติเหตุ';
-    b1.addEventListener('click', function(){
-      if(typeof openIncidentModal!=='function') return;
-      openIncidentModal();
-      setTimeout(function(){
-        var h=document.getElementById('ta-inc-id');
-        var hn=document.getElementById('ta-inc-inp');
-        var pat=(db.patients||[]).find(function(x){return x.id===pid;});
-        if(h) h.value=pid;
-        if(hn&&pat) hn.value=pat.name||'';
-      },150);
-    });
-    var b2 = document.createElement('button');
-    b2.className = 'btn btn-secondary btn-sm';
-    b2.textContent = '🩹 + แผลกดทับ';
-    b2.addEventListener('click', function(){
-      if(typeof openWoundModal!=='function') return;
-      openWoundModal();
-      setTimeout(function(){
-        var h=document.getElementById('ta-wnd-id');
-        var hn=document.getElementById('ta-wnd-inp');
-        var pat=(db.patients||[]).find(function(x){return x.id===pid;});
-        if(h) h.value=pid;
-        if(hn&&pat) hn.value=pat.name||'';
-      },150);
-    });
-    wrap.appendChild(b1); wrap.appendChild(b2);
-    listEl.parentNode.insertBefore(wrap, listEl);
+    var card=document.createElement('div');card.className='card';
+    listEl.parentNode.insertBefore(card,listEl);
+    var cardHdr=document.createElement('div');cardHdr.className='card-header';
+    var cardTitle=document.createElement('div');cardTitle.className='card-title';
+    var wrap=document.createElement('div');
+    wrap.id='pat-incident-btns-'+pid;
+    wrap.style.cssText='display:flex;gap:8px;';
+    var b1=document.createElement('button');
+    b1.className='btn btn-primary btn-sm';
+    b1.innerHTML='⚠️ + อุบัติเหตุ';
+    b1.onclick=function(){openPatIncidentModal(pid);};
+    var b2=document.createElement('button');
+    b2.className='btn btn-secondary btn-sm';
+    b2.innerHTML='🩹 + แผลกดทับ';
+    b2.onclick=function(){setTimeout(function(){openPatWoundModal(pid);},150);};
+    wrap.appendChild(b1);wrap.appendChild(b2);
+    cardHdr.appendChild(cardTitle);cardHdr.appendChild(wrap);
+    card.appendChild(cardHdr);card.appendChild(listEl);
   }
   listEl.innerHTML = '<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
   Promise.all([
@@ -399,39 +384,28 @@ function _renderPatIncidentTab(pid, listEl) {
 
 function _renderPatDietaryTab(pid, listEl) {
   if (!document.getElementById('pat-dietary-btns-'+pid)) {
-    var wrap = document.createElement('div');
-    wrap.id = 'pat-dietary-btns-'+pid;
-    wrap.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
-    var b1 = document.createElement('button');
-    b1.className = 'btn btn-primary btn-sm';
-    b1.textContent = '🍽️ + กำหนดอาหาร';
-    b1.addEventListener('click', function(){
-      if(typeof openDietModal!=='function') return;
-      openDietModal();
-      setTimeout(function(){
-        var h=document.getElementById('ta-diet-id');
-        var hn=document.getElementById('ta-diet-inp');
-        var pat=(db.patients||[]).find(function(x){return x.id===pid;});
-        if(h) h.value=pid;
-        if(hn&&pat) hn.value=pat.name||'';
-      },150);
-    });
-    var b2 = document.createElement('button');
-    b2.className = 'btn btn-secondary btn-sm';
-    b2.textContent = '🧪 + สายให้อาหาร';
-    b2.addEventListener('click', function(){
-      if(typeof openTubeFeedModal!=='function') return;
-      openTubeFeedModal();
-      setTimeout(function(){
-        var h=document.getElementById('ta-tf-id');
-        var hn=document.getElementById('ta-tf-inp');
-        var pat=(db.patients||[]).find(function(x){return x.id===pid;});
-        if(h) h.value=pid;
-        if(hn&&pat) hn.value=pat.name||'';
-      },150);
-    });
-    wrap.appendChild(b1); wrap.appendChild(b2);
-    listEl.parentNode.insertBefore(wrap, listEl);
+    var card=document.createElement('div');card.className='card';
+    listEl.parentNode.insertBefore(card,listEl);
+    var cardHdr=document.createElement('div');cardHdr.className='card-header';
+    var cardTitle=document.createElement('div');cardTitle.className='card-title';
+    var wrap=document.createElement('div');
+    wrap.id='pat-dietary-btns-'+pid;
+    wrap.style.cssText='display:flex;gap:8px;';
+    var b1=document.createElement('button');
+    b1.className='btn btn-primary btn-sm';
+    b1.textContent='🍽️ + กำหนดอาหาร';
+    b1.addEventListener('click',function(){if(typeof openDietModal!=='function')return;openDietModal();setTimeout(function(){
+      var s=document.getElementById('diet-patient-id');if(s)s.value=pid;
+    },150);});
+    var b2=document.createElement('button');
+    b2.className='btn btn-secondary btn-sm';
+    b2.textContent='🧪 + สายให้อาหาร';
+    b2.addEventListener('click',function(){if(typeof openTubeFeedModal!=='function')return;openTubeFeedModal();setTimeout(function(){
+      var s=document.getElementById('tubefeed-patient-id');if(s)s.value=pid;
+    },150);});
+    wrap.appendChild(b1);wrap.appendChild(b2);
+    cardHdr.appendChild(cardTitle);cardHdr.appendChild(wrap);
+    card.appendChild(cardHdr);card.appendChild(listEl);
   }
   listEl.innerHTML = '<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
   Promise.all([
