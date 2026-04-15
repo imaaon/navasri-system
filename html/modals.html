@@ -1857,18 +1857,7 @@
         <label class="form-label">ที่อยู่</label>
         <textarea class="form-control" id="pat-address" rows="2" placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด" style="resize:vertical;"></textarea>
       </div>
-      <hr class="divider">
-      <!-- Medical history - managed from profile page -->
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">ประวัติการรักษา / โรคประจำตัว</div>
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);margin-bottom:12px;">
-        💡 จัดการรายละเอียดได้ในหน้าโปรไฟล์ผู้รับบริการ (แท็บ ประวัติการรักษา)
-      </div>
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">ประวัติการให้ยา / ยาประจำ</div>
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);margin-bottom:4px;">
-        💡 จัดการรายละเอียดได้ในหน้าโปรไฟล์ผู้รับบริการ (แท็บ ยาประจำ)
-      </div>
-      <input type="hidden" id="pat-medical">
-      <input type="hidden" id="pat-medications">
+      
       <hr class="divider">
       <!-- Notes -->
       <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">หมายเหตุ</div>
@@ -2713,12 +2702,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
         <div class="form-group">
           <label class="form-label">ระยะเวลา (นาที) *</label>
-          <select class="form-control" id="physio-duration">
-            <option value="30">30 นาที (ครึ่งชั่วโมง)</option>
-            <option value="60" selected>60 นาที (1 ชั่วโมง)</option>
-            <option value="90">90 นาที (1.5 ชั่วโมง)</option>
-            <option value="120">120 นาที (2 ชั่วโมง)</option>
-          </select>
+          <input class="form-control" type="number" id="physio-duration" min="1" max="480" placeholder="60" value="60">
         </div>
         <div class="form-group">
           <label class="form-label">ราคา/ชั่วโมง (฿) *</label>
