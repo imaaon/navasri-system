@@ -105,6 +105,8 @@ async function openPatientProfile(id, activeTab) {
       <div id="patprofile-tab-medical" style="display:none;">
         
         ${renderMedLogTab(p.id, 'medical')}
+
+        <div id="med-files-section-${p.id}" style="margin-top:12px;"></div>
       </div>
       <div id="patprofile-tab-meds" style="display:none;">
         ${renderMedLogTab(p.id, 'meds')}
@@ -491,6 +493,10 @@ function switchPatTab(tab) {
   document.querySelectorAll('#patprofileTabs .tab').forEach(el => {
     const t = el.getAttribute('onclick')?.match(/'([^']+)'/)?.[1]; el.classList.toggle('active', t === tab);
   });
+    if (tab === 'medical') {
+      const _medEl = document.getElementById('patprofile-tab-medical');
+      if (_medEl && _medEl.dataset.patid) { _renderMedicalFilesSection(_medEl.dataset.patid); }
+    }
     if (tab === 'excretion') { const _exEl = document.getElementById('patprofile-tab-excretion'); if (_exEl && _exEl.dataset.patid) { _renderExcretionTab(_exEl.dataset.patid); return; } const _pEl = document.querySelector('[id^="diag-card-"]'); if (_pEl) { _renderExcretionTab(_pEl.id.replace('diag-card-','')); return; } }
   if (tab === 'physio') {
     const listEl = document.querySelector('[id^="physio-list-"]');
@@ -1475,5 +1481,118 @@ async function openContractFilesModal(patientId, patientName) {
     loadFiles();
   };
   
+  loadFiles();
+}
+
+
+// ===== MEDICAL FILES SECTION =====
+async function _renderMedicalFilesSection(patientId) {
+  const sec = document.getElementById('med-files-section-' + patientId);
+  if (!sec) return;
+  const patObj = db.patients.find(function(x){ return x.id === patientId; }) || {};
+  const pName = patObj.name || '';
+  const { data, error } = await supa.from('patient_medical_files')
+    .select('*').eq('patient_id', patientId).order('created_at', { ascending: false });
+  let rows = '';
+  if (!error && data && data.length > 0) {
+    rows = data.map(function(f) {
+      const isPdf = (f.file_type||'').indexOf('pdf') > -1 || f.file_name.slice(-4) === '.pdf';
+      const kb = f.file_size ? (f.file_size > 1048576 ? (f.file_size/1048576).toFixed(1)+' MB' : Math.round(f.file_size/1024)+' KB') : '';
+      const dt = f.created_at ? new Date(f.created_at).toLocaleDateString('th-TH') : '';
+      const meta = [kb,dt,f.note].filter(Boolean).join(' · ');
+      const badgeStyle = isPdf ? 'background:#fee2e2;color:#b91c1c' : 'background:#dcfce7;color:#15803d';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f3f4f6;">'
+        + '<span style="font-size:10px;font-weight:600;padding:2px 5px;border-radius:4px;flex-shrink:0;' + badgeStyle + ';">' + (isPdf?'PDF':'IMG') + '</span>'
+        + '<div style="flex:1;min-width:0;"><div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + f.file_name + '</div>'
+        + '<div style="font-size:10px;color:#9ca3af;">' + meta + '</div></div>'
+        + '<button class="_med-view-btn" data-url="' + f.file_url + '" style="font-size:10px;padding:2px 7px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;">เปิด</button>'
+        + '</div>';
+    }).join('');
+  }
+  const emptyMsg = (!error && data && data.length > 0) ? '' : '<div style="color:#9ca3af;font-size:12px;padding:4px 0;">ยังไม่มีไฟล์</div>';
+  sec.innerHTML = '<div style="border-top:1px solid #e5e7eb;padding-top:10px;margin-top:4px;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+    + '<div style="font-size:12px;font-weight:600;color:#374151;">📂 ไฟล์ประวัติการรักษา</div>'
+    + '<button id="_med-files-open-' + patientId + '" class="_med-open-btn btn btn-sm btn-outline-primary" data-patid="' + patientId + '" style="font-size:11px;padding:3px 10px;">+ เพิ่ม / ดูไฟล์</button>'
+    + '</div>' + emptyMsg + rows + '</div>';
+  const openBtn = document.getElementById('_med-files-open-' + patientId);
+  if (openBtn) {
+    openBtn.addEventListener('click', function() { openMedicalFilesModal(patientId, pName); });
+  }
+  sec.querySelectorAll('._med-view-btn').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      const url = this.getAttribute('data-url');
+      const { data: ud } = await supa.storage.from('documents').createSignedUrl(url, 60);
+      if (ud && ud.signedUrl) window.open(ud.signedUrl, '_blank');
+      else alert('ไม่สามารถเปิดได้');
+    });
+  });
+}
+
+async function openMedicalFilesModal(patientId, patientName) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;';
+  const header = document.createElement('div');
+  header.style.cssText = 'padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
+  const titleDiv = document.createElement('div');
+  const t1 = document.createElement('div'); t1.style.cssText='font-weight:600;font-size:15px;'; t1.textContent='📂 ไฟล์ประวัติการรักษา';
+  const t2 = document.createElement('div'); t2.style.cssText='font-size:12px;color:#6b7280;margin-top:2px;'; t2.textContent=(patientName||'')+' — PDF หรือรูปภาพ ไม่เกิน 20MB';
+  titleDiv.appendChild(t1); titleDiv.appendChild(t2);
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent='×'; closeBtn.style.cssText='background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;padding:0 4px;line-height:1;';
+  closeBtn.onclick=function(){ document.body.removeChild(overlay); _renderMedicalFilesSection(patientId); };
+  header.appendChild(titleDiv); header.appendChild(closeBtn);
+  const uploadBar=document.createElement('div'); uploadBar.style.cssText='padding:12px 20px;border-bottom:1px solid #e5e7eb;display:flex;gap:10px;align-items:center;flex-shrink:0;';
+  const fileInput=document.createElement('input'); fileInput.type='file'; fileInput.accept='.pdf,image/*'; fileInput.multiple=true; fileInput.style.cssText='flex:1;font-size:13px;';
+  const noteInput=document.createElement('input'); noteInput.type='text'; noteInput.placeholder='หมายเหตุ'; noteInput.style.cssText='width:130px;font-size:13px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;';
+  const uploadBtn=document.createElement('button'); uploadBtn.textContent='↑ อัปโหลด'; uploadBtn.style.cssText='padding:6px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;';
+  uploadBar.appendChild(fileInput); uploadBar.appendChild(noteInput); uploadBar.appendChild(uploadBtn);
+  const listArea=document.createElement('div'); listArea.style.cssText='flex:1;overflow-y:auto;padding:12px 20px;min-height:120px;';
+  const footer=document.createElement('div'); footer.style.cssText='padding:12px 20px;border-top:1px solid #e5e7eb;text-align:right;flex-shrink:0;';
+  const doneBtn=document.createElement('button'); doneBtn.textContent='ปิด'; doneBtn.style.cssText='padding:7px 20px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:6px;font-size:13px;cursor:pointer;';
+  doneBtn.onclick=function(){ document.body.removeChild(overlay); _renderMedicalFilesSection(patientId); };
+  footer.appendChild(doneBtn);
+  box.appendChild(header); box.appendChild(uploadBar); box.appendChild(listArea); box.appendChild(footer);
+  overlay.appendChild(box); document.body.appendChild(overlay);
+  async function loadFiles() {
+    listArea.innerHTML='<div style="color:#9ca3af;font-size:13px;padding:8px 0;">กำลังโหลด...</div>';
+    const {data,error}=await supa.from('patient_medical_files').select('*').eq('patient_id',patientId).order('created_at',{ascending:false});
+    if(error){listArea.innerHTML='<div style="color:red;font-size:13px;">โหลดไม่ได้: '+error.message+'</div>';return;}
+    if(!data||data.length===0){listArea.innerHTML='<div style="color:#9ca3af;font-size:13px;padding:16px 0;text-align:center;">ยังไม่มีไฟล์ — กดอัปโหลดเพื่อเพิ่ม</div>';return;}
+    listArea.innerHTML='';
+    data.forEach(function(f){
+      const row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#f9fafb;border-radius:8px;margin-bottom:6px;gap:10px;';
+      const isPdf=(f.file_type||'').indexOf('pdf')>-1||f.file_name.slice(-4)==='.pdf';
+      const badge=document.createElement('div'); badge.style.cssText='width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;'+(isPdf?'background:#fee2e2;color:#b91c1c;':'background:#dcfce7;color:#15803d;'); badge.textContent=isPdf?'PDF':'IMG';
+      const info=document.createElement('div'); info.style.cssText='flex:1;min-width:0;';
+      const kb=f.file_size?(f.file_size>1048576?(f.file_size/1048576).toFixed(1)+' MB':Math.round(f.file_size/1024)+' KB'):'';
+      const dt=f.created_at?new Date(f.created_at).toLocaleDateString('th-TH'):'';
+      const nameEl=document.createElement('div'); nameEl.style.cssText='font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'; nameEl.title=f.file_name; nameEl.textContent=f.file_name;
+      const metaEl=document.createElement('div'); metaEl.style.cssText='font-size:11px;color:#6b7280;'; metaEl.textContent=[kb,dt,f.note].filter(Boolean).join('  ·  ');
+      info.appendChild(nameEl); info.appendChild(metaEl);
+      const btns=document.createElement('div'); btns.style.cssText='display:flex;gap:6px;flex-shrink:0;';
+      const viewBtn=document.createElement('button'); viewBtn.textContent='เปิดดู'; viewBtn.style.cssText='padding:4px 10px;font-size:11px;border:1px solid #d1d5db;border-radius:5px;background:#fff;cursor:pointer;';
+      viewBtn.onclick=async function(){ const {data:u}=await supa.storage.from('documents').createSignedUrl(f.file_url,60); if(u&&u.signedUrl)window.open(u.signedUrl,'_blank'); else alert('ไม่สามารถเปิด'); };
+      const delBtn=document.createElement('button'); delBtn.textContent='ลบ'; delBtn.style.cssText='padding:4px 10px;font-size:11px;border:1px solid #fca5a5;border-radius:5px;background:#fee2e2;color:#b91c1c;cursor:pointer;';
+      delBtn.onclick=async function(){ if(!confirm('ลบไฟล์ "'+f.file_name+'" ?'))return; await supa.storage.from('documents').remove([f.file_url]); await supa.from('patient_medical_files').delete().eq('id',f.id); loadFiles(); };
+      btns.appendChild(viewBtn); btns.appendChild(delBtn);
+      row.appendChild(badge); row.appendChild(info); row.appendChild(btns); listArea.appendChild(row);
+    });
+  }
+  uploadBtn.onclick=async function(){
+    if(!fileInput.files||fileInput.files.length===0){alert('กรุณาเลือกไฟล์ก่อน');return;}
+    uploadBtn.disabled=true; uploadBtn.textContent='กำลังอัปโหลด...';
+    const note=noteInput.value.trim();
+    for(const file of fileInput.files){
+      if(file.size>20971520){alert(file.name+' ใหญ่เกิน 20MB');continue;}
+      const path='medical/'+patientId+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const {error:upErr}=await supa.storage.from('documents').upload(path,file,{upsert:false});
+      if(upErr){alert('อัปโหลดไม่ได้: '+upErr.message);continue;}
+      await supa.from('patient_medical_files').insert({patient_id:patientId,file_name:file.name,file_url:path,file_size:file.size,file_type:file.type,note:note||null,uploaded_by:window._currentUser||'user'});
+    }
+    fileInput.value=''; noteInput.value=''; uploadBtn.disabled=false; uploadBtn.textContent='↑ อัปโหลด'; loadFiles();
+  };
   loadFiles();
 }
