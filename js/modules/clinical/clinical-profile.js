@@ -102,7 +102,7 @@ async function openPatientProfile(id, activeTab) {
           </div>
         </div>
       </div>
-      <div id="patprofile-tab-medical" style="display:none;">
+      <div id="patprofile-tab-medical" style="display:none;" data-patid="${p.id}">
         
         ${renderMedLogTab(p.id, 'medical')}
 
