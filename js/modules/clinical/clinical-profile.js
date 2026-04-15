@@ -37,6 +37,9 @@ async function openPatientProfile(id, activeTab) {
             <div style="font-size:11px;color:var(--text2);">หน่วยรวม</div>
           </div>
         </div>
+        <div style="margin-top:8px;">
+          <button class="btn btn-outline-primary" style="width:100%;font-size:13px;" onclick="openContractFilesModal('${p.id}','${p.name}')">📄 สัญญา</button>
+        </div>
         <div style="margin-top:16px;">
           <button class="btn btn-primary" style="width:100%;" onclick="editPatient('${p.id}')">✏️ แก้ไขข้อมูล</button>
         </div>
@@ -100,19 +103,7 @@ async function openPatientProfile(id, activeTab) {
         </div>
       </div>
       <div id="patprofile-tab-medical" style="display:none;">
-        <div class="card" style="margin-bottom:12px;" id="diag-card-${p.id}">
-          <div class="card-header">
-            <div class="card-title" style="font-size:13px;">🏥 โรคประจำตัว</div>
-            <div style="display:flex;gap:6px;">
-              <button class="btn btn-ghost btn-sm" id="diag-edit-${p.id}">✏️ แก้ไข</button>
-              <button class="btn btn-primary btn-sm" id="diag-save-${p.id}" style="display:none;">💾 บันทึก</button>
-            </div>
-          </div>
-          <div style="padding:14px 16px;">
-            <div id="diag-disp-${p.id}" style="font-size:14px;min-height:24px;">${p.diagnosis||'-'}</div>
-            <textarea id="diag-inp-${p.id}" style="display:none;width:100%;min-height:80px;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;resize:vertical;box-sizing:border-box;">${p.diagnosis||''}</textarea>
-          </div>
-        </div>
+        
         ${renderMedLogTab(p.id, 'medical')}
       </div>
       <div id="patprofile-tab-meds" style="display:none;">
