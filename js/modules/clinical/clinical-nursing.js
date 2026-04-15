@@ -95,7 +95,7 @@ function openAddNursingModal(patientId, date, shift, noteId=null) {
   document.getElementById('nursing-time').value = nowTime;
   document.getElementById('nursing-by').value = currentUser?.displayName || currentUser?.username || '';
   // Clear all fields
-  ['nursing-condition','nursing-consciousness','nursing-pain','nursing-eating',
+  ['nursing-condition','nursing-consciousness','nursing-eating',
    'nursing-elimination','nursing-sleep','nursing-activity','nursing-wound',
    'nursing-iv','nursing-o2','nursing-handover'].forEach(id => {
     const el = document.getElementById(id);
@@ -141,7 +141,7 @@ async function saveNursingNote() {
     recorded_by:       document.getElementById('nursing-by').value.trim(),
     general_condition: document.getElementById('nursing-condition').value.trim(),
     consciousness:     document.getElementById('nursing-consciousness').value.trim(),
-    pain:              document.getElementById('nursing-pain').value.trim(),
+    pain:              (document.getElementById('nursing-pain')?.value||'').trim(),
     eating:            document.getElementById('nursing-eating').value.trim(),
     elimination:       document.getElementById('nursing-elimination').value.trim(),
     sleep:             document.getElementById('nursing-sleep').value.trim(),
