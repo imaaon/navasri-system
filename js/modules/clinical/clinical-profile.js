@@ -118,7 +118,7 @@ async function openPatientProfile(id, activeTab) {
             <div class="card-title" style="font-size:13px;">🚨 ประวัติการแพ้ยา / อาหาร</div>
             <button class="btn btn-primary btn-sm" onclick="openAddAllergyModal('${p.id}')">+ เพิ่ม</button>
           </div>
-          ${'<div id="pat-allergy-list-'+p.id+'" style="padding:16px"><div style="padding:24px;text-align:center;color:var(--text3)">⏳ กำลังโหลด...</div></div>}
+          <div id="pat-allergy-list-${p.id}" style="padding:16px"><div style="padding:24px;text-align:center;color:var(--text3)">⏳ กำลังโหลด...</div></div>
         </div>
       </div>
       <!-- CONTACTS TAB -->
