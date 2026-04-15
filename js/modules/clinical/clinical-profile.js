@@ -183,7 +183,7 @@ async function openPatientProfile(id, activeTab) {
       <div id="patprofile-tab-vitals" style="display:none;">
         ${renderVitalsTab(pid, p.id)}
       </div>
-      <div id="patprofile-tab-excretion" style="display:none;"></div>
+      <div id="patprofile-tab-excretion" style="display:none;" data-patid="${p.id}"></div>
       <!-- LAB RESULTS TAB -->
       <div id="patprofile-tab-lab" style="display:none;">
         <div id="lab-list-${p.id}"></div>
