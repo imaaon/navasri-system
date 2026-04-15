@@ -135,10 +135,8 @@ async function renderPhysioTab(patientId) {
   var unbilledAmt = totalAmt - billedAmt;
   summaryEl.innerHTML = "<div style=\"text-align:center;\"><div style=\"font-size:11px;color:var(--text3);\">จำนวน Session</div><div style=\"font-size:20px;font-weight:700;color:var(--accent);\">" + (sessions||[]).length + "</div></div><div style=\"text-align:center;\"><div style=\"font-size:11px;color:var(--text3);\">ยังไม่รวมบิล</div><div style=\"font-size:20px;font-weight:700;color:#e67e22;\">" + unbilledAmt.toLocaleString("th-TH",{minimumFractionDigits:0}) + " ฿</div></div><div style=\"text-align:center;\"><div style=\"font-size:11px;color:var(--text3);\">รวมในบิล</div><div style=\"font-size:20px;font-weight:700;color:#27ae60;\">" + billedAmt.toLocaleString("th-TH",{minimumFractionDigits:0}) + " ฿</div></div>";
   var p = db.patients.find(function(x) { return String(x.id) === String(patientId); });
-  var patName = p ? p.name.replace(/'/g, "\\'") : "";
-  var addBtn = "<button class=\"btn btn-primary btn-sm\" onclick=\"openPhysioSessionModal('" + patientId + "','" + patName + "')\" style=\"margin-bottom:12px;\">บันทึก Session</button>";
-  if (!sessions || sessions.length === 0) {
-    listEl.innerHTML = addBtn + "<div style=\"text-align:center;padding:32px;color:var(--text3);\">ยังไม่มีบันทึกในเดือนนี้</div>";
+  var patName = p ? p.name.replace(/'/g, "\\'") : "";  if (!sessions || sessions.length === 0) {
+    listEl.innerHTML = "<div style=\"text-align:center;padding:32px;color:var(--text3);\">ยังไม่มีบันทึกในเดือนนี้</div>";
     return;
   }
   var rows = (sessions||[]).map(function(s) {
@@ -149,7 +147,7 @@ async function renderPhysioTab(patientId) {
       : "<span style=\"font-size:11px;color:var(--text3);\">ล็อค</span>";
     return "<tr><td>" + s.session_date + "</td><td>" + hrs + "</td><td>" + (s.therapist_name||"-") + "</td><td style=\"text-align:right;font-weight:600;\">" + amt + "</td><td>" + editBtn + "</td></tr>";
   }).join("");
-  listEl.innerHTML = addBtn + "<div class=\"table-wrap\"><table><thead><tr><th>วันที่</th><th>เวลา</th><th>นักกายภาพ</th><th>ยอด</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>";
+  listEl.innerHTML = "<div class=\"table-wrap\"><table><thead><tr><th>วันที่</th><th>เวลา</th><th>นักกายภาพ</th><th>ยอด</th><th></th></tr></thead><tbody>" + rows + "</tbody></table></div>";
 }
 
 async function deletePhysioSession(sessionId, patientId) {
