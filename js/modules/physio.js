@@ -33,15 +33,8 @@ function openPhysioSessionModal(patientId, patientName, editId) {
   document.getElementById("physio-amount").value = "0.00";
   var today = new Date().toISOString().split("T")[0];
   document.getElementById("physio-date").value = today;
-  document.getElementById("physio-rate").value = (p && p.physioRatePerHour) ? p.physioRatePerHour : 0;
-  if (p && p.physioHoursPerDay) {
-    var mins = p.physioHoursPerDay * 60;
-    var sel = document.getElementById("physio-duration");
-    var match = Array.from(sel.options).find(function(o) { return parseInt(o.value) === mins; });
-    if (match) sel.value = String(mins); else sel.value = "60";
-  } else {
+  document.getElementById("physio-rate").value = 0;
     document.getElementById("physio-duration").value = "60";
-  }
   var sel2 = document.getElementById("ta-pt-id");
   if (sel2) {
     sel2.innerHTML = "<option value=\"\">เลือกพนักงาน</option>" +
