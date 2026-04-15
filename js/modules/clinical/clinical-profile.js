@@ -310,8 +310,6 @@ async function openPatientProfile(id, activeTab) {
 
 function _renderPatIncidentTab(pid, listEl) {
   if (!document.getElementById('pat-incident-btns-'+pid)) {
-    var card=document.createElement('div');card.className='card';
-    listEl.parentNode.insertBefore(card,listEl);
     var cardHdr=document.createElement('div');cardHdr.className='card-header';
     var cardTitle=document.createElement('div');cardTitle.className='card-title';
     var wrap=document.createElement('div');
@@ -327,7 +325,7 @@ function _renderPatIncidentTab(pid, listEl) {
     b2.onclick=function(){setTimeout(function(){openPatWoundModal(pid);},150);};
     wrap.appendChild(b1);wrap.appendChild(b2);
     cardHdr.appendChild(cardTitle);cardHdr.appendChild(wrap);
-    card.appendChild(cardHdr);card.appendChild(listEl);
+    listEl.parentNode.insertBefore(cardHdr,listEl);
   }
   listEl.innerHTML = '<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
   Promise.all([
@@ -386,8 +384,6 @@ function _renderPatIncidentTab(pid, listEl) {
 
 function _renderPatDietaryTab(pid, listEl) {
   if (!document.getElementById('pat-dietary-btns-'+pid)) {
-    var card=document.createElement('div');card.className='card';
-    listEl.parentNode.insertBefore(card,listEl);
     var cardHdr=document.createElement('div');cardHdr.className='card-header';
     var cardTitle=document.createElement('div');cardTitle.className='card-title';
     var wrap=document.createElement('div');
@@ -407,7 +403,7 @@ function _renderPatDietaryTab(pid, listEl) {
     },150);});
     wrap.appendChild(b1);wrap.appendChild(b2);
     cardHdr.appendChild(cardTitle);cardHdr.appendChild(wrap);
-    card.appendChild(cardHdr);card.appendChild(listEl);
+    listEl.parentNode.insertBefore(cardHdr,listEl);
   }
   listEl.innerHTML = '<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
   Promise.all([
