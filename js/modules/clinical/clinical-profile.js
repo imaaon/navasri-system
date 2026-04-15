@@ -318,11 +318,11 @@ function _renderPatIncidentTab(pid, listEl) {
     var b1=document.createElement('button');
     b1.className='btn btn-primary btn-sm';
     b1.innerHTML='⚠️ + อุบัติเหตุ';
-    b1.onclick=function(){openPatIncidentModal(pid);};
+    b1.onclick=function(){openIncidentModal(pid);};
     var b2=document.createElement('button');
     b2.className='btn btn-secondary btn-sm';
     b2.innerHTML='🩹 + แผลกดทับ';
-    b2.onclick=function(){setTimeout(function(){openPatWoundModal(pid);},150);};
+    b2.onclick=function(){setTimeout(function(){openWoundModal(pid);},150);};
     wrap.appendChild(b1);wrap.appendChild(b2);
     listEl.parentNode.insertBefore(wrap,listEl);
   }
