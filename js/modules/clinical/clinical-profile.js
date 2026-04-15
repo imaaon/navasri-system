@@ -265,12 +265,14 @@ async function openPatientProfile(id, activeTab) {
           <div id="pat-deposits-list-${p.id}">
             <div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div>
           </div>
-        </div>
+      
+      <div id="patprofile-tab-incident" style="display:none" data-patid="${p.id}"><div id="pat-incident-list-${pid}"><div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div></div></div>
+<div id="patprofile-tab-dietary" style="display:none" data-patid="${p.id}"><div id="pat-dietary-list-${pid}"><div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div></div></div>
+  </div>
       </div>
       ` : ''}
     </div>
-<div id="patprofile-tab-incident" style="display:none" data-patid="${p.id}"><div id="pat-incident-list-${pid}"><div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div></div></div>
-<div id="patprofile-tab-dietary" style="display:none" data-patid="${p.id}"><div id="pat-dietary-list-${pid}"><div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div></div></div>
+
   </div>`;
   switchPatTab(activeTab || 'medical');
   // diagnosis edit/save handlers
