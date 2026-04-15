@@ -269,8 +269,8 @@ async function openPatientProfile(id, activeTab) {
       </div>
       ` : ''}
     </div>
-<div id="patprofile-tab-incident" style="display:none"><div id="pat-incident-list-${pid}"><div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div></div></div>
-<div id="patprofile-tab-dietary" style="display:none"><div id="pat-dietary-list-${pid}"><div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div></div></div>
+<div id="patprofile-tab-incident" style="display:none" data-patid="${p.id}"><div id="pat-incident-list-${pid}"><div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div></div></div>
+<div id="patprofile-tab-dietary" style="display:none" data-patid="${p.id}"><div id="pat-dietary-list-${pid}"><div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div></div></div>
   </div>`;
   switchPatTab(activeTab || 'medical');
   // diagnosis edit/save handlers
@@ -521,14 +521,16 @@ function switchPatTab(tab) {
     if (labPid && typeof renderLabTab === 'function') renderLabTab(labPid);
   }
   if (tab === 'incident') {
-    var _ie=document.querySelector('[id^="pat-incident-list-"]');
-    var _ip=_ie?_ie.id.replace('pat-incident-list-',''):null;
-    if(_ip&&_ie){ _renderPatIncidentTab(_ip,_ie); }
+    const _incEl=document.getElementById('patprofile-tab-incident');
+    const _ip=_incEl?.dataset?.patid;
+    const _ie=_ip?document.getElementById('pat-incident-list-'+_ip):null;
+    if(_ip&&_ie){_renderPatIncidentTab(_ip,_ie);}
   }
   if (tab === 'dietary') {
-    var _de=document.querySelector('[id^="pat-dietary-list-"]');
-    var _dp=_de?_de.id.replace('pat-dietary-list-',''):null;
-    if(_dp&&_de){ _renderPatDietaryTab(_dp,_de); }
+    const _dietEl=document.getElementById('patprofile-tab-dietary');
+    const _dp=_dietEl?.dataset?.patid;
+    const _de=_dp?document.getElementById('pat-dietary-list-'+_dp):null;
+    if(_dp&&_de){_renderPatDietaryTab(_dp,_de);}
   }
 }
 
