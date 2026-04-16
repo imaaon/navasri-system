@@ -169,6 +169,18 @@ stockMovementsRes, suppliersRes, purchaseRequestsRes, supplierInvoicesRes, suppl
     db.assets = (assetsRes?.data || []).map(mapAsset);
     db.assetMaintenanceLogs = (assetMaintenanceLogsRes?.data || []);
   db.incidentReports = (incidentReportsRes?.data || []);
+  // ── ตรวจ data limits หลังโหลด secondary ──
+  _checkDataLimit(db.requisitions, 'ใบเบิก', 500);
+  _checkDataLimit(db.purchases, 'ใบสั่งซื้อ', 500);
+  _checkDataLimit(db.itemLots, 'lot สินค้า', 500);
+  _checkDataLimit(db.invoices, 'ใบแจ้งหนี้', 300);
+  _checkDataLimit(db.expenses, 'ค่าใช้จ่าย', 300);
+  _checkDataLimit(db.payments, 'การชำระ', 300);
+  _checkDataLimit(db.appointments, 'นัดหมาย', 200);
+  _checkDataLimit(db.supplierInvoices, 'ใบแจ้งหนี้ซัพพลายเออร์', 200);
+  _checkDataLimit(db.purchaseRequests, 'ใบขอซื้อ', 200);
+  _checkDataLimit(db.stockMovements, 'ความเคลื่อนไหวสต็อก', 200);
+  _checkDataLimit(db.incidentReports, 'รายงานอุบัติเหตุ', 200);
     window._dbSecondaryLoaded = true;
     buildBarcodeMap();
   } catch(e) {
