@@ -88,4 +88,92 @@ if (typeof _origSaveWound === 'function') {
   };
 }
 console.log('[fix] v93 snippet loaded');
+
+// ===== FIX v94: แก้ 5 bugs (แพ้ยา / อุบัติเหตุ / แผลกดทับ / โภชนาการ) =====
+
+// FIX 1: openEditAllergyModal — params สลับกัน (ปุ่มส่ง allergyId, patientId แต่ fn รับ patId, allergyId)
+var _origEditAllergy = window.openEditAllergyModal;
+if (typeof _origEditAllergy === 'function') {
+  window.openEditAllergyModal = function(first, second) {
+    // ตรวจว่า first เป็น allergyId (number/short) หรือ patientId (UUID)
+    var isUUID = function(s) { return typeof s === 'string' && s.length > 20; };
+    if (isUUID(second) && !isUUID(first)) {
+      // first=allergyId, second=patientId — สลับกลับ
+      return _origEditAllergy.call(this, second, first);
+    }
+    return _origEditAllergy.apply(this, arguments);
+  };
+}
+
+// FIX 2: openIncidentModal — ใช้ db.incidentReports แทน db.incidents
+var _origOpenIncidentModal = window.openIncidentModal;
+if (typeof _origOpenIncidentModal === 'function') {
+  window.openIncidentModal = function(id) {
+    // patch db.incidents ชั่วคราวให้ชี้ไปที่ db.incidentReports
+    var _origIncidents = db.incidents;
+    db.incidents = db.incidentReports || [];
+    try {
+      _origOpenIncidentModal.call(this, id);
+    } finally {
+      db.incidents = _origIncidents;
+    }
+  };
+}
+
+// FIX 3: openWoundModal — db.wounds ไม่มี ต้อง fetch จาก Supabase แล้ว populate
+var _origOpenWoundModal = window.openWoundModal;
+if (typeof _origOpenWoundModal === 'function') {
+  window.openWoundModal = async function(id) {
+    if (id) {
+      // ถ้ามี id ให้ fetch จาก Supabase ก่อน แล้วใส่ใน db.wounds
+      var result = await supa.from('patient_wounds').select('*').eq('id', id).single();
+      if (!result.error && result.data) {
+        if (!db.wounds) db.wounds = [];
+        var mapped = mapWound(result.data);
+        var idx = db.wounds.findIndex(function(x){ return String(x.id) === String(id); });
+        if (idx >= 0) db.wounds[idx] = mapped;
+        else db.wounds.unshift(mapped);
+      }
+    }
+    _origOpenWoundModal.call(this, id);
+  };
+}
+
+// FIX 4+5: openDietModal — db.diets ไม่มี ต้อง fetch จาก Supabase
+var _origOpenDietModal = window.openDietModal;
+if (typeof _origOpenDietModal === 'function') {
+  window.openDietModal = async function(id) {
+    if (id) {
+      var result = await supa.from('patient_diets').select('*').eq('id', id).single();
+      if (!result.error && result.data) {
+        if (!db.diets) db.diets = [];
+        var mapped = mapDiet(result.data);
+        var idx = db.diets.findIndex(function(x){ return String(x.id) === String(id); });
+        if (idx >= 0) db.diets[idx] = mapped;
+        else db.diets.unshift(mapped);
+      }
+    }
+    _origOpenDietModal.call(this, id);
+  };
+}
+
+// FIX 5b: renderDietaryPage refresh — patch saveDiet ให้เรียก renderDietaryPage หลัง save เสมอ
+// (saveDiet มี renderDietaryPage อยู่แล้ว แต่ถ้า db.diets ว่างอยู่ จะ render ว่าง)
+// แก้ด้วยการ reload diet list จาก Supabase ก่อน render
+var _origSaveDiet = window.saveDiet;
+if (typeof _origSaveDiet === 'function') {
+  window.saveDiet = async function() {
+    await _origSaveDiet.apply(this, arguments);
+    // refresh db.diets จาก Supabase แล้วค่อย render
+    try {
+      var r2 = await supa.from('patient_diets').select('*').order('created_at', {ascending: false});
+      if (!r2.error && r2.data) {
+        db.diets = r2.data.map(mapDiet);
+        renderDietaryPage();
+      }
+    } catch(e) {}
+  };
+}
+
+console.log('[fix] v94 snippet loaded');
 })();
