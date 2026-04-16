@@ -360,4 +360,158 @@ if (typeof _origRenderDietaryPageV96 === 'function') {
 }
 
 console.log('[fix] v96 snippet loaded');
+
+// ===== FIX v97: แก้ปุ่มใน Patient Profile tabs =====
+
+// FIX 1: _renderPatIncidentTab — ปุ่ม "+ อุบัติเหตุ" ส่ง pid แต่ openIncidentModal ตีเป็น edit id
+// แก้ด้วยการ patch openIncidentModal ให้แยก patient UUID ออกจาก incident id
+// UUID จะมีความยาว 36 chars (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+// incident id จาก Supabase เป็น int หรือ UUID ก็ได้ — ต้องตรวจว่า id นั้นมีอยู่ใน incidentReports ไหม
+var _prevOpenIncidentModal = window.openIncidentModal;
+if (typeof _prevOpenIncidentModal === 'function') {
+  window.openIncidentModal = function(id) {
+    // ถ้า id เป็น patient UUID (อยู่ใน db.patients) ให้เปิด modal ใหม่แล้ว pre-fill patient
+    if (id) {
+      var isPatient = (db.patients||[]).some(function(p){ return String(p.id) === String(id); });
+      if (isPatient) {
+        // เปิด modal ใหม่ (ไม่ส่ง id)
+        _prevOpenIncidentModal.call(this);
+        // pre-fill patient
+        setTimeout(function() {
+          var pat = (db.patients||[]).find(function(p){ return String(p.id) === String(id); });
+          if (pat) {
+            var idEl = document.getElementById('ta-inc-id');
+            var inpEl = document.getElementById('ta-inc-inp');
+            if (idEl) idEl.value = pat.id;
+            if (inpEl) inpEl.value = pat.name;
+          }
+        }, 100);
+        return;
+      }
+    }
+    _prevOpenIncidentModal.apply(this, arguments);
+  };
+}
+
+// FIX 2: openWoundModal — เช่นเดียวกัน ถ้าส่ง patient UUID ให้เปิด modal ใหม่แล้ว pre-fill
+var _prevOpenWoundModal = window.openWoundModal;
+if (typeof _prevOpenWoundModal === 'function') {
+  window.openWoundModal = function(id) {
+    if (id) {
+      var isPatient = (db.patients||[]).some(function(p){ return String(p.id) === String(id); });
+      if (isPatient) {
+        _prevOpenWoundModal.call(this);
+        setTimeout(function() {
+          var pat = (db.patients||[]).find(function(p){ return String(p.id) === String(id); });
+          if (pat) {
+            var idEl = document.getElementById('ta-wnd-id');
+            var inpEl = document.getElementById('ta-wnd-inp');
+            if (idEl) idEl.value = pat.id;
+            if (inpEl) inpEl.value = pat.name;
+          }
+        }, 100);
+        return;
+      }
+    }
+    _prevOpenWoundModal.apply(this, arguments);
+  };
+}
+
+// FIX 3: _renderPatDietaryTab ปุ่ม "+ กำหนดอาหาร" set field ผิดชื่อ (diet-patient-id vs ta-diet-id)
+// patch openDietModal ให้รับ patient_id เป็น argument ที่ 2 ได้
+var _prevOpenDietModal = window.openDietModal;
+if (typeof _prevOpenDietModal === 'function') {
+  window.openDietModal = async function(id, patientId) {
+    await _prevOpenDietModal.call(this, id);
+    // ถ้ามี patientId ส่งมา ให้ set ใน field ที่ถูกต้อง
+    if (patientId && !id) {
+      setTimeout(function() {
+        var pat = (db.patients||[]).find(function(p){ return String(p.id) === String(patientId); });
+        if (pat) {
+          var idEl = document.getElementById('ta-diet-id');
+          var inpEl = document.getElementById('ta-diet-inp');
+          if (idEl) idEl.value = pat.id;
+          if (inpEl) inpEl.value = pat.name;
+        }
+      }, 150);
+    }
+  };
+}
+
+// FIX 4: openTubeFeedModal — เช่นเดียวกัน
+var _prevOpenTubeFeedModal2 = window.openTubeFeedModal;
+if (typeof _prevOpenTubeFeedModal2 === 'function') {
+  window.openTubeFeedModal = async function(id, patientId) {
+    await _prevOpenTubeFeedModal2.call(this, id);
+    if (patientId && !id) {
+      setTimeout(function() {
+        var pat = (db.patients||[]).find(function(p){ return String(p.id) === String(patientId); });
+        if (pat) {
+          var idEl = document.getElementById('ta-tf-id');
+          var inpEl = document.getElementById('ta-tf-inp');
+          if (idEl) idEl.value = pat.id;
+          if (inpEl) inpEl.value = pat.name;
+        }
+      }, 150);
+    }
+  };
+}
+
+// FIX 5: patch clinical-profile.js ปุ่ม dietary ให้ส่ง patientId ไปด้วย
+// override _renderPatDietaryTab ให้ปุ่มเรียก openDietModal(null, pid) และ openTubeFeedModal(null, pid)
+var _prevRenderPatDietaryTab = window._renderPatDietaryTab;
+if (typeof _prevRenderPatDietaryTab === 'function') {
+  window._renderPatDietaryTab = function(pid, listEl) {
+    // เรียก original ก่อน
+    _prevRenderPatDietaryTab.call(this, pid, listEl);
+    // หลังจากนั้น patch ปุ่มที่ถูก render ให้ส่ง patientId ถูก
+    setTimeout(function() {
+      var btnWrap = document.getElementById('pat-dietary-btns-' + pid);
+      if (!btnWrap) return;
+      var btns = btnWrap.querySelectorAll('button');
+      if (btns[0]) {
+        btns[0].onclick = null;
+        btns[0].addEventListener('click', function() {
+          if (typeof openDietModal === 'function') openDietModal(null, pid);
+        });
+      }
+      if (btns[1]) {
+        btns[1].onclick = null;
+        btns[1].addEventListener('click', function() {
+          if (typeof openTubeFeedModal === 'function') openTubeFeedModal(null, pid);
+        });
+      }
+    }, 200);
+  };
+}
+
+// FIX 6: หลัง saveIncident/saveWound/saveDiet/saveTubeFeed ให้ refresh แท็บใน patient profile ด้วย
+// patch โดย call switchPatTab หลัง save ถ้า patient profile เปิดอยู่
+var _wrapSaveAndRefreshPatTab = function(origFn, tabName) {
+  return async function() {
+    await origFn.apply(this, arguments);
+    // ถ้า modal ปิดแล้ว (save สำเร็จ) และ patient profile เปิดอยู่
+    setTimeout(function() {
+      if (typeof switchPatTab === 'function') {
+        try { switchPatTab(tabName); } catch(e) {}
+      }
+    }, 300);
+  };
+};
+
+// ใช้ originals ก่อน patch ปัจจุบัน
+if (typeof saveIncident === 'function') {
+  window.saveIncident = _wrapSaveAndRefreshPatTab(window.saveIncident, 'incident');
+}
+if (typeof saveWound === 'function') {
+  window.saveWound = _wrapSaveAndRefreshPatTab(window.saveWound, 'incident');
+}
+if (typeof saveDiet === 'function') {
+  window.saveDiet = _wrapSaveAndRefreshPatTab(window.saveDiet, 'dietary');
+}
+if (typeof saveTubeFeed === 'function') {
+  window.saveTubeFeed = _wrapSaveAndRefreshPatTab(window.saveTubeFeed, 'dietary');
+}
+
+console.log('[fix] v97 snippet loaded');
 })();
