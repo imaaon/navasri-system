@@ -3,9 +3,9 @@
 // ==========================================
 // ===== NURSING NOTES ======================
 // ==========================================
-const SHIFTS = ['à¹à¸à¹à¸²','à¸à¸¶à¸'];
-const SHIFT_TIMES = {'à¹à¸à¹à¸²':'07:00â19:00','à¸à¸¶à¸':'19:00â07:00'};
-const SHIFT_COLORS = {'à¹à¸à¹à¸²':'#e67e22','à¸à¸¶à¸':'#8e44ad'};
+const SHIFTS = ['Ã Â¹ÂÃ Â¸ÂÃ Â¹ÂÃ Â¸Â²','Ã Â¸ÂÃ Â¸Â¶Ã Â¸Â'];
+const SHIFT_TIMES = {'Ã Â¹ÂÃ Â¸ÂÃ Â¹ÂÃ Â¸Â²':'07:00Ã¢ÂÂ19:00','Ã Â¸ÂÃ Â¸Â¶Ã Â¸Â':'19:00Ã¢ÂÂ07:00'};
+const SHIFT_COLORS = {'Ã Â¹ÂÃ Â¸ÂÃ Â¹ÂÃ Â¸Â²':'#e67e22','Ã Â¸ÂÃ Â¸Â¶Ã Â¸Â':'#8e44ad'};
 
 function renderNursingTab(pid, patientId) {
   const notes = (db.nursingNotes[pid]||[]);
@@ -25,30 +25,30 @@ function renderNursingTab(pid, patientId) {
     .slice(0,30)
     .map(([date, dayNotes]) => {
       const isToday = date === today;
-      const dateLabel = isToday ? 'ð à¸§à¸±à¸à¸à¸µà¹' : 'ð '+date;
+      const dateLabel = isToday ? 'Ã°ÂÂÂ Ã Â¸Â§Ã Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸ÂµÃ Â¹Â' : 'Ã°ÂÂÂ '+date;
       const entryRows = dayNotes.map(note => `
         <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start;">
           <div style="flex-shrink:0;min-width:48px;text-align:center;">
             <div style="font-size:13px;font-weight:700;color:var(--accent);">${note.time||'--:--'}</div>
           </div>
           <div style="flex:1;font-size:13px;line-height:1.6;white-space:pre-wrap;">${[
-              note.generalCondition ? 'ð§ à¸­à¸²à¸à¸²à¸£: ' + note.generalCondition : '',
-              note.consciousness    ? 'ð§  à¸à¸§à¸²à¸¡à¸£à¸¹à¹à¸ªà¸¶à¸à¸à¸±à¸§: ' + note.consciousness : '',
-              note.pain             ? 'ð£ à¸à¸§à¸: ' + note.pain : '',
-              note.eating           ? 'ð½ï¸ à¸­à¸²à¸«à¸²à¸£: ' + note.eating : '',
-              note.elimination      ? 'ð½ à¸à¸±à¸à¸à¹à¸²à¸¢: ' + note.elimination : '',
-              note.sleep            ? 'ð´ à¸à¸­à¸: ' + note.sleep : '',
-              note.activity         ? 'ð à¸à¸´à¸à¸à¸£à¸£à¸¡: ' + note.activity : '',
-              note.wound            ? 'ð©¹ à¹à¸à¸¥: ' + note.wound : '',
-              note.iv               ? 'ð IV: ' + note.iv : '',
-              note.o2               ? 'ð« Oâ: ' + note.o2 : '',
-              note.handoverNote     ? 'ð à¸ªà¹à¸à¹à¸§à¸£: ' + note.handoverNote : '',
+              note.generalCondition ? 'Ã°ÂÂ§Â Ã Â¸Â­Ã Â¸Â²Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£: ' + note.generalCondition : '',
+              note.consciousness    ? 'Ã°ÂÂ§Â  Ã Â¸ÂÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸Â£Ã Â¸Â¹Ã Â¹ÂÃ Â¸ÂªÃ Â¸Â¶Ã Â¸ÂÃ Â¸ÂÃ Â¸Â±Ã Â¸Â§: ' + note.consciousness : '',
+              note.pain             ? 'Ã°ÂÂÂ£ Ã Â¸ÂÃ Â¸Â§Ã Â¸Â: ' + note.pain : '',
+              note.eating           ? 'Ã°ÂÂÂ½Ã¯Â¸Â Ã Â¸Â­Ã Â¸Â²Ã Â¸Â«Ã Â¸Â²Ã Â¸Â£: ' + note.eating : '',
+              note.elimination      ? 'Ã°ÂÂÂ½ Ã Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¹ÂÃ Â¸Â²Ã Â¸Â¢: ' + note.elimination : '',
+              note.sleep            ? 'Ã°ÂÂÂ´ Ã Â¸ÂÃ Â¸Â­Ã Â¸Â: ' + note.sleep : '',
+              note.activity         ? 'Ã°ÂÂÂ Ã Â¸ÂÃ Â¸Â´Ã Â¸ÂÃ Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡: ' + note.activity : '',
+              note.wound            ? 'Ã°ÂÂ©Â¹ Ã Â¹ÂÃ Â¸ÂÃ Â¸Â¥: ' + note.wound : '',
+              note.iv               ? 'Ã°ÂÂÂ IV: ' + note.iv : '',
+              note.o2               ? 'Ã°ÂÂ«Â OÃ¢ÂÂ: ' + note.o2 : '',
+              note.handoverNote     ? 'Ã°ÂÂÂ Ã Â¸ÂªÃ Â¹ÂÃ Â¸ÂÃ Â¹ÂÃ Â¸Â§Ã Â¸Â£: ' + note.handoverNote : '',
             ].filter(Boolean).join('\n') || '-'}</div>
           <div style="flex-shrink:0;font-size:11px;color:var(--text3);text-align:right;">
             ${note.by||''}<br>
             <div style="display:flex;gap:4px;margin-top:2px;">
-              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="editNursingNote('${patientId}','${pid}','${note.id}')">âï¸</button>
-              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:#e74c3c;" onclick="deleteNursingNote('${patientId}','${pid}','${note.id}')">ðï¸</button>
+              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="editNursingNote('${patientId}','${pid}','${note.id}')">Ã¢ÂÂÃ¯Â¸Â</button>
+              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:#e74c3c;" onclick="deleteNursingNote('${patientId}','${pid}','${note.id}')">Ã°ÂÂÂÃ¯Â¸Â</button>
             </div>
           </div>
         </div>`).join('');
@@ -57,7 +57,7 @@ function renderNursingTab(pid, patientId) {
         <div style="border:1.5px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;">
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--surface2);">
             <div style="font-size:12px;font-weight:700;color:${isToday?'var(--accent)':'var(--text2)'};">${dateLabel}</div>
-            <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="openAddNursingModal('${patientId}','${date}','')">+ à¹à¸à¸´à¹à¸¡à¸à¸±à¸à¸à¸¶à¸</button>
+            <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="openAddNursingModal('${patientId}','${date}','')">+ Ã Â¹ÂÃ Â¸ÂÃ Â¸Â´Ã Â¹ÂÃ Â¸Â¡Ã Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸Â</button>
           </div>
           <div style="padding:0 14px;">${entryRows}</div>
         </div>`;
@@ -65,24 +65,24 @@ function renderNursingTab(pid, patientId) {
 
   const addTodayBtn = !byDate[today] ? `
     <div style="padding:16px;text-align:center;">
-      <button class="btn btn-primary" onclick="openAddNursingModal('${patientId}','${today}','')">+ à¸à¸±à¸à¸à¸¶à¸à¸à¸²à¸à¸à¸²à¸£à¸à¸¢à¸²à¸à¸²à¸¥à¸§à¸±à¸à¸à¸µà¹</button>
+      <button class="btn btn-primary" onclick="openAddNursingModal('${patientId}','${today}','')">+ Ã Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸ÂÃ Â¸ÂÃ Â¸Â²Ã Â¸ÂÃ Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸ÂÃ Â¸Â¢Ã Â¸Â²Ã Â¸ÂÃ Â¸Â²Ã Â¸Â¥Ã Â¸Â§Ã Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸ÂµÃ Â¹Â</button>
     </div>` : '';
 
   return `<div class="card">
     <div class="card-header">
-      <div class="card-title" style="font-size:13px;">ð à¸à¸±à¸à¸à¸¶à¸à¸à¸²à¸à¸à¸²à¸£à¸à¸¢à¸²à¸à¸²à¸¥ (${notes.length} à¸£à¸²à¸¢à¸à¸²à¸£)</div>
-      <button class="btn btn-primary btn-sm" onclick="openAddNursingModal('${patientId}','${today}','')">+ à¸à¸±à¸à¸à¸¶à¸à¹à¸«à¸¡à¹</button>
+      <div class="card-title" style="font-size:13px;">Ã°ÂÂÂ Ã Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸ÂÃ Â¸ÂÃ Â¸Â²Ã Â¸ÂÃ Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸ÂÃ Â¸Â¢Ã Â¸Â²Ã Â¸ÂÃ Â¸Â²Ã Â¸Â¥ (${notes.length} Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£)</div>
+      <button class="btn btn-primary btn-sm" onclick="openAddNursingModal('${patientId}','${today}','')">+ Ã Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸ÂÃ Â¹ÂÃ Â¸Â«Ã Â¸Â¡Ã Â¹Â</button>
     </div>
     <div style="padding:12px 16px;">
       ${addTodayBtn}
-      ${noteCards || '<div style="padding:24px;text-align:center;color:var(--text3);">à¸¢à¸±à¸à¹à¸¡à¹à¸¡à¸µà¸à¸±à¸à¸à¸¶à¸</div>'}
+      ${noteCards || '<div style="padding:24px;text-align:center;color:var(--text3);">Ã Â¸Â¢Ã Â¸Â±Ã Â¸ÂÃ Â¹ÂÃ Â¸Â¡Ã Â¹ÂÃ Â¸Â¡Ã Â¸ÂµÃ Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸Â</div>'}
     </div>
   </div>`;
 }
 
 function getCurrentShift() {
   const h = new Date().getHours();
-  return (h >= 7 && h < 19) ? 'à¹à¸à¹à¸²' : 'à¸à¸¶à¸';
+  return (h >= 7 && h < 19) ? 'Ã Â¹ÂÃ Â¸ÂÃ Â¹ÂÃ Â¸Â²' : 'Ã Â¸ÂÃ Â¸Â¶Ã Â¸Â';
 }
 
 let _nursingEditId = null;
@@ -120,7 +120,7 @@ function openAddNursingModal(patientId, date, shift, noteId=null) {
       {const _e=document.getElementById('nursing-time');if(_e)_e.value=note.time||nowTime;}
     }
   }
-  document.getElementById('modal-nursing-title').textContent = noteId ? 'âï¸ à¹à¸à¹à¹à¸à¸à¸±à¸à¸à¸¶à¸à¸à¸¢à¸²à¸à¸²à¸¥' : 'ð à¸à¸±à¸à¸à¸¶à¸à¸à¸²à¸à¸à¸²à¸£à¸à¸¢à¸²à¸à¸²à¸¥';
+  document.getElementById('modal-nursing-title').textContent = noteId ? 'Ã¢ÂÂÃ¯Â¸Â Ã Â¹ÂÃ Â¸ÂÃ Â¹ÂÃ Â¹ÂÃ Â¸ÂÃ Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¢Ã Â¸Â²Ã Â¸ÂÃ Â¸Â²Ã Â¸Â¥' : 'Ã°ÂÂÂ Ã Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸ÂÃ Â¸ÂÃ Â¸Â²Ã Â¸ÂÃ Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸ÂÃ Â¸Â¢Ã Â¸Â²Ã Â¸ÂÃ Â¸Â²Ã Â¸Â¥';
   openModal('modal-add-nursing');
 }
 function editNursingNote(patientId, pid, noteId) {
@@ -133,9 +133,9 @@ async function saveNursingNote() {
   const date  = document.getElementById('nursing-date').value;
   const shift = document.getElementById('nursing-shift').value;
   const time  = document.getElementById('nursing-time')?.value || '';
-  if (!date) { toast('à¸à¸£à¸¸à¸à¸²à¸£à¸°à¸à¸¸à¸§à¸±à¸à¸à¸µà¹','warning'); return; }
+  if (!date) { toast('Ã Â¸ÂÃ Â¸Â£Ã Â¸Â¸Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â°Ã Â¸ÂÃ Â¸Â¸Ã Â¸Â§Ã Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸ÂµÃ Â¹Â','warning'); return; }
   const time_val = document.getElementById('nursing-time')?.value || '';
-  if (!time_val) { toast('à¸à¸£à¸¸à¸à¸²à¸£à¸°à¸à¸¸à¹à¸§à¸¥à¸²à¸à¸µà¹à¸à¸±à¸à¸à¸¶à¸','warning'); return; }
+  if (!time_val) { toast('Ã Â¸ÂÃ Â¸Â£Ã Â¸Â¸Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â°Ã Â¸ÂÃ Â¸Â¸Ã Â¹ÂÃ Â¸Â§Ã Â¸Â¥Ã Â¸Â²Ã Â¸ÂÃ Â¸ÂµÃ Â¹ÂÃ Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸Â','warning'); return; }
   const data = {
     patient_id: patientId, date, shift, time,
     recorded_by:       document.getElementById('nursing-by').value.trim(),
@@ -143,7 +143,7 @@ async function saveNursingNote() {
     consciousness:     document.getElementById('nursing-consciousness').value.trim(),
     pain:              (document.getElementById('nursing-pain')?.value||'').trim(),
     eating:            document.getElementById('nursing-eating').value.trim(),
-    elimination:       document.getElementById('nursing-elimination').value.trim(),
+    elimination:       document.getElementById('nursing-pain').value.trim(),
     sleep:             document.getElementById('nursing-sleep').value.trim(),
     activity:          document.getElementById('nursing-activity').value.trim(),
     wound:             document.getElementById('nursing-wound').value.trim(),
@@ -154,30 +154,30 @@ async function saveNursingNote() {
   const pid = String(patientId);
   if (_nursingEditId) {
     const { error } = await supa.from('nursing_notes').update(data).eq('id', _nursingEditId);
-    if (error) { toast('à¸à¸±à¸à¸à¸¶à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: '+error.message,'error'); return; }
+    if (error) { toast('Ã Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸ÂÃ Â¹ÂÃ Â¸Â¡Ã Â¹ÂÃ Â¸ÂªÃ Â¸Â³Ã Â¹ÂÃ Â¸Â£Ã Â¹ÂÃ Â¸Â: '+error.message,'error'); return; }
     const idx = (db.nursingNotes[pid]||[]).findIndex(n=>n.id==_nursingEditId);
     if(!db.nursingNotes) db.nursingNotes={};
             if(!db.nursingNotes[pid]) db.nursingNotes[pid]=[];
             if(idx>=0) db.nursingNotes[pid][idx] = mapNursingNote({id:_nursingEditId,...data,created_at:db.nursingNotes[pid][idx].createdAt});
-    toast('à¹à¸à¹à¹à¸à¸à¸±à¸à¸à¸¶à¸à¹à¸¥à¹à¸§','success');
+    toast('Ã Â¹ÂÃ Â¸ÂÃ Â¹ÂÃ Â¹ÂÃ Â¸ÂÃ Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸ÂÃ Â¹ÂÃ Â¸Â¥Ã Â¹ÂÃ Â¸Â§','success');
   } else {
     const { data: ins, error } = await supa.from('nursing_notes').insert(data).select().single();
-    if (error) { toast('à¸à¸±à¸à¸à¸¶à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: '+error.message,'error'); return; }
+    if (error) { toast('Ã Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸ÂÃ Â¹ÂÃ Â¸Â¡Ã Â¹ÂÃ Â¸ÂªÃ Â¸Â³Ã Â¹ÂÃ Â¸Â£Ã Â¹ÂÃ Â¸Â: '+error.message,'error'); return; }
     if(!db.nursingNotes) db.nursingNotes={};
             if(!db.nursingNotes[pid]) db.nursingNotes[pid]=[];
     db.nursingNotes[pid].unshift(mapNursingNote(ins));
-    toast(`à¸à¸±à¸à¸à¸¶à¸à¸à¸°${shift} à¹à¸£à¸µà¸¢à¸à¸£à¹à¸­à¸¢`,'success');
+    toast(`Ã Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸ÂÃ Â¸ÂÃ Â¸Â°${shift} Ã Â¹ÂÃ Â¸Â£Ã Â¸ÂµÃ Â¸Â¢Ã Â¸ÂÃ Â¸Â£Ã Â¹ÂÃ Â¸Â­Ã Â¸Â¢`,'success');
   }
   closeModal('modal-add-nursing');
   document.getElementById('patprofile-tab-nursing').innerHTML = renderNursingTab(pid, patientId);
 }
 
 async function deleteNursingNote(patientId, pid, id) {
-  if(!confirm('à¸¥à¸à¸à¸±à¸à¸à¸¶à¸à¸à¸µà¹?')) return;
+  if(!confirm('Ã Â¸Â¥Ã Â¸ÂÃ Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸ÂÃ Â¸ÂÃ Â¸ÂµÃ Â¹Â?')) return;
   const { error } = await supa.from('nursing_notes').delete().eq('id', id);
-  if (error) { toast('à¸¥à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: ' + error.message, 'error'); return; }
+  if (error) { toast('Ã Â¸Â¥Ã Â¸ÂÃ Â¹ÂÃ Â¸Â¡Ã Â¹ÂÃ Â¸ÂªÃ Â¸Â³Ã Â¹ÂÃ Â¸Â£Ã Â¹ÂÃ Â¸Â: ' + error.message, 'error'); return; }
   db.nursingNotes[pid] = (db.nursingNotes[pid]||[]).filter(n=>n.id!=id);
-  toast('à¸¥à¸à¹à¸¥à¹à¸§');
+  toast('Ã Â¸Â¥Ã Â¸ÂÃ Â¹ÂÃ Â¸Â¥Ã Â¹ÂÃ Â¸Â§');
   document.getElementById('patprofile-tab-nursing').innerHTML = renderNursingTab(pid, patientId);
 }
 
@@ -187,7 +187,7 @@ function onPatStatusChange(sel) {
   if (sel.value === 'inactive' && editId) {
     const p = db.patients.find(x => x.id == editId);
     if (p && p.status === 'active') {
-      sel.value = 'active'; // reset à¹à¸§à¹à¸à¹à¸­à¸
+      sel.value = 'active'; // reset Ã Â¹ÂÃ Â¸Â§Ã Â¹ÂÃ Â¸ÂÃ Â¹ÂÃ Â¸Â­Ã Â¸Â
       openDischargeModal(editId);
     }
   }
@@ -199,7 +199,7 @@ function openDischargeModal(patientId) {
   document.getElementById('discharge-patient-id').value = patientId;
   document.getElementById('discharge-patient-name').textContent = p.name;
   document.getElementById('discharge-date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('discharge-reason').value = 'à¸à¸¥à¸±à¸à¸à¹à¸²à¸';
+  document.getElementById('discharge-reason').value = 'Ã Â¸ÂÃ Â¸Â¥Ã Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¹ÂÃ Â¸Â²Ã Â¸Â';
   document.getElementById('discharge-summary').value = '';
   openModal('modal-discharge');
 }
@@ -209,12 +209,12 @@ async function saveDischarge() {
   const date   = document.getElementById('discharge-date').value;
   const reason = document.getElementById('discharge-reason').value;
   const summary = document.getElementById('discharge-summary').value.trim();
-  if (!date || !reason) { toast('à¸à¸£à¸¸à¸à¸²à¸à¸£à¸­à¸à¸à¹à¸­à¸¡à¸¹à¸¥à¹à¸«à¹à¸à¸£à¸', 'warning'); return; }
+  if (!date || !reason) { toast('Ã Â¸ÂÃ Â¸Â£Ã Â¸Â¸Ã Â¸ÂÃ Â¸Â²Ã Â¸ÂÃ Â¸Â£Ã Â¸Â­Ã Â¸ÂÃ Â¸ÂÃ Â¹ÂÃ Â¸Â­Ã Â¸Â¡Ã Â¸Â¹Ã Â¸Â¥Ã Â¹ÂÃ Â¸Â«Ã Â¹ÂÃ Â¸ÂÃ Â¸Â£Ã Â¸Â', 'warning'); return; }
 
   const p = db.patients.find(x => x.id == patId);
   if (!p) return;
 
-  // à¸­à¸±à¸à¹à¸à¸à¸ªà¸à¸²à¸à¸°à¸à¸à¹à¸à¹
+  // Ã Â¸Â­Ã Â¸Â±Ã Â¸ÂÃ Â¹ÂÃ Â¸ÂÃ Â¸ÂÃ Â¸ÂªÃ Â¸ÂÃ Â¸Â²Ã Â¸ÂÃ Â¸Â°Ã Â¸ÂÃ Â¸ÂÃ Â¹ÂÃ Â¸ÂÃ Â¹Â
   const { error } = await supa.from('patients').update({
     status: 'inactive',
     end_date: date,
@@ -223,9 +223,9 @@ async function saveDischarge() {
     discharged_by: currentUser?.displayName || currentUser?.username || ''
   }).eq('id', patId);
 
-  if (error) { toast('à¸à¸±à¸à¸à¸¶à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: ' + error.message, 'error'); return; }
+  if (error) { toast('Ã Â¸ÂÃ Â¸Â±Ã Â¸ÂÃ Â¸ÂÃ Â¸Â¶Ã Â¸ÂÃ Â¹ÂÃ Â¸Â¡Ã Â¹ÂÃ Â¸ÂªÃ Â¸Â³Ã Â¹ÂÃ Â¸Â£Ã Â¹ÂÃ Â¸Â: ' + error.message, 'error'); return; }
 
-  // à¸à¸·à¸à¹à¸à¸µà¸¢à¸
+  // Ã Â¸ÂÃ Â¸Â·Ã Â¸ÂÃ Â¹ÂÃ Â¸ÂÃ Â¸ÂµÃ Â¸Â¢Ã Â¸Â
   if (p.currentBedId) {
     await supa.from('beds').update({ status: 'available' }).eq('id', p.currentBedId);
     const bed = db.beds.find(b => b.id == p.currentBedId);
@@ -235,7 +235,7 @@ async function saveDischarge() {
   p.status = 'inactive';
   p.endDate = date;
 
-  toast(`ðª à¸à¸³à¸«à¸à¹à¸²à¸¢ ${p.name} à¹à¸£à¸µà¸¢à¸à¸£à¹à¸­à¸¢ (${reason})`, 'success');
+  toast(`Ã°ÂÂÂª Ã Â¸ÂÃ Â¸Â³Ã Â¸Â«Ã Â¸ÂÃ Â¹ÂÃ Â¸Â²Ã Â¸Â¢ ${p.name} Ã Â¹ÂÃ Â¸Â£Ã Â¸ÂµÃ Â¸Â¢Ã Â¸ÂÃ Â¸Â£Ã Â¹ÂÃ Â¸Â­Ã Â¸Â¢ (${reason})`, 'success');
   closeModal('modal-discharge');
   closeModal('modal-addPatient');
   renderPatients();
