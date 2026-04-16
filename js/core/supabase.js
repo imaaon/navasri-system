@@ -5,6 +5,5 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let supa = null;
 function initSupabase() {
   supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  window._supabaseKey = SUPABASE_KEY; // ใช้สำหรับเรียก Edge Functions
   return supa;
 }
