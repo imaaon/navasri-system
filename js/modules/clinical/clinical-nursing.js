@@ -88,12 +88,12 @@ function getCurrentShift() {
 let _nursingEditId = null;
 function openAddNursingModal(patientId, date, shift, noteId=null) {
   _nursingEditId = noteId;
-  document.getElementById('nursing-pat-id')?.value = patientId;
-  document.getElementById('nursing-date')?.value = date || new Date().toISOString().split('T')[0];
-  document.getElementById('nursing-shift')?.value = shift || getCurrentShift();
+  {const _e=document.getElementById('nursing-pat-id');if(_e)_e.value=patientId;}
+  {const _e=document.getElementById('nursing-date');if(_e)_e.value=date || new Date().toISOString().split('T')[0];}
+  {const _e=document.getElementById('nursing-shift');if(_e)_e.value=shift || getCurrentShift();}
   const nowTime = new Date().toTimeString().slice(0,5);
-  document.getElementById('nursing-time')?.value = nowTime;
-  document.getElementById('nursing-by')?.value = currentUser?.displayName || currentUser?.username || '';
+  {const _e=document.getElementById('nursing-time');if(_e)_e.value=nowTime;}
+  {const _e=document.getElementById('nursing-by');if(_e)_e.value=currentUser?.displayName || currentUser?.username || '';}
   // Clear all fields
   ['nursing-condition','nursing-consciousness','nursing-eating',
    'nursing-sleep','nursing-activity','nursing-wound',
@@ -105,19 +105,19 @@ function openAddNursingModal(patientId, date, shift, noteId=null) {
     const pid = String(patientId);
     const note = (db.nursingNotes[pid]||[]).find(n=>n.id==noteId);
     if (note) {
-      document.getElementById('nursing-condition')?.value = note.generalCondition||'';
-      document.getElementById('nursing-consciousness')?.value = note.consciousness||'';
-      document.getElementById('nursing-pain')?.value = note.pain||'';
-      document.getElementById('nursing-eating')?.value = note.eating||'';
+      {const _e=document.getElementById('nursing-condition');if(_e)_e.value=note.generalCondition||'';}
+      {const _e=document.getElementById('nursing-consciousness');if(_e)_e.value=note.consciousness||'';}
+      {const _e=document.getElementById('nursing-pain');if(_e)_e.value=note.pain||'';}
+      {const _e=document.getElementById('nursing-eating');if(_e)_e.value=note.eating||'';}
       // elimination removed
-      document.getElementById('nursing-sleep')?.value = note.sleep||'';
-      document.getElementById('nursing-activity')?.value = note.activity||'';
-      document.getElementById('nursing-wound')?.value = note.wound||'';
-      document.getElementById('nursing-iv')?.value = note.iv||'';
-      document.getElementById('nursing-o2')?.value = note.o2||'';
-      document.getElementById('nursing-handover')?.value = note.handoverNote||'';
-      document.getElementById('nursing-by')?.value = note.recordedBy||'';
-      document.getElementById('nursing-time')?.value = note.time||nowTime;
+      {const _e=document.getElementById('nursing-sleep');if(_e)_e.value=note.sleep||'';}
+      {const _e=document.getElementById('nursing-activity');if(_e)_e.value=note.activity||'';}
+      {const _e=document.getElementById('nursing-wound');if(_e)_e.value=note.wound||'';}
+      {const _e=document.getElementById('nursing-iv');if(_e)_e.value=note.iv||'';}
+      {const _e=document.getElementById('nursing-o2');if(_e)_e.value=note.o2||'';}
+      {const _e=document.getElementById('nursing-handover');if(_e)_e.value=note.handoverNote||'';}
+      {const _e=document.getElementById('nursing-by');if(_e)_e.value=note.recordedBy||'';}
+      {const _e=document.getElementById('nursing-time');if(_e)_e.value=note.time||nowTime;}
     }
   }
   document.getElementById('modal-nursing-title').textContent = noteId ? '✏️ แก้ไขบันทึกพยาบาล' : '📋 บันทึกทางการพยาบาล';
