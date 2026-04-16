@@ -32,9 +32,11 @@ async function renderAccounts() {
   const accounts = await loadAccounts();
   document.getElementById('accTableTitle').textContent = 'รายการ Account ทั้งหมด (' + accounts.length + ' account)';
   const tb = document.getElementById('accTable');
-  tb.innerHTML = accounts.map(function(a, i) {
+  var fragment = document.createDocumentFragment();
+  accounts.forEach(function(a, i) {
     var dname = a.display_name || a.name || a.username;
-    return '<tr>' +
+    var tr = document.createElement('tr');
+    tr.innerHTML =
       '<td class="number" style="color:var(--text3);">' + (i+1) + '</td>' +
       '<td style="font-weight:700;font-family:monospace;">' + (a.username||'') + '</td>' +
       '<td>' + (dname||'') + '</td>' +
@@ -43,11 +45,15 @@ async function renderAccounts() {
       '<td class="number" style="font-size:12px;color:var(--text2);">' + (a.created_at ? a.created_at.slice(0,10) : '-') + '</td>' +
       '<td class="number" style="font-size:12px;color:var(--text2);">' + (a.last_login ? a.last_login.slice(0,10) : '-') + '</td>' +
       '<td style="white-space:nowrap;">' +
-        '<button class="btn btn-ghost btn-sm" onclick="editAccount('' + a.id + '','' + (a.username||'').replace(/'/g,"\'") + '')">✏️</button>' +
-        '<button class="btn btn-ghost btn-sm" onclick="deleteAccount('' + a.id + '','' + (a.username||'').replace(/'/g,"\'") + '')" style="color:#e74c3c;">🗑️</button>' +
-      '</td>' +
-    '</tr>';
-  }).join('');
+        '<button class="btn btn-ghost btn-sm" data-edit-id="' + a.id + '">✏️</button>' +
+        '<button class="btn btn-ghost btn-sm" data-del-id="' + a.id + '" data-del-name="' + (a.username||'') + '" style="color:#e74c3c;">🗑️</button>' +
+      '</td>';
+    tr.querySelector('[data-edit-id]').addEventListener('click', (function(id, uname){ return function(){ editAccount(id, uname); }; })(a.id, a.username||''));
+    tr.querySelector('[data-del-id]').addEventListener('click', (function(id, uname){ return function(){ deleteAccount(id, uname); }; })(a.id, a.username||''));
+    fragment.appendChild(tr);
+  });
+  tb.innerHTML = '';
+  tb.appendChild(fragment);
 }
 
 function openAddAccountModal() {
