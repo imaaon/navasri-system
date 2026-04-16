@@ -12,9 +12,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-<!-- JsBarcode: à¹à¸«à¸¥à¸à¸à¸²à¸ CDN -->
+<!-- JsBarcode: โหลดจาก CDN -->
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-<!-- ExcelJS: à¸ªà¸³à¸«à¸£à¸±à¸ Backup Excel à¸à¸µà¹à¸¡à¸µ styling à¹à¸à¹à¸¡à¸£à¸¹à¸à¹à¸à¸ -->
+<!-- ExcelJS: สำหรับ Backup Excel ที่มี styling เต็มรูปแบบ -->
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 
 <!-- Styles -->
@@ -23,7 +23,7 @@
 <body>
 
 <!-- ===============================================
-     LOGIN SCREEN (à¹à¸«à¸¥à¸à¸à¸²à¸ html/login.html)
+     LOGIN SCREEN (โหลดจาก html/login.html)
 ================================================ -->
 <div id="login-placeholder"></div>
 
@@ -37,7 +37,7 @@
 ================================================ -->
 <div class="app" id="app-shell" style="display:none;">
 
-  <!-- Sidebar (à¹à¸«à¸¥à¸à¸à¸²à¸ html/sidebar.html) -->
+  <!-- Sidebar (โหลดจาก html/sidebar.html) -->
   <div id="sidebar-placeholder"></div>
 
   <!-- Main Content -->
@@ -47,7 +47,7 @@
     <!-- Topbar -->
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:4px;">
-        <button id="hamburgerBtn" onclick="toggleSidebar()">â°</button>
+        <button id="hamburgerBtn" onclick="toggleSidebar()">☰</button>
         <div class="page-title" id="pageTitle">Dashboard</div>
       </div>
       <div class="topbar-right">
@@ -81,7 +81,7 @@
 
 
 <!-- ===============================================
-     CORE -- à¹à¸«à¸¥à¸à¸à¹à¸­à¸à¹à¸ªà¸¡à¸­
+     CORE -- โหลดก่อนเสมอ
 ================================================ -->
 <script src="js/core/supabase.js?v=1"></script>
 <script src="js/core/audit.js?v=1"></script>
@@ -98,7 +98,7 @@
 <script src="js/shared/events.js?v=2"></script>
 
 <!-- ===============================================
-     MODULES -- à¹à¸«à¸¥à¸à¸à¸²à¸¡à¸¥à¸³à¸à¸±à¸
+     MODULES -- โหลดตามลำดับ
 ================================================ -->
 <script src="js/modules/dashboard.js?v=2"></script>
 <script src="js/modules/inventory.js?v=8"></script>
@@ -137,7 +137,7 @@
      HTML LOADER + INIT
 ================================================ -->
 <script>
-// à¹à¸«à¸¥à¸ HTML partials à¹à¸¥à¹à¸§ init à¸£à¸°à¸à¸
+// โหลด HTML partials แล้ว init ระบบ
 async function loadHTMLPartials() {
   const parts = [
     { id: 'login-placeholder',  file: 'html/login.html'   },
@@ -158,14 +158,14 @@ async function loadHTMLPartials() {
 }
 
 window.onload = async function() {
-  // 1. à¹à¸«à¸¥à¸ HTML partials à¸à¹à¸­à¸à¸à¸¸à¸à¸­à¸¢à¹à¸²à¸
+  // 1. โหลด HTML partials ก่อนทุกอย่าง
   await loadHTMLPartials();
-  initModalClickOutside(); // à¸à¹à¸­à¸à¹à¸£à¸µà¸¢à¸à¸«à¸¥à¸±à¸ HTML à¹à¸«à¸¥à¸à¹à¸ªà¸£à¹à¸
+  initModalClickOutside(); // ต้องเรียกหลัง HTML โหลดเสร็จ
 
   // 2. Init Supabase
   supa = initSupabase();
 
-  // 3. à¹à¸à¹à¸ session
+  // 3. เช็ก session
   const { data: { session } } = await supa.auth.getSession();
 
   const loginScreen = document.getElementById('loginScreen');
