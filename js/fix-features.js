@@ -35,4 +35,20 @@ window.scanSupInv=function(){_scanFile('scan-supinv-btn','invoice',function(d){i
 // [MOVED to router.js] loadBillingSettings hook on showPage settings
 // [MOVED to router.js] loadBillingSettings hook on showPage settings (duplicate removed)
 console.log('[fix] v90 snippet loaded');
+
+// ===== FIX: openTubeFeedModal — clear ta-tf-id before open (v92) =====
+var _origOpenTubeFeedModal = window.openTubeFeedModal;
+if (typeof _origOpenTubeFeedModal === 'function') {
+  window.openTubeFeedModal = function(id) {
+    // ถ้าไม่ได้ส่ง id = เปิด modal ใหม่ ให้ clear patient fields
+    if (!id) {
+      var _tfId = document.getElementById('ta-tf-id');
+      var _tfInp = document.getElementById('ta-tf-inp');
+      if (_tfId) _tfId.value = '';
+      if (_tfInp) _tfInp.value = '';
+    }
+    _origOpenTubeFeedModal.apply(this, arguments);
+  };
+}
+console.log('[fix] v92 snippet loaded');
 })();
