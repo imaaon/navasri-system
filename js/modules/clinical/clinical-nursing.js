@@ -3,9 +3,9 @@
 // ==========================================
 // ===== NURSING NOTES ======================
 // ==========================================
-const SHIFTS = ['เช้า','ดึก'];
-const SHIFT_TIMES = {'เช้า':'07:00–19:00','ดึก':'19:00–07:00'};
-const SHIFT_COLORS = {'เช้า':'#e67e22','ดึก':'#8e44ad'};
+const SHIFTS = ['à¹à¸à¹à¸²','à¸à¸¶à¸'];
+const SHIFT_TIMES = {'à¹à¸à¹à¸²':'07:00â19:00','à¸à¸¶à¸':'19:00â07:00'};
+const SHIFT_COLORS = {'à¹à¸à¹à¸²':'#e67e22','à¸à¸¶à¸':'#8e44ad'};
 
 function renderNursingTab(pid, patientId) {
   const notes = (db.nursingNotes[pid]||[]);
@@ -25,30 +25,30 @@ function renderNursingTab(pid, patientId) {
     .slice(0,30)
     .map(([date, dayNotes]) => {
       const isToday = date === today;
-      const dateLabel = isToday ? '📅 วันนี้' : '📅 '+date;
+      const dateLabel = isToday ? 'ð à¸§à¸±à¸à¸à¸µà¹' : 'ð '+date;
       const entryRows = dayNotes.map(note => `
         <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start;">
           <div style="flex-shrink:0;min-width:48px;text-align:center;">
             <div style="font-size:13px;font-weight:700;color:var(--accent);">${note.time||'--:--'}</div>
           </div>
           <div style="flex:1;font-size:13px;line-height:1.6;white-space:pre-wrap;">${[
-              note.generalCondition ? '🧍 อาการ: ' + note.generalCondition : '',
-              note.consciousness    ? '🧠 ความรู้สึกตัว: ' + note.consciousness : '',
-              note.pain             ? '😣 ปวด: ' + note.pain : '',
-              note.eating           ? '🍽️ อาหาร: ' + note.eating : '',
-              note.elimination      ? '🚽 ขับถ่าย: ' + note.elimination : '',
-              note.sleep            ? '😴 นอน: ' + note.sleep : '',
-              note.activity         ? '🏃 กิจกรรม: ' + note.activity : '',
-              note.wound            ? '🩹 แผล: ' + note.wound : '',
-              note.iv               ? '💉 IV: ' + note.iv : '',
-              note.o2               ? '🫁 O₂: ' + note.o2 : '',
-              note.handoverNote     ? '📋 ส่งเวร: ' + note.handoverNote : '',
+              note.generalCondition ? 'ð§ à¸­à¸²à¸à¸²à¸£: ' + note.generalCondition : '',
+              note.consciousness    ? 'ð§  à¸à¸§à¸²à¸¡à¸£à¸¹à¹à¸ªà¸¶à¸à¸à¸±à¸§: ' + note.consciousness : '',
+              note.pain             ? 'ð£ à¸à¸§à¸: ' + note.pain : '',
+              note.eating           ? 'ð½ï¸ à¸­à¸²à¸«à¸²à¸£: ' + note.eating : '',
+              note.elimination      ? 'ð½ à¸à¸±à¸à¸à¹à¸²à¸¢: ' + note.elimination : '',
+              note.sleep            ? 'ð´ à¸à¸­à¸: ' + note.sleep : '',
+              note.activity         ? 'ð à¸à¸´à¸à¸à¸£à¸£à¸¡: ' + note.activity : '',
+              note.wound            ? 'ð©¹ à¹à¸à¸¥: ' + note.wound : '',
+              note.iv               ? 'ð IV: ' + note.iv : '',
+              note.o2               ? 'ð« Oâ: ' + note.o2 : '',
+              note.handoverNote     ? 'ð à¸ªà¹à¸à¹à¸§à¸£: ' + note.handoverNote : '',
             ].filter(Boolean).join('\n') || '-'}</div>
           <div style="flex-shrink:0;font-size:11px;color:var(--text3);text-align:right;">
             ${note.by||''}<br>
             <div style="display:flex;gap:4px;margin-top:2px;">
-              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="editNursingNote('${patientId}','${pid}','${note.id}')">✏️</button>
-              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:#e74c3c;" onclick="deleteNursingNote('${patientId}','${pid}','${note.id}')">🗑️</button>
+              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="editNursingNote('${patientId}','${pid}','${note.id}')">âï¸</button>
+              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:#e74c3c;" onclick="deleteNursingNote('${patientId}','${pid}','${note.id}')">ðï¸</button>
             </div>
           </div>
         </div>`).join('');
@@ -57,7 +57,7 @@ function renderNursingTab(pid, patientId) {
         <div style="border:1.5px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;">
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--surface2);">
             <div style="font-size:12px;font-weight:700;color:${isToday?'var(--accent)':'var(--text2)'};">${dateLabel}</div>
-            <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="openAddNursingModal('${patientId}','${date}','')">+ เพิ่มบันทึก</button>
+            <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="openAddNursingModal('${patientId}','${date}','')">+ à¹à¸à¸´à¹à¸¡à¸à¸±à¸à¸à¸¶à¸</button>
           </div>
           <div style="padding:0 14px;">${entryRows}</div>
         </div>`;
@@ -65,24 +65,24 @@ function renderNursingTab(pid, patientId) {
 
   const addTodayBtn = !byDate[today] ? `
     <div style="padding:16px;text-align:center;">
-      <button class="btn btn-primary" onclick="openAddNursingModal('${patientId}','${today}','')">+ บันทึกทางการพยาบาลวันนี้</button>
+      <button class="btn btn-primary" onclick="openAddNursingModal('${patientId}','${today}','')">+ à¸à¸±à¸à¸à¸¶à¸à¸à¸²à¸à¸à¸²à¸£à¸à¸¢à¸²à¸à¸²à¸¥à¸§à¸±à¸à¸à¸µà¹</button>
     </div>` : '';
 
   return `<div class="card">
     <div class="card-header">
-      <div class="card-title" style="font-size:13px;">📝 บันทึกทางการพยาบาล (${notes.length} รายการ)</div>
-      <button class="btn btn-primary btn-sm" onclick="openAddNursingModal('${patientId}','${today}','')">+ บันทึกใหม่</button>
+      <div class="card-title" style="font-size:13px;">ð à¸à¸±à¸à¸à¸¶à¸à¸à¸²à¸à¸à¸²à¸£à¸à¸¢à¸²à¸à¸²à¸¥ (${notes.length} à¸£à¸²à¸¢à¸à¸²à¸£)</div>
+      <button class="btn btn-primary btn-sm" onclick="openAddNursingModal('${patientId}','${today}','')">+ à¸à¸±à¸à¸à¸¶à¸à¹à¸«à¸¡à¹</button>
     </div>
     <div style="padding:12px 16px;">
       ${addTodayBtn}
-      ${noteCards || '<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีบันทึก</div>'}
+      ${noteCards || '<div style="padding:24px;text-align:center;color:var(--text3);">à¸¢à¸±à¸à¹à¸¡à¹à¸¡à¸µà¸à¸±à¸à¸à¸¶à¸</div>'}
     </div>
   </div>`;
 }
 
 function getCurrentShift() {
   const h = new Date().getHours();
-  return (h >= 7 && h < 19) ? 'เช้า' : 'ดึก';
+  return (h >= 7 && h < 19) ? 'à¹à¸à¹à¸²' : 'à¸à¸¶à¸';
 }
 
 let _nursingEditId = null;
@@ -120,7 +120,7 @@ function openAddNursingModal(patientId, date, shift, noteId=null) {
       {const _e=document.getElementById('nursing-time');if(_e)_e.value=note.time||nowTime;}
     }
   }
-  document.getElementById('modal-nursing-title').textContent = noteId ? '✏️ แก้ไขบันทึกพยาบาล' : '📋 บันทึกทางการพยาบาล';
+  document.getElementById('modal-nursing-title').textContent = noteId ? 'âï¸ à¹à¸à¹à¹à¸à¸à¸±à¸à¸à¸¶à¸à¸à¸¢à¸²à¸à¸²à¸¥' : 'ð à¸à¸±à¸à¸à¸¶à¸à¸à¸²à¸à¸à¸²à¸£à¸à¸¢à¸²à¸à¸²à¸¥';
   openModal('modal-add-nursing');
 }
 function editNursingNote(patientId, pid, noteId) {
@@ -133,9 +133,9 @@ async function saveNursingNote() {
   const date  = document.getElementById('nursing-date').value;
   const shift = document.getElementById('nursing-shift').value;
   const time  = document.getElementById('nursing-time')?.value || '';
-  if (!date) { toast('กรุณาระบุวันที่','warning'); return; }
+  if (!date) { toast('à¸à¸£à¸¸à¸à¸²à¸£à¸°à¸à¸¸à¸§à¸±à¸à¸à¸µà¹','warning'); return; }
   const time_val = document.getElementById('nursing-time')?.value || '';
-  if (!time_val) { toast('กรุณาระบุเวลาที่บันทึก','warning'); return; }
+  if (!time_val) { toast('à¸à¸£à¸¸à¸à¸²à¸£à¸°à¸à¸¸à¹à¸§à¸¥à¸²à¸à¸µà¹à¸à¸±à¸à¸à¸¶à¸','warning'); return; }
   const data = {
     patient_id: patientId, date, shift, time,
     recorded_by:       document.getElementById('nursing-by').value.trim(),
@@ -154,27 +154,30 @@ async function saveNursingNote() {
   const pid = String(patientId);
   if (_nursingEditId) {
     const { error } = await supa.from('nursing_notes').update(data).eq('id', _nursingEditId);
-    if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
+    if (error) { toast('à¸à¸±à¸à¸à¸¶à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: '+error.message,'error'); return; }
     const idx = (db.nursingNotes[pid]||[]).findIndex(n=>n.id==_nursingEditId);
-    if(idx>=0) db.nursingNotes[pid][idx] = mapNursingNote({id:_nursingEditId,...data,created_at:db.nursingNotes[pid][idx].createdAt});
-    toast('แก้ไขบันทึกแล้ว','success');
+    if(!db.nursingNotes) db.nursingNotes={};
+            if(!db.nursingNotes[pid]) db.nursingNotes[pid]=[];
+            if(idx>=0) db.nursingNotes[pid][idx] = mapNursingNote({id:_nursingEditId,...data,created_at:db.nursingNotes[pid][idx].createdAt});
+    toast('à¹à¸à¹à¹à¸à¸à¸±à¸à¸à¸¶à¸à¹à¸¥à¹à¸§','success');
   } else {
     const { data: ins, error } = await supa.from('nursing_notes').insert(data).select().single();
-    if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
-    if(!db.nursingNotes[pid]) db.nursingNotes[pid]=[];
+    if (error) { toast('à¸à¸±à¸à¸à¸¶à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: '+error.message,'error'); return; }
+    if(!db.nursingNotes) db.nursingNotes={};
+            if(!db.nursingNotes[pid]) db.nursingNotes[pid]=[];
     db.nursingNotes[pid].unshift(mapNursingNote(ins));
-    toast(`บันทึกกะ${shift} เรียบร้อย`,'success');
+    toast(`à¸à¸±à¸à¸à¸¶à¸à¸à¸°${shift} à¹à¸£à¸µà¸¢à¸à¸£à¹à¸­à¸¢`,'success');
   }
   closeModal('modal-add-nursing');
   document.getElementById('patprofile-tab-nursing').innerHTML = renderNursingTab(pid, patientId);
 }
 
 async function deleteNursingNote(patientId, pid, id) {
-  if(!confirm('ลบบันทึกนี้?')) return;
+  if(!confirm('à¸¥à¸à¸à¸±à¸à¸à¸¶à¸à¸à¸µà¹?')) return;
   const { error } = await supa.from('nursing_notes').delete().eq('id', id);
-  if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  if (error) { toast('à¸¥à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: ' + error.message, 'error'); return; }
   db.nursingNotes[pid] = (db.nursingNotes[pid]||[]).filter(n=>n.id!=id);
-  toast('ลบแล้ว');
+  toast('à¸¥à¸à¹à¸¥à¹à¸§');
   document.getElementById('patprofile-tab-nursing').innerHTML = renderNursingTab(pid, patientId);
 }
 
@@ -184,7 +187,7 @@ function onPatStatusChange(sel) {
   if (sel.value === 'inactive' && editId) {
     const p = db.patients.find(x => x.id == editId);
     if (p && p.status === 'active') {
-      sel.value = 'active'; // reset ไว้ก่อน
+      sel.value = 'active'; // reset à¹à¸§à¹à¸à¹à¸­à¸
       openDischargeModal(editId);
     }
   }
@@ -196,7 +199,7 @@ function openDischargeModal(patientId) {
   document.getElementById('discharge-patient-id').value = patientId;
   document.getElementById('discharge-patient-name').textContent = p.name;
   document.getElementById('discharge-date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('discharge-reason').value = 'กลับบ้าน';
+  document.getElementById('discharge-reason').value = 'à¸à¸¥à¸±à¸à¸à¹à¸²à¸';
   document.getElementById('discharge-summary').value = '';
   openModal('modal-discharge');
 }
@@ -206,12 +209,12 @@ async function saveDischarge() {
   const date   = document.getElementById('discharge-date').value;
   const reason = document.getElementById('discharge-reason').value;
   const summary = document.getElementById('discharge-summary').value.trim();
-  if (!date || !reason) { toast('กรุณากรอกข้อมูลให้ครบ', 'warning'); return; }
+  if (!date || !reason) { toast('à¸à¸£à¸¸à¸à¸²à¸à¸£à¸­à¸à¸à¹à¸­à¸¡à¸¹à¸¥à¹à¸«à¹à¸à¸£à¸', 'warning'); return; }
 
   const p = db.patients.find(x => x.id == patId);
   if (!p) return;
 
-  // อัปเดตสถานะคนไข้
+  // à¸­à¸±à¸à¹à¸à¸à¸ªà¸à¸²à¸à¸°à¸à¸à¹à¸à¹
   const { error } = await supa.from('patients').update({
     status: 'inactive',
     end_date: date,
@@ -220,9 +223,9 @@ async function saveDischarge() {
     discharged_by: currentUser?.displayName || currentUser?.username || ''
   }).eq('id', patId);
 
-  if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+  if (error) { toast('à¸à¸±à¸à¸à¸¶à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: ' + error.message, 'error'); return; }
 
-  // คืนเตียง
+  // à¸à¸·à¸à¹à¸à¸µà¸¢à¸
   if (p.currentBedId) {
     await supa.from('beds').update({ status: 'available' }).eq('id', p.currentBedId);
     const bed = db.beds.find(b => b.id == p.currentBedId);
@@ -232,7 +235,7 @@ async function saveDischarge() {
   p.status = 'inactive';
   p.endDate = date;
 
-  toast(`🚪 จำหน่าย ${p.name} เรียบร้อย (${reason})`, 'success');
+  toast(`ðª à¸à¸³à¸«à¸à¹à¸²à¸¢ ${p.name} à¹à¸£à¸µà¸¢à¸à¸£à¹à¸­à¸¢ (${reason})`, 'success');
   closeModal('modal-discharge');
   closeModal('modal-addPatient');
   renderPatients();
