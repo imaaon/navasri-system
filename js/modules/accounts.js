@@ -160,7 +160,7 @@ function renderPickStaffList() {
   var list = db.staff.filter(function(s){ return !search||s.name.toLowerCase().includes(search)||(s.nickname||'').toLowerCase().includes(search); });
   var el = document.getElementById('pickStaffList');
   el.innerHTML = list.map(function(s) {
-    return '<div style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;" onmouseover="this.style.background='var(--sage-light)'" onmouseout="this.style.background=''" data-name="' + s.name.replace(/"/g,'&quot;') + '" data-pos="' + (s.position||'').replace(/"/g,'&quot;') + '" onclick="selectStaffForAccount(this)">' +
+    return '<div style="padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;" data-name="' + s.name.replace(/"/g,'&quot;') + '" data-pos="' + (s.position||'').replace(/"/g,'&quot;') + '" onclick="selectStaffForAccount(this)">' +
       '<div style="width:32px;height:32px;border-radius:50%;background:var(--sage-light);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">👤</div>' +
       '<div><div style="font-weight:600;font-size:13px;">' + s.name + '</div><div style="font-size:11px;color:var(--text2);">' + (s.nickname?'('+s.nickname+') ':'') + (s.position||'') + '</div></div></div>';
   }).join('') || '<div style="padding:24px;text-align:center;color:var(--text3);">ไม่พบพนักงาน</div>';
