@@ -89,7 +89,7 @@ async function sendLineNotify(event, messageText, data = {}) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': window._supabaseKey || '',
+        'apikey': SUPABASE_KEY || '',
       },
       body: JSON.stringify(payload),
     });
@@ -150,7 +150,7 @@ async function testWebhook() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': window._supabaseKey || '',
+        'apikey': SUPABASE_KEY || '',
       },
       body: JSON.stringify(testPayload),
     });
