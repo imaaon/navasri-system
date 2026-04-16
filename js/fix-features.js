@@ -491,4 +491,245 @@ console.log('[fix] v98 snippet loaded');
 })();
 
 console.log('[fix] v99 snippet loaded');
+
+
+// ===== FIX v100: Clear fields on Add / Populate on Edit — all modals =====
+
+// Utility: clear user-input fields ใน modal (ยกเว้น keepIds)
+function _clearModalFields(modalId, keepIds) {
+  var modal = document.getElementById(modalId);
+  if (!modal) return;
+  var keep = keepIds || [];
+  Array.from(modal.querySelectorAll('input,textarea,select')).forEach(function(el) {
+    if (!el.id || keep.indexOf(el.id) >= 0) return;
+    if (el.type === 'hidden' || el.type === 'file') return;
+    if (el.type === 'checkbox' || el.type === 'radio') { el.checked = false; return; }
+    // select — reset to first option
+    if (el.tagName === 'SELECT') { if (el.options.length > 0) el.selectedIndex = 0; return; }
+    el.value = '';
+  });
+}
+
+// Utility: set default fields
+function _setModalDefaults(fields) {
+  var today = new Date().toISOString().split('T')[0];
+  var now = new Date().toTimeString().slice(0,5);
+  var user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+  fields.forEach(function(f) {
+    var el = document.getElementById(f.id);
+    if (!el) return;
+    var val = f.value === '__today__' ? today : f.value === '__now__' ? now : f.value === '__user__' ? user : f.value;
+    el.value = val;
+  });
+}
+
+// ===== INCIDENT =====
+(function() {
+  var _orig = window.openIncidentModal;
+  if (typeof _orig !== 'function') return;
+  window.openIncidentModal = function(id) {
+    // detect patient UUID = add from profile
+    if (id && (db.patients||[]).some(function(p){ return String(p.id)===String(id); })) {
+      _orig.call(this); // เปิด add mode (original clear)
+      _clearModalFields('modal-incident', ['incident-date','incident-time','incident-recorder']);
+      setTimeout(function() {
+        var pat = (db.patients||[]).find(function(p){ return String(p.id)===String(id); });
+        if (pat) {
+          var idEl = document.getElementById('ta-inc-id');
+          var inpEl = document.getElementById('ta-inc-inp');
+          if (idEl) idEl.value = pat.id;
+          if (inpEl) inpEl.value = pat.name;
+        }
+      }, 100);
+      return;
+    }
+    // add mode (no id) — clear user fields
+    if (!id) {
+      _clearModalFields('modal-incident', ['incident-date','incident-time','incident-recorder']);
+      _setModalDefaults([
+        {id:'incident-date', value:'__today__'},
+        {id:'incident-time', value:'__now__'},
+        {id:'incident-recorder', value:'__user__'}
+      ]);
+    }
+    _orig.apply(this, arguments);
+  };
+})();
+
+// ===== WOUND =====
+(function() {
+  var _orig = window.openWoundModal;
+  if (typeof _orig !== 'function') return;
+  window.openWoundModal = async function(id) {
+    if (id && (db.patients||[]).some(function(p){ return String(p.id)===String(id); })) {
+      _orig.call(this);
+      _clearModalFields('modal-wound', ['wound-date','wound-recorder']);
+      setTimeout(function() {
+        var pat = (db.patients||[]).find(function(p){ return String(p.id)===String(id); });
+        if (pat) {
+          var idEl = document.getElementById('ta-wnd-id');
+          var inpEl = document.getElementById('ta-wnd-inp');
+          if (idEl) idEl.value = pat.id;
+          if (inpEl) inpEl.value = pat.name;
+        }
+      }, 100);
+      return;
+    }
+    if (!id) {
+      _clearModalFields('modal-wound', ['wound-date','wound-recorder']);
+      _setModalDefaults([{id:'wound-date',value:'__today__'},{id:'wound-recorder',value:'__user__'}]);
+    }
+    if (id) {
+      try {
+        var result = await supa.from('patient_wounds').select('*').eq('id', id).single();
+        if (!result.error && result.data) {
+          if (!db.wounds) db.wounds = [];
+          var mapped = mapWound(result.data);
+          var idx2 = db.wounds.findIndex(function(x){ return String(x.id)===String(id); });
+          if (idx2 >= 0) db.wounds[idx2] = mapped; else db.wounds.unshift(mapped);
+        }
+      } catch(e) {}
+    }
+    _orig.apply(this, arguments);
+  };
+})();
+
+// ===== DIET =====
+(function() {
+  var _orig = window.openDietModal;
+  if (typeof _orig !== 'function') return;
+  window.openDietModal = async function(id, patientId) {
+    if (!id) _clearModalFields('modal-diet', ['diet-type','diet-meals']);
+    if (id) {
+      try {
+        var result = await supa.from('patient_diets').select('*').eq('id', id).single();
+        if (!result.error && result.data) {
+          if (!db.diets) db.diets = [];
+          var mapped = mapDiet(result.data);
+          var idx2 = db.diets.findIndex(function(x){ return String(x.id)===String(id); });
+          if (idx2 >= 0) db.diets[idx2] = mapped; else db.diets.unshift(mapped);
+        }
+      } catch(e) {}
+    }
+    _orig.call(this, id);
+    if (patientId && !id) {
+      setTimeout(function() {
+        var pat = (db.patients||[]).find(function(p){ return String(p.id)===String(patientId); });
+        if (pat) {
+          var idEl = document.getElementById('ta-diet-id');
+          var inpEl = document.getElementById('ta-diet-inp');
+          if (idEl) idEl.value = pat.id;
+          if (inpEl) inpEl.value = pat.name;
+        }
+      }, 150);
+    }
+  };
+})();
+
+// ===== TUBE FEED =====
+(function() {
+  var _orig = window.openTubeFeedModal;
+  if (typeof _orig !== 'function') return;
+  window.openTubeFeedModal = async function(id, patientId) {
+    if (!id) {
+      var el = document.getElementById('ta-tf-id');
+      var el2 = document.getElementById('ta-tf-inp');
+      if (el) el.value = '';
+      if (el2) el2.value = '';
+      _clearModalFields('modal-tubefeed', ['tubefeed-date','tubefeed-time','tubefeed-recorder']);
+      _setModalDefaults([{id:'tubefeed-date',value:'__today__'},{id:'tubefeed-recorder',value:'__user__'}]);
+    }
+    await _orig.call(this, id);
+    if (patientId && !id) {
+      setTimeout(function() {
+        var pat = (db.patients||[]).find(function(p){ return String(p.id)===String(patientId); });
+        if (pat) {
+          var idEl = document.getElementById('ta-tf-id');
+          var inpEl = document.getElementById('ta-tf-inp');
+          if (idEl) idEl.value = pat.id;
+          if (inpEl) inpEl.value = pat.name;
+        }
+      }, 150);
+    }
+  };
+})();
+
+// ===== APPT =====
+(function() {
+  var _orig = window.openApptModal;
+  if (typeof _orig !== 'function') return;
+  window.openApptModal = function(id) {
+    if (!id) _clearModalFields('modal-appt', ['appt-date','appt-status']);
+    if (!id) _setModalDefaults([{id:'appt-date',value:'__today__'}]);
+    _orig.apply(this, arguments);
+  };
+})();
+
+// ===== ADD VITAL =====
+(function() {
+  var _orig = window.openAddVitalModal;
+  if (typeof _orig !== 'function') return;
+  window.openAddVitalModal = function(patientId) {
+    _clearModalFields('modal-add-vital', ['vital-time','vital-by']);
+    _setModalDefaults([{id:'vital-time',value:'__now__'},{id:'vital-by',value:'__user__'}]);
+    _orig.apply(this, arguments);
+  };
+})();
+
+// ===== ADD MED =====
+(function() {
+  var _orig = window.openAddMedModal;
+  if (typeof _orig !== 'function') return;
+  window.openAddMedModal = function(patientId) {
+    _clearModalFields('modal-add-medication', ['med-unit','med-route']);
+    _orig.apply(this, arguments);
+  };
+})();
+
+// ===== ADD LAB =====
+(function() {
+  var _orig = window.openAddLabModal;
+  if (typeof _orig !== 'function') return;
+  window.openAddLabModal = function(patientId) {
+    _clearModalFields('modal-add-lab', ['lab-test-date']);
+    _setModalDefaults([{id:'lab-test-date',value:'__today__'}]);
+    _orig.apply(this, arguments);
+  };
+})();
+
+// ===== EXPENSE =====
+(function() {
+  var _orig = window.openExpenseModal;
+  if (typeof _orig !== 'function') return;
+  window.openExpenseModal = function(id) {
+    if (!id) _clearModalFields('modal-expense', ['exp-date','exp-preparer','exp-wht-rate']);
+    if (!id) _setModalDefaults([{id:'exp-date',value:'__today__'},{id:'exp-preparer',value:'__user__'}]);
+    _orig.apply(this, arguments);
+  };
+})();
+
+// ===== ADD ALLERGY =====
+(function() {
+  var _orig = window.openAddAllergyModal;
+  if (typeof _orig !== 'function') return;
+  window.openAddAllergyModal = function(patId) {
+    _clearModalFields('modal-add-allergy', ['allergy-type','allergy-severity']);
+    _orig.apply(this, arguments);
+  };
+})();
+
+// ===== BELONGING (add only) =====
+(function() {
+  var _orig = window.openBelongingModal;
+  if (typeof _orig !== 'function') return;
+  window.openBelongingModal = function(id, patientId) {
+    if (!id) {
+      _clearModalFields('modal-belonging', ['belonging-condition','belonging-date-in','belonging-received-by']);
+      _setModalDefaults([{id:'belonging-date-in',value:'__today__'},{id:'belonging-received-by',value:'__user__'}]);
+    }
+    _orig.apply(this, arguments);
+  };
+})();
+
+console.log('[fix] v100 snippet loaded');
 })();
