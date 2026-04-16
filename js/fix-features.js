@@ -36,416 +36,24 @@ window.scanSupInv=function(){_scanFile('scan-supinv-btn','invoice',function(d){i
 // [MOVED to router.js] loadBillingSettings hook on showPage settings (duplicate removed)
 console.log('[fix] v90 snippet loaded');
 
-// ===== FIX: openTubeFeedModal — clear ta-tf-id before open (v92) =====
-var _origOpenTubeFeedModal = window.openTubeFeedModal;
-if (typeof _origOpenTubeFeedModal === 'function') {
-  window.openTubeFeedModal = function(id) {
-    // ถ้าไม่ได้ส่ง id = เปิด modal ใหม่ ให้ clear patient fields
-    if (!id) {
-      var _tfId = document.getElementById('ta-tf-id');
-      var _tfInp = document.getElementById('ta-tf-inp');
-      if (_tfId) _tfId.value = '';
-      if (_tfInp) _tfInp.value = '';
-    }
-    _origOpenTubeFeedModal.apply(this, arguments);
-  };
-}
-console.log('[fix] v92 snippet loaded');
+// ===== FIX v98: Clean rewrite — แก้ทุกปัญหาในรอบเดียว =====
 
-// ===== FIX: saveWound — map recorder → created_by (v93) =====
-var _origSaveWound = window.saveWound;
-if (typeof _origSaveWound === 'function') {
-  window.saveWound = async function() {
-    // patch supa.from('patient_wounds').insert/update ให้ map recorder → created_by
-    var _origFrom = supa.from.bind(supa);
-    supa.from = function(table) {
-      var qb = _origFrom(table);
-      if (table === 'patient_wounds') {
-        var _origInsert = qb.insert.bind(qb);
-        var _origUpdate = qb.update.bind(qb);
-        qb.insert = function(data) {
-          if (data && data.recorder !== undefined) {
-            data.created_by = data.recorder;
-            delete data.recorder;
-          }
-          return _origInsert(data);
-        };
-        qb.update = function(data) {
-          if (data && data.recorder !== undefined) {
-            data.created_by = data.recorder;
-            delete data.recorder;
-          }
-          return _origUpdate(data);
-        };
-      }
-      return qb;
-    };
-    try {
-      await _origSaveWound.apply(this, arguments);
-    } finally {
-      supa.from = _origFrom;
-    }
-  };
-}
-console.log('[fix] v93 snippet loaded');
-
-// ===== FIX v94: แก้ 5 bugs (แพ้ยา / อุบัติเหตุ / แผลกดทับ / โภชนาการ) =====
-
-// FIX 1: openEditAllergyModal — params สลับกัน (ปุ่มส่ง allergyId, patientId แต่ fn รับ patId, allergyId)
-var _origEditAllergy = window.openEditAllergyModal;
-if (typeof _origEditAllergy === 'function') {
-  window.openEditAllergyModal = function(first, second) {
-    // ตรวจว่า first เป็น allergyId (number/short) หรือ patientId (UUID)
-    var isUUID = function(s) { return typeof s === 'string' && s.length > 20; };
-    if (isUUID(second) && !isUUID(first)) {
-      // first=allergyId, second=patientId — สลับกลับ
-      return _origEditAllergy.call(this, second, first);
-    }
-    return _origEditAllergy.apply(this, arguments);
-  };
-}
-
-// FIX 2: openIncidentModal — ใช้ db.incidentReports แทน db.incidents
-var _origOpenIncidentModal = window.openIncidentModal;
-if (typeof _origOpenIncidentModal === 'function') {
-  window.openIncidentModal = function(id) {
-    // patch db.incidents ชั่วคราวให้ชี้ไปที่ db.incidentReports
-    var _origIncidents = db.incidents;
-    db.incidents = db.incidentReports || [];
-    try {
-      _origOpenIncidentModal.call(this, id);
-    } finally {
-      db.incidents = _origIncidents;
-    }
-  };
-}
-
-// FIX 3: openWoundModal — db.wounds ไม่มี ต้อง fetch จาก Supabase แล้ว populate
-var _origOpenWoundModal = window.openWoundModal;
-if (typeof _origOpenWoundModal === 'function') {
-  window.openWoundModal = async function(id) {
-    if (id) {
-      // ถ้ามี id ให้ fetch จาก Supabase ก่อน แล้วใส่ใน db.wounds
-      var result = await supa.from('patient_wounds').select('*').eq('id', id).single();
-      if (!result.error && result.data) {
-        if (!db.wounds) db.wounds = [];
-        var mapped = mapWound(result.data);
-        var idx = db.wounds.findIndex(function(x){ return String(x.id) === String(id); });
-        if (idx >= 0) db.wounds[idx] = mapped;
-        else db.wounds.unshift(mapped);
-      }
-    }
-    _origOpenWoundModal.call(this, id);
-  };
-}
-
-// FIX 4+5: openDietModal — db.diets ไม่มี ต้อง fetch จาก Supabase
-var _origOpenDietModal = window.openDietModal;
-if (typeof _origOpenDietModal === 'function') {
-  window.openDietModal = async function(id) {
-    if (id) {
-      var result = await supa.from('patient_diets').select('*').eq('id', id).single();
-      if (!result.error && result.data) {
-        if (!db.diets) db.diets = [];
-        var mapped = mapDiet(result.data);
-        var idx = db.diets.findIndex(function(x){ return String(x.id) === String(id); });
-        if (idx >= 0) db.diets[idx] = mapped;
-        else db.diets.unshift(mapped);
-      }
-    }
-    _origOpenDietModal.call(this, id);
-  };
-}
-
-// FIX 5b: renderDietaryPage refresh — patch saveDiet ให้เรียก renderDietaryPage หลัง save เสมอ
-// (saveDiet มี renderDietaryPage อยู่แล้ว แต่ถ้า db.diets ว่างอยู่ จะ render ว่าง)
-// แก้ด้วยการ reload diet list จาก Supabase ก่อน render
-var _origSaveDiet = window.saveDiet;
-if (typeof _origSaveDiet === 'function') {
-  window.saveDiet = async function() {
-    await _origSaveDiet.apply(this, arguments);
-    // refresh db.diets จาก Supabase แล้วค่อย render
-    try {
-      var r2 = await supa.from('patient_diets').select('*').order('created_at', {ascending: false});
-      if (!r2.error && r2.data) {
-        db.diets = r2.data.map(mapDiet);
-        renderDietaryPage();
-      }
-    } catch(e) {}
-  };
-}
-
-console.log('[fix] v94 snippet loaded');
-
-// ===== FIX v95 =====
-
-// FIX A: saveWound — แก้ใหม่ทั้งหมด ไม่ใช้ _origSaveWound แต่ intercept ตรง Supabase insert/update
-// ปัญหาเดิม: v93 ใช้ _origSaveWound ที่ undefined เพราะ define ก่อน original load
+// [1] openTubeFeedModal — clear ta-tf-id ตอนเปิด modal ใหม่ (no id)
 (function() {
-  var _patchedSaveWound = window.saveWound;
-  // ลบ patch v93 ออก แล้วใส่ใหม่ที่ถูกต้อง
-  // intercept supa.from ตรงๆ ทุกครั้งที่ saveWound ถูกเรียก
-  window.saveWound = async function() {
-    var _origFrom = supa.from.bind(supa);
-    supa.from = function(table) {
-      var qb = _origFrom(table);
-      if (table === 'patient_wounds') {
-        var _origInsert = qb.insert.bind(qb);
-        var _origUpdate = qb.update.bind(qb);
-        qb.insert = function(data) {
-          if (data && data.recorder !== undefined) {
-            data.created_by = data.recorder;
-            delete data.recorder;
-          }
-          return _origInsert(data);
-        };
-        qb.update = function(data) {
-          if (data && data.recorder !== undefined) {
-            data.created_by = data.recorder;
-            delete data.recorder;
-          }
-          return _origUpdate(data);
-        };
-      }
-      return qb;
-    };
-    try {
-      // เรียก original saveWound โดยตรง (ไม่ใช้ _patchedSaveWound)
-      // หา original จาก pages.html inline script
-      var origFn = window._origSaveWoundV95;
-      if (origFn) {
-        await origFn.apply(this, arguments);
-      } else {
-        // fallback: ใช้ _patchedSaveWound แต่ถ้า patch อื่นพัง ให้ทำ manual save
-        await _patchedSaveWound.apply(this, arguments);
-      }
-    } catch(e) {
-      toast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
-    } finally {
-      supa.from = _origFrom;
-    }
-    // reload wound data หลัง save
-    try {
-      var wr = await supa.from('patient_wounds').select('*').order('wound_date', {ascending:false});
-      if (!wr.error && wr.data) db.wounds = wr.data.map(mapWound);
-    } catch(e2) {}
-  };
-})();
-
-// FIX B: renderDietaryPage — patch mapTubeFeed ให้ใช้ column ชื่อถูก (volume ไม่ใช่ volume_ml)
-var _origRenderDietaryPage = window.renderDietaryPage;
-if (typeof _origRenderDietaryPage === 'function') {
-  window.renderDietaryPage = async function() {
-    // reload tube_feedings ด้วย mapping ที่ถูก
-    if (supa) {
-      var tr = await supa.from('tube_feedings').select('*').order('date', {ascending: false});
-      if (!tr.error && tr.data) {
-        db.tubeFeeds = tr.data.map(function(r) {
-          return {
-            id: r.id, patientId: r.patient_id, patientName: r.patient_name,
-            date: r.date, time: r.time, meal: r.meal,
-            formula: r.formula,
-            volume: r.volume,       // column จริงชื่อ volume ไม่ใช่ volume_ml
-            water: r.water,
-            residual: r.residual,
-            recorder: r.recorder, note: r.note
-          };
-        });
-      }
-      // reload diets ด้วย
-      var dr = await supa.from('patient_diets').select('*').order('updated_at', {ascending: false});
-      if (!dr.error && dr.data) db.diets = dr.data.map(mapDiet);
-    }
-    await _origRenderDietaryPage.apply(this, arguments);
-  };
-}
-
-// FIX C: saveTubeFeed — reload หลัง save และ call renderDietaryPage
-var _origSaveTubeFeed = window.saveTubeFeed;
-if (typeof _origSaveTubeFeed === 'function') {
-  window.saveTubeFeed = async function() {
-    await _origSaveTubeFeed.apply(this, arguments);
-    // reload tube_feedings
-    try {
-      var tr2 = await supa.from('tube_feedings').select('*').order('date', {ascending: false});
-      if (!tr2.error && tr2.data) {
-        db.tubeFeeds = tr2.data.map(function(r) {
-          return { id:r.id, patientId:r.patient_id, patientName:r.patient_name, date:r.date, time:r.time, meal:r.meal, formula:r.formula, volume:r.volume, water:r.water, residual:r.residual, recorder:r.recorder, note:r.note };
-        });
-      }
-      if (typeof renderTubeFeedTable === 'function') renderTubeFeedTable();
-    } catch(e) {}
-  };
-}
-
-// FIX D: saveIncident — reload incidentReports หลัง save
-var _origSaveIncident = window.saveIncident;
-if (typeof _origSaveIncident === 'function') {
-  window.saveIncident = async function() {
-    await _origSaveIncident.apply(this, arguments);
-    // sync db.incidentReports กับ db.incidents
-    try {
-      if (db.incidents) db.incidentReports = db.incidents;
-    } catch(e) {}
-  };
-}
-
-console.log('[fix] v95 snippet loaded');
-
-// ===== FIX v96: แก้ tube_feedings column mapping (volume_ml → volume) =====
-// แก้ด้วยการ patch mapTubeFeed ตรงๆ แทนที่จะ wrap renderDietaryPage
-// เพราะ _origRenderDietaryPage ยัง overwrite db.tubeFeeds ด้วย volume_ml
-var _origMapTubeFeed = window.mapTubeFeed;
-if (typeof _origMapTubeFeed === 'function') {
-  window.mapTubeFeed = function(r) {
-    var result = _origMapTubeFeed.call(this, r);
-    // ถ้า volume undefined แต่มี volume_ml หรือ r.volume ให้ fix
-    if ((result.volume === undefined || result.volume === null) && r) {
-      result.volume = r.volume !== undefined ? r.volume : (r.volume_ml !== undefined ? r.volume_ml : 0);
-      result.water = r.water !== undefined ? r.water : (r.water_ml !== undefined ? r.water_ml : 0);
-      result.residual = r.residual !== undefined ? r.residual : (r.residual_ml !== undefined ? r.residual_ml : 0);
-    }
-    return result;
-  };
-}
-
-// patch renderTubeFeedTable ให้แสดง volume ถูก field
-var _origRenderTubeFeedTable = window.renderTubeFeedTable;
-if (typeof _origRenderTubeFeedTable === 'function') {
-  window.renderTubeFeedTable = function() {
-    // fix db.tubeFeeds ก่อน render — เปลี่ยน volumeMl/volume_ml เป็น volume
-    if (db.tubeFeeds) {
-      db.tubeFeeds = db.tubeFeeds.map(function(x) {
-        if (x.volume === undefined || x.volume === null) {
-          x.volume = x.volumeMl !== undefined ? x.volumeMl : 0;
-        }
-        if (x.water === undefined || x.water === null) {
-          x.water = x.waterMl !== undefined ? x.waterMl : 0;
-        }
-        if (x.residual === undefined || x.residual === null) {
-          x.residual = x.residualMl !== undefined ? x.residualMl : 0;
-        }
-        return x;
-      });
-    }
-    return _origRenderTubeFeedTable.apply(this, arguments);
-  };
-}
-
-// patch renderDietaryPage ให้ after fetch fix volume field ใน db.tubeFeeds
-var _origRenderDietaryPageV96 = window.renderDietaryPage;
-if (typeof _origRenderDietaryPageV96 === 'function') {
-  window.renderDietaryPage = async function() {
-    await _origRenderDietaryPageV96.apply(this, arguments);
-    // หลัง render เสร็จ fix volume fields ใน db.tubeFeeds แล้ว render table ใหม่
-    if (db.tubeFeeds && db.tubeFeeds.length > 0) {
-      var needFix = db.tubeFeeds.some(function(x){ return x.volume === undefined || x.volume === null; });
-      if (needFix) {
-        // reload จาก Supabase ด้วย column ที่ถูก
-        try {
-          var tr = await supa.from('tube_feedings').select('*').order('date', {ascending: false});
-          if (!tr.error && tr.data) {
-            db.tubeFeeds = tr.data.map(function(r) {
-              return { id:r.id, patientId:r.patient_id, patientName:r.patient_name,
-                date:r.date, time:r.time, meal:r.meal, formula:r.formula,
-                volume: r.volume, water: r.water, residual: r.residual,
-                recorder:r.recorder, note:r.note };
-            });
-            if (typeof _origRenderTubeFeedTable === 'function') _origRenderTubeFeedTable();
-          }
-        } catch(e) {}
-      }
-    }
-  };
-}
-
-console.log('[fix] v96 snippet loaded');
-
-// ===== FIX v97: แก้ปุ่มใน Patient Profile tabs =====
-
-// FIX 1: _renderPatIncidentTab — ปุ่ม "+ อุบัติเหตุ" ส่ง pid แต่ openIncidentModal ตีเป็น edit id
-// แก้ด้วยการ patch openIncidentModal ให้แยก patient UUID ออกจาก incident id
-// UUID จะมีความยาว 36 chars (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
-// incident id จาก Supabase เป็น int หรือ UUID ก็ได้ — ต้องตรวจว่า id นั้นมีอยู่ใน incidentReports ไหม
-var _prevOpenIncidentModal = window.openIncidentModal;
-if (typeof _prevOpenIncidentModal === 'function') {
-  window.openIncidentModal = function(id) {
-    // ถ้า id เป็น patient UUID (อยู่ใน db.patients) ให้เปิด modal ใหม่แล้ว pre-fill patient
-    if (id) {
-      var isPatient = (db.patients||[]).some(function(p){ return String(p.id) === String(id); });
-      if (isPatient) {
-        // เปิด modal ใหม่ (ไม่ส่ง id)
-        _prevOpenIncidentModal.call(this);
-        // pre-fill patient
-        setTimeout(function() {
-          var pat = (db.patients||[]).find(function(p){ return String(p.id) === String(id); });
-          if (pat) {
-            var idEl = document.getElementById('ta-inc-id');
-            var inpEl = document.getElementById('ta-inc-inp');
-            if (idEl) idEl.value = pat.id;
-            if (inpEl) inpEl.value = pat.name;
-          }
-        }, 100);
-        return;
-      }
-    }
-    _prevOpenIncidentModal.apply(this, arguments);
-  };
-}
-
-// FIX 2: openWoundModal — เช่นเดียวกัน ถ้าส่ง patient UUID ให้เปิด modal ใหม่แล้ว pre-fill
-var _prevOpenWoundModal = window.openWoundModal;
-if (typeof _prevOpenWoundModal === 'function') {
-  window.openWoundModal = function(id) {
-    if (id) {
-      var isPatient = (db.patients||[]).some(function(p){ return String(p.id) === String(id); });
-      if (isPatient) {
-        _prevOpenWoundModal.call(this);
-        setTimeout(function() {
-          var pat = (db.patients||[]).find(function(p){ return String(p.id) === String(id); });
-          if (pat) {
-            var idEl = document.getElementById('ta-wnd-id');
-            var inpEl = document.getElementById('ta-wnd-inp');
-            if (idEl) idEl.value = pat.id;
-            if (inpEl) inpEl.value = pat.name;
-          }
-        }, 100);
-        return;
-      }
-    }
-    _prevOpenWoundModal.apply(this, arguments);
-  };
-}
-
-// FIX 3: _renderPatDietaryTab ปุ่ม "+ กำหนดอาหาร" set field ผิดชื่อ (diet-patient-id vs ta-diet-id)
-// patch openDietModal ให้รับ patient_id เป็น argument ที่ 2 ได้
-var _prevOpenDietModal = window.openDietModal;
-if (typeof _prevOpenDietModal === 'function') {
-  window.openDietModal = async function(id, patientId) {
-    await _prevOpenDietModal.call(this, id);
-    // ถ้ามี patientId ส่งมา ให้ set ใน field ที่ถูกต้อง
-    if (patientId && !id) {
-      setTimeout(function() {
-        var pat = (db.patients||[]).find(function(p){ return String(p.id) === String(patientId); });
-        if (pat) {
-          var idEl = document.getElementById('ta-diet-id');
-          var inpEl = document.getElementById('ta-diet-inp');
-          if (idEl) idEl.value = pat.id;
-          if (inpEl) inpEl.value = pat.name;
-        }
-      }, 150);
-    }
-  };
-}
-
-// FIX 4: openTubeFeedModal — เช่นเดียวกัน
-var _prevOpenTubeFeedModal2 = window.openTubeFeedModal;
-if (typeof _prevOpenTubeFeedModal2 === 'function') {
+  var _orig = window.openTubeFeedModal;
+  if (typeof _orig !== 'function') return;
   window.openTubeFeedModal = async function(id, patientId) {
-    await _prevOpenTubeFeedModal2.call(this, id);
+    if (!id) {
+      var el = document.getElementById('ta-tf-id');
+      var el2 = document.getElementById('ta-tf-inp');
+      if (el) el.value = '';
+      if (el2) el2.value = '';
+    }
+    await _orig.call(this, id);
+    // ถ้ามี patientId (เรียกจาก patient profile) ให้ pre-fill
     if (patientId && !id) {
       setTimeout(function() {
-        var pat = (db.patients||[]).find(function(p){ return String(p.id) === String(patientId); });
+        var pat = (db.patients||[]).find(function(p){ return String(p.id)===String(patientId); });
         if (pat) {
           var idEl = document.getElementById('ta-tf-id');
           var inpEl = document.getElementById('ta-tf-inp');
@@ -455,63 +63,218 @@ if (typeof _prevOpenTubeFeedModal2 === 'function') {
       }, 150);
     }
   };
-}
+})();
 
-// FIX 5: patch clinical-profile.js ปุ่ม dietary ให้ส่ง patientId ไปด้วย
-// override _renderPatDietaryTab ให้ปุ่มเรียก openDietModal(null, pid) และ openTubeFeedModal(null, pid)
-var _prevRenderPatDietaryTab = window._renderPatDietaryTab;
-if (typeof _prevRenderPatDietaryTab === 'function') {
+// [2] saveWound — map recorder → created_by โดยไม่แตะ supa.from
+// แก้ตรงใน row object ก่อนส่ง ด้วยการ patch document.getElementById ชั่วคราวสำหรับ recorder field
+(function() {
+  var _origSaveWound = window.saveWound;
+  if (typeof _origSaveWound !== 'function') return;
+  window.saveWound = async function() {
+    // intercept เฉพาะ supa.from('patient_wounds') ด้วยวิธีที่ไม่ทำลาย chain
+    var _origSupaFrom = supa.from.bind(supa);
+    supa.from = function(table) {
+      var qb = _origSupaFrom(table);
+      if (table === 'patient_wounds') {
+        // wrap insert
+        var _qbInsert = qb.insert.bind(qb);
+        qb.insert = function(data) {
+          if (data && data.recorder !== undefined) {
+            data = Object.assign({}, data, { created_by: data.recorder });
+            delete data.recorder;
+          }
+          return _qbInsert(data);
+        };
+        // wrap update
+        var _qbUpdate = qb.update.bind(qb);
+        qb.update = function(data) {
+          if (data && data.recorder !== undefined) {
+            data = Object.assign({}, data, { created_by: data.recorder });
+            delete data.recorder;
+          }
+          return _qbUpdate(data);
+        };
+      }
+      return qb;
+    };
+    try {
+      await _origSaveWound.apply(this, arguments);
+    } finally {
+      supa.from = _origSupaFrom;
+    }
+    // reload wound data
+    try {
+      var wr = await _origSupaFrom('patient_wounds').select('*').order('wound_date',{ascending:false});
+      if (!wr.error && wr.data) db.wounds = wr.data.map(mapWound);
+      // refresh patient profile tab ถ้าเปิดอยู่
+      setTimeout(function(){ try { switchPatTab('incident'); } catch(e){} }, 300);
+    } catch(e2) {}
+  };
+})();
+
+// [3] openIncidentModal — detect patient UUID → เปิด add mode + pre-fill
+(function() {
+  var _orig = window.openIncidentModal;
+  if (typeof _orig !== 'function') return;
+  window.openIncidentModal = function(id) {
+    if (id && (db.patients||[]).some(function(p){ return String(p.id)===String(id); })) {
+      _orig.call(this); // เปิด add mode
+      setTimeout(function() {
+        var pat = (db.patients||[]).find(function(p){ return String(p.id)===String(id); });
+        if (pat) {
+          var idEl = document.getElementById('ta-inc-id');
+          var inpEl = document.getElementById('ta-inc-inp');
+          if (idEl) idEl.value = pat.id;
+          if (inpEl) inpEl.value = pat.name;
+        }
+      }, 100);
+      return;
+    }
+    _orig.apply(this, arguments);
+  };
+})();
+
+// [4] openWoundModal — detect patient UUID → เปิด add mode + pre-fill + fetch ก่อน edit
+(function() {
+  var _orig = window.openWoundModal;
+  if (typeof _orig !== 'function') return;
+  window.openWoundModal = async function(id) {
+    if (id && (db.patients||[]).some(function(p){ return String(p.id)===String(id); })) {
+      _orig.call(this); // เปิด add mode
+      setTimeout(function() {
+        var pat = (db.patients||[]).find(function(p){ return String(p.id)===String(id); });
+        if (pat) {
+          var idEl = document.getElementById('ta-wnd-id');
+          var inpEl = document.getElementById('ta-wnd-inp');
+          if (idEl) idEl.value = pat.id;
+          if (inpEl) inpEl.value = pat.name;
+        }
+      }, 100);
+      return;
+    }
+    // edit mode — fetch ข้อมูลจาก Supabase ก่อน
+    if (id) {
+      try {
+        var result = await supa.from('patient_wounds').select('*').eq('id', id).single();
+        if (!result.error && result.data) {
+          if (!db.wounds) db.wounds = [];
+          var mapped = mapWound(result.data);
+          var idx = db.wounds.findIndex(function(x){ return String(x.id)===String(id); });
+          if (idx >= 0) db.wounds[idx] = mapped; else db.wounds.unshift(mapped);
+        }
+      } catch(e) {}
+    }
+    _orig.apply(this, arguments);
+  };
+})();
+
+// [5] openDietModal — fetch ก่อน edit + รับ patientId
+(function() {
+  var _orig = window.openDietModal;
+  if (typeof _orig !== 'function') return;
+  window.openDietModal = async function(id, patientId) {
+    if (id) {
+      try {
+        var result = await supa.from('patient_diets').select('*').eq('id', id).single();
+        if (!result.error && result.data) {
+          if (!db.diets) db.diets = [];
+          var mapped = mapDiet(result.data);
+          var idx = db.diets.findIndex(function(x){ return String(x.id)===String(id); });
+          if (idx >= 0) db.diets[idx] = mapped; else db.diets.unshift(mapped);
+        }
+      } catch(e) {}
+    }
+    _orig.call(this, id);
+    if (patientId && !id) {
+      setTimeout(function() {
+        var pat = (db.patients||[]).find(function(p){ return String(p.id)===String(patientId); });
+        if (pat) {
+          var idEl = document.getElementById('ta-diet-id');
+          var inpEl = document.getElementById('ta-diet-inp');
+          if (idEl) idEl.value = pat.id;
+          if (inpEl) inpEl.value = pat.name;
+        }
+      }, 150);
+    }
+  };
+})();
+
+// [6] _renderPatDietaryTab — patch ปุ่มให้ส่ง patientId
+(function() {
+  var _orig = window._renderPatDietaryTab;
+  if (typeof _orig !== 'function') return;
   window._renderPatDietaryTab = function(pid, listEl) {
-    // เรียก original ก่อน
-    _prevRenderPatDietaryTab.call(this, pid, listEl);
-    // หลังจากนั้น patch ปุ่มที่ถูก render ให้ส่ง patientId ถูก
+    _orig.call(this, pid, listEl);
     setTimeout(function() {
-      var btnWrap = document.getElementById('pat-dietary-btns-' + pid);
-      if (!btnWrap) return;
-      var btns = btnWrap.querySelectorAll('button');
-      if (btns[0]) {
-        btns[0].onclick = null;
-        btns[0].addEventListener('click', function() {
-          if (typeof openDietModal === 'function') openDietModal(null, pid);
-        });
-      }
-      if (btns[1]) {
-        btns[1].onclick = null;
-        btns[1].addEventListener('click', function() {
-          if (typeof openTubeFeedModal === 'function') openTubeFeedModal(null, pid);
-        });
-      }
+      var wrap = document.getElementById('pat-dietary-btns-'+pid);
+      if (!wrap) return;
+      var btns = wrap.querySelectorAll('button');
+      if (btns[0]) { btns[0].onclick = function(){ openDietModal(null, pid); }; }
+      if (btns[1]) { btns[1].onclick = function(){ openTubeFeedModal(null, pid); }; }
     }, 200);
   };
-}
+})();
 
-// FIX 6: หลัง saveIncident/saveWound/saveDiet/saveTubeFeed ให้ refresh แท็บใน patient profile ด้วย
-// patch โดย call switchPatTab หลัง save ถ้า patient profile เปิดอยู่
-var _wrapSaveAndRefreshPatTab = function(origFn, tabName) {
-  return async function() {
-    await origFn.apply(this, arguments);
-    // ถ้า modal ปิดแล้ว (save สำเร็จ) และ patient profile เปิดอยู่
-    setTimeout(function() {
-      if (typeof switchPatTab === 'function') {
-        try { switchPatTab(tabName); } catch(e) {}
-      }
-    }, 300);
+// [7] saveDiet + saveTubeFeed — reload data หลัง save + refresh tab
+(function() {
+  var _origSaveDiet = window.saveDiet;
+  if (typeof _origSaveDiet === 'function') {
+    window.saveDiet = async function() {
+      await _origSaveDiet.apply(this, arguments);
+      try {
+        var r = await supa.from('patient_diets').select('*').order('updated_at',{ascending:false});
+        if (!r.error && r.data) { db.diets = r.data.map(mapDiet); }
+        if (typeof renderDietaryPage === 'function') renderDietaryPage();
+        setTimeout(function(){ try { switchPatTab('dietary'); } catch(e){} }, 300);
+      } catch(e) {}
+    };
+  }
+  var _origSaveTube = window.saveTubeFeed;
+  if (typeof _origSaveTube === 'function') {
+    window.saveTubeFeed = async function() {
+      await _origSaveTube.apply(this, arguments);
+      try {
+        var r2 = await supa.from('tube_feedings').select('*').order('date',{ascending:false});
+        if (!r2.error && r2.data) {
+          db.tubeFeeds = r2.data.map(function(x){
+            return { id:x.id, patientId:x.patient_id, patientName:x.patient_name,
+              date:x.date, time:x.time, meal:x.meal, formula:x.formula,
+              volume:x.volume, water:x.water, residual:x.residual,
+              recorder:x.recorder, note:x.note };
+          });
+        }
+        if (typeof renderTubeFeedTable === 'function') renderTubeFeedTable();
+        setTimeout(function(){ try { switchPatTab('dietary'); } catch(e){} }, 300);
+      } catch(e) {}
+    };
+  }
+})();
+
+// [8] openEditAllergyModal — fix params สลับกัน
+(function() {
+  var _orig = window.openEditAllergyModal;
+  if (typeof _orig !== 'function') return;
+  window.openEditAllergyModal = function(first, second) {
+    var isUUID = function(s){ return typeof s === 'string' && s.length > 20 && s.includes('-'); };
+    if (!isUUID(first) && isUUID(second)) {
+      return _orig.call(this, second, first); // สลับกลับ
+    }
+    return _orig.apply(this, arguments);
   };
-};
+})();
 
-// ใช้ originals ก่อน patch ปัจจุบัน
-if (typeof saveIncident === 'function') {
-  window.saveIncident = _wrapSaveAndRefreshPatTab(window.saveIncident, 'incident');
-}
-if (typeof saveWound === 'function') {
-  window.saveWound = _wrapSaveAndRefreshPatTab(window.saveWound, 'incident');
-}
-if (typeof saveDiet === 'function') {
-  window.saveDiet = _wrapSaveAndRefreshPatTab(window.saveDiet, 'dietary');
-}
-if (typeof saveTubeFeed === 'function') {
-  window.saveTubeFeed = _wrapSaveAndRefreshPatTab(window.saveTubeFeed, 'dietary');
-}
+// [9] saveIncident — refresh patient tab หลัง save
+(function() {
+  var _orig = window.saveIncident;
+  if (typeof _orig !== 'function') return;
+  window.saveIncident = async function() {
+    await _orig.apply(this, arguments);
+    try {
+      db.incidentReports = db.incidents || db.incidentReports || [];
+      setTimeout(function(){ try { switchPatTab('incident'); } catch(e){} }, 300);
+    } catch(e) {}
+  };
+})();
 
-console.log('[fix] v97 snippet loaded');
+console.log('[fix] v98 snippet loaded');
 })();
