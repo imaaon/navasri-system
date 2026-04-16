@@ -51,4 +51,41 @@ if (typeof _origOpenTubeFeedModal === 'function') {
   };
 }
 console.log('[fix] v92 snippet loaded');
+
+// ===== FIX: saveWound — map recorder → created_by (v93) =====
+var _origSaveWound = window.saveWound;
+if (typeof _origSaveWound === 'function') {
+  window.saveWound = async function() {
+    // patch supa.from('patient_wounds').insert/update ให้ map recorder → created_by
+    var _origFrom = supa.from.bind(supa);
+    supa.from = function(table) {
+      var qb = _origFrom(table);
+      if (table === 'patient_wounds') {
+        var _origInsert = qb.insert.bind(qb);
+        var _origUpdate = qb.update.bind(qb);
+        qb.insert = function(data) {
+          if (data && data.recorder !== undefined) {
+            data.created_by = data.recorder;
+            delete data.recorder;
+          }
+          return _origInsert(data);
+        };
+        qb.update = function(data) {
+          if (data && data.recorder !== undefined) {
+            data.created_by = data.recorder;
+            delete data.recorder;
+          }
+          return _origUpdate(data);
+        };
+      }
+      return qb;
+    };
+    try {
+      await _origSaveWound.apply(this, arguments);
+    } finally {
+      supa.from = _origFrom;
+    }
+  };
+}
+console.log('[fix] v93 snippet loaded');
 })();
