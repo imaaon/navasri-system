@@ -88,15 +88,15 @@ function getCurrentShift() {
 let _nursingEditId = null;
 function openAddNursingModal(patientId, date, shift, noteId=null) {
   _nursingEditId = noteId;
-  document.getElementById('nursing-pat-id').value = patientId;
-  document.getElementById('nursing-date').value = date || new Date().toISOString().split('T')[0];
-  document.getElementById('nursing-shift').value = shift || getCurrentShift();
+  document.getElementById('nursing-pat-id')?.value = patientId;
+  document.getElementById('nursing-date')?.value = date || new Date().toISOString().split('T')[0];
+  document.getElementById('nursing-shift')?.value = shift || getCurrentShift();
   const nowTime = new Date().toTimeString().slice(0,5);
-  document.getElementById('nursing-time').value = nowTime;
-  document.getElementById('nursing-by').value = currentUser?.displayName || currentUser?.username || '';
+  document.getElementById('nursing-time')?.value = nowTime;
+  document.getElementById('nursing-by')?.value = currentUser?.displayName || currentUser?.username || '';
   // Clear all fields
   ['nursing-condition','nursing-consciousness','nursing-eating',
-   'nursing-elimination','nursing-sleep','nursing-activity','nursing-wound',
+   'nursing-sleep','nursing-activity','nursing-wound',
    'nursing-iv','nursing-o2','nursing-handover'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.value = '';
@@ -105,19 +105,19 @@ function openAddNursingModal(patientId, date, shift, noteId=null) {
     const pid = String(patientId);
     const note = (db.nursingNotes[pid]||[]).find(n=>n.id==noteId);
     if (note) {
-      document.getElementById('nursing-condition').value    = note.generalCondition||'';
-      document.getElementById('nursing-consciousness').value= note.consciousness||'';
-      document.getElementById('nursing-pain').value         = note.pain||'';
-      document.getElementById('nursing-eating').value       = note.eating||'';
-      document.getElementById('nursing-elimination').value  = note.elimination||'';
-      document.getElementById('nursing-sleep').value        = note.sleep||'';
-      document.getElementById('nursing-activity').value     = note.activity||'';
-      document.getElementById('nursing-wound').value        = note.wound||'';
-      document.getElementById('nursing-iv').value           = note.iv||'';
-      document.getElementById('nursing-o2').value           = note.o2||'';
-      document.getElementById('nursing-handover').value     = note.handoverNote||'';
-      document.getElementById('nursing-by').value           = note.recordedBy||'';
-      document.getElementById('nursing-time').value          = note.time||nowTime;
+      document.getElementById('nursing-condition')?.value = note.generalCondition||'';
+      document.getElementById('nursing-consciousness')?.value = note.consciousness||'';
+      document.getElementById('nursing-pain')?.value = note.pain||'';
+      document.getElementById('nursing-eating')?.value = note.eating||'';
+      // elimination removed
+      document.getElementById('nursing-sleep')?.value = note.sleep||'';
+      document.getElementById('nursing-activity')?.value = note.activity||'';
+      document.getElementById('nursing-wound')?.value = note.wound||'';
+      document.getElementById('nursing-iv')?.value = note.iv||'';
+      document.getElementById('nursing-o2')?.value = note.o2||'';
+      document.getElementById('nursing-handover')?.value = note.handoverNote||'';
+      document.getElementById('nursing-by')?.value = note.recordedBy||'';
+      document.getElementById('nursing-time')?.value = note.time||nowTime;
     }
   }
   document.getElementById('modal-nursing-title').textContent = noteId ? '✏️ แก้ไขบันทึกพยาบาล' : '📋 บันทึกทางการพยาบาล';
