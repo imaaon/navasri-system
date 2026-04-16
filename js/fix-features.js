@@ -291,4 +291,73 @@ if (typeof _origSaveIncident === 'function') {
 }
 
 console.log('[fix] v95 snippet loaded');
+
+// ===== FIX v96: แก้ tube_feedings column mapping (volume_ml → volume) =====
+// แก้ด้วยการ patch mapTubeFeed ตรงๆ แทนที่จะ wrap renderDietaryPage
+// เพราะ _origRenderDietaryPage ยัง overwrite db.tubeFeeds ด้วย volume_ml
+var _origMapTubeFeed = window.mapTubeFeed;
+if (typeof _origMapTubeFeed === 'function') {
+  window.mapTubeFeed = function(r) {
+    var result = _origMapTubeFeed.call(this, r);
+    // ถ้า volume undefined แต่มี volume_ml หรือ r.volume ให้ fix
+    if ((result.volume === undefined || result.volume === null) && r) {
+      result.volume = r.volume !== undefined ? r.volume : (r.volume_ml !== undefined ? r.volume_ml : 0);
+      result.water = r.water !== undefined ? r.water : (r.water_ml !== undefined ? r.water_ml : 0);
+      result.residual = r.residual !== undefined ? r.residual : (r.residual_ml !== undefined ? r.residual_ml : 0);
+    }
+    return result;
+  };
+}
+
+// patch renderTubeFeedTable ให้แสดง volume ถูก field
+var _origRenderTubeFeedTable = window.renderTubeFeedTable;
+if (typeof _origRenderTubeFeedTable === 'function') {
+  window.renderTubeFeedTable = function() {
+    // fix db.tubeFeeds ก่อน render — เปลี่ยน volumeMl/volume_ml เป็น volume
+    if (db.tubeFeeds) {
+      db.tubeFeeds = db.tubeFeeds.map(function(x) {
+        if (x.volume === undefined || x.volume === null) {
+          x.volume = x.volumeMl !== undefined ? x.volumeMl : 0;
+        }
+        if (x.water === undefined || x.water === null) {
+          x.water = x.waterMl !== undefined ? x.waterMl : 0;
+        }
+        if (x.residual === undefined || x.residual === null) {
+          x.residual = x.residualMl !== undefined ? x.residualMl : 0;
+        }
+        return x;
+      });
+    }
+    return _origRenderTubeFeedTable.apply(this, arguments);
+  };
+}
+
+// patch renderDietaryPage ให้ after fetch fix volume field ใน db.tubeFeeds
+var _origRenderDietaryPageV96 = window.renderDietaryPage;
+if (typeof _origRenderDietaryPageV96 === 'function') {
+  window.renderDietaryPage = async function() {
+    await _origRenderDietaryPageV96.apply(this, arguments);
+    // หลัง render เสร็จ fix volume fields ใน db.tubeFeeds แล้ว render table ใหม่
+    if (db.tubeFeeds && db.tubeFeeds.length > 0) {
+      var needFix = db.tubeFeeds.some(function(x){ return x.volume === undefined || x.volume === null; });
+      if (needFix) {
+        // reload จาก Supabase ด้วย column ที่ถูก
+        try {
+          var tr = await supa.from('tube_feedings').select('*').order('date', {ascending: false});
+          if (!tr.error && tr.data) {
+            db.tubeFeeds = tr.data.map(function(r) {
+              return { id:r.id, patientId:r.patient_id, patientName:r.patient_name,
+                date:r.date, time:r.time, meal:r.meal, formula:r.formula,
+                volume: r.volume, water: r.water, residual: r.residual,
+                recorder:r.recorder, note:r.note };
+            });
+            if (typeof _origRenderTubeFeedTable === 'function') _origRenderTubeFeedTable();
+          }
+        } catch(e) {}
+      }
+    }
+  };
+}
+
+console.log('[fix] v96 snippet loaded');
 })();
