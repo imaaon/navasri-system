@@ -62,6 +62,17 @@ function lookupItemByBarcode(code) {
   if (!code) return null;
   return _barcodeMap[code] || _barcodeExtMap[code] || null;
 }
+
+// ── Data limit warning ──────────────────────────────────────────────────────
+function _checkDataLimit(data, tableName, limit) {
+  if (Array.isArray(data) && data.length >= limit) {
+    console.warn('[DATA LIMIT] ' + tableName + ' โหลดครบ limit ' + limit + ' รายการ — อาจมีข้อมูลเพิ่มเติมที่ยังไม่โหลด');
+    if (typeof toast === 'function') {
+      toast('⚠️ ' + tableName + ': โหลดข้อมูลครบ ' + limit + ' รายการ (อาจมีข้อมูลเพิ่มเติม)', 'warning', 5000);
+    }
+  }
+  return data;
+}
 async function loadDB() {
   showLoadingOverlay(true);
   try {
