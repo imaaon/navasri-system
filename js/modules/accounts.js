@@ -119,7 +119,7 @@ async function saveAccount() {
       // ถ้ามีการเปลี่ยน password ให้ใช้ Edge Function
       if (pass1) {
         const { data: { session } } = await supa.auth.getSession();
-        const res = await fetch('https://umueucsxowjaurlaubwa.supabase.co/functions/v1/fix-features', {
+        const res = await fetch('https://umueucsxowjaurlaubwa.supabase.co/functions/v1/manage-users', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -134,7 +134,7 @@ async function saveAccount() {
     } else {
       // === เพิ่มใหม่: สร้างผ่าน Edge Function (ต้องการ service_role) ===
       const { data: { session } } = await supa.auth.getSession();
-      const res = await fetch('https://umueucsxowjaurlaubwa.supabase.co/functions/v1/fix-features', {
+      const res = await fetch('https://umueucsxowjaurlaubwa.supabase.co/functions/v1/manage-users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ async function deleteAccount(id, username) {
   if (!confirm('ลบ Account "' + username + '" หรือไม่?')) return;
   try {
     const { data: { session } } = await supa.auth.getSession();
-    const res = await fetch('https://umueucsxowjaurlaubwa.supabase.co/functions/v1/fix-features', {
+    const res = await fetch('https://umueucsxowjaurlaubwa.supabase.co/functions/v1/manage-users', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
