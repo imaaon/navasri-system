@@ -176,4 +176,119 @@ if (typeof _origSaveDiet === 'function') {
 }
 
 console.log('[fix] v94 snippet loaded');
+
+// ===== FIX v95 =====
+
+// FIX A: saveWound — แก้ใหม่ทั้งหมด ไม่ใช้ _origSaveWound แต่ intercept ตรง Supabase insert/update
+// ปัญหาเดิม: v93 ใช้ _origSaveWound ที่ undefined เพราะ define ก่อน original load
+(function() {
+  var _patchedSaveWound = window.saveWound;
+  // ลบ patch v93 ออก แล้วใส่ใหม่ที่ถูกต้อง
+  // intercept supa.from ตรงๆ ทุกครั้งที่ saveWound ถูกเรียก
+  window.saveWound = async function() {
+    var _origFrom = supa.from.bind(supa);
+    supa.from = function(table) {
+      var qb = _origFrom(table);
+      if (table === 'patient_wounds') {
+        var _origInsert = qb.insert.bind(qb);
+        var _origUpdate = qb.update.bind(qb);
+        qb.insert = function(data) {
+          if (data && data.recorder !== undefined) {
+            data.created_by = data.recorder;
+            delete data.recorder;
+          }
+          return _origInsert(data);
+        };
+        qb.update = function(data) {
+          if (data && data.recorder !== undefined) {
+            data.created_by = data.recorder;
+            delete data.recorder;
+          }
+          return _origUpdate(data);
+        };
+      }
+      return qb;
+    };
+    try {
+      // เรียก original saveWound โดยตรง (ไม่ใช้ _patchedSaveWound)
+      // หา original จาก pages.html inline script
+      var origFn = window._origSaveWoundV95;
+      if (origFn) {
+        await origFn.apply(this, arguments);
+      } else {
+        // fallback: ใช้ _patchedSaveWound แต่ถ้า patch อื่นพัง ให้ทำ manual save
+        await _patchedSaveWound.apply(this, arguments);
+      }
+    } catch(e) {
+      toast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
+    } finally {
+      supa.from = _origFrom;
+    }
+    // reload wound data หลัง save
+    try {
+      var wr = await supa.from('patient_wounds').select('*').order('wound_date', {ascending:false});
+      if (!wr.error && wr.data) db.wounds = wr.data.map(mapWound);
+    } catch(e2) {}
+  };
+})();
+
+// FIX B: renderDietaryPage — patch mapTubeFeed ให้ใช้ column ชื่อถูก (volume ไม่ใช่ volume_ml)
+var _origRenderDietaryPage = window.renderDietaryPage;
+if (typeof _origRenderDietaryPage === 'function') {
+  window.renderDietaryPage = async function() {
+    // reload tube_feedings ด้วย mapping ที่ถูก
+    if (supa) {
+      var tr = await supa.from('tube_feedings').select('*').order('date', {ascending: false});
+      if (!tr.error && tr.data) {
+        db.tubeFeeds = tr.data.map(function(r) {
+          return {
+            id: r.id, patientId: r.patient_id, patientName: r.patient_name,
+            date: r.date, time: r.time, meal: r.meal,
+            formula: r.formula,
+            volume: r.volume,       // column จริงชื่อ volume ไม่ใช่ volume_ml
+            water: r.water,
+            residual: r.residual,
+            recorder: r.recorder, note: r.note
+          };
+        });
+      }
+      // reload diets ด้วย
+      var dr = await supa.from('patient_diets').select('*').order('updated_at', {ascending: false});
+      if (!dr.error && dr.data) db.diets = dr.data.map(mapDiet);
+    }
+    await _origRenderDietaryPage.apply(this, arguments);
+  };
+}
+
+// FIX C: saveTubeFeed — reload หลัง save และ call renderDietaryPage
+var _origSaveTubeFeed = window.saveTubeFeed;
+if (typeof _origSaveTubeFeed === 'function') {
+  window.saveTubeFeed = async function() {
+    await _origSaveTubeFeed.apply(this, arguments);
+    // reload tube_feedings
+    try {
+      var tr2 = await supa.from('tube_feedings').select('*').order('date', {ascending: false});
+      if (!tr2.error && tr2.data) {
+        db.tubeFeeds = tr2.data.map(function(r) {
+          return { id:r.id, patientId:r.patient_id, patientName:r.patient_name, date:r.date, time:r.time, meal:r.meal, formula:r.formula, volume:r.volume, water:r.water, residual:r.residual, recorder:r.recorder, note:r.note };
+        });
+      }
+      if (typeof renderTubeFeedTable === 'function') renderTubeFeedTable();
+    } catch(e) {}
+  };
+}
+
+// FIX D: saveIncident — reload incidentReports หลัง save
+var _origSaveIncident = window.saveIncident;
+if (typeof _origSaveIncident === 'function') {
+  window.saveIncident = async function() {
+    await _origSaveIncident.apply(this, arguments);
+    // sync db.incidentReports กับ db.incidents
+    try {
+      if (db.incidents) db.incidentReports = db.incidents;
+    } catch(e) {}
+  };
+}
+
+console.log('[fix] v95 snippet loaded');
 })();
