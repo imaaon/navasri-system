@@ -277,4 +277,218 @@ console.log('[fix] v90 snippet loaded');
 })();
 
 console.log('[fix] v98 snippet loaded');
+
+
+// ===== FIX v99: patient profile tabs — render ข้อมูลครบ + deleteAllergy params fix =====
+
+// [1] deleteAllergy — params สลับ (eid, pid) แต่ fn รับ (patId, allergyId)
+(function() {
+  var _orig = window.deleteAllergy;
+  if (typeof _orig !== 'function') return;
+  window.deleteAllergy = function(first, second) {
+    var isUUID = function(s){ return typeof s === 'string' && s.length > 20 && s.includes('-'); };
+    if (!isUUID(first) && isUUID(second)) {
+      return _orig.call(this, second, first); // สลับกลับ: patId, allergyId
+    }
+    return _orig.apply(this, arguments);
+  };
+})();
+
+// [2] _renderPatIncidentTab — แสดงข้อมูลครบ (อุบัติเหตุ + แผลกดทับ)
+(function() {
+  var _orig = window._renderPatIncidentTab;
+  if (typeof _orig !== 'function') return;
+  window._renderPatIncidentTab = function(pid, listEl) {
+    // เพิ่มปุ่มก่อน (เหมือนเดิม)
+    if (!document.getElementById('pat-incident-btns-'+pid)) {
+      var wrap = document.createElement('div');
+      wrap.id = 'pat-incident-btns-'+pid;
+      wrap.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
+      var b1 = document.createElement('button');
+      b1.className = 'btn btn-primary btn-sm';
+      b1.innerHTML = '⚠️ + อุบัติเหตุ';
+      b1.onclick = function(){ openIncidentModal(pid); };
+      var b2 = document.createElement('button');
+      b2.className = 'btn btn-secondary btn-sm';
+      b2.innerHTML = '🩹 + แผลกดทับ';
+      b2.onclick = function(){ openWoundModal(pid); };
+      wrap.appendChild(b1); wrap.appendChild(b2);
+      listEl.parentNode.insertBefore(wrap, listEl);
+    }
+    listEl.innerHTML = '<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
+    Promise.all([
+      supa.from('incident_reports').select('*').eq('patient_id', pid).order('date',{ascending:false}),
+      supa.from('patient_wounds').select('*').eq('patient_id', pid).order('wound_date',{ascending:false})
+    ]).then(function(rs) {
+      var iD = rs[0].data || [], wD = rs[1].data || [];
+      if (!iD.length && !wD.length) {
+        listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3)">ไม่มีข้อมูล</div>';
+        return;
+      }
+      var frag = document.createDocumentFragment();
+
+      // อุบัติเหตุ
+      iD.forEach(function(x) {
+        var d = document.createElement('div');
+        d.className = 'card';
+        d.style.cssText = 'margin-bottom:8px;padding:12px;';
+        d.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+            '<div style="flex:1;">' +
+              '<div style="font-weight:600;font-size:13px;">⚠️ ' + (x.type||'') + ' <span style="font-size:11px;color:var(--text3);">' + (x.date||'') + ' ' + (x.time||'') + '</span></div>' +
+              '<div style="font-size:12px;margin-top:4px;color:var(--text2);">สถานที่: ' + (x.location||'-') + ' | ความรุนแรง: ' + (x.severity||'-') + ' | แจ้ง: ' + (x.notified||'-') + '</div>' +
+              '<div style="font-size:13px;margin-top:4px;">' + (x.detail||'') + '</div>' +
+              (x.first_aid ? '<div style="font-size:12px;color:var(--text2);margin-top:2px;">การปฐมพยาบาล: ' + x.first_aid + '</div>' : '') +
+              '<div style="font-size:11px;color:var(--text3);margin-top:2px;">ผู้บันทึก: ' + (x.recorder||'-') + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">' +
+              '<button class="btn btn-ghost btn-sm" data-inc-id="'+x.id+'">✏️</button>' +
+              '<button class="btn btn-ghost btn-sm" style="color:#c0392b;" data-inc-del="'+x.id+'">🗑️</button>' +
+            '</div>' +
+          '</div>';
+        d.querySelector('[data-inc-id]').addEventListener('click', function(){ openIncidentModal(this.dataset.incId); });
+        d.querySelector('[data-inc-del]').addEventListener('click', function(){
+          var id = this.dataset.incDel;
+          if (!confirm('ลบรายการนี้?')) return;
+          supa.from('incident_reports').delete().eq('id', id).then(function(){
+            switchPatTab('incident'); toast('ลบแล้ว','success');
+          });
+        });
+        frag.appendChild(d);
+      });
+
+      // แผลกดทับ
+      wD.forEach(function(x) {
+        var d = document.createElement('div');
+        d.className = 'card';
+        d.style.cssText = 'margin-bottom:8px;padding:12px;border-left:3px solid #e67e22;';
+        d.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+            '<div style="flex:1;">' +
+              '<div style="font-weight:600;font-size:13px;">🩹 ' + (x.location||'') + ' Stage ' + (x.stage||'') + ' <span style="font-size:11px;color:var(--text3);">' + (x.wound_date||'') + '</span></div>' +
+              (x.size_cm ? '<div style="font-size:12px;color:var(--text2);margin-top:2px;">ขนาด: ' + x.size_cm + ' cm</div>' : '') +
+              (x.appearance ? '<div style="font-size:12px;margin-top:2px;">ลักษณะ: ' + x.appearance + '</div>' : '') +
+              (x.dressing ? '<div style="font-size:12px;color:var(--text2);margin-top:2px;">การรักษา: ' + x.dressing + '</div>' : '') +
+              '<div style="font-size:11px;color:var(--text3);margin-top:2px;">สถานะ: ' + (x.status||'-') + ' | ผู้บันทึก: ' + (x.created_by||'-') + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">' +
+              '<button class="btn btn-ghost btn-sm" data-wnd-id="'+x.id+'">✏️</button>' +
+              '<button class="btn btn-ghost btn-sm" style="color:#c0392b;" data-wnd-del="'+x.id+'">🗑️</button>' +
+            '</div>' +
+          '</div>';
+        d.querySelector('[data-wnd-id]').addEventListener('click', function(){ openWoundModal(this.dataset.wndId); });
+        d.querySelector('[data-wnd-del]').addEventListener('click', function(){
+          var id = this.dataset.wndDel;
+          if (!confirm('ลบรายการนี้?')) return;
+          supa.from('patient_wounds').delete().eq('id', id).then(function(){
+            switchPatTab('incident'); toast('ลบแล้ว','success');
+          });
+        });
+        frag.appendChild(d);
+      });
+
+      listEl.innerHTML = ''; listEl.appendChild(frag);
+    });
+  };
+})();
+
+// [3] _renderPatDietaryTab — แสดงข้อมูลครบ (โภชนาการ + สายให้อาหาร)
+(function() {
+  var _orig = window._renderPatDietaryTab;
+  if (typeof _orig !== 'function') return;
+  window._renderPatDietaryTab = function(pid, listEl) {
+    if (!document.getElementById('pat-dietary-btns-'+pid)) {
+      var wrap = document.createElement('div');
+      wrap.id = 'pat-dietary-btns-'+pid;
+      wrap.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
+      var b1 = document.createElement('button');
+      b1.className = 'btn btn-primary btn-sm';
+      b1.textContent = '🍽️ + กำหนดอาหาร';
+      b1.onclick = function(){ openDietModal(null, pid); };
+      var b2 = document.createElement('button');
+      b2.className = 'btn btn-secondary btn-sm';
+      b2.textContent = '🧪 + สายให้อาหาร';
+      b2.onclick = function(){ openTubeFeedModal(null, pid); };
+      wrap.appendChild(b1); wrap.appendChild(b2);
+      listEl.parentNode.insertBefore(wrap, listEl);
+    }
+    listEl.innerHTML = '<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
+    Promise.all([
+      supa.from('patient_diets').select('*').eq('patient_id', pid).order('updated_at',{ascending:false}),
+      supa.from('tube_feedings').select('*').eq('patient_id', pid).order('created_at',{ascending:false})
+    ]).then(function(rs) {
+      var dD = rs[0].data || [], tD = rs[1].data || [];
+      if (!dD.length && !tD.length) {
+        listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3)">ไม่มีข้อมูล</div>';
+        return;
+      }
+      var frag = document.createDocumentFragment();
+
+      // โภชนาการ
+      dD.forEach(function(x) {
+        var restrictions = [];
+        try { restrictions = Array.isArray(x.restrictions) ? x.restrictions : JSON.parse(x.restrictions||'[]'); } catch(e){}
+        var d = document.createElement('div');
+        d.className = 'card';
+        d.style.cssText = 'margin-bottom:8px;padding:12px;';
+        d.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+            '<div style="flex:1;">' +
+              '<div style="font-weight:600;font-size:13px;">🍽️ ' + (x.diet_type||'') + ' | ' + (x.meals||'3 มื้อ') + '</div>' +
+              (restrictions.length ? '<div style="font-size:12px;color:var(--text2);margin-top:2px;">ข้อจำกัด: ' + restrictions.join(', ') + '</div>' : '') +
+              (x.calories ? '<div style="font-size:12px;color:var(--text2);margin-top:2px;">แคลอรี: ' + x.calories + ' kcal' + (x.protein ? ' | โปรตีน: ' + x.protein + 'g' : '') + '</div>' : '') +
+              (x.note ? '<div style="font-size:12px;margin-top:2px;">หมายเหตุ: ' + x.note + '</div>' : '') +
+              '<div style="font-size:11px;color:var(--text3);margin-top:2px;">ผู้บันทึก: ' + (x.recorder||'-') + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">' +
+              '<button class="btn btn-ghost btn-sm" data-diet-id="'+x.id+'">✏️</button>' +
+              '<button class="btn btn-ghost btn-sm" style="color:#c0392b;" data-diet-del="'+x.id+'">🗑️</button>' +
+            '</div>' +
+          '</div>';
+        d.querySelector('[data-diet-id]').addEventListener('click', function(){ openDietModal(this.dataset.dietId); });
+        d.querySelector('[data-diet-del]').addEventListener('click', function(){
+          var id = this.dataset.dietDel;
+          if (!confirm('ลบรายการนี้?')) return;
+          supa.from('patient_diets').delete().eq('id', id).then(function(){
+            switchPatTab('dietary'); toast('ลบแล้ว','success');
+          });
+        });
+        frag.appendChild(d);
+      });
+
+      // สายให้อาหาร
+      tD.forEach(function(x) {
+        var d = document.createElement('div');
+        d.className = 'card';
+        d.style.cssText = 'margin-bottom:8px;padding:12px;border-left:3px solid #27ae60;';
+        d.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+            '<div style="flex:1;">' +
+              '<div style="font-weight:600;font-size:13px;">🧪 สายให้อาหาร | ' + (x.date||'') + ' ' + (x.time||'') + ' (' + (x.meal||'') + ')</div>' +
+              '<div style="font-size:12px;color:var(--text2);margin-top:2px;">สูตร: ' + (x.formula||'-') + ' | ปริมาณ: ' + (x.volume||0) + ' ml | น้ำตาม: ' + (x.water||0) + ' ml | Residual: ' + (x.residual||0) + ' ml</div>' +
+              (x.note ? '<div style="font-size:12px;margin-top:2px;">หมายเหตุ: ' + x.note + '</div>' : '') +
+              '<div style="font-size:11px;color:var(--text3);margin-top:2px;">ผู้บันทึก: ' + (x.recorder||'-') + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">' +
+              '<button class="btn btn-ghost btn-sm" data-tube-id="'+x.id+'">✏️</button>' +
+              '<button class="btn btn-ghost btn-sm" style="color:#c0392b;" data-tube-del="'+x.id+'">🗑️</button>' +
+            '</div>' +
+          '</div>';
+        d.querySelector('[data-tube-id]').addEventListener('click', function(){ openTubeFeedModal(this.dataset.tubeId); });
+        d.querySelector('[data-tube-del]').addEventListener('click', function(){
+          var id = this.dataset.tubeDel;
+          if (!confirm('ลบรายการนี้?')) return;
+          supa.from('tube_feedings').delete().eq('id', id).then(function(){
+            switchPatTab('dietary'); toast('ลบแล้ว','success');
+          });
+        });
+        frag.appendChild(d);
+      });
+
+      listEl.innerHTML = ''; listEl.appendChild(frag);
+    });
+  };
+})();
+
+console.log('[fix] v99 snippet loaded');
 })();
