@@ -243,7 +243,7 @@ async function openPatientProfile(id, activeTab) {
         <div class="card">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;">💰 มัดจำ & เงินประกัน</div>
-            <button class="btn btn-primary btn-sm" onclick="openDepositModal('${p.id}')">+ บันทึกมัดจำ</button>
+            <button class="btn btn-primary btn-sm" onclick="openDepositModalFromProfile(null,'${p.id}')">+ บันทึกมัดจำ</button>
           </div>
           <div id="pat-deposits-list-${p.id}">
             <div style="padding:24px;text-align:center;color:var(--text3);">⏳ กำลังโหลด...</div>
