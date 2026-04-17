@@ -209,7 +209,7 @@ function openAddItemModal() {
   document.getElementById('editItemIdx').value = '';
   document.getElementById('item-name').value = '';
   document.getElementById('item-cat').value = 'ยา';
-  document.getElementById('item-unit').value = 'เม็ด';
+  document.getElementById('item-unit').value = '';
   document.getElementById('item-qty').value = 0;
   document.getElementById('item-reorder').value = 10;
   document.getElementById('item-cost').value  = '';
