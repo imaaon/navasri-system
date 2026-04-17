@@ -415,7 +415,7 @@ async function saveNewItemInline() {
 
 
 async function receiveItem() {
-  const itemId  = document.getElementById('recv-item').value;
+  const itemId  = document.getElementById('ta-ri-id').value;
   const qty     = parseFloat(document.getElementById('recv-qty').value);
   const cost    = parseFloat(document.getElementById('recv-cost').value) || 0;
   const lotNum  = document.getElementById('recv-lot').value.trim();
