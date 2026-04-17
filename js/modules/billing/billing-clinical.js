@@ -593,13 +593,17 @@ function printDietaryReport() {
 // ── DEPOSITS SYSTEM ─────────────────────────────────────
 // =======================================================
 
-function openDepositModal(id) {
+async function openDepositModal(id) {
   const patients = (db.patients||[]).filter(p=>p.status==='active');
   makeTypeahead({inputId:"ta-dep-inp",listId:"ta-dep-list",hiddenId:"ta-dep-id",dataFn:()=>taPatients(true)});
   document.getElementById('deposit-edit-id').value = id||'';
   document.getElementById('modal-deposit-title').textContent = id ? '✏️ แก้ไขรายการมัดจำ' : '🏦 บันทึกเงินมัดจำ / เงินประกัน';
   if (id) {
-    const dep = (db.deposits||[]).find(x=>x.id==id);
+    let dep = (db.deposits||[]).find(x=>x.id==id);
+    if (!dep) {
+      const { data: _depData } = await supa.from('patient_deposits').select('*').eq('id', id).single();
+      if (_depData) dep = { id:_depData.id, patientId:_depData.patient_id, patientName:_depData.patient_name, type:_depData.type, amount:_depData.amount, dateIn:_depData.date_in, payMethod:_depData.pay_method, status:_depData.status, dateOut:_depData.date_out, note:_depData.note };
+    }
     if (dep) {
       (function(){var _v=dep.patientId;var _h=document.getElementById("ta-dep-id");if(_h)_h.value=String(_v||"");var _i=document.getElementById("ta-dep-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
       document.getElementById('deposit-type').value = dep.type;
