@@ -616,6 +616,8 @@ function openDepositModal(id) {
     document.getElementById('deposit-date-out').value = '';
     document.getElementById('deposit-note').value = '';
     document.getElementById('deposit-status').value = 'active';
+    document.getElementById('ta-dep-id').value = '';
+    document.getElementById('ta-dep-inp').value = '';
   }
   document.getElementById('deposit-return-group').style.display = document.getElementById('deposit-status').value!=='active' ? '' : 'none';
   document.getElementById('deposit-status').onchange = function(){ document.getElementById('deposit-return-group').style.display = this.value!=='active'?'':'none'; };
@@ -767,8 +769,15 @@ function openDepositModalFromProfile(depId, patId) {
       await _origSave.apply(this, arguments);
       window.saveDeposit = _origSave;
       const el = document.querySelector('[id^="pat-deposits-list-"]');
-      const pid = el ? el.id.replace('pat-deposits-list-', '') : patId;
-      if (pid && typeof loadPatDeposits === 'function') loadPatDeposits(pid);
+      const pid2 = el ? el.id.replace('pat-deposits-list-', '') : patId;
+      if (pid2 && typeof loadPatDeposits === 'function') loadPatDeposits(pid2);
+    };
+    // reset saveDeposit กลับเมื่อปิด modal
+    const _origClose = window.closeModal;
+    window.closeModal = function(id) {
+      if (id === 'modal-deposit') window.saveDeposit = _origSave;
+      _origClose(id);
+      if (id === 'modal-deposit') window.closeModal = _origClose;
     };
   }, 300);
 }
