@@ -2,7 +2,20 @@
 
 // ===== ROOM & BED MANAGEMENT =====
 function renderRooms() {
-  const rooms = db.rooms;
+  const rooms = db.rooms.slice().sort(function(a, b) {
+    function roomOrder(name) {
+      // Ward-1A = ลำดับ 0 (ขึ้นก่อน)
+      if (name === 'Ward-1A') return '0_0_000';
+      // แยก ตัวเลข+ตึก เช่น 201A -> floor=201, wing=A
+      var m = name.match(/^(\d+)([A-Z]+)$/);
+      if (!m) return '9_'+name;
+      var num = m[1]; var wing = m[2];
+      // A ก่อน B: sort by wing first, then number
+      return wing + '_' + num.padStart(6,'0');
+    }
+    var oa = roomOrder(a.name), ob = roomOrder(b.name);
+    return oa < ob ? -1 : oa > ob ? 1 : 0;
+  });
   const beds  = db.beds;
   // Summary cards by type
   const types = [...new Set(rooms.map(r => r.roomType))];
