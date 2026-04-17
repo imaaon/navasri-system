@@ -763,14 +763,12 @@ function openDepositModalFromProfile(depId, patId) {
       if (p) inpEl.value = p.name || '';
     }
     const _origSave = window.saveDeposit;
-    window.saveDeposit = function() {
-      _origSave.apply(this, arguments);
-      setTimeout(function() {
-        const el = document.querySelector('[id^="pat-deposits-list-"]');
-        const pid = el ? el.id.replace('pat-deposits-list-', '') : patId;
-        if (pid && typeof loadPatDeposits === 'function') loadPatDeposits(pid);
-      }, 600);
+    window.saveDeposit = async function() {
+      await _origSave.apply(this, arguments);
       window.saveDeposit = _origSave;
+      const el = document.querySelector('[id^="pat-deposits-list-"]');
+      const pid = el ? el.id.replace('pat-deposits-list-', '') : patId;
+      if (pid && typeof loadPatDeposits === 'function') loadPatDeposits(pid);
     };
   }, 300);
 }
