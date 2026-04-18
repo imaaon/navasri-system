@@ -108,7 +108,7 @@ async function loadDB() {
     if (typeof loadBillingFromSettings === 'function') {
       loadBillingFromSettings(settingsRes.data || []);
     }
-    if (db.items.length === 0) seedData();
+    // seedData ปิดแล้ว — กรอกสินค้าจริงจากหน้าคลังสต็อก
     window._dbLoaded = true;
     buildBarcodeMap();
   } catch(e) {
