@@ -18,6 +18,9 @@ function renderAssets() {
   const statusF = document.getElementById('asset-filter-status')?.value||'';
   const q       = (document.getElementById('asset-search')?.value||'').toLowerCase();
   const tb      = document.getElementById('assetTable'); if(!tb) return;
+  // ซ่อนปุ่มเพิ่มครุภัณฑ์สำหรับ nurse และ caregiver
+  const addBtn = document.getElementById('btn-add-asset');
+  if (addBtn) addBtn.style.display = hasRole('admin','manager','officer') ? '' : 'none';
 
   // Alert: ถึงรอบซ่อม หรือประกันใกล้หมด
   const today = new Date(); const soon7 = new Date(today); soon7.setDate(soon7.getDate()+7);
