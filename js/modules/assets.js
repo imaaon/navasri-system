@@ -69,9 +69,11 @@ function renderAssets() {
       <td style="font-size:12px;${weCls}">${a.warrantyExpiry||'-'}</td>
       <td>${ASSET_STATUS_BADGE[a.status]||a.status}</td>
       <td>
+        ${hasRole('admin','manager','officer') ? `
         <button class="btn btn-ghost btn-sm" onclick="openAddMaintenanceModal('${a.id}')">🛠️</button>
         <button class="btn btn-ghost btn-sm" onclick="editAsset('${a.id}')">✏️</button>
         <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteAsset('${a.id}')">🗑️</button>
+        ` : ''}
       </td>
     </tr>`;
   }).join('');
