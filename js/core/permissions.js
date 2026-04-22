@@ -24,7 +24,7 @@ const ROLE_PAGES = {
 
   // พยาบาลพาร์ทไทม์: เหมือน nurse ยกเว้น deposits + staff
   parttime_nurse: ['dashboard','requisition','history','report','patients','rooms',
-                    'healthreport','incident','dietary','stock','purchaserequests'],
+                    'healthreport','incident','dietary','stock','purchaserequests','deposits','assets'],
 
   // หมอ (จากภายนอก): เฉพาะข้อมูลคนไข้ tab คลินิก
   doctor: ['dashboard','patients'],
