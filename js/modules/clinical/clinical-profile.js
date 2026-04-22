@@ -1179,7 +1179,8 @@ function _openExcretionModal(rec, patId, today) {
 
   btnSave.addEventListener('click', function() {
     var timeVal = inpTime.value;
-    var dateTime = today + 'T' + timeVal + ':00+07:00';
+    var _dObj1 = new Date(today + 'T' + timeVal + ':00');
+    var dateTime = new Date(_dObj1.getTime() - _dObj1.getTimezoneOffset() * 60000).toISOString().slice(0, 19) + 'Z';
     var user = (window._currentUser && window._currentUser.username) ? window._currentUser.username : 'user';
     var payload = {
       patient_id: patId,
@@ -1311,7 +1312,8 @@ function _openFluidModal(rec, patId, direction, today) {
 
   btnSave.addEventListener('click', function() {
     var timeVal = inpTime.value;
-    var dateTime = today + 'T' + timeVal + ':00+07:00';
+    var _dObj2 = new Date(today + 'T' + timeVal + ':00');
+    var dateTime = new Date(_dObj2.getTime() - _dObj2.getTimezoneOffset() * 60000).toISOString().slice(0, 19) + 'Z';
     var user = (window._currentUser && window._currentUser.username) ? window._currentUser.username : 'user';
     var payload = {
       patient_id: patId,
