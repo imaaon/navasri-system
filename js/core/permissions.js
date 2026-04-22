@@ -20,7 +20,7 @@ const ROLE_PAGES = {
 
   // พยาบาลวิชาชีพ: ดูแลคนไข้ครบ + deposits + เบิกของ + PR + สต็อค(ดูอย่างเดียว)
   nurse: ['dashboard','requisition','history','report','patients','rooms',
-           'healthreport','incident','dietary','deposits','stock','purchaserequests'],
+           'healthreport','incident','dietary','deposits','stock','purchaserequests','assets'],
 
   // พยาบาลพาร์ทไทม์: เหมือน nurse ยกเว้น deposits + staff
   parttime_nurse: ['dashboard','requisition','history','report','patients','rooms',
@@ -36,7 +36,7 @@ const ROLE_PAGES = {
   dietitian: ['dashboard','patients','dietary','requisition','history'],
 
   // ผู้ช่วยพยาบาล / พนักงานผู้ช่วยเหลือคนไข้: vital + เบิกของ + ประวัติ
-  caregiver: ['dashboard','patients','requisition','history','incident','dietary'],
+  caregiver: ['dashboard','patients','requisition','history','incident','dietary','assets'],
 
   // พนักงานผู้ช่วยฯ (ตรวจสต็อค): สต็อค + เบิกของ + ประวัติ
   warehouse: ['dashboard','stock','requisition','history','report',
