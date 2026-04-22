@@ -326,7 +326,7 @@ async function saveItem() {
       toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return;
     }
     if (!inserted) { toast('บันทึกไม่สำเร็จ กรุณาลองใหม่', 'error'); return; }
-    db.items.push(mapItem({ ...insertData, id: inserted.id }));
+    db.items.push(mapItem({ ...inserted }));
     if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
     logAudit(AUDIT_MODULES.INVENTORY, AUDIT_ACTIONS.CREATE, inserted.id, { name: insertData.name, barcode: insertData.barcode });
     toast('เพิ่มรายการเรียบร้อย', 'success');
