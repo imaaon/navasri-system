@@ -72,6 +72,7 @@ function renderAssets() {
       <td style="font-size:12px;${weCls}">${a.warrantyExpiry||'-'}</td>
       <td>${ASSET_STATUS_BADGE[a.status]||a.status}</td>
       <td>
+        <button class="btn btn-ghost btn-sm" onclick="openMaintenanceHistoryModal('${a.id}')" title="ประวัติการซ่อม">📋</button>
         ${hasRole('admin','manager','officer') ? `
         <button class="btn btn-ghost btn-sm" onclick="openAddMaintenanceModal('${a.id}')">🛠️</button>
         <button class="btn btn-ghost btn-sm" onclick="editAsset('${a.id}')">✏️</button>
@@ -293,4 +294,50 @@ function mapAsset(r) {
     status:r.status, isCritical:r.is_critical,
     note:r.note, createdAt:r.created_at,
   };
+}
+
+// ===== MAINTENANCE HISTORY MODAL =====
+function openMaintenanceHistoryModal(assetId) {
+  const a = (db.assets||[]).find(x => String(x.id) === String(assetId));
+  if (!a) return;
+  const logs = (db.assetMaintenanceLogs||[]).filter(x => String(x.asset_id) === String(assetId));
+  const canDelete = hasRole('admin','manager','officer');
+  const TYPE_LABEL = { preventive:'ซ่อมบำรุงตามแผน', corrective:'ซ่อมฉุกเฉิน', inspection:'ตรวจสอบ', cleaning:'ทำความสะอาด', other:'อื่นๆ' };
+  const TYPE_COLOR = { preventive:'success', corrective:'warning', inspection:'info', cleaning:'info', other:'secondary' };
+  const rows = logs.length === 0
+    ? '<div style="text-align:center;padding:24px;color:var(--text2);font-size:13px;">ยังไม่มีประวัติการซ่อมบำรุง</div>'
+    : logs.map(function(l) {
+        const typeLabel = TYPE_LABEL[l.maintenance_type] || l.maintenance_type || '-';
+        const typeColor = TYPE_COLOR[l.maintenance_type] || 'secondary';
+        const cost = l.cost ? Number(l.cost).toLocaleString('th-TH') + ' บาท' : '-';
+        const tech = l.technician_name || 'ช่างภายใน';
+        const delBtn = canDelete ? '<button class="btn btn-ghost btn-sm" style="color:var(--danger);flex-shrink:0;" onclick="deleteMaintenanceLog('+l.id+','+assetId+')" title="ลบ">🗑️</button>' : '';
+        return '<div style="padding:12px 0;border-bottom:0.5px solid var(--border-color);">' +
+          '<div style="display:flex;align-items:flex-start;gap:8px;">' +
+            '<div style="flex:1;">' +
+              '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;">' +
+                '<span class="badge badge-'+typeColor+'" style="font-size:11px;">'+typeLabel+'</span>' +
+                '<span style="font-size:12px;color:var(--text2);">'+(l.maintenance_date||'-')+'</span>' +
+              '</div>' +
+              '<div style="font-size:13px;font-weight:500;margin-bottom:2px;">'+(l.description||'-')+'</div>' +
+              '<div style="font-size:12px;color:var(--text2);">ช่าง: '+tech+' &nbsp;&middot;&nbsp; ค่าใช้จ่าย: '+cost+'</div>' +
+              (l.created_by ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">บันทึกโดย: '+l.created_by+'</div>' : '') +
+            '</div>' + delBtn +
+          '</div>' +
+        '</div>';
+      }).join('');
+  document.getElementById('maint-history-asset-name').textContent = a.name + ' (' + (a.assetNo||'-') + ')';
+  document.getElementById('maint-history-body').innerHTML = rows;
+  document.getElementById('maint-history-asset-id').value = assetId;
+  openModal('modal-maintenance-history');
+}
+
+async function deleteMaintenanceLog(logId, assetId) {
+  if (!hasRole('admin','manager','officer')) { toast('ไม่มีสิทธิ์ลบ','error'); return; }
+  if (!confirm('ลบประวัติการซ่อมรายการนี้?')) return;
+  const { error } = await supa.from('asset_maintenance_logs').delete().eq('id', logId);
+  if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
+  db.assetMaintenanceLogs = (db.assetMaintenanceLogs||[]).filter(x => x.id !== logId);
+  toast('ลบแล้ว','success');
+  openMaintenanceHistoryModal(assetId);
 }
