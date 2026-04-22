@@ -2977,8 +2977,10 @@ function renderDeposits() {
     <td style="font-size:12px;">${d.dateOut||'—'}</td>
     <td style="font-size:12px;max-width:150px;">${d.note||'—'}</td>
     <td style="white-space:nowrap;">
+      ${['admin','manager','officer'].includes(currentUser?.role) ? `
       <button class="btn btn-ghost btn-sm" onclick="openDepositModal('${d.id}')">✏️</button>
       <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteDeposit('${d.id}')">🗑️</button>
+      ` : ''}
     </td>
   </tr>`).join('') : `<tr><td colspan="9"><div class="empty"><div class="empty-icon">🏦</div><div class="empty-text">ยังไม่มีรายการมัดจำ</div></div></td></tr>`;
 }
