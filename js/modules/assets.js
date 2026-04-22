@@ -326,7 +326,7 @@ function openMaintenanceHistoryModal(assetId) {
           '</div>' +
         '</div>';
       }).join('');
-  document.getElementById('maint-history-asset-name').textContent = a.name + ' (' + (a.assetNo||'-') + ')';
+  document.getElementById('maint-history-asset-name').textContent = a.name + ' (' + (a.assetNo||a.asset_no||'-') + ')';
   document.getElementById('maint-history-body').innerHTML = rows;
   document.getElementById('maint-history-asset-id').value = assetId;
   openModal('modal-maintenance-history');
