@@ -272,6 +272,7 @@ async function generateContractInvoice(contractId, silent=false) {
   const otherItems = getChargeItems(c.items||[]).map(item => ({ name:item.name, qty:1, price:item.amount }));
 
   // คำนวณ physio ส่วนเกิน package
+  let physioExtra = 0;
   const physioRule = getPhysioRule(c.items||[]);
   if (physioRule && physioRule.sessions_included > 0) {
     const period = getBillingPeriod(c);
