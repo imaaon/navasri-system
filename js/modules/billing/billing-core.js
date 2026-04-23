@@ -641,6 +641,7 @@ async function saveInvoice(status) {
     med_items: inv.medItems||[], med_total: inv.medTotal||0,
     hide_items: inv.hideItems||false,
     other_items: inv.otherItems||[], other_total: inv.otherTotal||0,
+    included_items: inv.includedItems||[], show_included: inv.showIncluded||false,
     subtotal: inv.subtotal||0, vat_rate: inv.vatRate||0, vat_amt: inv.vatAmt||0,
     before_wht: inv.beforeWht||0, wht_rate: inv.whtRate||0, wht_amt: inv.whtAmt||0,
     grand_total: inv.grandTotal||0,
@@ -701,6 +702,8 @@ function editInvoice(id) {
   document.getElementById('inv-pt-qty').value     = inv.ptQty||1;
   document.getElementById('inv-pt-rate').value    = inv.ptRate||0;
   document.getElementById('inv-hide-items').checked = inv.hideItems||false;
+  const _showIncEl = document.getElementById('inv-show-included'); if(_showIncEl) _showIncEl.checked = inv.showIncluded||false;
+  const _incDataEl = document.getElementById('inv-included-items-data'); if(_incDataEl) _incDataEl.value = JSON.stringify(inv.includedItems||[]);
   document.getElementById('inv-req-items-data').value   = JSON.stringify(inv.medItems||[]);
   document.getElementById('inv-other-items-data').value = JSON.stringify(inv.otherItems||[]);
   document.getElementById('inv-vat-rate').value   = inv.vatRate||0;
