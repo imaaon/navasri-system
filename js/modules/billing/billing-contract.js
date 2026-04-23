@@ -290,6 +290,10 @@ async function generateContractInvoice(contractId, silent=false) {
     }
   }
 
+  // รวบรวม included items จาก requisitions ในรอบบิล
+  const contractIncluded = getIncludedProducts(c.items||[]);
+  const invIncludedItems = contractIncluded.map(function(p){ return { item_id: p.item_id, name: p.name, qty_limit: p.qty_limit }; });
+
   const inv = {
     id: 'inv_'+Date.now()+'_'+contractId,
     contractId: c.id,
@@ -303,7 +307,9 @@ async function generateContractInvoice(contractId, silent=false) {
     ptEnabled:false, ptType:'monthly', ptQty:1, ptRate:0, ptTotal:0,
     medItems:[], medTotal:0,
     otherItems,
-    otherTotal: c.totalMonthly,
+    otherTotal: c.totalMonthly + (physioExtra||0),
+    includedItems: invIncludedItems,
+    showIncluded: false,
     subtotal: c.totalMonthly,
     vatRate:0, vatAmt:0, beforeWht:c.totalMonthly,
     whtRate:0, whtAmt:0, grandTotal:c.totalMonthly,
@@ -319,6 +325,7 @@ async function generateContractInvoice(contractId, silent=false) {
     room_enabled: false, pt_enabled: false,
     med_items: [], med_total: 0, hide_items: false,
     other_items: inv.otherItems||[], other_total: inv.otherTotal||0,
+    included_items: inv.includedItems||[], show_included: false,
     subtotal: inv.subtotal||0, vat_rate: 0, vat_amt: 0,
     before_wht: inv.subtotal||0, wht_rate: 0, wht_amt: 0,
     grand_total: inv.grandTotal||0,
