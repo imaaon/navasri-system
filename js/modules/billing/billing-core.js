@@ -325,30 +325,51 @@ async function loadRequisitionsForInvoice() {
   if (!patId) { toast('กรุณาเลือกผู้รับบริการก่อน','warning'); return; }
   const fromDate = from ? from+'-01' : '2000-01-01';
   const toDate   = to   ? to+'-31'   : '2099-12-31';
+  const contract = getActiveContract(patId);
+  const includedProducts = contract ? getIncludedProducts(contract.items||[]) : [];
   const reqs = (db.requisitions||[]).filter(r => {
     if (!r.patientId || String(r.patientId)!==String(patId)) return false;
     const d = r.date || r.createdAt || '';
     return d >= fromDate && d <= toDate && r.status === 'approved';
   });
-  const itemMap = {};
+  const allItems = [];
   reqs.forEach(req => {
     (req.items||[]).forEach(ri => {
       const item = db.items.find(it=>String(it.id)===String(ri.itemId));
-      // กรองเฉพาะ Billable items
       if (item && item.isBillable === false) return;
-      const key  = ri.itemId || ri.name;
-      const price= item ? (item.price||item.cost||0) : 0;
-      const unit = item?.dispenseUnit || item?.unit || '';
-      if (!itemMap[key]) itemMap[key] = { name: ri.name||item?.name||key, qty:0, price, unit };
-      itemMap[key].qty += ri.qty||1;
+      allItems.push({ itemId: ri.itemId, name: ri.name||item?.name||ri.itemId,
+        qty: ri.qty||1, price: item ? (item.price||item.cost||0) : 0,
+        unit: item?.dispenseUnit||item?.unit||'' });
     });
   });
-  const items = Object.values(itemMap);
-  document.getElementById('inv-req-items-data').value = JSON.stringify(items);
+  const allocated = allocateIncludedProducts(allItems, includedProducts);
+  const billableMap = {}, includedMap = {};
+  allocated.billable.forEach(function(ri) {
+    const key = ri.itemId||ri.name;
+    if (!billableMap[key]) billableMap[key] = { name:ri.name, qty:0, price:ri.price, unit:ri.unit };
+    billableMap[key].qty += ri.qty||1;
+  });
+  allocated.included.forEach(function(ri) {
+    const key = ri.itemId||ri.name;
+    if (!includedMap[key]) includedMap[key] = { name:ri.name, qty:0, price:ri.price, unit:ri.unit, is_included:true };
+    includedMap[key].qty += ri.free_qty||0;
+    if (ri.charge_qty > 0) {
+      if (!billableMap[key]) billableMap[key] = { name:ri.name, qty:0, price:ri.price, unit:ri.unit };
+      billableMap[key].qty += ri.charge_qty;
+    }
+  });
+  const billableItems = Object.values(billableMap);
+  const includedItems = Object.values(includedMap);
+  document.getElementById('inv-req-items-data').value = JSON.stringify(billableItems);
+  const incEl = document.getElementById('inv-included-items-data');
+  if (incEl) incEl.value = JSON.stringify(includedItems);
   renderInvoiceItems();
   recalcInvoice();
-  toast(items.length===0 ? 'ไม่พบรายการเบิกที่อนุมัติแล้ว' : `พบ ${items.length} รายการ`, items.length===0?'warning':'success');
+  const msg = 'พบรายการเบิก '+billableItems.length+' รายการคิดเงิน'+(includedItems.length>0?' + '+includedItems.length+' รายการรวมใน package':'');
+  toast(billableItems.length===0&&includedItems.length===0?'ไม่พบรายการเปิดที่อนุมัติแล้ว':msg,
+    billableItems.length===0&&includedItems.length===0?'warning':'success');
 }
+
 
 // ── Render requisition items ─────────────────────────
 function renderInvoiceItems() {
@@ -413,7 +434,26 @@ function renderInvoiceItems() {
       </table>
     </div>`;
   });
+  // แสดง included items section
+  let _incItems = []; try { _incItems = JSON.parse(document.getElementById('inv-included-items-data')?.value||'[]'); } catch(e){}
+  const _showInc = document.getElementById('inv-show-included')?.checked;
+  let _existInc = document.getElementById('inv-included-section');
+  if (_existInc) _existInc.remove();
   container.innerHTML = html;
+  if (_incItems.length > 0) {
+    const _incDiv = document.createElement('div');
+    _incDiv.id = 'inv-included-section';
+    _incDiv.style.marginTop = '8px';
+    if (_showInc) {
+      let _ih = '<div style="font-size:11px;font-weight:700;color:#3a6a3a;padding:4px 6px;background:#f0fff4;border-radius:4px;display:flex;justify-content:space-between;margin-bottom:4px;"><span>📦 สินค้ารวมใน package — ไม่คิดเงิน ('+_incItems.length+' รายการ)</span><span style="color:#888;">฿0.00</span></div><table style="width:100%;border-collapse:collapse;font-size:12px;color:var(--text2);"><tbody>';
+      _incItems.forEach(function(it){ _ih += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:3px 6px;">'+it.name+'</td><td style="padding:3px 6px;text-align:right;">'+(it.qty||0)+' '+(it.unit||'')+'</td><td style="padding:3px 6px;text-align:right;color:#27ae60;">รวมใน package</td></tr>'; });
+      _ih += '</tbody></table>';
+      _incDiv.innerHTML = _ih;
+    } else {
+      _incDiv.innerHTML = '<div style="font-size:12px;color:#3a6a3a;padding:4px 6px;background:#f0fff4;border-radius:4px;cursor:pointer;" onclick="document.getElementById(\'inv-show-included\').checked=true;renderInvoiceItems()">📦 มีสินค้ารวมใน package '+_incItems.length+' รายการ — <span style="text-decoration:underline;">คลิกเพื่อดู</span></div>';
+    }
+    container.after(_incDiv);
+  }
   recalcInvoice();
 }
 
