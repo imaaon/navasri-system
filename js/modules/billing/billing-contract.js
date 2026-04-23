@@ -403,7 +403,7 @@ function openAddIncludedProductModal() {
     '</div>' +
     '<div style="display:flex;gap:8px;">' +
       '<button class="btn btn-primary btn-sm" onclick="confirmAddIncludedProduct()">เพิ่ม</button>' +
-      '<button class="btn btn-ghost btn-sm" onclick="document.getElementById('add-included-panel').remove()">ยกเลิก</button>' +
+      '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'add-included-panel\').remove()">ยกเลิก</button>' +
     '</div>' +
   '</div>';
   var container = document.getElementById('contract-items-container');
