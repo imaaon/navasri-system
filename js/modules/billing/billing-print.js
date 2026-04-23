@@ -342,8 +342,15 @@ function buildInvoiceHTML(id, copyMode=false) {
       rows.push({name:'ค่าเวชภัณฑ์ / ยา / ของใช้ / บริการ', sub:'', qty:1, unit:'', price:inv.medTotal, total:inv.medTotal});
     }
     (inv.otherItems||[]).filter(it=>(it.price||0)>0).forEach(it=>rows.push({name:it.name, qty:it.qty||1, unit:it.unit||'', price:it.price||0, total:(it.qty||1)*(it.price||0)}));
+    // included items (ถ้า showIncluded = true)
+    if (inv.showIncluded && (inv.includedItems||[]).length > 0) {
+      rows.push({ name:'――― รายการที่รวมใน package (ไม่คิดเงิน) ―――', qty:'', unit:'', price:'', total:'' });
+      (inv.includedItems||[]).forEach(function(it){
+        rows.push({ name:it.name, qty:it.qty_limit||'-', unit:'', price:0, total:0, _included:true });
+      });
+    }
 
-    const rowsHtml = rows.map((r,i)=>`<tr>
+    const rowsHtml = rows.map((r,i)=>r.name.startsWith('―') ? `<tr><td colspan="5" style="padding:4px 11px;font-size:11px;color:#888;border-bottom:1px solid #f0f0f0;">${r.name}</td></tr>` : r._included ? `<tr><td style="border-bottom:1px solid #f0f0f0;padding:5px 11px;text-align:center;color:#999;font-size:11px;">✓</td><td colspan="3" style="border-bottom:1px solid #f0f0f0;padding:5px 11px;font-size:12px;color:#555;">${r.name}</td><td style="border-bottom:1px solid #f0f0f0;padding:5px 11px;text-align:right;font-size:11px;color:#27ae60;">รวมใน package</td></tr>` : `<tr>
       <td style="border-bottom:1px solid #f0f0f0;padding:8px 11px;text-align:center;color:#999;">${i+1}</td>
       <td style="border-bottom:1px solid #f0f0f0;padding:8px 11px;font-weight:500;">${r.name}${r.sub?`<span style="margin-left:6px;font-size:10px;color:#888;font-weight:400;">${r.sub}</span>`:''}</td>
       <td style="border-bottom:1px solid #f0f0f0;padding:8px 11px;text-align:center;font-family:monospace;">${r.qty}${r.unit?' '+r.unit:''}</td>
