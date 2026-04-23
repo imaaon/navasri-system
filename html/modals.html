@@ -2388,7 +2388,7 @@
             <input id="inv-med-to" type="month" class="form-control" style="font-size:12px;padding:4px 8px;">
             <button class="btn btn-ghost btn-sm" onclick="loadRequisitionsForInvoice()">🔄 ดึงรายการ</button>
             <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
-              <input type="checkbox" id="inv-hide-items" onchange="renderInvoiceItems()"> ซ่อนรายการ
+              <input type="checkbox" id="inv-hide-items" onchange="renderInvoiceItems()"> ซ่อนรายการ &nbsp;|&nbsp; <input type="checkbox" id="inv-show-included" onchange="renderInvoiceItems()"> แสดงสินค้าใน package
             </label>
           </div>
         </div>
@@ -2457,6 +2457,7 @@
 
       <input type="hidden" id="inv-edit-id" value="">
       <input type="hidden" id="inv-req-items-data" value="[]">
+      <input type="hidden" id="inv-included-items-data" value="[]">
       <input type="hidden" id="inv-other-items-data" value="[]">
 
     </div>
