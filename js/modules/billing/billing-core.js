@@ -717,10 +717,14 @@ function editInvoice(id) {
   document.getElementById('inv-wht-rate').value   = inv.whtRate||0;
   document.getElementById('inv-note').value       = inv.note||'';
 
-  const sel = document.getElementById("ta-inv-id");
-  sel.innerHTML = '<option value="">-- เลือกผู้รับบริการ --</option>' +
-    db.patients.filter(p=>p.status==='active').map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-  sel.value = inv.patientId||'';
+  // set patient ผ่าน typeahead
+  const taId = document.getElementById('ta-inv-id');
+  const taInp = document.getElementById('ta-inv-inp');
+  if (taId) taId.value = inv.patientId||'';
+  if (taInp) {
+    const invPat = db.patients.find(p=>String(p.id)===String(inv.patientId));
+    taInp.value = invPat ? invPat.name : (inv.patientName||'');
+  }
 
   const now = new Date(); const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('inv-med-from').value = ym;
