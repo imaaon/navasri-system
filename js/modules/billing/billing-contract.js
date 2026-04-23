@@ -332,3 +332,111 @@ async function generateContractInvoice(contractId, silent=false) {
     renderBilling();
   }
 }
+
+// ===== CONTRACT PACKAGE UI =====
+
+function renderContractItems() {
+  var container = document.getElementById('contract-items-container');
+  var normalized = normalizeContractItems(_contractItems);
+  _contractItems = normalized;
+  var chargeItems = _contractItems.map(function(item,i){ return {item,i}; }).filter(function(x){ return x.item.type==='charge'; });
+  var productItems = _contractItems.map(function(item,i){ return {item,i}; }).filter(function(x){ return x.item.type==='product_included'; });
+  var physioItem = _contractItems.map(function(item,i){ return {item,i}; }).find(function(x){ return x.item.type==='physio_included'; });
+
+  var chargeHTML = chargeItems.map(function(x){
+    var i = x.i; var item = x.item;
+    return '<div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin-bottom:8px;">' +
+      '<input class="form-control" value="'+(item.name||'')+'" placeholder="ชื่อรายการ เช่น ค่าดูแลรายเดือน" oninput="_contractItems['+i+'].name=this.value;updateContractTotal()">' +
+      '<input class="form-control number" type="number" value="'+(item.amount||0)+'" placeholder="0" style="width:130px;" oninput="_contractItems['+i+'].amount=parseFloat(this.value)||0;updateContractTotal()">' +
+      '<button class="btn btn-ghost btn-sm" onclick="_contractItems.splice('+i+',1);renderContractItems()">✕</button>' +
+      '</div>';
+  }).join('');
+
+  var productHTML = productItems.map(function(x){
+    var i = x.i; var item = x.item;
+    var qtyVal = item.qty_limit !== null && item.qty_limit !== undefined ? item.qty_limit : '';
+    return '<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;margin-bottom:8px;">' +
+      '<div style="font-size:13px;font-weight:500;">'+(item.name||'-')+'<div style="font-size:11px;color:var(--text3);">'+item.item_id+'</div></div>' +
+      '<div style="font-size:12px;color:var(--text2);">จำกัด:</div>' +
+      '<input class="form-control number" type="number" value="'+qtyVal+'" placeholder="ไม่จำกัด" style="width:100px;" oninput="_contractItems['+i+'].qty_limit=this.value?parseInt(this.value):null">' +
+      '<button class="btn btn-ghost btn-sm" onclick="_contractItems.splice('+i+',1);renderContractItems()">✕</button>' +
+      '</div>';
+  }).join('');
+
+  var physioHTML = '';
+  if (physioItem) {
+    var pi = physioItem.i; var pitem = physioItem.item;
+    physioHTML = '<div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:8px;">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;">' +
+        '<div class="form-group" style="margin:0;">' +
+          '<label style="font-size:11px;color:var(--text3);">จำนวน session ที่รวม</label>' +
+          '<input class="form-control number" type="number" value="'+(pitem.sessions_included||0)+'" min="0" oninput="_contractItems['+pi+'].sessions_included=parseInt(this.value)||0">' +
+        '</div>' +
+        '<div class="form-group" style="margin:0;">' +
+          '<label style="font-size:11px;color:var(--text3);">ราคา/ชม. ที่เกิน (บาท)</label>' +
+          '<input class="form-control number" type="number" value="'+(pitem.rate_per_hour_extra||0)+'" min="0" oninput="_contractItems['+pi+'].rate_per_hour_extra=parseFloat(this.value)||0">' +
+        '</div>' +
+        '<button class="btn btn-ghost btn-sm" style="margin-top:18px;" onclick="_contractItems.splice('+pi+',1);renderContractItems()">✕</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  container.innerHTML =
+    '<div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:6px;">• รายการคิดเงิน</div>' +
+    (chargeHTML || '<div style="font-size:12px;color:var(--text3);padding:6px;">ยังไม่มีรายการ</div>') +
+    '<button class="btn btn-ghost btn-sm" onclick="addChargeItem()" style="margin-bottom:12px;">+ เพิ่มรายการคิดเงิน</button>' +
+    '<div style="font-size:12px;font-weight:700;color:var(--text3);margin:4px 0 6px;">• สินค้าที่รวมใน package (ไม่คิดเงิน)</div>' +
+    (productHTML || '<div style="font-size:12px;color:var(--text3);padding:6px;">ยังไม่มีรายการ</div>') +
+    '<button class="btn btn-ghost btn-sm" onclick="openAddIncludedProductModal()" style="margin-bottom:12px;">+ เพิ่มสินค้าใน package</button>' +
+    '<div style="font-size:12px;font-weight:700;color:var(--text3);margin:4px 0 6px;">• กายภาพที่รวมใน package</div>' +
+    (physioHTML || '<div style="font-size:12px;color:var(--text3);padding:6px;">ยังไม่มี</div>') +
+    (!physioItem ? '<button class="btn btn-ghost btn-sm" onclick="addPhysioIncluded()">+ เพิ่มกายภาพใน package</button>' : '');
+
+  updateContractTotal();
+}
+
+function addChargeItem() {
+  _contractItems.push({ type:'charge', name:'', amount:0 });
+  renderContractItems();
+}
+
+function addPhysioIncluded() {
+  var existing = _contractItems.find(function(i){ return i.type === 'physio_included'; });
+  if (existing) { toast('มีกายภาพใน package อยู่แล้วค่ะ', 'warning'); return; }
+  _contractItems.push({ type:'physio_included', sessions_included:0, rate_per_hour_extra:0 });
+  renderContractItems();
+}
+
+function openAddIncludedProductModal() {
+  var items = db.items || [];
+  var opts = items.map(function(it){ return '<option value="'+it.id+'">'+it.name+'</option>'; }).join('');
+  var html = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:8px;" id="add-included-panel">' +
+    '<div style="font-size:13px;font-weight:600;margin-bottom:8px;">เลือกสินค้าจากระบบ</div>' +
+    '<select id="inc-item-select" class="form-control" style="margin-bottom:8px;"><option value="">เลือกสินค้า...</option>'+opts+'</select>' +
+    '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">' +
+      '<label style="font-size:12px;white-space:nowrap;">จำนวนจำกัด (0 = ไม่จำกัด):</label>' +
+      '<input type="number" id="inc-qty-limit" class="form-control number" min="0" value="0" style="width:100px;">' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;">' +
+      '<button class="btn btn-primary btn-sm" onclick="confirmAddIncludedProduct()">เพิ่ม</button>' +
+      '<button class="btn btn-ghost btn-sm" onclick="document.getElementById('add-included-panel').remove()">ยกเลิก</button>' +
+    '</div>' +
+  '</div>';
+  var container = document.getElementById('contract-items-container');
+  var panel = document.createElement('div');
+  panel.innerHTML = html;
+  container.appendChild(panel);
+}
+
+function confirmAddIncludedProduct() {
+  var sel = document.getElementById('inc-item-select');
+  var itemId = sel.value;
+  var qtyLimit = parseInt(document.getElementById('inc-qty-limit').value) || 0;
+  if (!itemId) { toast('กรุณาเลือกสินค้า', 'warning'); return; }
+  var item = (db.items||[]).find(function(it){ return String(it.id) === String(itemId); });
+  if (!item) return;
+  var already = _contractItems.find(function(ci){ return ci.type==='product_included' && String(ci.item_id)===String(itemId); });
+  if (already) { toast('สินค้านี้มีอยู่ใน package แล้วค่ะ', 'warning'); return; }
+  _contractItems.push({ type:'product_included', item_id:itemId, name:item.name, qty_limit: qtyLimit > 0 ? qtyLimit : null });
+  renderContractItems();
+}
