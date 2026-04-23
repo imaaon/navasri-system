@@ -98,23 +98,7 @@ function openAddContractModal(editId=null) {
   openModal('modal-add-contract');
 }
 
-function renderContractItems() {
-  const container = document.getElementById('contract-items-container');
-  container.innerHTML = _contractItems.map((item,i) => `
-    <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;margin-bottom:8px;">
-      <input class="form-control" value="${item.name||''}" placeholder="ชื่อรายการ เช่น ค่าดูแลรายเดือน"
-        oninput="_contractItems[${i}].name=this.value;updateContractTotal()">
-      <input class="form-control number" type="number" value="${item.amount||0}" placeholder="0" style="width:130px;"
-        oninput="_contractItems[${i}].amount=parseFloat(this.value)||0;updateContractTotal()">
-      <button class="btn btn-ghost btn-sm" onclick="_contractItems.splice(${i},1);renderContractItems()">✕</button>
-    </div>`).join('');
-  updateContractTotal();
-}
-
-function addContractItem() {
-  _contractItems.push({ name:'', amount:0 });
-  renderContractItems();
-}
+// renderContractItems และ addContractItem อยู่ใน section ด้านล่าง
 
 function updateContractTotal() {
   const total = getChargeItems(_contractItems).reduce((s,x)=>s+(x.amount||0),0);
