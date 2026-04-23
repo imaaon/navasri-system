@@ -69,14 +69,15 @@ function openAddContractModal(editId=null) {
   _contractItems = editId ? [] : [{ name:'ค่าดูแลรายเดือน', amount:0 }];
   document.getElementById('contract-edit-id').value = editId||'';
   document.getElementById('modal-contract-title').textContent = editId ? '✏️ แก้ไขแพ็กเกจ' : '📋 เพิ่มแพ็กเกจรายเดือน';
-  // Populate patient select
-  const sel = document.getElementById('contract-patient');
-  sel.innerHTML = '<option value="">-- เลือกผู้รับบริการ --</option>' +
-    db.patients.filter(p=>p.status==='active').map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  // ใช้ typeahead แทน select
+  makeTypeahead({inputId:'ta-con-inp',listId:'ta-con-list',hiddenId:'ta-con-id',dataFn:()=>db.patients.filter(p=>p.status==='active').map(p=>({id:p.id,label:p.name}))});
   if (editId) {
     const c = (db.contracts||[]).find(x=>x.id==editId);
     if (c) {
-      sel.value = c.patientId;
+      // set typeahead value
+      const taInp = document.getElementById('ta-con-inp');
+      const taId = document.getElementById('ta-con-id');
+      if (taInp && taId) { taId.value = c.patientId; taInp.value = c.patientName||''; }
       document.getElementById('contract-name').value = c.name;
       document.getElementById('contract-billing-day').value = c.billingDay;
       document.getElementById('contract-due-days').value = c.dueDays;
