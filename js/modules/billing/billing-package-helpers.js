@@ -3,8 +3,11 @@
 
 function normalizeContractItems(items) {
   if (!Array.isArray(items)) return [];
+  var CHARGE_TYPES = ['charge', 'room'];
   return items.map(function(item) {
     if (!item.type) return Object.assign({}, item, { type: 'charge' });
+    // normalize type เก่า (room) ให้เป็น charge
+    if (CHARGE_TYPES.indexOf(item.type) >= 0) return Object.assign({}, item, { type: 'charge' });
     return item;
   });
 }
