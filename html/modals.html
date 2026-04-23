@@ -3435,3 +3435,33 @@
     </div>
   </div>
 </div>
+
+<!-- ===== MODAL: PHYSIO PACKAGE ===== -->
+<div class="modal-overlay" id="modal-physio-package">
+  <div class="modal" style="max-width:480px;width:95%;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-physio-package-title">➕ เพิ่มแพ็กเกจกายภาพ</div>
+      <button class="modal-close" onclick="closeModal('modal-physio-package')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pp-edit-id">
+      <div style="display:grid;gap:14px;">
+        <div class="form-group"><label class="form-label">ผู้รับบริการ <span class="required">*</span></label><select id="pp-patient" class="form-control"><option value="">— เลือก —</option></select></div>
+        <div class="form-group"><label class="form-label">ชื่อแพ็กเกจ <span class="required">*</span></label><input id="pp-name" type="text" class="form-control" placeholder="เช่น แพ็กเกจ 10 ครั้ง"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group"><label class="form-label">Session รวม</label><input id="pp-sessions-included" type="number" class="form-control number" min="1" value="10"></div>
+          <div class="form-group"><label class="form-label">ราคา/ชม. เกิน (บาท)</label><input id="pp-rate-extra" type="number" class="form-control number" min="0" value="0"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group"><label class="form-label">วันเริ่มต้น</label><input id="pp-start-date" type="date" class="form-control"></div>
+          <div class="form-group"><label class="form-label">วันหมดอายุ</label><input id="pp-end-date" type="date" class="form-control"></div>
+        </div>
+        <div class="form-group"><label class="form-label">หมายเหตุ</label><input id="pp-note" type="text" class="form-control"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-physio-package')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="savePhysioPackage()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
