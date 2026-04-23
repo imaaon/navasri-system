@@ -622,6 +622,8 @@ async function saveInvoice(status) {
     roomLabel: document.getElementById('inv-room-label').value.trim(),
     ptEnabled,   ptType:   document.getElementById('inv-pt-type').value,   ptQty,  ptRate,  ptTotal,
     medItems, medTotal, hideItems: document.getElementById('inv-hide-items').checked,
+    showIncluded: document.getElementById('inv-show-included')?.checked||false,
+    includedItems: (function(){ try{ return JSON.parse(document.getElementById('inv-included-items-data')?.value||'[]'); }catch(e){ return []; } })(),
     otherItems, otherTotal,
     subtotal, vatRate, vatAmt, beforeWht, whtRate, whtAmt, grandTotal,
     note: document.getElementById('inv-note').value,
