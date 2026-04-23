@@ -268,8 +268,27 @@ async function generateContractInvoice(contractId, silent=false) {
   const dueDate = new Date(today);
   dueDate.setDate(dueDate.getDate() + c.dueDays);
 
-  // Build invoice items from contract items
-  const otherItems = (c.items||[]).map(item => ({ name:item.name, qty:1, price:item.amount }));
+  // Build invoice items จาก charge items เท่านั้น (ไม่รวม included)
+  const otherItems = getChargeItems(c.items||[]).map(item => ({ name:item.name, qty:1, price:item.amount }));
+
+  // คำนวณ physio ส่วนเกิน package
+  const physioRule = getPhysioRule(c.items||[]);
+  if (physioRule && physioRule.sessions_included > 0) {
+    const period = getBillingPeriod(c);
+    if (period) {
+      const { data: physioSessions } = await supa.from('physio_sessions').select('*')
+        .eq('patient_id', c.patientId).is('invoice_id', null)
+        .gte('session_date', period.start).lte('session_date', period.end);
+      if (physioSessions && physioSessions.length > 0) {
+        const allocated = allocatePhysioSessions(physioSessions, physioRule);
+        if (allocated.extra_amount > 0) {
+          const mins = allocated.charged.reduce(function(s,x){ return s+(x.duration_minutes||0); }, 0);
+          otherItems.push({ name: 'กายภาพเกิน package '+allocated.charged.length+' sessions ('+mins+' นาที)', qty:1, price:allocated.extra_amount });
+        }
+        window._pendingPhysioSessions = physioSessions.map(function(s){ return s.id; });
+      }
+    }
+  }
 
   const inv = {
     id: 'inv_'+Date.now()+'_'+contractId,
@@ -310,6 +329,11 @@ async function generateContractInvoice(contractId, silent=false) {
   const { error: autoErr } = await supa.from('invoices').upsert(row);
   if (autoErr) { toast('สร้างบิลอัตโนมัติไม่สำเร็จ: '+autoErr.message,'error'); return; }
   db.invoices.unshift(inv);
+  // mark physio sessions
+  if (window._pendingPhysioSessions && window._pendingPhysioSessions.length > 0) {
+    await supa.from('physio_sessions').update({ invoice_id: inv.id, billed: true }).in('id', window._pendingPhysioSessions);
+    window._pendingPhysioSessions = null;
+  }
   if (!silent) {
     toast(`สร้างร่างบิล ${inv.docNo} สำหรับ ${c.patientName} เรียบร้อย`, 'success');
     switchBillingTab('invoices');
