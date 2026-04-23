@@ -83,7 +83,7 @@ function openAddContractModal(editId=null) {
       document.getElementById('contract-start').value = c.startDate||'';
       document.getElementById('contract-end').value   = c.endDate||'';
       document.getElementById('contract-note').value  = c.note||'';
-      _contractItems = c.items||[];
+      _contractItems = normalizeContractItems(c.items||[]);
     }
   } else {
     document.getElementById('contract-name').value = 'ค่าบริการรายเดือน';
@@ -116,19 +116,24 @@ function addContractItem() {
 }
 
 function updateContractTotal() {
-  const total = _contractItems.reduce((s,x)=>s+(x.amount||0),0);
+  const total = getChargeItems(_contractItems).reduce((s,x)=>s+(x.amount||0),0);
   const el = document.getElementById('contract-total-display');
   if(el) el.textContent = formatThb(total);
 }
 
 async function saveContract() {
   const editId     = document.getElementById('contract-edit-id').value;
-  const patientId  = document.getElementById('contract-patient').value;
+  const patientId  = document.getElementById('ta-con-id')?.value || document.getElementById('contract-patient')?.value || '';
   const name       = document.getElementById('contract-name').value.trim();
   if (!patientId) { toast('กรุณาเลือกผู้รับบริการ','warning'); return; }
   if (!name)      { toast('กรุณาระบุชื่อแพ็กเกจ','warning'); return; }
+  if (!editId) {
+    const existing = (db.contracts||[]).find(c => String(c.patientId)===String(patientId) && c.isActive);
+    if (existing) { toast('ผู้รับบริการนี้มีแพ็กเกจ active อยู่แล้ว กรุณาปิดอันเก่าก่อนค่ะ','error'); return; }
+  }
   const patient = db.patients.find(p=>String(p.id)===String(patientId));
-  const total = _contractItems.reduce((s,x)=>s+(x.amount||0),0);
+  _contractItems = normalizeContractItems(_contractItems);
+  const total = getChargeItems(_contractItems).reduce((s,x)=>s+(x.amount||0),0);
   const data = {
     patient_id: patientId, patient_name: patient?.name||'',
     name, items: _contractItems, total_monthly: total,
