@@ -338,6 +338,7 @@ function mapInvoice(r) {
     medItems: r.med_items||[], medTotal: r.med_total||0,
     hideItems: r.hide_items||false,
     otherItems: r.other_items||[], otherTotal: r.other_total||0,
+    includedItems: r.included_items||[], showIncluded: r.show_included||false,
     subtotal: r.subtotal||0, vatRate: r.vat_rate||0, vatAmt: r.vat_amt||0,
     beforeWht: r.before_wht||0, whtRate: r.wht_rate||0, whtAmt: r.wht_amt||0,
     grandTotal: r.grand_total||0,
