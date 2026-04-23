@@ -27,7 +27,7 @@ function openQuickInvoiceModal() {
 }
 
 async function confirmQuickInvoice() {
-  const patId    = document.getElementById('qi-patient').value;
+  const patId    = document.getElementById('ta-qi-id').value;
   const dateFrom = document.getElementById('qi-date-from').value;
   const dateTo   = document.getElementById('qi-date-to').value;
 
