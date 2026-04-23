@@ -753,12 +753,12 @@ async function markInvoicePaid(id) {
 // ── BILLING TABS ─────────────────────────────────────
 // ─────────────────────────────────────────────────────
 function switchBillingTab(tab) {
-  ['invoices','contracts','payments'].forEach(t => {
+  ['invoices','contracts','payments','physio-packages'].forEach(t => {
     const panel = document.getElementById('billing-tab-'+t);
     if(panel) panel.style.display = t===tab ? '' : 'none';
   });
   document.querySelectorAll('.billing-tab').forEach((el,i) => {
-    const tabs = ['invoices','contracts','payments'];
+    const tabs = ['invoices','contracts','payments','physio-packages'];
     const active = tabs[i]===tab;
     el.style.color      = active ? 'var(--accent)' : 'var(--text2)';
     el.style.borderBottom = active ? '2px solid var(--accent)' : '2px solid transparent';
@@ -766,6 +766,7 @@ function switchBillingTab(tab) {
   });
   if (tab === 'contracts') renderContracts();
   if (tab === 'payments')  renderPaymentsTab();
+  if (tab === 'physio-packages') renderPhysioPackages();
 }
 
 // ─────────────────────────────────────────────────────
