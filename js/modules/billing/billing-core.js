@@ -334,12 +334,17 @@ async function loadRequisitionsForInvoice() {
   });
   const allItems = [];
   reqs.forEach(req => {
-    (req.items||[]).forEach(ri => {
-      const item = db.items.find(it=>String(it.id)===String(ri.itemId));
+    // รองรับทั้ง flat record (itemId/qty) และ lines/items array
+    const lines = (req.lines && req.lines.length > 0) ? req.lines :
+                  (req.items && req.items.length > 0) ? req.items :
+                  (req.itemId ? [{ itemId: req.itemId, name: req.itemName, qty: req.qty||1, unit: req.unit }] : []);
+    lines.forEach(ri => {
+      const iid = ri.itemId || ri.item_id;
+      const item = db.items.find(it=>String(it.id)===String(iid));
       if (item && item.isBillable === false) return;
-      allItems.push({ itemId: ri.itemId, name: ri.name||item?.name||ri.itemId,
+      allItems.push({ itemId: iid, name: ri.name||ri.itemName||item?.name||iid,
         qty: ri.qty||1, price: item ? (item.price||item.cost||0) : 0,
-        unit: item?.dispenseUnit||item?.unit||'' });
+        unit: ri.unit||item?.dispenseUnit||item?.unit||'' });
     });
   });
   const allocated = allocateIncludedProducts(allItems, includedProducts);
