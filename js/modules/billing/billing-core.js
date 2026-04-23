@@ -211,9 +211,11 @@ function openCreateInvoiceModal() {
   document.getElementById('inv-med-from').value = ym;
   document.getElementById('inv-med-to').value   = ym;
 
-  const sel = document.getElementById("ta-inv-id");
-  sel.innerHTML = '<option value="">-- เลือกผู้รับบริการ --</option>' +
-    db.patients.filter(p=>p.status==='active').map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  // clear typeahead patient
+  const _taId = document.getElementById('ta-inv-id');
+  const _taInp = document.getElementById('ta-inv-inp');
+  if (_taId) _taId.value = '';
+  if (_taInp) _taInp.value = '';
 
   renderInvoiceItems();
   renderOtherItems();
