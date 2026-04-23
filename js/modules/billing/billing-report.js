@@ -127,12 +127,14 @@ async function confirmQuickInvoice() {
   document.getElementById('inv-med-from').value = dateFrom.slice(0,7);
   document.getElementById('inv-med-to').value   = dateTo.slice(0,7);
 
-  // เลือกผู้รับบริการ
-  const patSel = document.getElementById('inv-patient');
-  patSel.innerHTML = '<option value="">-- เลือกผู้รับบริการ --</option>' +
-    db.patients.filter(p=>p.status==='active')
-      .map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-  patSel.value = String(patId);
+  // เลือกผู้รับบริการ (ผ่าน typeahead)
+  const taInvId = document.getElementById('ta-inv-id');
+  const taInvInp = document.getElementById('ta-inv-inp');
+  if (taInvId) taInvId.value = String(patId);
+  if (taInvInp) {
+    const pat = db.patients.find(p=>String(p.id)===String(patId));
+    taInvInp.value = pat ? pat.name : '';
+  }
   // Auto-fill room rate + label from patient's bed
   onInvoicePatientChange();
   // Enable room checkbox if rate was found
