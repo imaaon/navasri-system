@@ -456,3 +456,89 @@ function confirmAddIncludedProduct() {
   _contractItems.push({ type:'product_included', item_id:itemId, name:item.name, qty_limit: qtyLimit > 0 ? qtyLimit : null });
   renderContractItems();
 }
+
+
+// ─── PHYSIO PACKAGES TAB ───────────────────────────
+
+async function renderPhysioPackagesTab() {
+  var el = document.getElementById('physio-packages-content');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text3);">กำลังโหลด...</div>';
+  var canWrite = hasRole(['admin','manager','officer']);
+  var res = await supa.from('physio_packages').select('*, patients(name)').order('is_active',{ascending:false}).order('created_at',{ascending:false});
+  if (res.error) { el.innerHTML = '<div style="color:red;padding:16px;">โหลดไม่ได้: '+res.error.message+'</div>'; return; }
+  var pkgs = res.data||[];
+  var active = pkgs.filter(function(p){ return p.is_active; });
+  var inactive = pkgs.filter(function(p){ return !p.is_active; });
+  var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+    '<div><h3 style="margin:0;font-size:16px;">🤸 กายภาพ Package แยก</h3>' +
+    '<div style="font-size:12px;color:var(--text3);margin-top:2px;">Package กายภาพรายคนที่แยกจาก contract</div></div>' +
+    (canWrite ? '<button class="btn btn-primary" onclick="openAddPhysioPackageModal()">+ เพิ่ม Package</button>' : '') + '</div>';
+  if (!pkgs.length) {
+    html += '<div style="text-align:center;padding:48px;color:var(--text3);"><div style="font-size:32px;">🤸</div><div>ยังไม่มี Physio Package</div></div>';
+  } else {
+    html += _buildPhysioPkgTable(active, canWrite);
+    if (inactive.length) { html += '<div style="font-size:12px;font-weight:700;color:var(--text3);margin:20px 0 8px;">• หมดอายุ/ไม่ใช้งาน</div>'+_buildPhysioPkgTable(inactive, canWrite); }
+  }
+  el.innerHTML = html;
+}
+
+function _buildPhysioPkgTable(pkgs, canWrite) {
+  if (!pkgs.length) return '';
+  return '<div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>ผู้รับบริการ</th><th>ชื่อ Package</th><th style="text-align:center;">Session รวม</th><th style="text-align:center;">ใช้ไป</th><th style="text-align:center;">คงเหลือ</th><th style="text-align:right;">ราคา/ชม.เกิน</th><th>วันเริ่ม</th><th>วันหมด</th>'+(canWrite?'<th></th>':'')+'</tr></thead><tbody>'+
+  pkgs.map(function(p){
+    var rem = Math.max(0,(p.sessions_included||0)-(p.sessions_used||0));
+    var pct = p.sessions_included>0?Math.min(100,Math.round((p.sessions_used||0)/p.sessions_included*100)):0;
+    var col = pct>=100?'#e74c3c':pct>=80?'#f39c12':'#27ae60';
+    return '<tr><td style="font-weight:500;">'+(p.patients?.name||'-')+'</td><td>'+(p.name||'-')+'</td><td style="text-align:center;">'+(p.sessions_included||0)+'</td><td style="text-align:center;"><div>'+(p.sessions_used||0)+'</div><div style="width:60px;height:4px;background:var(--border);border-radius:2px;margin:3px auto 0;"><div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:2px;"></div></div></td><td style="text-align:center;font-weight:700;color:'+(rem===0?'#e74c3c':'var(--accent)')+';">'+rem+'</td><td style="text-align:right;">'+(p.rate_per_hour_extra>0?formatThb(p.rate_per_hour_extra):'-')+'</td><td style="font-size:12px;">'+(p.start_date||'-')+'</td><td style="font-size:12px;">'+(p.end_date||'-')+'</td>'+(canWrite?'<td><button class="btn btn-ghost btn-sm" onclick="openAddPhysioPackageModal(''+p.id+'')">✏️</button> <button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="deletePhysioPackage(''+p.id+'')">🗑️</button></td>':'')+'</tr>';
+  }).join('')+'</tbody></table></div>';
+}
+
+function openAddPhysioPackageModal(editId) {
+  document.getElementById('pp-edit-id').value = editId||'';
+  document.getElementById('pp-modal-title').textContent = editId ? '✏️ แก้ไข Physio Package' : '➕ เพิ่ม Physio Package';
+  if (editId) {
+    supa.from('physio_packages').select('*').eq('id',editId).single().then(function(res){
+      var data=res.data; if(!data) return;
+      var pat=(db.patients||[]).find(function(p){ return String(p.id)===String(data.patient_id); });
+      document.getElementById('pp-ta-id').value=data.patient_id||'';
+      document.getElementById('pp-ta-inp').value=pat?pat.name:'';
+      document.getElementById('pp-name').value=data.name||'';
+      document.getElementById('pp-sessions').value=data.sessions_included||0;
+      document.getElementById('pp-used').value=data.sessions_used||0;
+      document.getElementById('pp-rate').value=data.rate_per_hour_extra||0;
+      document.getElementById('pp-start').value=data.start_date||'';
+      document.getElementById('pp-end').value=data.end_date||'';
+      document.getElementById('pp-active').checked=data.is_active!==false;
+      document.getElementById('pp-note').value=data.note||'';
+    });
+  } else {
+    ['pp-ta-id','pp-ta-inp','pp-name','pp-note'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('pp-sessions').value=8; document.getElementById('pp-used').value=0;
+    document.getElementById('pp-rate').value=0; document.getElementById('pp-active').checked=true;
+    document.getElementById('pp-start').value=new Date().toISOString().split('T')[0];
+    document.getElementById('pp-end').value='';
+  }
+  makeTypeahead({inputId:'pp-ta-inp',listId:'pp-ta-list',hiddenId:'pp-ta-id',dataFn:function(){ return taPatients(true); }});
+  openModal('modal-physio-package');
+}
+
+async function savePhysioPackage() {
+  var patId=document.getElementById('pp-ta-id').value;
+  var name=document.getElementById('pp-name').value.trim();
+  if (!patId) { toast('กรุณาเลือกผู้รับบริการ','warning'); return; }
+  if (!name)  { toast('กรุณาระบุชื่อ Package','warning'); return; }
+  var editId=document.getElementById('pp-edit-id').value;
+  var row={patient_id:patId,name:name,sessions_included:parseInt(document.getElementById('pp-sessions').value)||0,sessions_used:parseInt(document.getElementById('pp-used').value)||0,rate_per_hour_extra:parseFloat(document.getElementById('pp-rate').value)||0,start_date:document.getElementById('pp-start').value||null,end_date:document.getElementById('pp-end').value||null,is_active:document.getElementById('pp-active').checked,note:document.getElementById('pp-note').value.trim()||null,updated_at:new Date().toISOString()};
+  var result = editId ? await supa.from('physio_packages').update(row).eq('id',editId) : await supa.from('physio_packages').insert(Object.assign({},row,{created_by:currentUser?.name||''}));
+  if (result.error) { toast('บันทึกไม่สำเร็จ: '+result.error.message,'error'); return; }
+  toast('บันทึกสำเร็จค่ะ','success');
+  closeModal('modal-physio-package'); renderPhysioPackagesTab();
+}
+
+async function deletePhysioPackage(id) {
+  if (!confirm('ลบ Physio Package นี้?')) return;
+  var result = await supa.from('physio_packages').delete().eq('id',id);
+  if (result.error) { toast('ลบไม่สำเร็จ: '+result.error.message,'error'); return; }
+  toast('ลบแล้วค่ะ','success'); renderPhysioPackagesTab();
+}
