@@ -95,7 +95,7 @@ function openAddPhysioPackageModal(editId) {
       <div class="modal" style="max-width:480px;width:95%;">
         <div class="modal-header">
           <div class="modal-title">🤸 ${editId ? 'แก้ไข' : 'เพิ่ม'} Package กายภาพ</div>
-          <button class="modal-close" onclick="closeModal('modal-physio-pkg')">✕</button>
+          <button class="modal-close" onclick="document.getElementById('modal-physio-pkg')?.remove()">✕</button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="physio-pkg-edit-id" value="${editId||''}">
@@ -136,7 +136,7 @@ function openAddPhysioPackageModal(editId) {
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-ghost" onclick="closeModal('modal-physio-pkg')">ยกเลิก</button>
+          <button class="btn btn-ghost" onclick="document.getElementById('modal-physio-pkg')?.remove()">ยกเลิก</button>
           <button class="btn btn-primary" onclick="savePhysioPackage()">💾 บันทึก</button>
         </div>
       </div>
@@ -199,7 +199,7 @@ async function savePhysioPackage() {
 
   if (error) { toast('บันทึกไม่สำเร็จ: '+error.message, 'error'); return; }
   toast(editId ? 'แก้ไข Package แล้วค่ะ' : 'เพิ่ม Package กายภาพแล้วค่ะ', 'success');
-  closeModal('modal-physio-pkg');
+  document.getElementById('modal-physio-pkg')?.remove();
   renderPhysioPackagesTab();
 }
 
