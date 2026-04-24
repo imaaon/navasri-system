@@ -53,7 +53,7 @@ function renderMARTab(pid, patientId) {
                 <td style="font-weight:600;">${med.name}</td>
                 <td style="font-size:12px;color:var(--text2);">${med.dose||''} ${med.unit||''} ${med.route ? '· '+med.route : ''}</td>
                 <td style="font-size:12px;">${(med.timings||[]).join(', ')||'-'}</td>
-                <td style="font-size:12px;">${lastGiven ? `<span style="color:#27ae60;font-weight:600;">${lastGiven.givenAt?.slice(11,16)||''}</span> โดย ${lastGiven.givenBy||'-'}` : '<span style="color:var(--text3);">ยังไม่ได้ให้วันนี้</span>'}</td>
+                <td style="font-size:12px;">${lastGiven ? `<span style="color:#27ae60;font-weight:600;">${(lastGiven.givenAt ? new Date(lastGiven.givenAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '')}</span> โดย ${lastGiven.givenBy||'-'}` : '<span style="color:var(--text3);">ยังไม่ได้ให้วันนี้</span>'}</td>
                 <td style="text-align:center;"><span style="background:${todayForMed.length?'#27ae60':'var(--surface2)'};color:${todayForMed.length?'white':'var(--text3)'};border-radius:10px;padding:2px 10px;font-size:12px;">${todayForMed.length} ครั้ง</span></td>
                 <td style="display:flex;gap:4px;">
                   <button class="btn btn-primary btn-sm" onclick="openMAREntryModal('${patientId}','${pid}','${med.id}')">+ บันทึกการให้</button>
