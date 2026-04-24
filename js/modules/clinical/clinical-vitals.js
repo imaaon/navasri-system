@@ -7,8 +7,9 @@ async function openEditVitalModal(patientId, pid, vitalId) {
   document.getElementById('vital-pat-id').dataset.editId = vitalId;
   document.getElementById('vital-pat-id').dataset.pid = pid;
   // set datetime
-  const dt = v.recordedAt || new Date().toISOString();
-  document.getElementById('vital-time').value = dt.slice(0,16);
+  const dt = v.recordedAt ? new Date(v.recordedAt) : new Date();
+  const dtLocal = new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('vital-time').value = dtLocal;
   document.getElementById('vital-by').value = v.recordedBy || '';
   // vital fields
   document.getElementById('vital-bp-sys').value = v.bp_sys || '';
@@ -38,7 +39,7 @@ function renderVitalsTab(pid, patientId) {
   const bpPoints = chartData.map(v => v.bp_sys ? `${v.bp_sys}/${v.bp_dia}` : '-');
   const hrPoints = chartData.map(v => v.hr||'-');
   const spo2Points = chartData.map(v => v.spo2||'-');
-  const labels  = chartData.map(v => v.recordedAt?.slice(5,10)||'');
+  const labels  = chartData.map(v => v.recordedAt ? new Date(new Date(v.recordedAt).getTime() - new Date(v.recordedAt).getTimezoneOffset()*60000).toISOString().slice(5,10) : '');
 
   const svgBP = vitalsSparkline(chartData.map(v=>v.bp_sys), '#e74c3c', 120, 180);
   const svgHR = vitalsSparkline(chartData.map(v=>v.hr), '#3498db', 50, 100);
