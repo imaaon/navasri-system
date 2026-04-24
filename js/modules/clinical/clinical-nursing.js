@@ -83,6 +83,8 @@ let _nursingEditId = null;
 
 function openAddNursingModal(patientId, date, shift, noteId=null) {
   _nursingEditId = noteId;
+    const _user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+  const _nByEl = document.getElementById('nursing-by'); if(_nByEl && !noteId) _nByEl.value = _user;
   {const _e=document.getElementById('nursing-pat-id');if(_e)_e.value=patientId;}
   {const _e=document.getElementById('nursing-date');if(_e)_e.value=date || new Date().toISOString().split('T')[0];}
   {const _e=document.getElementById('nursing-shift');if(_e)_e.selectedIndex=0;}
