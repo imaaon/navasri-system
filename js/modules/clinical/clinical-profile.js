@@ -359,7 +359,8 @@ function _renderPatIncidentTab(pid, listEl) {
       d.className='card';
       d.style.cssText='margin-bottom:8px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;';
       var info=document.createElement('div');
-      info.innerHTML='<b>'+x.type+'</b><div style="font-size:13px;color:var(--text2)">'+x.date+' | '+(x.severity||'')+'</div><div style="font-size:13px">'+(x.detail||'')+'</div>';
+      var incPhoto=x.photo_url?'<div style="margin-top:6px;"><img src="'+x.photo_url+'" style="max-width:120px;max-height:90px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>':'';
+      info.innerHTML='<b>'+x.type+'</b><div style="font-size:13px;color:var(--text2)">'+x.date+' | '+(x.severity||'')+'</div><div style="font-size:13px">'+(x.detail||'')+'</div>'+incPhoto;
       var btns=document.createElement('div');
       btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
@@ -379,7 +380,8 @@ function _renderPatIncidentTab(pid, listEl) {
       d.className='card';
       d.style.cssText='margin-bottom:8px;padding:12px;border-left:3px solid #e67e22;display:flex;justify-content:space-between;align-items:flex-start;';
       var info=document.createElement('div');
-      info.innerHTML='<b>🩹 '+(x.location||'')+' Stage '+(x.stage||'')+'</b><div style="font-size:13px;color:var(--text2)">'+(x.wound_date||'')+'</div><div style="font-size:13px">'+(x.appearance||'')+'</div>';
+      var wndPhoto=x.photo_url?'<div style="margin-top:6px;"><img src="'+x.photo_url+'" style="max-width:120px;max-height:90px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>':'';
+      info.innerHTML='<b>🩹 '+(x.location||'')+' Stage '+(x.stage||'')+'</b><div style="font-size:13px;color:var(--text2)">'+(x.wound_date||'')+'</div><div style="font-size:13px">'+(x.appearance||'')+'</div>'+wndPhoto;
       var btns=document.createElement('div');
       btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
