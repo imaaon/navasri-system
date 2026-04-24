@@ -452,7 +452,15 @@ function _renderPatDietaryTab(pid, listEl) {
       var d=document.createElement('div'); d.className='card';
       d.style.cssText='margin-bottom:8px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;';
       var info=document.createElement('div');
-      info.innerHTML='<div style="font-weight:600;">'+(x.diet_type||'')+'</div><div style="font-size:13px;color:var(--text2);">'+(x.meals||'')+(x.calories?' | '+x.calories+' kcal':'')+'</div>';
+      var dietR='';
+      try{var rArr=JSON.parse(x.restrictions||'[]');if(rArr.length)dietR='<div style="font-size:12px;color:#c0392b;margin-top:2px;">⚫ ข้อห้าม: '+rArr.join(', ')+'</div>';}catch(e){}
+      info.innerHTML=
+        '<div style="font-weight:600;font-size:13px;">สูตรอาหาร: '+(x.diet_type||'-')+'</div>'
+        +(x.date?'<div style="font-size:12px;color:var(--text3);margin-top:2px;">📅 '+x.date+'</div>':'')
+        +'<div style="font-size:12px;color:var(--text2);margin-top:2px;">มื้อ: '+(x.meals||'-')+(x.calories?' | '+x.calories+' kcal':'')+'</div>'
+        +dietR
+        +(x.note?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">หมายเหตุ: '+x.note+'</div>':'')
+        +'<div style="font-size:11px;color:var(--text3);margin-top:3px;">✍️ ผู้บันทึก: '+(x.recorder||'-')+'</div>';
       var btns=document.createElement('div'); btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
       eb.addEventListener('click',function(){openDietModal(x.id);});
