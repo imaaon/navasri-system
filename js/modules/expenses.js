@@ -124,7 +124,7 @@ async function saveExpense() {
   const date   = document.getElementById('exp-date').value;
   const expType= document.getElementById('exp-type').value;
   const job    = document.getElementById('exp-job').value.trim();
-  const sub    = parseFloat(document.getElementById('exp-subtotal').value)||0;
+  const _subEl = document.getElementById('exp-subtotal'); const sub = parseFloat(_subEl?.value || _subEl?.textContent?.replace(/[^0-9.]/g,''))||0;
   if (!date || !job || sub <= 0) { toast('กรุณากรอกวันที่ รายการ และยอดเงิน', 'error'); return; }
 
   const vatRate = parseFloat(document.getElementById('exp-vat-rate').value)||0;
