@@ -340,6 +340,7 @@ console.log('[fix] v98 snippet loaded');
               '<div style="font-size:13px;margin-top:4px;">' + (x.detail||'') + '</div>' +
               (x.first_aid ? '<div style="font-size:12px;color:var(--text2);margin-top:2px;">การปฐมพยาบาล: ' + x.first_aid + '</div>' : '') +
               '<div style="font-size:11px;color:var(--text3);margin-top:2px;">ผู้บันทึก: ' + (x.recorder||'-') + '</div>' +
+              (x.photo_url ? '<div style="margin-top:8px;"><img src="' + x.photo_url + '" style="max-width:160px;max-height:120px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>' : '') +
             '</div>' +
             '<div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">' +
               '<button class="btn btn-ghost btn-sm" data-inc-id="'+x.id+'">✏️</button>' +
@@ -370,6 +371,7 @@ console.log('[fix] v98 snippet loaded');
               (x.appearance ? '<div style="font-size:12px;margin-top:2px;">ลักษณะ: ' + x.appearance + '</div>' : '') +
               (x.dressing ? '<div style="font-size:12px;color:var(--text2);margin-top:2px;">การรักษา: ' + x.dressing + '</div>' : '') +
               '<div style="font-size:11px;color:var(--text3);margin-top:2px;">สถานะ: ' + (x.status||'-') + ' | ผู้บันทึก: ' + (x.created_by||'-') + '</div>' +
+              (x.photo_url ? '<div style="margin-top:8px;"><img src="' + x.photo_url + '" style="max-width:160px;max-height:120px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>' : '') +
             '</div>' +
             '<div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">' +
               '<button class="btn btn-ghost btn-sm" data-wnd-id="'+x.id+'">✏️</button>' +
