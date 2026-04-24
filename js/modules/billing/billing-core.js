@@ -755,7 +755,7 @@ async function markInvoicePaid(id) {
 function switchBillingTab(tab) {
   ['invoices','contracts','payments','physio-packages'].forEach(t => {
     const panel = document.getElementById('billing-tab-'+t);
-    if(panel) panel.style.display = t===tab ? '' : 'none';
+    if(panel) panel.style.display = t===tab ? 'block' : 'none';
   });
   document.querySelectorAll('.billing-tab').forEach((el,i) => {
     const tabs = ['invoices','contracts','payments','physio-packages'];
