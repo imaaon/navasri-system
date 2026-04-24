@@ -2730,7 +2730,7 @@ async function saveDiet() {
 function mapDiet(r) {
   let restrictions = [];
   try { restrictions = typeof r.restrictions==='string' ? JSON.parse(r.restrictions) : (r.restrictions||[]); } catch(e){}
-  return { id:r.id, patientId:r.patient_id, patientName:r.patient_name, dietType:r.diet_type, meals:r.meals, restrictions, note:r.note, updatedAt:r.updated_at };
+  return { id:r.id, patientId:r.patient_id, patientName:r.patient_name, dietType:r.diet_type, meals:r.meals, restrictions, note:r.note, updatedAt:r.updated_at, date:r.date, recorder:r.recorder, calories:r.calories, protein:r.protein };
 }
 
 async function deleteDiet(id) {
@@ -2827,6 +2827,7 @@ function renderDietaryPage() {
     <td style="font-size:12px;">${(d.restrictions||[]).join(', ')||'—'}</td>
     <td>${d.meals||'3 มื้อ'}</td>
     <td style="font-size:12px;">${d.note||'—'}</td>
+    <td style="font-size:12px;">${d.recorder||'—'}</td>
     <td style="font-size:11px;color:var(--text2);">${(d.updatedAt||'').slice(0,10)}</td>
     <td style="white-space:nowrap;">
       <button class="btn btn-ghost btn-sm" onclick="openDietModal('${d.id}')">✏️</button>
