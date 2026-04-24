@@ -2709,6 +2709,7 @@ async function saveDiet() {
     diet_type: dietType, meals: document.getElementById('diet-meals').value,
     restrictions: JSON.stringify(restrictions),
     note: document.getElementById('diet-note').value,
+    recorder: (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '',
     updated_at: new Date().toISOString()
   };
   const editId = document.getElementById('diet-edit-id').value;
