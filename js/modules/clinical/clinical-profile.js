@@ -359,8 +359,18 @@ function _renderPatIncidentTab(pid, listEl) {
       d.className='card';
       d.style.cssText='margin-bottom:8px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;';
       var info=document.createElement('div');
-      var incPhoto=x.photo_url?'<div style="margin-top:6px;"><img src="'+x.photo_url+'" style="max-width:120px;max-height:90px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>':'';
-      info.innerHTML='<b>'+x.type+'</b><div style="font-size:13px;color:var(--text2)">'+x.date+' | '+(x.severity||'')+'</div><div style="font-size:13px">'+(x.detail||'')+'</div>'+incPhoto;
+      var incTime = x.date ? (x.time ? x.date+' '+x.time : x.date) : '-';
+      var sevBadge = {'mild':'<span style="background:#27ae6022;color:#27ae60;border-radius:4px;padding:1px 8px;font-size:11px;">เล็กน้อย</span>','moderate':'<span style="background:#e67e2222;color:#d35400;border-radius:4px;padding:1px 8px;font-size:11px;">ปานกลาง</span>','severe':'<span style="background:#e74c3c22;color:#c0392b;border-radius:4px;padding:1px 8px;font-size:11px;">รุนแรง</span>'}[x.severity]||(x.severity?'<span style="background:var(--surface2);border-radius:4px;padding:1px 8px;font-size:11px;">'+x.severity+'</span>':'');
+      var incPhoto=x.photo_url?'<div style="margin-top:8px;"><img src="'+x.photo_url+'" style="max-width:180px;max-height:140px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>':'';
+      info.innerHTML=
+        '<div style="font-weight:600;font-size:13px;">⚠️ '+(x.type||'-')+' '+sevBadge+'</div>'
+        +'<div style="font-size:12px;color:var(--text3);margin-top:3px;">📅 '+incTime+(x.patient_name?' &nbsp;|&nbsp; 👤 '+x.patient_name:'')+'</div>'
+        +(x.location?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">📍 สถานที่: '+x.location+'</div>':'')
+        +(x.detail?'<div style="font-size:13px;margin-top:4px;">'+x.detail+'</div>':'')
+        +(x.first_aid?'<div style="font-size:12px;color:var(--text2);margin-top:3px;">🩹 การปฐมพยาบาล: '+x.first_aid+'</div>':'')
+        +(x.notified?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">📞 แจ้ง: '+x.notified+'</div>':'')
+        +'<div style="font-size:11px;color:var(--text3);margin-top:3px;">✍️ ผู้บันทึก: '+(x.recorder||'-')+'</div>'
+        +incPhoto;
       var btns=document.createElement('div');
       btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
@@ -380,8 +390,19 @@ function _renderPatIncidentTab(pid, listEl) {
       d.className='card';
       d.style.cssText='margin-bottom:8px;padding:12px;border-left:3px solid #e67e22;display:flex;justify-content:space-between;align-items:flex-start;';
       var info=document.createElement('div');
-      var wndPhoto=x.photo_url?'<div style="margin-top:6px;"><img src="'+x.photo_url+'" style="max-width:120px;max-height:90px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>':'';
-      info.innerHTML='<b>🩹 '+(x.location||'')+' Stage '+(x.stage||'')+'</b><div style="font-size:13px;color:var(--text2)">'+(x.wound_date||'')+'</div><div style="font-size:13px">'+(x.appearance||'')+'</div>'+wndPhoto;
+      var stageBadge=x.stage?'<span style="background:#e67e2222;color:#d35400;border-radius:4px;padding:1px 8px;font-size:11px;">Stage '+x.stage+'</span>':'';
+      var wndStatus={'active':'<span style="background:#e74c3c22;color:#c0392b;border-radius:4px;padding:1px 8px;font-size:11px;">กำลังรักษา</span>','healed':'<span style="background:#27ae6022;color:#27ae60;border-radius:4px;padding:1px 8px;font-size:11px;">หายแล้ว</span>','monitoring':'<span style="background:#3498db22;color:#2980b9;border-radius:4px;padding:1px 8px;font-size:11px;">เฝ้าระวัง</span>'}[x.status]||(x.status?'<span style="background:var(--surface2);border-radius:4px;padding:1px 8px;font-size:11px;">'+x.status+'</span>':'');
+      var wndPhoto=x.photo_url?'<div style="margin-top:8px;"><img src="'+x.photo_url+'" style="max-width:180px;max-height:140px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>':'';
+      info.innerHTML=
+        '<div style="font-weight:600;font-size:13px;">🩹 '+(x.location||'-')+' '+stageBadge+' '+wndStatus+'</div>'
+        +'<div style="font-size:12px;color:var(--text3);margin-top:3px;">📅 '+(x.wound_date||'-')+(x.patient_name?' &nbsp;|&nbsp; 👤 '+x.patient_name:'')+'</div>'
+        +(x.size_cm?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">📏 ขนาด: '+x.size_cm+' cm</div>':'')
+        +(x.appearance?'<div style="font-size:13px;margin-top:4px;">ลักษณะ: '+x.appearance+'</div>':'')
+        +(x.exudate?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">💧 ของเหลว: '+x.exudate+'</div>':'')
+        +(x.dressing?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">🩹 การรักษา: '+x.dressing+'</div>':'')
+        +(x.pain_score!=null&&x.pain_score!==''?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">😣 ความเจ็บปวด: '+x.pain_score+'/10</div>':'')
+        +'<div style="font-size:11px;color:var(--text3);margin-top:3px;">✍️ ผู้บันทึก: '+(x.created_by||'-')+'</div>'
+        +wndPhoto;
       var btns=document.createElement('div');
       btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
