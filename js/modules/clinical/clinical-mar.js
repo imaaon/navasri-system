@@ -85,7 +85,7 @@ function renderMARTab(pid, patientId) {
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>วัน</th><th>เวลาให้จริง</th><th>ยา</th><th>ขนาด</th><th>มื้อ/ครั้งที่</th><th>ผู้ให้</th><th>หมายเหตุ</th><th></th></tr></thead>
+          <thead><tr><th>วัน</th><th>เวลาให้จริง</th><th>ยา</th><th>ขนาด</th><th>มื้อ/ครั้งที่</th><th>สถานะ</th><th>ผู้ให้</th><th>หมายเหตุ</th><th></th></tr></thead>
           <tbody>
             ${(() => {
               const filterDate = document.getElementById('mar-filter-date')?.value || today;
@@ -94,15 +94,16 @@ function renderMARTab(pid, patientId) {
                 const med = (db.medications[pid]||[]).find(m=>m.id==r.medicationId);
                 return `<tr>
                   <td class="number" style="font-size:12px;">${r.date}</td>
-                  <td class="number" style="font-weight:600;color:#27ae60;">${r.givenAt ? r.givenAt.slice(11,16) : '-'}</td>
+                  <td class="number" style="font-weight:600;color:#27ae60;">${r.givenAt ? new Date(r.givenAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '-'}</td>
                   <td style="font-weight:500;">${med?.name||'-'}</td>
                   <td style="font-size:12px;color:var(--text2);">${med?.dose||''} ${med?.unit||''}</td>
                   <td><span style="background:var(--sage-light);border-radius:4px;padding:2px 8px;font-size:12px;">${r.timing||'-'}</span></td>
+                  <td>${r.status==='refused'?'<span style="background:#e74c3c22;color:#c0392b;border-radius:4px;padding:2px 8px;font-size:12px;">❌ ปฏิเสธ</span>':r.status==='withheld'?'<span style="background:#e67e2222;color:#d35400;border-radius:4px;padding:2px 8px;font-size:12px;">⏸️ งดยา</span>':'<span style="background:#27ae6022;color:#27ae60;border-radius:4px;padding:2px 8px;font-size:12px;">✅ ให้แล้ว</span>'}</td>
                   <td style="font-size:12px;">${r.givenBy||'-'}</td>
                   <td style="font-size:12px;color:var(--text3);">${r.note||''}</td>
                   <td><button class="btn btn-ghost btn-sm" onclick="deleteMAREntry('${pid}','${patientId}','${r.id}')">🗑️</button></td>
                 </tr>`;
-              }).join('') : '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text3);">ไม่มีรายการวันนี้</td></tr>';
+              }).join('') : '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text3);">ไม่มีรายการวันนี้</td></tr>';
             })()}
           </tbody>
         </table>
@@ -152,7 +153,7 @@ async function saveMAREntry() {
   const timeVal = document.getElementById('mar-entry-time').value;
   const status  = document.getElementById('mar-entry-status').value;
   if (!timeVal) { toast('กรุณาระบุเวลา','warning'); return; }
-  const givenAt = new Date(timeVal).toISOString();
+  const givenAt = new Date(timeVal + ':00').toISOString();
   const date    = timeVal.slice(0,10);
   const data = {
     patient_id:    _marPatientId,
