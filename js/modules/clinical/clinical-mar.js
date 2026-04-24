@@ -114,6 +114,8 @@ function renderMARTab(pid, patientId) {
 let _marMedId = null, _marPid = null, _marPatientId = null;
 function openMAREntryModal(patientId, pid, medId) {
   _marMedId = medId; _marPid = pid; _marPatientId = patientId;
+    const _user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+  document.getElementById('mar-entry-by').value = _user;
   const med = (db.medications[pid]||[]).find(m=>m.id==medId);
   document.getElementById('mar-entry-med-name').textContent = med ? `${med.name} ${med.dose||''} ${med.unit||''}` : '';
   document.getElementById('mar-entry-timing').value = med?.timings?.[0] || 'เช้า';
