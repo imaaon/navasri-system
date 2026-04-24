@@ -429,6 +429,7 @@ function mapMarRecord(r) {
   return {
     id: r.id, patientId: r.patient_id, medicationId: r.medication_id,
     date: r.date, timing: r.timing, givenAt: r.given_at||null,
+    status: r.status || 'given',
     givenBy: r.given_by||'', note: r.note||''
   };
 }
