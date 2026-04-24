@@ -410,9 +410,14 @@ async function saveDiet() {
     if (idx>=0) db.diets[idx] = mapDiet({id:editId,...row});
   } else {
     row.created_at = new Date().toISOString();
-    const { data, error } = await supa.from('patient_diets').insert(row).select().single();
+    const { data, error } = await supa.from('patient_diets').upsert(row, { onConflict: 'patient_id' }).select().single();
     if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
-    if (data) { if(!db.diets) db.diets=[]; db.diets.unshift(mapDiet(data)); }
+    if (data) {
+      if(!db.diets) db.diets=[];
+      const existIdx = db.diets.findIndex(x=>String(x.patientId)===String(data.patient_id));
+      if (existIdx >= 0) db.diets[existIdx] = mapDiet(data);
+      else db.diets.unshift(mapDiet(data));
+    }
   }
   closeModal('modal-diet');
   renderDietaryPage();
