@@ -94,7 +94,7 @@ function renderVitalsTab(pid, patientId) {
                 const spo2Alert = v.spo2 && v.spo2<95;
                 const hrAlert = v.hr && (v.hr>100||v.hr<50);
                 return `<tr ${bpAlert||spo2Alert||hrAlert ? 'style="background:#fff8f8;"' : ''}>
-                  <td class="number" style="font-size:12px;white-space:nowrap;">${v.recordedAt?.replace('T',' ').slice(0,16)||'-'}</td>
+                  <td class="number" style="font-size:12px;white-space:nowrap;">${(v.recordedAt ? new Date(v.recordedAt).toLocaleString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',',' ') : '-')}</td>
                   <td style="text-align:center;font-weight:${bpAlert?'700':'400'};color:${bpAlert?'#e74c3c':'inherit'};">${v.bp_sys ? v.bp_sys+'/'+v.bp_dia : '-'}</td>
                   <td style="text-align:center;font-weight:${hrAlert?'700':'400'};color:${hrAlert?'#e74c3c':'inherit'};">${v.hr||'-'}</td>
                   <td style="text-align:center;">${v.temp ? v.temp+'°C' : '-'}</td>
@@ -154,7 +154,7 @@ async function saveVitalSign() {
   const n = v => { const x=document.getElementById(v).value; return x===''?null:parseFloat(x); };
   const data = {
     patient_id: patientId,
-    recorded_at: new Date(time).toISOString(),
+    recorded_at: new Date(time + ':00').toISOString(),
     recorded_by: document.getElementById('vital-by').value.trim(),
     bp_sys: n('vital-bp-sys'), bp_dia: n('vital-bp-dia'),
     hr: n('vital-hr'), temp: n('vital-temp'),
