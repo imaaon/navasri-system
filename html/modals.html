@@ -1729,7 +1729,11 @@
       </div>
       <div class="form-group">
         <label class="form-label">ชื่อผู้จำหน่าย / Supplier</label>
-        <input class="form-control" id="recv-supplier" placeholder="เช่น บ.เมดิซัพพลาย จำกัด">
+        <div style="position:relative;">
+          <input class="form-control" id="recv-supplier" placeholder="พิมพ์ชื่อหรือเลือกจากรายชื่อ..." autocomplete="off">
+          <div id="recv-sup-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;"></div>
+          <input type="hidden" id="recv-sup-hidden">
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">อ้างอิงคำขอซื้อ (ถ้ามี)</label>
