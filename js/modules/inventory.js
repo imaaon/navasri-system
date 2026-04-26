@@ -386,7 +386,7 @@ function openReceiveModal() {
     document.getElementById('recv-supplier').value = '';
     document.getElementById('recv-sup-hidden').value = '';
     makeTypeahead({inputId:'recv-supplier',listId:'recv-sup-list',hiddenId:'recv-sup-hidden',
-      dataFn:function(){return (db.suppliers||[]).filter(function(s){return s.status!=='inactive';}).sort(function(a,b){return (a.supplierName||'').localeCompare(b.supplierName||'');}).map(function(s){return {id:s.id,label:s.supplierName||'',sub:(s.contactName||'')+' '+(s.phone||'')};});}
+      dataFn:function(){return (db.suppliers||[]).filter(function(s){return s.status!=='inactive';}).sort(function(a,b){return (a.supplierName||'').localeCompare(b.supplierName||'');}).map(function(s){return {id:s.id,label:s.name||'',sub:(s.contactName||'')+' '+(s.phone||'')};});}
     });
   }, 100);
 }
