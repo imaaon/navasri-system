@@ -164,8 +164,8 @@ function renderStock() {
       <td class="number" style="font-size:12px;color:var(--text2);">${item.price > 0 ? item.price.toLocaleString('th-TH',{minimumFractionDigits:2}) : '-'}</td>
       <td>${statusBadge}${lotBadge ? '<br>'+lotBadge : ''}</td>
       <td style="white-space:nowrap;">
-        <button class="btn btn-ghost btn-sm" <button class="btn btn-sm" onclick="openReceiveForItem('${item.id}')" style="background:var(--sage);color:#fff;margin-right:4px;" title="รับสินค้าเข้า">➕ รับ</button>
-        onclick="editItem('${item.id}')" style="margin-right:4px;" title="แก้ไข">✏️</button>
+        <button class="btn btn-sm" onclick="openReceiveForItem('${item.id}')" style="background:var(--sage);color:#fff;margin-right:4px;" title="รับสินค้าเข้า">➕ รับ</button>
+        <button class="btn btn-ghost btn-sm" onclick="editItem('${item.id}')" style="margin-right:4px;" title="แก้ไข">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="printBarcodeById('${item.id}')" style="margin-right:4px;" title="พิมพ์บาร์โค้ด">🖨️</button>
         <button class="btn btn-ghost btn-sm" onclick="deleteItem('${item.id}')" title="ลบ">🗑️</button>
       </td>
