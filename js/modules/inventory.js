@@ -164,7 +164,8 @@ function renderStock() {
       <td class="number" style="font-size:12px;color:var(--text2);">${item.price > 0 ? item.price.toLocaleString('th-TH',{minimumFractionDigits:2}) : '-'}</td>
       <td>${statusBadge}${lotBadge ? '<br>'+lotBadge : ''}</td>
       <td style="white-space:nowrap;">
-        <button class="btn btn-ghost btn-sm" onclick="editItem('${item.id}')" style="margin-right:4px;" title="แก้ไข">✏️</button>
+        <button class="btn btn-ghost btn-sm" <button class="btn btn-sm" onclick="openReceiveForItem('${item.id}')" style="background:var(--sage);color:#fff;margin-right:4px;" title="รับสินค้าเข้า">➕ รับ</button>
+        onclick="editItem('${item.id}')" style="margin-right:4px;" title="แก้ไข">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="printBarcodeById('${item.id}')" style="margin-right:4px;" title="พิมพ์บาร์โค้ด">🖨️</button>
         <button class="btn btn-ghost btn-sm" onclick="deleteItem('${item.id}')" title="ลบ">🗑️</button>
       </td>
@@ -348,8 +349,19 @@ async function deleteItem(id) {
 }
 
 // ===== RECEIVE =====
+function openReceiveForItem(itemId) {
+  openReceiveModal();
+  setTimeout(function() {
+    var item = (db.items||[]).find(function(i){return i.id==itemId;});
+    if (!item) return;
+    document.getElementById('ta-ri-inp').value = item.name||'';
+    document.getElementById('ta-ri-id').value = item.id;
+    if (typeof onRecvItemChange==='function') onRecvItemChange();
+  }, 200);
+}
+
 function openReceiveModal() {
-  makeTypeahead({inputId:'ta-ri-inp',listId:'ta-ri-list',hiddenId:'ta-ri-id',dataFn:()=>(db.items||[]).filter(x=>(x.qty||0)>0).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(x=>({id:x.id,label:x.name||String(x.id),sub:'คงเหลือ '+x.qty+' '+(x.dispenseUnit||'')})),onSelect:()=>{if(typeof onRecvItemChange==='function')onRecvItemChange();}});
+  makeTypeahead({inputId:'ta-ri-inp',listId:'ta-ri-list',hiddenId:'ta-ri-id',dataFn:()=>(db.items||[]).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(x=>({id:x.id,label:x.name||String(x.id),sub:x.qty>0?'คงเหลือ '+x.qty+' '+(x.dispenseUnit||''):'ยังไม่มีสต็อก'})),onSelect:()=>{if(typeof onRecvItemChange==='function')onRecvItemChange();}});
   document.getElementById('recv-qty').value = '';
   document.getElementById('recv-cost').value = '';
   document.getElementById('recv-note').value = '';
@@ -359,6 +371,10 @@ function openReceiveModal() {
   document.getElementById('recv-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('recv-po').value = '';
   document.getElementById('recv-supplier').value = '';
+  document.getElementById('recv-sup-hidden').value = '';
+  makeTypeahead({inputId:'recv-supplier',listId:'recv-sup-list',hiddenId:'recv-sup-hidden',
+    dataFn:()=>(db.suppliers||[]).filter(s=>s.status!=='inactive').sort((a,b)=>(a.supplierName||'').localeCompare(b.supplierName||'')).map(s=>({id:s.id,label:s.supplierName||'',sub:(s.contactName||'')+' '+(s.phone||'')})),
+    allowFreeText:true});
   // populate PR link dropdown
   const prSel = document.getElementById('recv-pr-link');
   if (prSel) {
