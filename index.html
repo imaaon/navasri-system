@@ -151,21 +151,48 @@ window.onload = async function() {
 
 <!-- _uaPoller START -->
 <script>
-// Poll db readiness แล้วเรียก renderUpcomingAppts (กัน race condition กับ loadDB)
-(function _uaPoll() {
-  let n = 0;
-  const iv = setInterval(function() {
-    n++;
-    var hasDb = (typeof db !== 'undefined') && db && Array.isArray(db.appointments);
-    var hasFn = typeof window.renderUpcomingAppts === 'function';
-    var hasEl = !!document.getElementById('dashboard-appts');
-    if (hasDb && hasFn && hasEl) {
-      clearInterval(iv);
-      try { window.renderUpcomingAppts(); } catch(e) { console.warn('uaPoll render fail:', e); }
-    } else if (n > 60) {
-      clearInterval(iv);
+// Robust poller: poll until widget renders successfully (no timeout)
+// Plus: re-trigger on every showPage('dashboard') call
+(function() {
+  var rendered = false;
+  
+  function tryRender() {
+    try {
+      var hasDb = (typeof db !== 'undefined') && db && Array.isArray(db.appointments);
+      var hasFn = typeof window.renderUpcomingAppts === 'function';
+      var hasEl = !!document.getElementById('dashboard-appts');
+      
+      if (hasDb && hasFn && hasEl) {
+        var el = document.getElementById('dashboard-appts');
+        // Only render if widget is currently empty/default OR shows "ไม่มีนัดหมาย"
+        var currentText = el.textContent || '';
+        if (currentText.length < 5 || currentText.includes('ไม่มีนัดหมาย')) {
+          window.renderUpcomingAppts();
+          rendered = true;
+        }
+      }
+    } catch(e) { console.warn('uaPoll error:', e); }
+  }
+  
+  // Start poller — runs every 1 sec forever
+  var iv = setInterval(tryRender, 1000);
+  
+  // Also hook into showPage to re-render when returning to dashboard
+  var origShowPage = window.showPage;
+  Object.defineProperty(window, 'showPage', {
+    configurable: true,
+    set: function(v) { origShowPage = v; },
+    get: function() {
+      return function() {
+        var result = origShowPage.apply(this, arguments);
+        if (arguments[0] === 'dashboard') {
+          setTimeout(tryRender, 100);
+          setTimeout(tryRender, 500);
+        }
+        return result;
+      };
     }
-  }, 500);
+  });
 })();
 </script>
 <!-- _uaPoller END -->
