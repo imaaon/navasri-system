@@ -65,7 +65,7 @@ async function deletePayment(id) {
 // ─────────────────────────────────────────────────────
 let _contractItems = [];
 
-function openAddContractModal(editId=null) {
+function openAddContractModal(editId=null, prefillCtx=null) {
   _contractItems = editId ? [] : [{ name:'ค่าดูแลรายเดือน', amount:0 }];
   document.getElementById('contract-edit-id').value = editId||'';
   document.getElementById('modal-contract-title').textContent = editId ? '✏️ แก้ไขแพ็กเกจ' : '📋 เพิ่มแพ็กเกจรายเดือน';
@@ -93,6 +93,14 @@ function openAddContractModal(editId=null) {
     document.getElementById('contract-start').value = new Date().toISOString().split('T')[0];
     document.getElementById('contract-end').value   = '';
     document.getElementById('contract-note').value  = '';
+    if (prefillCtx && prefillCtx.patientId) {
+      const taInp_pf = document.getElementById('ta-con-inp');
+      const taId_pf  = document.getElementById('ta-con-id');
+      if (taInp_pf && taId_pf) {
+        taId_pf.value  = prefillCtx.patientId;
+        taInp_pf.value = prefillCtx.patientName || '';
+      }
+    }
   }
   renderContractItems();
   openModal('modal-add-contract');
@@ -541,4 +549,152 @@ async function deletePhysioPackage(id) {
   var result = await supa.from('physio_packages').delete().eq('id',id);
   if (result.error) { toast('ลบไม่สำเร็จ: '+result.error.message,'error'); return; }
   toast('ลบแล้วค่ะ','success'); renderPhysioPackagesTab();
+}
+
+// ──────────────────────────────────────────────────────────
+// PATIENT CONTRACTS POPUP (เปิดจากหน้า patient profile)
+// ──────────────────────────────────────────────────────────
+
+function _pcEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function openPatientContractsModal(patientId, patientName) {
+  if (!patientId) { toast('ไม่พบ ID ผู้รับบริการ', 'warning'); return; }
+  window._patientContractsCtx = {
+    patientId: String(patientId),
+    patientName: patientName || '',
+    isOpen: true
+  };
+  _refreshPatientContractsModal();
+  openModal('modal-patient-contracts');
+}
+
+function _refreshPatientContractsModal() {
+  const ctx = window._patientContractsCtx;
+  if (!ctx) return;
+  const titleEl = document.getElementById('patient-contracts-title');
+  const bodyEl  = document.getElementById('patient-contracts-body');
+  if (!titleEl || !bodyEl) return;
+  
+  titleEl.textContent = '📋 แพ็กเกจของ ' + (ctx.patientName || 'ผู้รับบริการ');
+  
+  const all = (db.contracts || []).filter(c => String(c.patientId) === ctx.patientId);
+  const active = all.filter(c => c.isActive);
+  const inactive = all.filter(c => !c.isActive);
+  
+  let html = '';
+  
+  // ปุ่ม + เพิ่มแพ็กเกจ
+  html += '<div style="margin-bottom:14px;display:flex;justify-content:flex-end;">';
+  html += '  <button class="btn btn-primary btn-sm" onclick="_pcAddNew()">+ เพิ่มแพ็กเกจ</button>';
+  html += '</div>';
+  
+  if (all.length === 0) {
+    html += '<div style="text-align:center;padding:40px 20px;color:var(--text3);">';
+    html += '  <div style="font-size:32px;margin-bottom:10px;">📋</div>';
+    html += '  <div style="font-size:14px;margin-bottom:6px;">ยังไม่มีแพ็กเกจของผู้รับบริการรายนี้</div>';
+    html += '  <div style="font-size:12px;">กดปุ่ม "+ เพิ่มแพ็กเกจ" เพื่อเริ่มต้น</div>';
+    html += '</div>';
+  } else {
+    if (active.length > 0) {
+      html += '<div style="font-size:13px;font-weight:600;color:var(--accent-dark);margin-bottom:8px;">📌 แพ็กเกจปัจจุบัน (' + active.length + ')</div>';
+      html += _pcRenderTable(active, true);
+    }
+    if (inactive.length > 0) {
+      html += '<div style="font-size:13px;font-weight:600;color:var(--text2);margin:18px 0 8px 0;">📜 ประวัติแพ็กเกจเก่า (' + inactive.length + ')</div>';
+      html += _pcRenderTable(inactive, false);
+    }
+  }
+  
+  bodyEl.innerHTML = html;
+}
+
+function _pcRenderTable(contracts, isActive) {
+  let html = '<div style="overflow-x:auto;"><table class="data-table" style="font-size:12px;">';
+  html += '<thead><tr>';
+  html += '<th>ชื่อแพ็กเกจ</th>';
+  html += '<th>รายการ</th>';
+  html += '<th style="text-align:right;">ยอด/เดือน</th>';
+  html += '<th style="text-align:center;">วันออกบิล</th>';
+  if (isActive) html += '<th>ครั้งถัดไป</th>';
+  if (!isActive) html += '<th>วันสิ้นสุด</th>';
+  html += '<th style="white-space:nowrap;"></th>';
+  html += '</tr></thead><tbody>';
+  
+  contracts.forEach(function(c) {
+    const itemsTxt = (c.items || []).map(function(i){ return _pcEsc(i.name); }).join(', ');
+    const cId = _pcEsc(c.id);
+    html += '<tr>';
+    html += '<td style="font-weight:500;">' + _pcEsc(c.name) + '</td>';
+    html += '<td style="color:var(--text2);">' + (itemsTxt || '-') + '</td>';
+    html += '<td style="text-align:right;font-weight:700;color:var(--accent);">' + formatThb(c.totalMonthly) + '</td>';
+    html += '<td style="text-align:center;">วันที่ ' + (c.billingDay || 1) + '</td>';
+    if (isActive) {
+      const next = getNextBillingDate(c);
+      const days = Math.ceil((new Date(next) - new Date()) / (1000*60*60*24));
+      const colDays = days <= 3 ? '#e74c3c' : days <= 7 ? '#e67e22' : 'var(--text3)';
+      html += '<td><div style="font-size:11px;">' + next + '</div>';
+      html += '<div style="font-size:10px;color:' + colDays + ';">(' + (days <= 0 ? 'ถึงกำหนดแล้ว!' : days + ' วัน') + ')</div></td>';
+    } else {
+      html += '<td style="font-size:11px;color:var(--text3);">' + (c.endDate || '-') + '</td>';
+    }
+    html += '<td style="white-space:nowrap;">';
+    if (isActive) {
+      html += '<button class="btn btn-primary btn-sm" onclick="_pcGenerateInvoice(\'' + cId + '\')">💎 ออกบิล</button> ';
+    }
+    html += '<button class="btn btn-ghost btn-sm" onclick="_pcEdit(\'' + cId + '\')">✏️</button> ';
+    html += '<button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="_pcDelete(\'' + cId + '\')">🗑️</button>';
+    html += '</td></tr>';
+  });
+  
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function _pcAddNew() {
+  const ctx = window._patientContractsCtx;
+  if (!ctx) { toast('ไม่พบบริบทผู้รับบริการ', 'error'); return; }
+  openAddContractModal(null, { patientId: ctx.patientId, patientName: ctx.patientName });
+}
+
+function _pcEdit(contractId) {
+  openAddContractModal(contractId);
+}
+
+async function _pcDelete(contractId) {
+  await deleteContract(contractId);
+}
+
+async function _pcGenerateInvoice(contractId) {
+  if (typeof generateContractInvoice === 'function') {
+    await generateContractInvoice(contractId);
+  }
+}
+
+// ปิด popup → reset context (ป้องกัน refresh popup ที่ปิดแล้ว)
+function closePatientContractsModal() {
+  if (window._patientContractsCtx) window._patientContractsCtx.isOpen = false;
+  closeModal('modal-patient-contracts');
+}
+
+// Wrap renderContracts: ทุกครั้งที่ระบบ render หน้าบัญชี → ถ้า popup ของ patient เปิดอยู่ ให้ refresh ด้วย
+// ใช้ guard กัน wrap ซ้ำ
+if (typeof renderContracts === 'function' && !window._pcRenderContractsHooked) {
+  const _origRC = renderContracts;
+  window.renderContracts = function() {
+    const result = _origRC.apply(this, arguments);
+    try {
+      if (window._patientContractsCtx && window._patientContractsCtx.isOpen) {
+        _refreshPatientContractsModal();
+      }
+    } catch(e) { console.warn('_pc refresh failed:', e); }
+    return result;
+  };
+  window._pcRenderContractsHooked = true;
 }
