@@ -248,6 +248,7 @@ function makeTypeahead(cfg) {
 
   inp.addEventListener('input', () => render(inp.value));
   inp.addEventListener('focus', () => render(inp.value));
+  list.addEventListener('mousedown', (e) => e.preventDefault());
   inp.addEventListener('blur',  () => setTimeout(() => { list.style.display = 'none'; }, 150));
   if (cfg.placeholder) inp.placeholder = cfg.placeholder;
 }
