@@ -62,7 +62,7 @@
 <script src="js/modules/patients.js?v=4"></script>
 <script src="js/modules/clinical/clinical-photo.js?v=1"></script>
 <script src="js/modules/clinical/clinical-profile.js?v=45"></script>
-<script src="js/modules/clinical/clinical-appt.js?v=6"></script>
+<script src="js/modules/clinical/clinical-appt.js?v=7"></script>
 <script src="js/modules/clinical/clinical-belongings.js?v=2"></script>
 <script src="js/modules/clinical/clinical-mar.js?v=4"></script>
 <script src="js/modules/clinical/clinical-vitals.js?v=4"></script>
@@ -148,5 +148,26 @@ window.onload = async function() {
   </div>
 </div>
 
+
+<!-- _uaPoller START -->
+<script>
+// Poll db readiness แล้วเรียก renderUpcomingAppts (กัน race condition กับ loadDB)
+(function _uaPoll() {
+  let n = 0;
+  const iv = setInterval(function() {
+    n++;
+    var hasDb = (typeof db !== 'undefined') && db && Array.isArray(db.appointments);
+    var hasFn = typeof window.renderUpcomingAppts === 'function';
+    var hasEl = !!document.getElementById('dashboard-appts');
+    if (hasDb && hasFn && hasEl) {
+      clearInterval(iv);
+      try { window.renderUpcomingAppts(); } catch(e) { console.warn('uaPoll render fail:', e); }
+    } else if (n > 60) {
+      clearInterval(iv);
+    }
+  }, 500);
+})();
+</script>
+<!-- _uaPoller END -->
 </body>
 </html>
