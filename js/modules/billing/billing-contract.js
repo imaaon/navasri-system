@@ -93,6 +93,10 @@ function openAddContractModal(editId=null, prefillCtx=null) {
     document.getElementById('contract-start').value = new Date().toISOString().split('T')[0];
     document.getElementById('contract-end').value   = '';
     document.getElementById('contract-note').value  = '';
+    const taInp_clr = document.getElementById('ta-con-inp');
+    const taId_clr  = document.getElementById('ta-con-id');
+    if (taInp_clr) taInp_clr.value = '';
+    if (taId_clr)  taId_clr.value  = '';
     if (prefillCtx && prefillCtx.patientId) {
       const taInp_pf = document.getElementById('ta-con-inp');
       const taId_pf  = document.getElementById('ta-con-id');
