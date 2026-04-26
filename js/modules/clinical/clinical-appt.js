@@ -136,11 +136,28 @@ function renderUpcomingAppts() {
   const soon = (db.appointments||[]).filter(a=>a.status==='upcoming'&&a.apptDate>=today)
     .sort((a,b)=>a.apptDate.localeCompare(b.apptDate)).slice(0,5);
   if(!soon.length){el.innerHTML=`<div style="text-align:center;padding:16px;color:var(--text3);">ไม่มีนัดหมายที่กำลังจะถึง</div>`;return;}
+  
+  // Helpers
+  const _uaEsc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const _uaThaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  const _uaFmtDate = (s) => { if(!s) return ''; const d = new Date(s); return d.getDate() + ' ' + _uaThaiMonths[d.getMonth()]; };
+  const _uaFmtTime = (t) => { if(!t) return ''; return String(t).substring(0, 5); };
+  const _uaDayLabel = (d) => d === 0 ? 'วันนี้' : d === 1 ? 'พรุ่งนี้' : ('อีก ' + d + ' วัน');
+  
   el.innerHTML = soon.map(a=>{
-    const daysLeft=Math.ceil((new Date(a.apptDate)-new Date(today))/(86400000));
-    return `<div onclick="navigateToAppt('${a.patientId}')" style="cursor:pointer;padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;">
-      <div style="background:${daysLeft<=2?'#e74c3c22':'var(--sage-light)'};color:${daysLeft<=2?'#e74c3c':'var(--accent)'};border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;white-space:nowrap;">${daysLeft===0?'วันนี้':daysLeft===1?'พรุ่งนี้':'อีก '+daysLeft+' วัน'}</div>
-      <div style="flex:1;"><div style="font-weight:600;font-size:12px;">${a.patientName}</div><div style="font-size:11px;color:var(--text2);">${a.hospital} ${a.apptTime?'· '+a.apptTime:''}</div></div>
+    const daysLeft = Math.ceil((new Date(a.apptDate) - new Date(today)) / (86400000));
+    // Fallback: หาชื่อจาก db.patients เมื่อ patientName ใน appointment ว่าง
+    const fallbackName = (db.patients||[]).find(p => String(p.id) === String(a.patientId))?.name || '(ไม่ระบุชื่อ)';
+    const displayName = a.patientName && a.patientName.trim() ? a.patientName : fallbackName;
+    const dateText = _uaFmtDate(a.apptDate) + (a.apptTime ? ' ' + _uaFmtTime(a.apptTime) : '');
+    const isUrgent = daysLeft <= 2;
+    const badgeBg = isUrgent ? '#fef0ee' : '#eef4ff';
+    const badgeColor = isUrgent ? '#e74c3c' : 'var(--accent)';
+    return `<div onclick="navigateToAppt('${_uaEsc(a.patientId)}')" style="cursor:pointer;padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;white-space:nowrap;overflow:hidden;">
+      <div style="background:${badgeBg};color:${badgeColor};border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;flex-shrink:0;white-space:nowrap;">${_uaDayLabel(daysLeft)}</div>
+      <div style="font-weight:600;font-size:13px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;">${_uaEsc(displayName)}</div>
+      <div style="font-size:12px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;min-width:0;">· ${_uaEsc(a.hospital||'-')}</div>
+      <div style="font-size:12px;color:var(--text3);flex-shrink:0;white-space:nowrap;">${_uaEsc(dateText)}</div>
     </div>`;
   }).join('');
 }
