@@ -37,8 +37,9 @@ async function openPatientProfile(id, activeTab) {
             <div style="font-size:11px;color:var(--text2);">หน่วยรวม</div>
           </div>
         </div>
-        <div style="margin-top:8px;">
-          <button class="btn btn-outline-primary" style="width:100%;font-size:13px;" onclick="openContractFilesModal('${p.id}','${p.name}')">📄 สัญญา</button>
+        <div style="margin-top:8px;display:flex;gap:6px;">
+          <button class="btn btn-outline-primary" style="flex:1;font-size:13px;" onclick="openContractFilesModal('${p.id}','${p.name}')">📄 สัญญา</button>
+          <button class="btn btn-outline-primary" style="flex:1;font-size:13px;" onclick="openPatientContractsModal('${p.id}','${p.name}')">📋 แพ็กเกจ</button>
         </div>
         <div style="margin-top:16px;">
           <button class="btn btn-primary" style="width:100%;" onclick="editPatient('${p.id}')">✏️ แก้ไขข้อมูล</button>
