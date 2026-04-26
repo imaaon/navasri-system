@@ -164,19 +164,3 @@ function renderUpcomingAppts() {
 function navigateToAppt(patientId) {
   openPatientProfile(patientId).then(()=>switchPatTab('appts'));
 }
-
-// External poller: รอ db พร้อมแล้วค่อย render widget นัดหมาย (กัน race condition กับ loadDB)
-(function _uaWaitForDb() {
-  let attempts = 0;
-  const interval = setInterval(() => {
-    attempts++;
-    const dbReady = (typeof db !== 'undefined') && Array.isArray(db?.appointments);
-    const widgetExists = !!document.getElementById('dashboard-appts');
-    if (dbReady && widgetExists) {
-      clearInterval(interval);
-      try { renderUpcomingAppts(); } catch(e) { console.warn('_uaWaitForDb render failed:', e); }
-    } else if (attempts > 60) {
-      clearInterval(interval);
-    }
-  }, 500);
-})();
