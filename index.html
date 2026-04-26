@@ -61,7 +61,7 @@
 <script src="js/modules/requisition.js?v=7"></script>
 <script src="js/modules/patients.js?v=4"></script>
 <script src="js/modules/clinical/clinical-photo.js?v=1"></script>
-<script src="js/modules/clinical/clinical-profile.js?v=44"></script>
+<script src="js/modules/clinical/clinical-profile.js?v=45"></script>
 <script src="js/modules/clinical/clinical-appt.js?v=2"></script>
 <script src="js/modules/clinical/clinical-belongings.js?v=2"></script>
 <script src="js/modules/clinical/clinical-mar.js?v=4"></script>
@@ -76,7 +76,7 @@
 <script src="js/modules/billing/billing-core.js?v=17"></script>
 <script src="js/modules/billing/billing-package-helpers.js?v=2"></script>
 <script src="js/modules/billing/billing-physio.js?v=3"></script>
-<script src="js/modules/billing/billing-contract.js?v=14"></script>
+<script src="js/modules/billing/billing-contract.js?v=15"></script>
 <script src="js/modules/billing/billing-print.js?v=2"></script>
 <script src="js/modules/billing/billing-report.js?v=3"></script>
 <script src="js/modules/billing/billing-clinical.js?v=15"></script>
@@ -136,5 +136,15 @@ window.onload = async function() {
 };
 </script>
 <script src="js/fix-features.js?v=101" defer></script>
+
+<!-- MODAL: Patient Contracts (popup จากหน้า patient profile) -->
+<div id="modal-patient-contracts" class="modal" style="max-width:900px;max-height:90vh;display:flex;flex-direction:column;">
+  <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);">
+    <div id="patient-contracts-title" class="modal-title" style="font-size:16px;font-weight:600;">📋 แพ็กเกจของผู้รับบริการ</div>
+    <button class="btn btn-ghost btn-sm" onclick="closePatientContractsModal()" style="font-size:18px;line-height:1;">✕</button>
+  </div>
+  <div id="patient-contracts-body" style="padding:16px 18px;overflow-y:auto;flex:1;"></div>
+</div>
+
 </body>
 </html>
