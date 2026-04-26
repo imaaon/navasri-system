@@ -138,12 +138,14 @@ window.onload = async function() {
 <script src="js/fix-features.js?v=101" defer></script>
 
 <!-- MODAL: Patient Contracts (popup จากหน้า patient profile) -->
-<div id="modal-patient-contracts" class="modal" style="max-width:900px;max-height:90vh;display:flex;flex-direction:column;">
-  <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);">
-    <div id="patient-contracts-title" class="modal-title" style="font-size:16px;font-weight:600;">📋 แพ็กเกจของผู้รับบริการ</div>
-    <button class="btn btn-ghost btn-sm" onclick="closePatientContractsModal()" style="font-size:18px;line-height:1;">✕</button>
+<div id="modal-patient-contracts" class="modal-overlay">
+  <div class="modal" style="max-width:900px;max-height:90vh;display:flex;flex-direction:column;width:95vw;">
+    <div class="modal-header">
+      <div id="patient-contracts-title" class="modal-title">📋 แพ็กเกจของผู้รับบริการ</div>
+      <button class="modal-close" onclick="closePatientContractsModal()">✕</button>
+    </div>
+    <div id="patient-contracts-body" style="padding:16px 24px;overflow-y:auto;flex:1;"></div>
   </div>
-  <div id="patient-contracts-body" style="padding:16px 18px;overflow-y:auto;flex:1;"></div>
 </div>
 
 </body>
