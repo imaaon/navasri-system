@@ -132,14 +132,17 @@ function renderUpcomingAppts() {
   // Called from dashboard to show upcoming appt widget
   const el = document.getElementById('dashboard-appts');
   if(!el) return;
-  // Self-healing: ถ้า db ยังไม่ load (race condition กับ doLogin) → retry 1 ครั้ง
-  if (!window.db || !Array.isArray(db.appointments)) {
-    if (!window._uaRetried) {
-      window._uaRetried = true;
-      setTimeout(() => { window._uaRetried = false; renderUpcomingAppts(); }, 600);
+  // Self-healing v2: ใช้ module-scope db (ไม่ใช่ window.db) + retry หลายครั้งหากยังไม่พร้อม
+  let _uaApptsReady = false;
+  try { _uaApptsReady = (typeof db !== 'undefined') && Array.isArray(db.appointments); } catch(e) { _uaApptsReady = false; }
+  if (!_uaApptsReady) {
+    if ((window._uaRetryCount || 0) < 5) {
+      window._uaRetryCount = (window._uaRetryCount || 0) + 1;
+      setTimeout(() => renderUpcomingAppts(), 500);
     }
     return;
   }
+  window._uaRetryCount = 0;
   const today = new Date().toISOString().split('T')[0];
   const soon = (db.appointments||[]).filter(a=>a.status==='upcoming'&&a.apptDate>=today)
     .sort((a,b)=>a.apptDate.localeCompare(b.apptDate)).slice(0,5);
