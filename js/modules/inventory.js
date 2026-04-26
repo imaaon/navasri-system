@@ -286,7 +286,7 @@ async function saveItem() {
     ...(barcodeVal ? { barcode: barcodeVal } : {}),
     ...(barcodeExt ? { barcode_external: barcodeExt } : {}),
     unit: unitVal,
-    qty: parseInt(document.getElementById('item-qty').value) || 0,
+    qty: editId ? (parseInt(document.getElementById('item-qty').value) || 0) : 0,
     reorder: parseInt(document.getElementById('item-reorder').value) || 10,
     cost: costVal, price: priceVal,
     purchase_unit: purchaseUnit,
