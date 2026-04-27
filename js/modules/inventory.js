@@ -800,6 +800,7 @@ function openQuickDispenseModal(presetPatId, presetPatName) {
   document.getElementById('qd-qty').value = 1;
   document.getElementById('qd-item-id').value = '';
   document.getElementById('qd-item-info').style.display = 'none';
+  var resetUnitEl = document.getElementById("qd-qty-unit"); if (resetUnitEl) resetUnitEl.textContent = "หน่วย";
   // Phase 2 #5: lock ผู้รับบริการ ถ้าเรียกจาก profile
   (function(){
     var pi = document.getElementById("ta-qd-inp");
@@ -848,6 +849,7 @@ function openQuickDispenseModal(presetPatId, presetPatName) {
         if (qtyEl) qtyEl.textContent = item.qty;
         if (unitEl) unitEl.textContent = item.dispenseUnit || item.unit || "";
         if (billEl) billEl.textContent = item.isBillable !== false ? "💰 เรียกเก็บได้" : "🆓 ไม่เรียกเก็บ";
+        var unitDisplayEl = document.getElementById("qd-qty-unit"); if (unitDisplayEl) unitDisplayEl.textContent = item.dispenseUnit || item.unit || "หน่วย";
         if (infoEl) infoEl.style.display = "block";
       }
     });
@@ -874,6 +876,7 @@ function onQdBarcodeScan() {
       document.getElementById('qd-item-qty').textContent = item.qty;
       document.getElementById('qd-item-unit').textContent = item.unit || '';
       document.getElementById('qd-item-billable').textContent = item.isBillable !== false ? '💰 เรียกเก็บได้' : '🏥 ไม่เรียกเก็บ';
+      var qbUnitEl = document.getElementById("qd-qty-unit"); if (qbUnitEl) qbUnitEl.textContent = item.dispenseUnit || item.unit || "หน่วย";
       document.getElementById('qd-item-info').style.display = '';
       document.getElementById('qd-qty').focus();
     } else if (code.length >= 4) {
