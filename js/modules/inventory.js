@@ -888,8 +888,8 @@ function onQdBarcodeScan() {
 
 async function saveQuickDispense() {
   const itemId  = document.getElementById('qd-item-id').value;
-  const patId   = document.document.getElementById('ta-qd-id').value;
-  const staffId = document.document.getElementById('ta-qds-id').value;
+  const patId   = document.getElementById('ta-qd-id').value;
+  const staffId = document.getElementById('ta-qds-id').value;
   const qty     = parseFloat(document.getElementById('qd-qty').value);
   const note    = document.getElementById('qd-note').value.trim();
 
