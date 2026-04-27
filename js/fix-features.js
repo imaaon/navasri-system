@@ -417,7 +417,7 @@ function _clearModalFields(modalId, keepIds) {
 function _setModalDefaults(fields) {
   var today = new Date().toISOString().split('T')[0];
   var now = new Date().toTimeString().slice(0,5);
-  var user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+  var user = (typeof currentUser !== 'undefined' && currentUser) ? (currentUser.displayName || currentUser.username || '') : '';
   fields.forEach(function(f) {
     var el = document.getElementById(f.id);
     if (!el) return;
