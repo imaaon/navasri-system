@@ -788,7 +788,7 @@ function switchPhTab(tab) {
 }
 
 // ===== QUICK DISPENSE =====
-function openQuickDispenseModal() {
+function openQuickDispenseModal(presetPatId, presetPatName) {
   // populate patients
   makeTypeahead({inputId:'ta-qd-inp',listId:'ta-qd-list',hiddenId:'ta-qd-id',dataFn:()=>taPatients(true)});
   // populate staff
@@ -800,6 +800,27 @@ function openQuickDispenseModal() {
   document.getElementById('qd-qty').value = 1;
   document.getElementById('qd-item-id').value = '';
   document.getElementById('qd-item-info').style.display = 'none';
+  // Phase 2 #5: lock ผู้รับบริการ ถ้าเรียกจาก profile
+  (function(){
+    var pi = document.getElementById("ta-qd-inp");
+    var ph = document.getElementById("ta-qd-id");
+    if (presetPatId && pi && ph) {
+      ph.value = presetPatId;
+      pi.value = presetPatName || "";
+      pi.readOnly = true;
+      pi.style.background = "var(--surface2)";
+      pi.style.cursor = "not-allowed";
+      pi.style.color = "var(--text2)";
+    } else if (pi && ph) {
+      // unlock + clear ถ้าเรียกจากที่อื่น
+      pi.readOnly = false;
+      pi.style.background = "";
+      pi.style.cursor = "";
+      pi.style.color = "";
+      pi.value = "";
+      ph.value = "";
+    }
+  })();
   openModal('modal-quick-dispense');
   setTimeout(() => document.getElementById('qd-barcode')?.focus(), 200);
 }
