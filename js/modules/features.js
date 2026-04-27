@@ -748,11 +748,23 @@ function toggleNotifPanel() {
       try { renderNotifPanel(); } catch(e) { console.warn("notif refresh err:", e); }
     }
   }
-  // Initial render after DOM ready
+  // Initial render — retry until data loaded
+  function _initialRefresh(attempt) {
+    attempt = attempt || 0;
+    if (attempt > 15) return; // max 30 seconds
+    var hasData = (typeof db !== "undefined") && db && (db.items || db.purchaseRequests);
+    if (hasData && db.items && db.items.length >= 0) {
+      _refreshNotif();
+      // re-render once more after a moment for data that loads later
+      setTimeout(_refreshNotif, 3000);
+    } else {
+      setTimeout(function(){ _initialRefresh(attempt + 1); }, 2000);
+    }
+  }
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function(){ setTimeout(_refreshNotif, 1500); });
+    document.addEventListener("DOMContentLoaded", function(){ _initialRefresh(0); });
   } else {
-    setTimeout(_refreshNotif, 1500);
+    _initialRefresh(0);
   }
   // Auto-refresh every 30 seconds
   setInterval(_refreshNotif, 30000);
