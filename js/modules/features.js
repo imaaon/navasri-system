@@ -698,8 +698,8 @@ function renderNotifPanel() {
   if(lowItems.length) alerts.push({icon:'🟡',text:'สินค้าใกล้หมด '+lowItems.length+' รายการ',page:'stock',color:'#e67e22'});
   var urgentExp=(db.itemLots||[]).filter(function(l){if(!l.expiryDate||l.qtyRemaining<=0)return false;var diff=Math.ceil((new Date(l.expiryDate)-today)/86400000);return diff>=0&&diff<=7;});
   if(urgentExp.length) alerts.push({icon:'📅',text:'สินค้าหมดอายุใน 7 วัน '+urgentExp.length+' Lot',page:'stock',color:'#e74c3c'});
-  var stalePRs=(db.purchaseRequests||[]).filter(function(r){return r.status==='submitted'&&r.createdAt&&new Date(r.createdAt)<staleDate;});
-  if(stalePRs.length) alerts.push({icon:'📋',text:'คำขอซื้อรออนุมัติเกิน 3 วัน ('+stalePRs.length+' รายการ)',page:'purchaserequests',color:'#8e44ad'});
+  var pendingPRs=(db.purchaseRequests||[]).filter(function(r){return r.status==='submitted';});
+  if(pendingPRs.length) alerts.push({icon:'📋',text:'คำขอซื้อรอ approve '+pendingPRs.length+' รายการ',page:'purchaserequests',color:'#8e44ad'});
   var assetsDue=(db.assets||[]).filter(function(a){return a.status==='active'&&a.nextMaintenanceDate&&a.nextMaintenanceDate<=soon30Str;});
   if(assetsDue.length) alerts.push({icon:'🔧',text:'ครุภัณฑ์ถึงรอบซ่อม '+assetsDue.length+' รายการ',page:'assets',color:'#e67e22'});
   var overdueInv=(db.invoices||[]).filter(function(inv){if(inv.status==='paid'||inv.type!=='invoice')return false;return inv.dueDate&&inv.dueDate<todayStr;});
