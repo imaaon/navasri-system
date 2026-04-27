@@ -821,6 +821,41 @@ function openQuickDispenseModal(presetPatId, presetPatName) {
       ph.value = "";
     }
   })();
+  // Phase 2 #5: typeahead สินค้า (qd-item-search)
+  if (typeof makeTypeahead === "function") {
+    makeTypeahead({
+      inputId: "qd-item-search",
+      listId: "qd-item-search-list",
+      hiddenId: "qd-item-id",
+      dataFn: function() {
+        return (db.items||[])
+          .sort(function(a,b){return (a.name||"").localeCompare(b.name||"");})
+          .map(function(x){return {
+            id: x.id,
+            label: x.name || String(x.id),
+            sub: x.qty>0 ? ("คงเหลือ " + x.qty + " " + (x.dispenseUnit||x.unit||"")) : "ยังไม่มีสต็อก"
+          };});
+      },
+      onSelect: function(id, label) {
+        var item = (db.items||[]).find(function(x){return x.id == id;});
+        if (!item) return;
+        var nameEl = document.getElementById("qd-item-name");
+        var qtyEl = document.getElementById("qd-item-qty");
+        var unitEl = document.getElementById("qd-item-unit");
+        var billEl = document.getElementById("qd-item-billable");
+        var infoEl = document.getElementById("qd-item-info");
+        if (nameEl) nameEl.textContent = item.name || "";
+        if (qtyEl) qtyEl.textContent = item.qty;
+        if (unitEl) unitEl.textContent = item.dispenseUnit || item.unit || "";
+        if (billEl) billEl.textContent = item.isBillable !== false ? "💰 เรียกเก็บได้" : "🆓 ไม่เรียกเก็บ";
+        if (infoEl) infoEl.style.display = "block";
+      }
+    });
+    // clear search input ตอนเปิด modal
+    var searchInp = document.getElementById("qd-item-search");
+    if (searchInp) searchInp.value = "";
+  }
+
   openModal('modal-quick-dispense');
   setTimeout(() => document.getElementById('qd-barcode')?.focus(), 200);
 }
