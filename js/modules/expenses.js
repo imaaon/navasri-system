@@ -44,7 +44,7 @@ function renderExpenses() {
     if (statusF && r.status      !== statusF) return false;
     if (monthF) {
       const [fy,fm] = monthF.split('-');
-      if (String(r.periodYear) !== fy || String(r.periodMonth) !== fm) return false;
+      if (String(r.periodYear) !== String((parseInt(fy)||0)+543) || String(r.periodMonth) !== fm) return false;
     }
     if (q && !((r.job||'')+(r.vendorName||'')+(r.docNo||'')+(r.note||'')).toLowerCase().includes(q)) return false;
     return true;
@@ -52,7 +52,7 @@ function renderExpenses() {
 
   // stats
   const now = new Date(); const cy = now.getFullYear(); const cm = now.getMonth()+1;
-  const thisMonth = (db.expenses||[]).filter(r=>r.periodYear==cy&&r.periodMonth==cm||(!r.periodYear&&r.date?.startsWith(cy+'-'+String(cm).padStart(2,'0'))));
+  const thisMonth = (db.expenses||[]).filter(r=>r.periodYear==cy+543&&r.periodMonth==cm||(!r.periodYear&&r.date?.startsWith(cy+'-'+String(cm).padStart(2,'0'))));
   document.getElementById('exp-stat-total').textContent  = '฿'+thisMonth.reduce((s,r)=>s+(parseFloat(r.net)||0),0).toLocaleString('th',{maximumFractionDigits:2});
   document.getElementById('exp-stat-unpaid').textContent = '฿'+(db.expenses||[]).filter(r=>r.status==='unpaid').reduce((s,r)=>s+(parseFloat(r.net)||0),0).toLocaleString('th',{maximumFractionDigits:2});
   document.getElementById('exp-stat-paid').textContent   = '฿'+thisMonth.filter(r=>r.status==='paid').reduce((s,r)=>s+(parseFloat(r.net)||0),0).toLocaleString('th',{maximumFractionDigits:2});
