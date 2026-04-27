@@ -38,7 +38,7 @@ function initReq() {
   makeTypeahead({inputId:'ta-rs-inp',listId:'ta-rs-list',hiddenId:'ta-rs-id',dataFn:()=>taStaff(),
     onSelect:()=>{}});
   // auto-select current user as staff
-  (function(){ const me=(db.staff||[]).find(s=>s.name===currentUser?.displayName); if(me){ const h=document.getElementById('ta-rs-id'); const i=document.getElementById('ta-rs-inp'); if(h)h.value=me.id; if(i)i.value=me.name+(me.nickname?' ('+me.nickname+')':''); } else { const i=document.getElementById('ta-rs-inp'); if(i && currentUser?.displayName) i.value=currentUser.displayName; } })();
+  (function(){ const me=(db.staff||[]).find(s=>s.name===currentUser?.displayName); if(me){ const h=document.getElementById('ta-rs-id'); const i=document.getElementById('ta-rs-inp'); if(h)h.value=me.id; if(i)i.value=me.name+(me.nickname?' ('+me.nickname+')':''); } else { const i=document.getElementById('ta-rs-inp'); if(i && currentUser?.displayName) i.value=currentUser.displayName; } const _staffInp=document.getElementById('ta-rs-inp'); if(_staffInp && !_staffInp._autofillBound){ _staffInp._autofillBound=true; _staffInp.addEventListener('focus', function(){ const _hid=document.getElementById('ta-rs-id'); if(this.value && (!_hid || !_hid.value)){ this._savedAutofill=this.value; this.value=''; this.dispatchEvent(new Event('input',{bubbles:true})); }}); _staffInp.addEventListener('blur', function(){ const _self=this; setTimeout(function(){ if(!_self.value && _self._savedAutofill){ _self.value=_self._savedAutofill; _self._savedAutofill=null; } else if(_self.value){ _self._savedAutofill=null; } }, 200); }); } })();
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('req-date').value = today;
 
