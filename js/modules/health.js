@@ -13,7 +13,7 @@ function renderMedLogTab(patId, type) {
   if (!p) return '';
   const isM = type === 'medical';
   const icon   = isM ? '🏥' : '💊';
-  const title  = isM ? 'ประวัติการรักษา / โรคประจำตัว' : 'ประวัติการให้ยา / ยาประจำ';
+  const title  = isM ? 'ประวัติการรักษา' : 'ยาประจำ';
   const key    = isM ? 'medicalLog' : 'medsLog';
   const logs   = (p[key] || []).slice().sort((a,b) => b.date.localeCompare(a.date));
   const _ = patId; // used below
@@ -55,7 +55,7 @@ function openAddMedLog(patId, type) {
   document.getElementById('medlog-by').value = currentUser?.displayName || currentUser?.username || '';
   document.getElementById('medlog-date').value   = new Date().toISOString().slice(0,10);
   document.getElementById('medlog-detail').value = '';
-  document.getElementById('medlog-title').textContent = isM ? '+ ประวัติการรักษา' : '+ ประวัติการให้ยา';
+  document.getElementById('medlog-title').textContent = isM ? '+ ประวัติการรักษา' : '+ ยาประจำ';
   openModal('modal-addMedLog');
 }
 
@@ -75,7 +75,7 @@ function editMedLog(patId, type, supaId) {
   document.getElementById('medlog-date').value    = entry.date;
   document.getElementById('medlog-detail').value  = entry.detail;
   document.getElementById('medlog-by').value = entry.by || '';
-  document.getElementById('medlog-title').textContent = type === 'medical' ? '✏️ แก้ไขประวัติการรักษา' : '✏️ แก้ไขประวัติการให้ยา';
+  document.getElementById('medlog-title').textContent = type === 'medical' ? '✏️ แก้ไขประวัติการรักษา' : '✏️ แก้ไขยาประจำ';
   openModal('modal-addMedLog');
 }
 
@@ -405,7 +405,7 @@ function exportPatMedPDF(patId, type) {
   if (!p) return;
   const key   = type === 'medical' ? 'medicalLog' : 'medsLog';
   const icon  = type === 'medical' ? '🏥' : '💊';
-  const label = type === 'medical' ? 'ประวัติการรักษา / โรคประจำตัว' : 'ประวัติการให้ยา / ยาประจำ';
+  const label = type === 'medical' ? 'ประวัติการรักษา' : 'ยาประจำ';
   const color = type === 'medical' ? '#2d6a48' : '#2980b9';
   const logs  = (p[key] || []).slice().sort((a,b) => b.date.localeCompare(a.date));
   if (logs.length === 0) { toast('ไม่มีข้อมูล','warning'); return; }
