@@ -140,11 +140,11 @@ function recalcExpense() {
   const whtAmt  = subtotal * whtRate;
   const net     = subtotal - whtAmt;
 
-  if(document.getElementById('exp-subtotal'))  document.getElementById('exp-subtotal').textContent  = formatThb(beforeVat);
+  if(document.getElementById('expv-subtotal'))  document.getElementById('expv-subtotal').textContent  = formatThb(beforeVat);
   if(document.getElementById('exp-vat'))       document.getElementById('exp-vat').textContent       = formatThb(vatIncluded);
   if(document.getElementById('exp-total-vat')) document.getElementById('exp-total-vat').textContent = formatThb(subtotal);
   if(document.getElementById('exp-wht'))       document.getElementById('exp-wht').textContent       = formatThb(whtAmt);
-  if(document.getElementById('exp-net'))       document.getElementById('exp-net').textContent       = formatThb(net);
+  if(document.getElementById('expv-net'))       document.getElementById('expv-net').textContent       = formatThb(net);
 }
 
 async function saveExpense() {
