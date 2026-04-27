@@ -466,7 +466,7 @@ function openTubeFeedModal(id) {
     document.getElementById('tubefeed-date').value = now.toISOString().split('T')[0];
     document.getElementById('tubefeed-time').value = now.toTimeString().slice(0,5);
     ['formula','volume','water','residual','note'].forEach(f=>document.getElementById('tubefeed-'+f).value='');
-    document.getElementById('tubefeed-recorder').value = db.currentUser?.name||'';
+    document.getElementById('tubefeed-recorder').value = (typeof currentUser !== 'undefined' && currentUser ? (currentUser.displayName || currentUser.username || '') : '');
   }
   openModal('modal-tubefeed');
 }
