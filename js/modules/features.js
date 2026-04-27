@@ -740,3 +740,22 @@ function toggleNotifPanel() {
     }); },50);
   }
 }
+
+// ===== AUTO-REFRESH NOTIF BADGE (Phase 2 #8) =====
+(function(){
+  function _refreshNotif() {
+    if (typeof renderNotifPanel === "function") {
+      try { renderNotifPanel(); } catch(e) { console.warn("notif refresh err:", e); }
+    }
+  }
+  // Initial render after DOM ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function(){ setTimeout(_refreshNotif, 1500); });
+  } else {
+    setTimeout(_refreshNotif, 1500);
+  }
+  // Auto-refresh every 30 seconds
+  setInterval(_refreshNotif, 30000);
+  // Expose globally so other modules can trigger after data change
+  window.refreshNotifBadge = _refreshNotif;
+})();
