@@ -2589,7 +2589,7 @@
         <div style="display:grid;gap:8px;max-width:340px;margin-left:auto;">
           <div style="display:flex;justify-content:space-between;font-size:13px;">
             <span style="color:var(--text2);">รวมเป็นเงิน</span>
-            <span id="exp-subtotal">0.00 ฿</span>
+            <span id="expv-subtotal">0.00 ฿</span>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:13px;">
             <span style="color:var(--text2);">VAT 7%</span>
@@ -2601,7 +2601,7 @@
           </div>
           <div style="display:flex;justify-content:space-between;font-size:13px;align-items:center;">
             <span style="color:var(--text2);">หัก ณ ที่จ่าย
-              <select id="exp-wht-rate" onchange="recalcExpense()" style="border:1px solid var(--border);border-radius:4px;padding:1px 4px;background:var(--surface2);color:var(--text1);font-size:12px;margin-left:4px;">
+              <select id="expv-wht-rate" onchange="recalcExpense()" style="border:1px solid var(--border);border-radius:4px;padding:1px 4px;background:var(--surface2);color:var(--text1);font-size:12px;margin-left:4px;">
                 <option value="0">ไม่หัก</option>
                 <option value="1">1%</option>
                 <option value="3">3%</option>
@@ -2611,7 +2611,7 @@
           </div>
           <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;background:var(--accent);color:white;padding:10px 12px;border-radius:6px;">
             <span>ยอดชำระ</span>
-            <span id="exp-net">0.00 ฿</span>
+            <span id="expv-net">0.00 ฿</span>
           </div>
         </div>
       </div>
