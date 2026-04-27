@@ -2516,7 +2516,10 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">จำนวน <span class="required">*</span></label>
-            <input class="form-control number" id="qd-qty" type="number" min="1" value="1" inputmode="numeric">
+            <div style="display:flex;gap:8px;align-items:stretch;">
+            <input class="form-control number" style="flex:1;" id="qd-qty" type="number" min="1" value="1" inputmode="numeric">
+              <span id="qd-qty-unit" style="min-width:60px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text2);text-align:center;white-space:nowrap;">หน่วย</span>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">ผู้เบิก</label>
