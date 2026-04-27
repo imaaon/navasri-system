@@ -195,7 +195,7 @@ async function submitReq() {
 function clearReq() {
   reqItems = [];
   (function(){var _v='';var _h=document.getElementById("ta-rp-id");if(_h)_h.value=String(_v||"");var _i=document.getElementById("ta-rp-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
-  (function(){var _v='';var _h=document.getElementById("ta-rs-id");if(_h)_h.value=String(_v||"");var _i=document.getElementById("ta-rs-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
+  (function(){var _v='';var _h=document.getElementById("ta-rs-id");if(_h)_h.value=String(_v||"");var _i=document.getElementById("ta-rs-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})(); (function(){ const me=(db.staff||[]).find(s=>s.name===currentUser?.displayName); if(!me){ const i=document.getElementById("ta-rs-inp"); if(i && currentUser?.displayName) i.value=currentUser.displayName; } else { const h=document.getElementById("ta-rs-id"); const i=document.getElementById("ta-rs-inp"); if(h)h.value=me.id; if(i)i.value=me.name+(me.nickname?' ('+me.nickname+')':''); } })();
   document.getElementById('req-note').value = '';
   document.getElementById('req-date').value = new Date().toISOString().split('T')[0];
   for (let i = 0; i < 5; i++) reqItems.push({ itemId: '', qty: 1, unit: '' });
