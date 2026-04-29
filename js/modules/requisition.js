@@ -1173,11 +1173,11 @@ async function renderReport() {
 
 // Render a single requisition as a printable form and navigate to it
 function openReqForm(reqId) {
-  const group = db.reqGroups ? db.reqGroups.find(g => g.id === reqId) : null;
+  const group = db.reqGroups ? db.reqGroups.find(g => g.id == reqId) : null;
   // Fallback: build from individual requisitions with same id
   let reqs = group
     ? group.items.map(ri => ({ ...ri, patientName: group.patientName, staffName: group.staffName, date: group.date, note: group.note, status: group.status, refNo: group.refNo }))
-    : db.requisitions.filter(r => r.groupId === reqId || r.id === reqId);
+    : db.requisitions.filter(r => r.groupId == reqId || r.id == reqId);
 
   if (!reqs.length) { toast('ไม่พบข้อมูลใบเบิก', 'warning'); return; }
 
