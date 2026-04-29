@@ -64,10 +64,12 @@ async function confirmQuickInvoice() {
   });
 
   // === Phase 1 fix: รวม logic เดียวกับ loadRequisitionsForInvoice() ===
-  // 1. กรอง isBillable === false ก่อน (สินค้าที่บ้านรวมในค่าบริการ — ไม่คิดเงิน)
-  // 2. เรียก allocateIncludedProducts() แยก items ในแพ็คเกจ (สัญญา) ออกจากที่ต้องคิดเงิน
+  // Phase 1.5 fix: package logic override isBillable
+  //   - ถ้า item อยู่ใน package → ใช้ package logic (qty_limit) — ไม่สนใจ isBillable
+  //   - ถ้าไม่อยู่ใน package + isBillable=false → ฟรีตลอด ไม่ขึ้นในบิล
   const contract = (typeof getActiveContract === 'function') ? getActiveContract(patId) : null;
   const includedProducts = contract ? getIncludedProducts(contract.items||[]) : [];
+  const packagedItemIds = new Set((includedProducts||[]).map(p => String(p.item_id)));
 
   // Phase 0: รองรับใบเบิกหลายรายการ — flatten lines
   const allItems = [];
@@ -78,8 +80,9 @@ async function confirmQuickInvoice() {
     lines.forEach(l => {
       const iid = l.itemId || l.item_id;
       const item = (db.items||[]).find(i => String(i.id) === String(iid) || i.name === l.itemName);
-      // กรองเฉพาะ Billable items — ที่ isBillable === false จะไม่ขึ้นในบิล (เป็นต้นทุนของบ้าน)
-      if (item && item.isBillable === false) return;
+      // Phase 1.5: package items override isBillable check
+      const inPackage = iid && packagedItemIds.has(String(iid));
+      if (!inPackage && item && item.isBillable === false) return;
       const key = item?.id || l.itemName || '';
       if (!key) return;
       const price = l.unitPrice || (item?.price) || (item?.cost) || 0;
@@ -93,10 +96,11 @@ async function confirmQuickInvoice() {
       });
     });
   });
-  // Group items (legacy) — ตรวจ isBillable เหมือนกัน
+  // Group items (legacy) — ตรวจ isBillable + package override เหมือนกัน
   groupItems.forEach(it => {
     const item = (db.items||[]).find(i => String(i.id) === String(it.itemId) || i.name === it.name);
-    if (item && item.isBillable === false) return;
+    const inPackage = it.itemId && packagedItemIds.has(String(it.itemId));
+    if (!inPackage && item && item.isBillable === false) return;
     allItems.push({
       itemId: it.itemId,
       name: it.name,

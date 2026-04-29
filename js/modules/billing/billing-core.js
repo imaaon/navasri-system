@@ -335,6 +335,11 @@ async function loadRequisitionsForInvoice() {
     return d >= fromDate && d <= toDate && r.status === 'approved';
   });
   const allItems = [];
+  // Phase 1.5 fix: สร้าง Set ของ item IDs ที่อยู่ใน package เพื่อใช้ override isBillable check
+  // กฎใหม่: ถ้า item อยู่ใน package → ใช้ package logic (qty_limit) แม้ isBillable=false ก็ตาม
+  //         ถ้า item ไม่อยู่ใน package → ใช้ isBillable ตามเดิม
+  const packagedItemIds = new Set((includedProducts||[]).map(p => String(p.item_id)));
+
   reqs.forEach(req => {
     // รองรับทั้ง flat record (itemId/qty) และ lines/items array
     const lines = (req.lines && req.lines.length > 0) ? req.lines :
@@ -343,7 +348,10 @@ async function loadRequisitionsForInvoice() {
     lines.forEach(ri => {
       const iid = ri.itemId || ri.item_id;
       const item = db.items.find(it=>String(it.id)===String(iid));
-      if (item && item.isBillable === false) return;
+      // Phase 1.5: ถ้า item อยู่ใน package → ปล่อยผ่าน (package logic จะจัดการ qty_limit เอง)
+      //            ถ้าไม่อยู่ใน package + isBillable=false → ฟรีตลอด ไม่ขึ้นในบิล
+      const inPackage = iid && packagedItemIds.has(String(iid));
+      if (!inPackage && item && item.isBillable === false) return;
       allItems.push({ itemId: iid, name: ri.name||ri.itemName||item?.name||iid,
         qty: ri.qty||1, price: item ? (item.price||item.cost||0) : 0,
         unit: ri.unit||item?.dispenseUnit||item?.unit||'' });
