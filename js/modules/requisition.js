@@ -1305,7 +1305,7 @@ function renderReqForm({ reqs, first, group }) {
           <td style="font-weight:500;">${r.itemName}</td>
           <td class="center" style="font-weight:700;">${r.qty}</td>
           <td class="center" style="color:#555;">${r.unit}</td>
-          <td class="center" style="font-weight:500;">${r.qtyApproved || r.qty || ''}</td>
+          <td class="center" style="font-weight:500;">${r.qtyApproved ?? r.qty ?? ''}</td>
           <td class="center" style="color:#555;">${r.unit}</td>
           <td style="color:#aaa;">____________</td>
         </tr>`).join('')}
@@ -1492,13 +1492,13 @@ function exportRequisitionExcel() {
   // Phase 0: flatten lines เป็น 1 row ต่อ line ใน Excel
   db.requisitions.forEach(r => {
     const statusLabel = r.status === 'approved' ? 'อนุมัติแล้ว' : r.status === 'rejected' ? 'ไม่อนุมัติ' : 'รออนุมัติ';
-    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName, qty: r.qty, unit: r.unit }];
+    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName, qty: (r.qtyApproved ?? r.qty), unit: r.unit }];
     lines.forEach(l => {
       rowNum++;
       rows.push([
         rowNum, r.date || '', r.refNo || r.id || '',
         r.patientName || '', l.itemName || '',
-        l.qty || 0, l.unit || '',
+        (l.qtyApproved ?? l.qty ?? 0), l.unit || '',
         r.staffName || '', statusLabel, r.note || ''
       ]);
     });
