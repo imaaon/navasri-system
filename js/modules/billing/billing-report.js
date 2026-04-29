@@ -55,6 +55,7 @@ async function confirmQuickInvoice() {
         g.status === 'approved' &&
         g.date >= dateFrom && g.date <= dateTo) {
       (g.items||[]).forEach(it => groupItems.push({
+        itemId: it.itemId || it.item_id || null,
         name: it.name || it.itemName || '',
         qty:  it.qty  || it.quantity || 1,
         price: it.price || it.unitPrice || 0,
@@ -62,34 +63,81 @@ async function confirmQuickInvoice() {
     }
   });
 
-  // สร้าง medItems รวมรายการที่ชื่อเดียวกัน พร้อมแนบ category
+  // === Phase 1 fix: รวม logic เดียวกับ loadRequisitionsForInvoice() ===
+  // 1. กรอง isBillable === false ก่อน (สินค้าที่บ้านรวมในค่าบริการ — ไม่คิดเงิน)
+  // 2. เรียก allocateIncludedProducts() แยก items ในแพ็คเกจ (สัญญา) ออกจากที่ต้องคิดเงิน
+  const contract = (typeof getActiveContract === 'function') ? getActiveContract(patId) : null;
+  const includedProducts = contract ? getIncludedProducts(contract.items||[]) : [];
+
+  // Phase 0: รองรับใบเบิกหลายรายการ — flatten lines
+  const allItems = [];
+  reqs.forEach(r => {
+    const lines = (r.lines && r.lines.length > 0)
+      ? r.lines
+      : [{ itemId: r.itemId, itemName: r.itemName||r.name, qty: r.quantity||r.qty||1, unitPrice: r.price||r.unit_price||0 }];
+    lines.forEach(l => {
+      const iid = l.itemId || l.item_id;
+      const item = (db.items||[]).find(i => String(i.id) === String(iid) || i.name === l.itemName);
+      // กรองเฉพาะ Billable items — ที่ isBillable === false จะไม่ขึ้นในบิล (เป็นต้นทุนของบ้าน)
+      if (item && item.isBillable === false) return;
+      const key = item?.id || l.itemName || '';
+      if (!key) return;
+      const price = l.unitPrice || (item?.price) || (item?.cost) || 0;
+      allItems.push({
+        itemId: iid,
+        name: l.itemName || item?.name || key,
+        qty: l.qty || 1,
+        price: price,
+        unit: l.unit || item?.dispenseUnit || item?.unit || '',
+        category: item?.category || 'เวชภัณฑ์'
+      });
+    });
+  });
+  // Group items (legacy) — ตรวจ isBillable เหมือนกัน
+  groupItems.forEach(it => {
+    const item = (db.items||[]).find(i => String(i.id) === String(it.itemId) || i.name === it.name);
+    if (item && item.isBillable === false) return;
+    allItems.push({
+      itemId: it.itemId,
+      name: it.name,
+      qty: it.qty,
+      price: it.price,
+      unit: '',
+      category: item?.category || 'เวชภัณฑ์'
+    });
+  });
+
+  // แยก package items (free/charged) ออกจาก billable items
+  const allocated = (typeof allocateIncludedProducts === 'function')
+    ? allocateIncludedProducts(allItems, includedProducts)
+    : { billable: allItems, included: [] };
+
+  // รวม billable items ที่ชื่อเดียวกัน (จาก allocated.billable + charge_qty ของ included)
   const medMap = {};
   const getItemCategory = (name) => {
-    // หา category จาก db.items ตามชื่อ
     const found = (db.items||[]).find(i => i.name === name);
     return found ? (found.category || 'เวชภัณฑ์') : 'เวชภัณฑ์';
   };
-  // Phase 0: รองรับใบเบิกหลายรายการ — flatten lines
-  reqs.forEach(r => {
-    const lines = (r.lines && r.lines.length > 0) 
-      ? r.lines 
-      : [{ itemName: r.itemName||r.name, qty: r.quantity||r.qty||1, unitPrice: r.price||r.unit_price||0 }];
-    lines.forEach(l => {
-      const key = l.itemName || '';
-      if (!key) return;
-      const item = (db.items||[]).find(i => i.id == l.itemId || i.name === key);
-      const price = l.unitPrice || (item?.price) || (item?.cost) || 0;
-      if (!medMap[key]) medMap[key] = { name: key, qty: 0, price: price, category: (item?.category) || getItemCategory(key) };
-      medMap[key].qty += (l.qty || 1);
-    });
-  });
-  groupItems.forEach(it => {
-    const key = it.name;
+  allocated.billable.forEach(it => {
+    const key = it.name || '';
     if (!key) return;
     if (!medMap[key]) medMap[key] = { name: key, qty: 0, price: it.price || 0, category: it.category || getItemCategory(key) };
-    medMap[key].qty += it.qty;
+    medMap[key].qty += (it.qty || 0);
   });
-  const medItems = Object.values(medMap).filter(i => i.name);
+  // included items ที่ qty_limit เกิน → charge_qty ส่วนที่เกินก็ต้องคิดเงิน
+  const includedMap = {};
+  allocated.included.forEach(it => {
+    const key = it.name || '';
+    if (!key) return;
+    if (!includedMap[key]) includedMap[key] = { name: key, qty: 0, price: it.price || 0, unit: it.unit, category: it.category || getItemCategory(key), is_included: true };
+    includedMap[key].qty += (it.free_qty || 0);
+    if (it.charge_qty > 0) {
+      if (!medMap[key]) medMap[key] = { name: key, qty: 0, price: it.price || 0, category: it.category || getItemCategory(key) };
+      medMap[key].qty += it.charge_qty;
+    }
+  });
+  const medItems = Object.values(medMap).filter(i => i.name && i.qty > 0);
+  const includedItems = Object.values(includedMap).filter(i => i.name && i.qty > 0);
 
   // คำนวณช่วงวันที่
   const dFrom = new Date(dateFrom);
@@ -149,8 +197,10 @@ async function confirmQuickInvoice() {
   const roomRate = parseFloat(document.getElementById('inv-room-rate').value||0);
   if (roomRate > 0) document.getElementById('inv-room-enabled').checked = true;
 
-  // ใส่รายการเบิกสินค้าที่ดึงมา
+  // ใส่รายการเบิกสินค้าที่ดึงมา (Phase 1 fix: รวม included items ที่ฟรีตามแพ็คเกจด้วย)
   document.getElementById('inv-req-items-data').value   = JSON.stringify(medItems);
+  const incEl = document.getElementById('inv-included-items-data');
+  if (incEl) incEl.value = JSON.stringify(includedItems);
   // ค่าอื่นๆ — เพิ่ม placeholder ให้ 1 รายการว่างสำหรับกรอกเอง
   const defaultOther = [
     { name:'ค่ารถพยาบาล', qty:1, price:0 },

@@ -298,15 +298,8 @@ async function submitReq() {
       refNo, patient: patient.name, itemCount: validItems.length, staff: staff.name
     }), { patientName: patient.name, itemCount: validItems.length });
 
-    // Low stock check
-    validItems.forEach(ri => {
-      const item = db.items.find(i => i.id == ri.itemId);
-      if (item && item.qty <= item.reorder) {
-        sendLineNotify('low_stock', buildLineMsg('low_stock', {
-          itemName: item.name, qty: item.qty, unit: item.unit, reorder: item.reorder
-        }), { itemName: item.name, qty: item.qty });
-      }
-    });
+    // Phase 1 fix: ย้าย low stock check ไปที่ approveReq() (ตอนที่ stock ถูกตัดจริง)
+    // ก่อนหน้านี้อยู่ที่นี่ — ตรวจ qty ตอน submit ที่ stock ยังไม่โดนตัด → ไม่เคย trigger
 
     clearReq();
 
@@ -606,6 +599,18 @@ async function approveReq(reqId) {
       itemCount: approvedLines.length,
       actor,
     });
+
+    // Phase 1 fix: Low stock check — เช็คหลัง stock ถูกตัดจริงแล้ว (ตอน approve)
+    // ก่อนหน้านี้ check อยู่ที่ submitReq() ซึ่ง stock ยังไม่โดนตัด → ไม่เคย trigger
+    approvedLines.forEach(line => {
+      const item = db.items.find(i => i.id == line.itemId);
+      if (item && item.qty <= (item.reorder || 0)) {
+        sendLineNotify('low_stock', buildLineMsg('low_stock', {
+          itemName: item.name, qty: item.qty, unit: item.unit, reorder: item.reorder
+        }), { itemName: item.name, qty: item.qty });
+      }
+    });
+
     toast(`✅ อนุมัติใบเบิก ${req.refNo||reqId} — ตัดสต็อกเรียบร้อย`, 'success');
     updateApprovalBadge();
     renderApprovalPanel();
