@@ -466,11 +466,12 @@ async function approveReq(reqId) {
           created_by:            actor,
           lot_id:                fefoLot?.id || null,
           requisition_header_id: reqId,
-          unit_cost:             fefoLot?.unitCost || 0,
+          cost:                  fefoLot?.unitCost || 0,
           lot_no:                fefoLot?.lotNumber || null,
         };
-        supa.from('stock_movements').insert(movData).select().single().then(({ data }) => {
-          if (data) db.stockMovements.unshift(mapStockMovement(data));
+        supa.from('stock_movements').insert(movData).select().single().then(({ data, error }) => {
+          if (error) console.warn('[approveReq] stock_movements insert error:', error.message);
+          else if (data) db.stockMovements.unshift(mapStockMovement(data));
         });
       }
     }
