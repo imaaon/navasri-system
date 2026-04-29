@@ -5,26 +5,26 @@
 // =====================================================
 
 const DEFAULT_BILLING_SETTINGS = {
-  company: 'à¸à¸§à¸¨à¸£à¸µ à¹à¸à¸­à¸£à¹à¸ªà¸à¸´à¹à¸à¹à¸®à¸¡', address: '', taxId: '',
+  company: 'นวศรี เนอร์สซิ่งโฮม', address: '', taxId: '',
   phone: '', email: '', docPrefix: 'BL', docPrefixExp: 'EXP', vatRate: 0
 };
 
 function getBillingSettings() { return db.billingSettings || { ...DEFAULT_BILLING_SETTINGS }; }
 
-// ââ Page extra routing ââââââââââââââââââââââââââââââ
+// ── Page extra routing ──────────────────────────────
 function renderPageExtra(page) {
   if (page === 'billing-settings') loadBillingSettingsUI();
   if (page === 'billing') renderBilling();
 }
 
-// ââ Init âââââââââââââââââââââââââââââââââââââââââââââ
+// ── Init ─────────────────────────────────────────────
 async function initBilling() {
   await ensureSecondaryDB();
   if (!db.invoices) db.invoices = [];
   if (!db.expenses) db.expenses = [];
 }
 
-// ââ Month filter âââââââââââââââââââââââââââââââââââââ
+// ── Month filter ─────────────────────────────────────
 function initBillingMonthFilter() {
   const sel = document.getElementById('billing-filter-month');
   if (!sel) return;
@@ -32,10 +32,10 @@ function initBillingMonthFilter() {
   (db.invoices || []).forEach(i => { if (i.date) months.add(i.date.slice(0,7)); });
   (db.expenses || []).forEach(e => { if (e.date) months.add(e.date.slice(0,7)); });
   const sorted = Array.from(months).sort().reverse();
-  sel.innerHTML = '<option value="">à¸à¸¸à¸à¹à¸à¸·à¸­à¸</option>' + sorted.map(m => `<option value="${m}">${m}</option>`).join('');
+  sel.innerHTML = '<option value="">ทุกเดือน</option>' + sorted.map(m => `<option value="${m}">${m}</option>`).join('');
 }
 
-// ââ Render billing page âââââââââââââââââââââââââââââââ
+// ── Render billing page ───────────────────────────────
 function renderBilling() {
   initBilling();
   initBillingMonthFilter();
@@ -71,9 +71,9 @@ function renderBilling() {
   const expCard = document.getElementById('billing-exp-amount');
   if(expCard) expCard.textContent = formatThb(allExpTotal);
 
-  const TYPE_LABELS   = { invoice:'à¹à¸à¹à¸à¹à¸à¸«à¸à¸µà¹', receipt:'à¹à¸à¹à¸ªà¸£à¹à¸', quotation:'à¹à¸à¹à¸ªà¸à¸­à¸£à¸²à¸à¸²', tax_invoice:'à¹à¸à¸à¸³à¸à¸±à¸à¸ à¸²à¸©à¸µ', expense:'à¸à¹à¸²à¹à¸à¹à¸à¹à¸²à¸¢' };
+  const TYPE_LABELS   = { invoice:'ใบแจ้งหนี้', receipt:'ใบเสร็จ', quotation:'ใบเสนอราคา', tax_invoice:'ใบกำกับภาษี', expense:'ค่าใช้จ่าย' };
   const STATUS_COLORS = { draft:'#888', sent:'#e67e22', partial:'#3498db', paid:'#27ae60', cancelled:'#e74c3c' };
-  const STATUS_LABELS = { draft:'à¸£à¹à¸²à¸', sent:'à¸£à¸­à¸à¸³à¸£à¸°', partial:'à¸à¸³à¸£à¸°à¸à¸²à¸à¸ªà¹à¸§à¸', paid:'à¸à¸³à¸£à¸°à¸à¸£à¸', cancelled:'à¸¢à¸à¹à¸¥à¸´à¸' };
+  const STATUS_LABELS = { draft:'ร่าง', sent:'รอชำระ', partial:'ชำระบางส่วน', paid:'ชำระครบ', cancelled:'ยกเลิก' };
 
   const TYPE_ORDER = {quotation:1, invoice:2, tax_invoice:3, receipt:4};
   const invRows = [...invList].sort((a,b)=>{
@@ -87,23 +87,23 @@ function renderBilling() {
     const isOverdue = inv.dueDate && inv.dueDate < new Date().toISOString().split('T')[0] && dynStatus !== 'paid';
     return `
     <tr style="${isOverdue?'background:#fff8f8;':''}">
-      <td style="font-family:monospace;font-size:12px;">${inv.docNo||'-'}${inv.contractId?'<span style="font-size:10px;color:var(--accent);margin-left:4px;">ð¤</span>':''}</td>
+      <td style="font-family:monospace;font-size:12px;">${inv.docNo||'-'}${inv.contractId?'<span style="font-size:10px;color:var(--accent);margin-left:4px;">🤖</span>':''}</td>
       <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(90,158,122,.15);color:var(--accent);">${TYPE_LABELS[inv.type]||inv.type}</span></td>
       <td>${inv.patientName||'-'}</td>
       <td style="font-size:12px;">${inv.date||'-'}</td>
-      <td style="font-size:12px;color:${isOverdue?'#e74c3c':'var(--text2)'};">${inv.dueDate||'-'}${isOverdue?' â ï¸':''}</td>
+      <td style="font-size:12px;color:${isOverdue?'#e74c3c':'var(--text2)'};">${inv.dueDate||'-'}${isOverdue?' ⚠️':''}</td>
       <td style="text-align:right;font-weight:600;">${formatThb(inv.grandTotal||0)}</td>
       <td style="text-align:right;color:#27ae60;">${paid>0?formatThb(paid):'-'}</td>
       <td style="text-align:right;font-weight:${balance>0?'700':'400'};color:${balance>0?'#e67e22':'var(--text3)'};">${balance>0?formatThb(balance):'-'}</td>
       <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${STATUS_COLORS[dynStatus]||'#888'}22;color:${STATUS_COLORS[dynStatus]||'#888'};">${STATUS_LABELS[dynStatus]||dynStatus}</span></td>
       <td style="white-space:nowrap;">
-        <button class="btn btn-ghost btn-sm" onclick="previewDoc('${inv.id}','invoice')" title="à¸à¸¹ Preview">ðï¸</button>
-        <button class="btn btn-ghost btn-sm" onclick="printInvoice('${inv.id}')" title="à¸à¸´à¸¡à¸à¹">ð¨ï¸</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportInvoicePDF('${inv.id}')" title="Export PDF" style="color:#e74c3c;">ð</button>
-        <button class="btn btn-ghost btn-sm" onclick="editInvoice('${inv.id}')" title="à¹à¸à¹à¹à¸">âï¸</button>
-        ${dynStatus!=='paid'?`<button class="btn btn-primary btn-sm" onclick="openRecordPaymentModal('${inv.id}')" title="à¸£à¸±à¸à¸à¸³à¸£à¸°" style="font-size:11px;">ð³ à¸£à¸±à¸à¸à¸³à¸£à¸°</button>`:''}
-        ${['admin','manager','officer'].includes(currentUser?.role) && (dynStatus==='paid'||dynStatus==='partial') ? `<button class="btn btn-ghost btn-sm" onclick="openInvoiceResetModal('${inv.id}')" title="Reset à¸à¸´à¸¥" style="color:#8e44ad;font-size:11px;">ð Reset</button>` : ''}
-        <button class="btn btn-ghost btn-sm" onclick="deleteInvoice('${inv.id}')" style="color:#e74c3c;">ðï¸</button>
+        <button class="btn btn-ghost btn-sm" onclick="previewDoc('${inv.id}','invoice')" title="ดู Preview">👁️</button>
+        <button class="btn btn-ghost btn-sm" onclick="printInvoice('${inv.id}')" title="พิมพ์">🖨️</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportInvoicePDF('${inv.id}')" title="Export PDF" style="color:#e74c3c;">📄</button>
+        <button class="btn btn-ghost btn-sm" onclick="editInvoice('${inv.id}')" title="แก้ไข">✏️</button>
+        ${dynStatus!=='paid'?`<button class="btn btn-primary btn-sm" onclick="openRecordPaymentModal('${inv.id}')" title="รับชำระ" style="font-size:11px;">💳 รับชำระ</button>`:''}
+        ${['admin','manager','officer'].includes(currentUser?.role) && (dynStatus==='paid'||dynStatus==='partial') ? `<button class="btn btn-ghost btn-sm" onclick="openInvoiceResetModal('${inv.id}')" title="Reset บิล" style="color:#8e44ad;font-size:11px;">🔄 Reset</button>` : ''}
+        <button class="btn btn-ghost btn-sm" onclick="deleteInvoice('${inv.id}')" style="color:#e74c3c;">🗑️</button>
       </td>
     </tr>`;
   }).join('');
@@ -111,33 +111,33 @@ function renderBilling() {
   const expRows = [...expList].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(exp => `
     <tr>
       <td style="font-family:monospace;font-size:12px;">${exp.docNo||'-'}</td>
-      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#e67e2222;color:#e67e22;">à¸à¹à¸²à¹à¸à¹à¸à¹à¸²à¸¢</span></td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#e67e2222;color:#e67e22;">ค่าใช้จ่าย</span></td>
       <td style="font-size:13px;">${exp.vendorName||exp.job||'-'}</td>
       <td style="font-size:12px;">${exp.date||'-'}</td>
       <td style="font-size:12px;color:var(--text2);">${exp.payDate||'-'}</td>
       <td style="text-align:right;font-weight:600;">${formatThb(exp.net||0)}</td>
       <td>-</td><td>-</td>
-      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#27ae6022;color:#27ae60;">à¸à¸±à¸à¸à¸¶à¸à¹à¸¥à¹à¸§</span></td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#27ae6022;color:#27ae60;">บันทึกแล้ว</span></td>
       <td style="white-space:nowrap;">
-        <button class="btn btn-ghost btn-sm" onclick="previewDoc('${exp.id}','expense')" title="à¸à¸¹ Preview">ðï¸</button>
-        <button class="btn btn-ghost btn-sm" onclick="printExpense('${exp.id}')" title="à¸à¸´à¸¡à¸à¹">ð¨ï¸</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportExpensePDF('${exp.id}')" title="Export PDF" style="color:#e74c3c;">ð</button>
-        <button class="btn btn-ghost btn-sm" onclick="editExpense('${exp.id}')" title="à¹à¸à¹à¹à¸">âï¸</button>
-        <button class="btn btn-ghost btn-sm" onclick="deleteExpense('${exp.id}')" style="color:#e74c3c;">ðï¸</button>
+        <button class="btn btn-ghost btn-sm" onclick="previewDoc('${exp.id}','expense')" title="ดู Preview">👁️</button>
+        <button class="btn btn-ghost btn-sm" onclick="printExpense('${exp.id}')" title="พิมพ์">🖨️</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportExpensePDF('${exp.id}')" title="Export PDF" style="color:#e74c3c;">📄</button>
+        <button class="btn btn-ghost btn-sm" onclick="editExpense('${exp.id}')" title="แก้ไข">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteExpense('${exp.id}')" style="color:#e74c3c;">🗑️</button>
       </td>
     </tr>`).join('');
 
   const tb = document.getElementById('billing-table-body');
   const allRows = invRows + expRows;
-  tb.innerHTML = allRows || '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:40px;">à¹à¸¡à¹à¸¡à¸µà¹à¸­à¸à¸ªà¸²à¸£</td></tr>';
+  tb.innerHTML = allRows || '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:40px;">ไม่มีเอกสาร</td></tr>';
 }
 
-// ââ Format âââââââââââââââââââââââââââââââââââââââââââ
+// ── Format ───────────────────────────────────────────
 function formatThb(n) {
-  return (n||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' à¸¿';
+  return (n||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' ฿';
 }
 
-// ââ DocNo generation âââââââââââââââââââââââââââââââââ
+// ── DocNo generation ─────────────────────────────────
 function generateDocNo(type) {
   // Prefix per document type
   const TYPE_PREFIX = {
@@ -175,9 +175,9 @@ function generateDocNo(type) {
   return `${prefix}${ym}${String(maxSeq + 1).padStart(4,'0')}`;
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// ââ INVOICE MODAL ââââââââââââââââââââââââââââââââââââ
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─────────────────────────────────────────────────────
+// ── INVOICE MODAL ────────────────────────────────────
+// ─────────────────────────────────────────────────────
 function openCreateInvoiceModal() {
   initBilling();
   document.getElementById('inv-edit-id').value = '';
@@ -226,10 +226,10 @@ function openCreateInvoiceModal() {
 }
 
 function updateInvoiceTitle() {
-  const LABELS = { invoice:'à¹à¸à¹à¸à¹à¸à¸«à¸à¸µà¹ / à¸§à¸²à¸à¸à¸´à¸¥', receipt:'à¹à¸à¹à¸ªà¸£à¹à¸à¸£à¸±à¸à¹à¸à¸´à¸', quotation:'à¹à¸à¹à¸ªà¸à¸­à¸£à¸²à¸à¸²', tax_invoice:'à¹à¸à¸à¸³à¸à¸±à¸à¸ à¸²à¸©à¸µ' };
+  const LABELS = { invoice:'ใบแจ้งหนี้ / วางบิล', receipt:'ใบเสร็จรับเงิน', quotation:'ใบเสนอราคา', tax_invoice:'ใบกำกับภาษี' };
   const type   = document.getElementById('inv-type')?.value || 'invoice';
   const editId = document.getElementById('inv-edit-id')?.value;
-  document.getElementById('modal-invoice-title').textContent = (editId?'à¹à¸à¹à¹à¸':'à¸ªà¸£à¹à¸²à¸') + ' ' + (LABELS[type]||'');
+  document.getElementById('modal-invoice-title').textContent = (editId?'แก้ไข':'สร้าง') + ' ' + (LABELS[type]||'');
   if (!editId) document.getElementById('inv-docno').value = generateDocNo(type);
 }
 
@@ -245,16 +245,16 @@ function onInvoicePatientChange() {
   const autoText = document.getElementById('inv-room-autofill-text');
 
   if (room || bed) {
-    const bedLabel  = bed  ? `à¹à¸à¸µà¸¢à¸ ${bed.bedCode}` : '';
+    const bedLabel  = bed  ? `เตียง ${bed.bedCode}` : '';
     const roomLabel = room ? `${room.name} (${room.roomType})` : '';
     const rateMonthly = room?.monthlyRate || 0;
     const rateDaily   = room?.dailyRate   || 0;
     const rateText = [
-      rateMonthly ? `${rateMonthly.toLocaleString('th-TH')} à¸¿/à¹à¸à¸·à¸­à¸` : '',
-      rateDaily   ? `${rateDaily.toLocaleString('th-TH')} à¸¿/à¸§à¸±à¸` : '',
-    ].filter(Boolean).join(' Â· ') || 'à¹à¸¡à¹à¸£à¸°à¸à¸¸à¸£à¸²à¸à¸²';
+      rateMonthly ? `${rateMonthly.toLocaleString('th-TH')} ฿/เดือน` : '',
+      rateDaily   ? `${rateDaily.toLocaleString('th-TH')} ฿/วัน` : '',
+    ].filter(Boolean).join(' · ') || 'ไม่ระบุราคา';
 
-    autoText.textContent = `${roomLabel}${bedLabel ? ' Â· '+bedLabel : ''} Â· ${rateText}`;
+    autoText.textContent = `${roomLabel}${bedLabel ? ' · '+bedLabel : ''} · ${rateText}`;
     autoDiv.style.display = 'flex';
 
     // Auto-apply rate: prefer monthly, fallback to daily
@@ -275,7 +275,7 @@ function onInvoicePatientChange() {
   const payerEl = document.getElementById('inv-payer-info');
   if (payerEl) {
     if (payer) {
-      payerEl.innerHTML = `ð° à¸ªà¹à¸à¸à¸´à¸¥à¸à¸¶à¸: <strong>${payer.name}</strong> (${payer.relation}) Â· ð ${payer.phone}`;
+      payerEl.innerHTML = `💰 ส่งบิลถึง: <strong>${payer.name}</strong> (${payer.relation}) · 📞 ${payer.phone}`;
       payerEl.style.display = 'block';
     } else {
       payerEl.style.display = 'none';
@@ -285,7 +285,7 @@ function onInvoicePatientChange() {
 }
 
 function applyRoomRate(type, roomObj, bedObj) {
-  // à¸à¹à¸²à¹à¸¡à¹à¸ªà¹à¸ room/bed à¸¡à¸² à¹à¸«à¹à¸«à¸²à¸à¸²à¸ patient à¸à¸µà¹à¹à¸¥à¸·à¸­à¸à¸­à¸¢à¸¹à¹
+  // ถ้าไม่ส่ง room/bed มา ให้หาจาก patient ที่เลือกอยู่
   if (!roomObj) {
     const patId = document.getElementById("ta-inv-id").value;
     const p = db.patients.find(x => String(x.id)===String(patId));
@@ -300,14 +300,14 @@ function applyRoomRate(type, roomObj, bedObj) {
   onInvRoomTypeChange();
   // Auto-fill label
   const now = new Date();
-  const MONTHS = ['à¸¡à¸à¸£à¸²à¸à¸¡','à¸à¸¸à¸¡à¸ à¸²à¸à¸±à¸à¸à¹','à¸¡à¸µà¸à¸²à¸à¸¡','à¹à¸¡à¸©à¸²à¸¢à¸','à¸à¸¤à¸©à¸ à¸²à¸à¸¡','à¸¡à¸´à¸à¸¸à¸à¸²à¸¢à¸','à¸à¸£à¸à¸à¸²à¸à¸¡','à¸ªà¸´à¸à¸«à¸²à¸à¸¡','à¸à¸±à¸à¸¢à¸²à¸¢à¸','à¸à¸¸à¸¥à¸²à¸à¸¡','à¸à¸¤à¸¨à¸à¸´à¸à¸²à¸¢à¸','à¸à¸±à¸à¸§à¸²à¸à¸¡'];
+  const MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
   const monthName = MONTHS[now.getMonth()];
   const year = now.getFullYear() + 543;
   const roomName = roomObj?.name || '';
   const bedCode  = bedObj?.bedCode  || '';
   const label = type === 'monthly'
-    ? `à¸à¹à¸²à¸«à¹à¸­à¸${roomName ? ' '+roomName : ''}${bedCode ? ' à¹à¸à¸µà¸¢à¸ '+bedCode : ''} à¹à¸à¸·à¸­à¸${monthName} ${year}`
-    : `à¸à¹à¸²à¸«à¹à¸­à¸${roomName ? ' '+roomName : ''}${bedCode ? ' à¹à¸à¸µà¸¢à¸ '+bedCode : ''} (à¸£à¸²à¸¢à¸§à¸±à¸)`;
+    ? `ค่าห้อง${roomName ? ' '+roomName : ''}${bedCode ? ' เตียง '+bedCode : ''} เดือน${monthName} ${year}`
+    : `ค่าห้อง${roomName ? ' '+roomName : ''}${bedCode ? ' เตียง '+bedCode : ''} (รายวัน)`;
   document.getElementById('inv-room-label').value = label;
   recalcInvoice();
 }
@@ -315,16 +315,16 @@ function applyRoomRate(type, roomObj, bedObj) {
 function onInvRoomTypeChange() {
   const type = document.getElementById('inv-room-type').value;
   const qtyLabel = document.getElementById('inv-room-qty-label');
-  if (qtyLabel) qtyLabel.textContent = type === 'daily' ? 'à¸à¸³à¸à¸§à¸ (à¸§à¸±à¸)' : 'à¸à¸³à¸à¸§à¸ (à¹à¸à¸·à¸­à¸)';
+  if (qtyLabel) qtyLabel.textContent = type === 'daily' ? 'จำนวน (วัน)' : 'จำนวน (เดือน)';
   recalcInvoice();
 }
 
-// ââ Load requisitions ââââââââââââââââââââââââââââââââ
+// ── Load requisitions ────────────────────────────────
 async function loadRequisitionsForInvoice() {
   const patId = document.getElementById("ta-inv-id").value;
   const from  = document.getElementById('inv-med-from').value;
   const to    = document.getElementById('inv-med-to').value;
-  if (!patId) { toast('à¸à¸£à¸¸à¸à¸²à¹à¸¥à¸·à¸­à¸à¸à¸¹à¹à¸£à¸±à¸à¸à¸£à¸´à¸à¸²à¸£à¸à¹à¸­à¸','warning'); return; }
+  if (!patId) { toast('กรุณาเลือกผู้รับบริการก่อน','warning'); return; }
   const fromDate = from ? from+'-01' : '2000-01-01';
   const toDate   = to   ? to+'-31'   : '2099-12-31';
   const contract = getActiveContract(patId);
@@ -335,21 +335,21 @@ async function loadRequisitionsForInvoice() {
     return d >= fromDate && d <= toDate && r.status === 'approved';
   });
   const allItems = [];
-  // Phase 1.5 fix: à¸ªà¸£à¹à¸²à¸ Set à¸à¸­à¸ item IDs à¸à¸µà¹à¸­à¸¢à¸¹à¹à¹à¸ package à¹à¸à¸·à¹à¸­à¹à¸à¹ override isBillable check
-  // à¸à¸à¹à¸«à¸¡à¹: à¸à¹à¸² item à¸­à¸¢à¸¹à¹à¹à¸ package â à¹à¸à¹ package logic (qty_limit) à¹à¸¡à¹ isBillable=false à¸à¹à¸à¸²à¸¡
-  //         à¸à¹à¸² item à¹à¸¡à¹à¸­à¸¢à¸¹à¹à¹à¸ package â à¹à¸à¹ isBillable à¸à¸²à¸¡à¹à¸à¸´à¸¡
+  // Phase 1.5 fix: สร้าง Set ของ item IDs ที่อยู่ใน package เพื่อใช้ override isBillable check
+  // กฎใหม่: ถ้า item อยู่ใน package → ใช้ package logic (qty_limit) แม้ isBillable=false ก็ตาม
+  //         ถ้า item ไม่อยู่ใน package → ใช้ isBillable ตามเดิม
   const packagedItemIds = new Set((includedProducts||[]).map(p => String(p.item_id)));
 
   reqs.forEach(req => {
-    // à¸£à¸­à¸à¸£à¸±à¸à¸à¸±à¹à¸ flat record (itemId/qty) à¹à¸¥à¸° lines/items array
+    // รองรับทั้ง flat record (itemId/qty) และ lines/items array
     const lines = (req.lines && req.lines.length > 0) ? req.lines :
                   (req.items && req.items.length > 0) ? req.items :
                   (req.itemId ? [{ itemId: req.itemId, name: req.itemName, qty: req.qty||1, unit: req.unit }] : []);
     lines.forEach(ri => {
       const iid = ri.itemId || ri.item_id;
       const item = db.items.find(it=>String(it.id)===String(iid));
-      // Phase 1.5: à¸à¹à¸² item à¸­à¸¢à¸¹à¹à¹à¸ package â à¸à¸¥à¹à¸­à¸¢à¸à¹à¸²à¸ (package logic à¸à¸°à¸à¸±à¸à¸à¸²à¸£ qty_limit à¹à¸­à¸)
-      //            à¸à¹à¸²à¹à¸¡à¹à¸­à¸¢à¸¹à¹à¹à¸ package + isBillable=false â à¸à¸£à¸µà¸à¸¥à¸­à¸ à¹à¸¡à¹à¸à¸¶à¹à¸à¹à¸à¸à¸´à¸¥
+      // Phase 1.5: ถ้า item อยู่ใน package → ปล่อยผ่าน (package logic จะจัดการ qty_limit เอง)
+      //            ถ้าไม่อยู่ใน package + isBillable=false → ฟรีตลอด ไม่ขึ้นในบิล
       // Phase 1.6: ทุกรายการเข้าใบบิล — นอก package คิดเงินทุกชิ้น (เลิกใช้ isBillable filter)
       allItems.push({ itemId: iid, name: ri.name||ri.itemName||item?.name||iid,
         qty: ri.qty||1, price: item ? (item.price||item.cost||0) : 0,
@@ -367,7 +367,7 @@ async function loadRequisitionsForInvoice() {
     const key = ri.itemId||ri.name;
     if (!includedMap[key]) includedMap[key] = { name:ri.name, qty:0, price:ri.price, unit:ri.unit, is_included:true };
     includedMap[key].qty += ri.free_qty||0;
-    // Phase 1.6 fix: ลบการนับ charge_qty ออก (มีอยู่ใน allocated.billable แล้ว — นับซ้ำทำให้ qty × 2)
+    // Phase 1.6 fix: ลบการนับ charge_qty (มีอยู่ใน allocated.billable แล้ว — นับซ้ำทำให้ qty × 2)
   });
   const billableItems = Object.values(billableMap);
   const includedItems = Object.values(includedMap);
@@ -376,13 +376,13 @@ async function loadRequisitionsForInvoice() {
   if (incEl) incEl.value = JSON.stringify(includedItems);
   renderInvoiceItems();
   recalcInvoice();
-  const msg = 'à¸à¸à¸£à¸²à¸¢à¸à¸²à¸£à¹à¸à¸´à¸ '+billableItems.length+' à¸£à¸²à¸¢à¸à¸²à¸£à¸à¸´à¸à¹à¸à¸´à¸'+(includedItems.length>0?' + '+includedItems.length+' à¸£à¸²à¸¢à¸à¸²à¸£à¸£à¸§à¸¡à¹à¸ package':'');
-  toast(billableItems.length===0&&includedItems.length===0?'à¹à¸¡à¹à¸à¸à¸£à¸²à¸¢à¸à¸²à¸£à¹à¸à¸´à¸à¸à¸µà¹à¸­à¸à¸¸à¸¡à¸±à¸à¸´à¹à¸¥à¹à¸§':msg,
+  const msg = 'พบรายการเบิก '+billableItems.length+' รายการคิดเงิน'+(includedItems.length>0?' + '+includedItems.length+' รายการรวมใน package':'');
+  toast(billableItems.length===0&&includedItems.length===0?'ไม่พบรายการเปิดที่อนุมัติแล้ว':msg,
     billableItems.length===0&&includedItems.length===0?'warning':'success');
 }
 
 
-// ââ Render requisition items âââââââââââââââââââââââââ
+// ── Render requisition items ─────────────────────────
 function renderInvoiceItems() {
   const container = document.getElementById('inv-items-container');
   const hide = document.getElementById('inv-hide-items')?.checked;
@@ -391,19 +391,19 @@ function renderInvoiceItems() {
   const total = items.reduce((s,it)=>s+(it.qty||0)*(it.price||0),0);
   document.getElementById('inv-items-total').textContent = formatThb(total);
   if (items.length===0) {
-    container.innerHTML = '<div style="text-align:center;color:var(--text3);padding:12px;font-size:13px;">à¸¢à¸±à¸à¹à¸¡à¹à¸¡à¸µà¸£à¸²à¸¢à¸à¸²à¸£</div>';
+    container.innerHTML = '<div style="text-align:center;color:var(--text3);padding:12px;font-size:13px;">ยังไม่มีรายการ</div>';
     recalcInvoice(); return;
   }
   if (hide) {
-    container.innerHTML = `<div style="padding:10px;background:var(--surface2);border-radius:6px;text-align:center;color:var(--text2);font-size:13px;">ð à¸à¹à¸­à¸à¸£à¸²à¸¢à¸à¸²à¸£ ${items.length} à¸£à¸²à¸¢à¸à¸²à¸£ â à¸£à¸§à¸¡ ${formatThb(total)}</div>`;
+    container.innerHTML = `<div style="padding:10px;background:var(--surface2);border-radius:6px;text-align:center;color:var(--text2);font-size:13px;">🔒 ซ่อนรายการ ${items.length} รายการ — รวม ${formatThb(total)}</div>`;
     recalcInvoice(); return;
   }
-  // à¹à¸¢à¸à¸«à¸¡à¸§à¸à¸«à¸¡à¸¹à¹
-  const CAT_LABELS = { 'à¸¢à¸²':'ð à¸¢à¸²', 'à¹à¸§à¸à¸ à¸±à¸à¸à¹':'ð©º à¹à¸§à¸à¸ à¸±à¸à¸à¹', 'à¸à¸­à¸à¹à¸à¹':'ð§´ à¸à¸­à¸à¹à¸à¹', 'à¸à¸£à¸´à¸à¸²à¸£':'ð§ à¸à¸£à¸´à¸à¸²à¸£' };
-  const CAT_ORDER  = ['à¸¢à¸²','à¹à¸§à¸à¸ à¸±à¸à¸à¹','à¸à¸­à¸à¹à¸à¹','à¸à¸£à¸´à¸à¸²à¸£'];
+  // แยกหมวดหมู่
+  const CAT_LABELS = { 'ยา':'💊 ยา', 'เวชภัณฑ์':'🩺 เวชภัณฑ์', 'ของใช้':'🧴 ของใช้', 'บริการ':'🔧 บริการ' };
+  const CAT_ORDER  = ['ยา','เวชภัณฑ์','ของใช้','บริการ'];
   const grouped = {};
   items.forEach((it,idx) => {
-    const cat = it.category || 'à¹à¸§à¸à¸ à¸±à¸à¸à¹';
+    const cat = it.category || 'เวชภัณฑ์';
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push({...it, _idx: idx});
   });
@@ -421,7 +421,7 @@ function renderInvoiceItems() {
         style="width:80px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:13px;">
     </td>
     <td style="padding:5px 6px;text-align:right;font-weight:600;" id="inv-item-row-${it._idx}">${formatThb((it.qty||0)*(it.price||0))}</td>
-    <td><button onclick="removeInvItem('${it._idx}')" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">â</button></td>
+    <td><button onclick="removeInvItem('${it._idx}')" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>
   </tr>`;
   const allCats = [...CAT_ORDER, ...Object.keys(grouped).filter(c=>!CAT_ORDER.includes(c))];
   let html = '';
@@ -434,10 +434,10 @@ function renderInvoiceItems() {
       </div>
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead><tr style="color:var(--text2);border-bottom:1px solid var(--border);">
-          <th style="text-align:left;padding:3px 6px;">à¸£à¸²à¸¢à¸à¸²à¸£</th>
-          <th style="text-align:right;padding:3px 6px;width:70px;">à¸à¸³à¸à¸§à¸</th>
-          <th style="text-align:right;padding:3px 6px;width:80px;">à¸£à¸²à¸à¸²/à¸«à¸à¹à¸§à¸¢</th>
-          <th style="text-align:right;padding:3px 6px;width:90px;">à¸¡à¸¹à¸¥à¸à¹à¸²</th>
+          <th style="text-align:left;padding:3px 6px;">รายการ</th>
+          <th style="text-align:right;padding:3px 6px;width:70px;">จำนวน</th>
+          <th style="text-align:right;padding:3px 6px;width:80px;">ราคา/หน่วย</th>
+          <th style="text-align:right;padding:3px 6px;width:90px;">มูลค่า</th>
           <th style="width:24px;"></th>
         </tr></thead><tbody>
         ${grouped[cat].map(it=>itemRow(it)).join('')}
@@ -445,7 +445,7 @@ function renderInvoiceItems() {
       </table>
     </div>`;
   });
-  // à¹à¸ªà¸à¸ included items section
+  // แสดง included items section
   let _incItems = []; try { _incItems = JSON.parse(document.getElementById('inv-included-items-data')?.value||'[]'); } catch(e){}
   const _showInc = document.getElementById('inv-show-included')?.checked;
   let _existInc = document.getElementById('inv-included-section');
@@ -456,12 +456,12 @@ function renderInvoiceItems() {
     _incDiv.id = 'inv-included-section';
     _incDiv.style.marginTop = '8px';
     if (_showInc) {
-      let _ih = '<div style="font-size:11px;font-weight:700;color:#3a6a3a;padding:4px 6px;background:#f0fff4;border-radius:4px;display:flex;justify-content:space-between;margin-bottom:4px;"><span>ð¦ à¸ªà¸´à¸à¸à¹à¸²à¸£à¸§à¸¡à¹à¸ package â à¹à¸¡à¹à¸à¸´à¸à¹à¸à¸´à¸ ('+_incItems.length+' à¸£à¸²à¸¢à¸à¸²à¸£)</span><span style="color:#888;">à¸¿0.00</span></div><table style="width:100%;border-collapse:collapse;font-size:12px;color:var(--text2);"><tbody>';
-      _incItems.forEach(function(it){ _ih += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:3px 6px;">'+it.name+'</td><td style="padding:3px 6px;text-align:right;">'+(it.qty||0)+' '+(it.unit||'')+'</td><td style="padding:3px 6px;text-align:right;color:#27ae60;">à¸£à¸§à¸¡à¹à¸ package</td></tr>'; });
+      let _ih = '<div style="font-size:11px;font-weight:700;color:#3a6a3a;padding:4px 6px;background:#f0fff4;border-radius:4px;display:flex;justify-content:space-between;margin-bottom:4px;"><span>📦 สินค้ารวมใน package — ไม่คิดเงิน ('+_incItems.length+' รายการ)</span><span style="color:#888;">฿0.00</span></div><table style="width:100%;border-collapse:collapse;font-size:12px;color:var(--text2);"><tbody>';
+      _incItems.forEach(function(it){ _ih += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:3px 6px;">'+it.name+'</td><td style="padding:3px 6px;text-align:right;">'+(it.qty||0)+' '+(it.unit||'')+'</td><td style="padding:3px 6px;text-align:right;color:#27ae60;">รวมใน package</td></tr>'; });
       _ih += '</tbody></table>';
       _incDiv.innerHTML = _ih;
     } else {
-      _incDiv.innerHTML = '<div style="font-size:12px;color:#3a6a3a;padding:4px 6px;background:#f0fff4;border-radius:4px;cursor:pointer;" onclick="document.getElementById(\'inv-show-included\').checked=true;renderInvoiceItems()">ð¦ à¸¡à¸µà¸ªà¸´à¸à¸à¹à¸²à¸£à¸§à¸¡à¹à¸ package '+_incItems.length+' à¸£à¸²à¸¢à¸à¸²à¸£ â <span style="text-decoration:underline;">à¸à¸¥à¸´à¸à¹à¸à¸·à¹à¸­à¸à¸¹</span></div>';
+      _incDiv.innerHTML = '<div style="font-size:12px;color:#3a6a3a;padding:4px 6px;background:#f0fff4;border-radius:4px;cursor:pointer;" onclick="document.getElementById(\'inv-show-included\').checked=true;renderInvoiceItems()">📦 มีสินค้ารวมใน package '+_incItems.length+' รายการ — <span style="text-decoration:underline;">คลิกเพื่อดู</span></div>';
     }
     container.after(_incDiv);
   }
@@ -494,20 +494,20 @@ function addManualInvoiceItem() {
   renderInvoiceItems();
 }
 
-// ââ Other items ââââââââââââââââââââââââââââââââââââââ
+// ── Other items ──────────────────────────────────────
 function renderOtherItems() {
   const container = document.getElementById('inv-other-container');
   let items=[]; try{items=JSON.parse(document.getElementById('inv-other-items-data').value||'[]');}catch(e){}
   if(items.length===0){
-    container.innerHTML='<div style="text-align:center;color:var(--text3);padding:10px;font-size:13px;">à¸à¸ + à¹à¸à¸´à¹à¸¡à¸£à¸²à¸¢à¸à¸²à¸£</div>';
-    document.getElementById('inv-other-total').textContent='0.00 à¸¿'; recalcInvoice(); return;
+    container.innerHTML='<div style="text-align:center;color:var(--text3);padding:10px;font-size:13px;">กด + เพิ่มรายการ</div>';
+    document.getElementById('inv-other-total').textContent='0.00 ฿'; recalcInvoice(); return;
   }
   container.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px;">
     <thead><tr style="color:var(--text2);border-bottom:1px solid var(--border);">
-      <th style="text-align:left;padding:4px 6px;">à¸£à¸²à¸¢à¸à¸²à¸£</th>
-      <th style="text-align:right;padding:4px 6px;width:70px;">à¸à¸³à¸à¸§à¸</th>
-      <th style="text-align:right;padding:4px 6px;width:80px;">à¸£à¸²à¸à¸²/à¸«à¸à¹à¸§à¸¢</th>
-      <th style="text-align:right;padding:4px 6px;width:90px;">à¸¡à¸¹à¸¥à¸à¹à¸²</th>
+      <th style="text-align:left;padding:4px 6px;">รายการ</th>
+      <th style="text-align:right;padding:4px 6px;width:70px;">จำนวน</th>
+      <th style="text-align:right;padding:4px 6px;width:80px;">ราคา/หน่วย</th>
+      <th style="text-align:right;padding:4px 6px;width:90px;">มูลค่า</th>
       <th style="width:24px;"></th>
     </tr></thead><tbody>
     ${items.map((it,idx)=>`<tr style="border-bottom:1px solid var(--border);">
@@ -515,7 +515,7 @@ function renderOtherItems() {
       <td style="padding:5px 6px;"><input type="number" value="${it.qty||1}" min="0" oninput="updateOtherItem(${idx},'qty',this.value)" style="width:65px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:13px;"></td>
       <td style="padding:5px 6px;"><input type="number" value="${it.price||0}" min="0" oninput="updateOtherItem(${idx},'price',this.value)" style="width:80px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:13px;"></td>
       <td style="padding:5px 6px;text-align:right;font-weight:600;" id="inv-other-row-${idx}">${formatThb((it.qty||1)*(it.price||0))}</td>
-      <td><button onclick="removeOtherItem(${idx})" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">â</button></td>
+      <td><button onclick="removeOtherItem(${idx})" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>
     </tr>`).join('')}
     </tbody></table>`;
   document.getElementById('inv-other-total').textContent=formatThb(items.reduce((s,it)=>s+(it.qty||1)*(it.price||0),0));
@@ -542,27 +542,27 @@ function addOtherItem(){
   items.push({name:'',qty:1,price:0}); document.getElementById('inv-other-items-data').value=JSON.stringify(items); renderOtherItems();
 }
 
-// ââ Recalculate invoice totals âââââââââââââââââââââââ
+// ── Recalculate invoice totals ───────────────────────
 function recalcInvoice() {
-  // à¸à¹à¸²à¸«à¹à¸­à¸
+  // ค่าห้อง
   const roomEnabled = document.getElementById('inv-room-enabled')?.checked;
   const roomQty  = parseFloat(document.getElementById('inv-room-qty')?.value||0);
   const roomRate = parseFloat(document.getElementById('inv-room-rate')?.value||0);
   const roomTotal = roomEnabled ? roomQty*roomRate : 0;
   if(document.getElementById('inv-room-total')) document.getElementById('inv-room-total').value = roomTotal.toFixed(2);
 
-  // à¸à¹à¸²à¸à¸²à¸¢à¸ à¸²à¸
+  // ค่ากายภาพ
   const ptEnabled = document.getElementById('inv-pt-enabled')?.checked;
   const ptQty  = parseFloat(document.getElementById('inv-pt-qty')?.value||0);
   const ptRate = parseFloat(document.getElementById('inv-pt-rate')?.value||0);
   const ptTotal = ptEnabled ? ptQty*ptRate : 0;
   if(document.getElementById('inv-pt-total')) document.getElementById('inv-pt-total').value = ptTotal.toFixed(2);
 
-  // à¸à¹à¸²à¹à¸§à¸à¸ à¸±à¸à¸à¹
+  // ค่าเวชภัณฑ์
   let medItems=[]; try{medItems=JSON.parse(document.getElementById('inv-req-items-data')?.value||'[]');}catch(e){}
   const medTotal = medItems.reduce((s,it)=>s+(it.qty||0)*(it.price||0),0);
 
-  // à¸à¹à¸²à¸­à¸·à¹à¸à¹
+  // ค่าอื่นๆ
   let otherItems=[]; try{otherItems=JSON.parse(document.getElementById('inv-other-items-data')?.value||'[]');}catch(e){}
   const otherTotal = otherItems.reduce((s,it)=>s+(it.qty||1)*(it.price||0),0);
 
@@ -581,17 +581,17 @@ function recalcInvoice() {
   if(document.getElementById('inv-grand-total')) document.getElementById('inv-grand-total').textContent = formatThb(grandTotal);
 }
 
-// ââ Save invoice âââââââââââââââââââââââââââââââââââââ
+// ── Save invoice ─────────────────────────────────────
 async function saveInvoice(status) {
   const patId = document.getElementById("ta-inv-id").value;
-  if (!patId) { toast('à¸à¸£à¸¸à¸à¸²à¹à¸¥à¸·à¸­à¸à¸à¸¹à¹à¸£à¸±à¸à¸à¸£à¸´à¸à¸²à¸£','warning'); return; }
+  if (!patId) { toast('กรุณาเลือกผู้รับบริการ','warning'); return; }
   // Check duplicate doc number
   const editId_ = document.getElementById('inv-edit-id').value;
   const docNo_  = document.getElementById('inv-docno').value.trim();
   if (docNo_) {
     const dup = (db.invoices||[]).find(i => i.docNo === docNo_ && i.id !== editId_);
     if (dup) {
-      const proceed = confirm(`â ï¸ à¹à¸¥à¸à¸à¸µà¹à¹à¸­à¸à¸ªà¸²à¸£ "${docNo_}" à¸à¹à¸³à¸à¸±à¸à¹à¸­à¸à¸ªà¸²à¸£à¸à¸µà¹à¸¡à¸µà¸­à¸¢à¸¹à¹à¹à¸¥à¹à¸§!\n\nà¹à¸­à¸à¸ªà¸²à¸£à¹à¸à¸´à¸¡: ${dup.patientName || '-'} (${dup.date || '-'})\n\nà¸à¹à¸­à¸à¸à¸²à¸£à¸à¸±à¸à¸à¸¶à¸à¸à¸±à¸à¸«à¸£à¸·à¸­à¹à¸¡à¹?`);
+      const proceed = confirm(`⚠️ เลขที่เอกสาร "${docNo_}" ซ้ำกับเอกสารที่มีอยู่แล้ว!\n\nเอกสารเดิม: ${dup.patientName || '-'} (${dup.date || '-'})\n\nต้องการบันทึกทับหรือไม่?`);
       if (!proceed) return;
     }
   }
@@ -664,27 +664,27 @@ async function saveInvoice(status) {
   };
   if (!editId) row.created_at = new Date().toISOString();
   const { error: saveErr } = await supa.from('invoices').upsert(row);
-  if (saveErr) { toast('à¸à¸±à¸à¸à¸¶à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: '+saveErr.message,'error'); return; }
+  if (saveErr) { toast('บันทึกไม่สำเร็จ: '+saveErr.message,'error'); return; }
   if(editId) { const idx=db.invoices.findIndex(i=>i.id===editId); if(idx>=0) db.invoices[idx]={...db.invoices[idx],...inv}; else db.invoices.unshift(inv); }
   else db.invoices.unshift(inv);
   logAudit(AUDIT_MODULES.BILLING, editId ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
     editId || row.doc_no,
     { doc_no: row.doc_no, patient: row.patient_name, status, total: row.grand_total });
-  toast(status==='draft'?'à¸à¸±à¸à¸à¸¶à¸à¸£à¹à¸²à¸à¹à¸¥à¹à¸§':'à¸à¸±à¸à¸à¸¶à¸à¹à¸­à¸à¸ªà¸²à¸£à¹à¸¥à¹à¸§','success');
+  toast(status==='draft'?'บันทึกร่างแล้ว':'บันทึกเอกสารแล้ว','success');
   closeModal('modal-createInvoice');
   renderBilling();
 }
 
-// ââ Edit invoice âââââââââââââââââââââââââââââââââââââ
+// ── Edit invoice ─────────────────────────────────────
 function editInvoice(id) {
   const inv=(db.invoices||[]).find(i=>i.id===id);
   if(!inv) return;
   if (inv.status === 'paid') {
-    toast('â à¹à¸¡à¹à¸ªà¸²à¸¡à¸²à¸£à¸à¹à¸à¹à¹à¸à¸à¸´à¸¥à¸à¸µà¹à¸à¸³à¸£à¸°à¹à¸¥à¹à¸§à¹à¸à¹ â à¸«à¸²à¸à¸à¹à¸­à¸à¸à¸²à¸£à¹à¸à¹à¹à¸à¹à¸«à¹à¸¢à¸à¹à¸¥à¸´à¸à¸à¸´à¸¥à¹à¸¥à¹à¸§à¸­à¸­à¸à¹à¸«à¸¡à¹', 'error');
+    toast('❌ ไม่สามารถแก้ไขบิลที่ชำระแล้วได้ — หากต้องการแก้ไขให้ยกเลิกบิลแล้วออกใหม่', 'error');
     return;
   }
   if (inv.status === 'partial') {
-    if (!confirm('â ï¸ à¸à¸´à¸¥à¸à¸µà¹à¸¡à¸µà¸à¸²à¸£à¸£à¸±à¸à¹à¸à¸´à¸à¸à¸²à¸à¸ªà¹à¸§à¸à¹à¸¥à¹à¸§ à¸à¸²à¸£à¹à¸à¹à¹à¸à¸­à¸²à¸à¸à¸³à¹à¸«à¹à¸¢à¸­à¸à¹à¸¡à¹à¸à¸£à¸à¸à¸±à¸à¹à¸à¹à¸ªà¸£à¹à¸\nà¸à¹à¸­à¸à¸à¸²à¸£à¹à¸à¹à¹à¸à¸à¹à¸­à¸«à¸£à¸·à¸­à¹à¸¡à¹?')) return;
+    if (!confirm('⚠️ บิลนี้มีการรับเงินบางส่วนแล้ว การแก้ไขอาจทำให้ยอดไม่ตรงกับใบเสร็จ\nต้องการแก้ไขต่อหรือไม่?')) return;
   }
   document.getElementById('inv-edit-id').value   = inv.id;
   document.getElementById('inv-type').value       = inv.type;
@@ -705,8 +705,8 @@ function editInvoice(id) {
   const autoText = document.getElementById('inv-room-autofill-text');
   if (editRoom || editBed) {
     const rM = editRoom?.monthlyRate||0, rD = editRoom?.dailyRate||0;
-    const rateText = [rM?rM.toLocaleString('th-TH')+' à¸¿/à¹à¸à¸·à¸­à¸':'', rD?rD.toLocaleString('th-TH')+' à¸¿/à¸§à¸±à¸':''].filter(Boolean).join(' Â· ')||'à¹à¸¡à¹à¸£à¸°à¸à¸¸à¸£à¸²à¸à¸²';
-    autoText.textContent = `${editRoom?.name||''} (${editRoom?.roomType||''})${editBed?' Â· à¹à¸à¸µà¸¢à¸ '+editBed.bedCode:''} Â· ${rateText}`;
+    const rateText = [rM?rM.toLocaleString('th-TH')+' ฿/เดือน':'', rD?rD.toLocaleString('th-TH')+' ฿/วัน':''].filter(Boolean).join(' · ')||'ไม่ระบุราคา';
+    autoText.textContent = `${editRoom?.name||''} (${editRoom?.roomType||''})${editBed?' · เตียง '+editBed.bedCode:''} · ${rateText}`;
     autoDiv.style.display = 'flex';
   } else { autoDiv.style.display = 'none'; }
   onInvRoomTypeChange();
@@ -723,7 +723,7 @@ function editInvoice(id) {
   document.getElementById('inv-wht-rate').value   = inv.whtRate||0;
   document.getElementById('inv-note').value       = inv.note||'';
 
-  // set patient à¸à¹à¸²à¸ typeahead
+  // set patient ผ่าน typeahead
   const taId = document.getElementById('ta-inv-id');
   const taInp = document.getElementById('ta-inv-inp');
   if (taId) taId.value = inv.patientId||'';
@@ -741,21 +741,21 @@ function editInvoice(id) {
 }
 
 async function deleteInvoice(id) {
-  if(!confirm('à¸¥à¸à¹à¸­à¸à¸ªà¸²à¸£à¸à¸µà¹à¸«à¸£à¸·à¸­à¹à¸¡à¹?')) return;
+  if(!confirm('ลบเอกสารนี้หรือไม่?')) return;
   const { error } = await supa.from('invoices').delete().eq('id', id);
-  if (error) { toast('à¸¥à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: '+error.message,'error'); return; }
+  if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
   db.invoices=(db.invoices||[]).filter(i=>i.id!==id);
-  toast('à¸¥à¸à¹à¸¥à¹à¸§','success'); renderBilling();
+  toast('ลบแล้ว','success'); renderBilling();
 }
 
 async function markInvoicePaid(id) {
-  // Legacy quick-mark â open payment modal instead
+  // Legacy quick-mark — open payment modal instead
   openRecordPaymentModal(id);
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// ââ BILLING TABS âââââââââââââââââââââââââââââââââââââ
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─────────────────────────────────────────────────────
+// ── BILLING TABS ─────────────────────────────────────
+// ─────────────────────────────────────────────────────
 function switchBillingTab(tab) {
   ['invoices','contracts','payments','physio'].forEach(t => {
     const panel = document.getElementById('billing-tab-'+t);
@@ -774,9 +774,9 @@ function switchBillingTab(tab) {
   if (tab === 'physio') renderPhysioPackagesTab();
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// ââ PAYMENT TRACKING âââââââââââââââââââââââââââââââââ
-// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─────────────────────────────────────────────────────
+// ── PAYMENT TRACKING ─────────────────────────────────
+// ─────────────────────────────────────────────────────
 function getInvoicePaidAmount(invoiceId) {
   return (db.payments||[])
     .filter(p => p.invoiceId === invoiceId)
@@ -800,11 +800,11 @@ function openRecordPaymentModal(invoiceId) {
   const paid    = getInvoicePaidAmount(invoiceId);
   const balance = (inv.grandTotal||0) - paid;
   document.getElementById('pay-invoice-info').innerHTML = `
-    <div style="font-weight:700;margin-bottom:4px;">${inv.docNo} Â· ${inv.patientName}</div>
+    <div style="font-weight:700;margin-bottom:4px;">${inv.docNo} · ${inv.patientName}</div>
     <div style="display:flex;gap:16px;font-size:12px;">
-      <span>à¸¢à¸­à¸à¸£à¸§à¸¡: <strong>${formatThb(inv.grandTotal||0)}</strong></span>
-      <span style="color:#27ae60;">à¸à¸³à¸£à¸°à¹à¸¥à¹à¸§: <strong>${formatThb(paid)}</strong></span>
-      <span style="color:#e67e22;">à¸à¸à¸à¹à¸²à¸: <strong>${formatThb(balance)}</strong></span>
+      <span>ยอดรวม: <strong>${formatThb(inv.grandTotal||0)}</strong></span>
+      <span style="color:#27ae60;">ชำระแล้ว: <strong>${formatThb(paid)}</strong></span>
+      <span style="color:#e67e22;">คงค้าง: <strong>${formatThb(balance)}</strong></span>
     </div>`;
   document.getElementById('pay-amount').value = balance.toFixed(2);
   document.getElementById('pay-date').value = new Date().toISOString().split('T')[0];
@@ -812,14 +812,14 @@ function openRecordPaymentModal(invoiceId) {
   document.getElementById('pay-note').value = '';
   document.getElementById('pay-by').value = currentUser?.displayName || currentUser?.username || '';
   // Reset radio
-  document.querySelector('input[name="pay-method"][value="à¹à¸­à¸à¹à¸à¸´à¸"]').checked = true;
+  document.querySelector('input[name="pay-method"][value="โอนเงิน"]').checked = true;
   document.getElementById('pay-method-other-wrap').style.display = 'none';
   document.getElementById('pay-method-other').value = '';
   openModal('modal-record-payment');
 }
 
 function togglePayOther() {
-  const isOther = document.querySelector('input[name="pay-method"]:checked')?.value === 'à¸­à¸·à¹à¸à¹';
+  const isOther = document.querySelector('input[name="pay-method"]:checked')?.value === 'อื่นๆ';
   const wrap = document.getElementById('pay-method-other-wrap');
   if (wrap) {
     wrap.style.display = isOther ? '' : 'none';
@@ -831,11 +831,11 @@ async function savePayment() {
   const invoiceId = document.getElementById('pay-invoice-id').value;
   const amount    = parseFloat(document.getElementById('pay-amount').value||0);
   const date      = document.getElementById('pay-date').value;
-  if (!amount || amount <= 0) { toast('à¸à¸£à¸¸à¸à¸²à¸£à¸°à¸à¸¸à¸à¸³à¸à¸§à¸à¹à¸à¸´à¸','warning'); return; }
-  if (!date) { toast('à¸à¸£à¸¸à¸à¸²à¸£à¸°à¸à¸¸à¸§à¸±à¸à¸à¸µà¹','warning'); return; }
-  const methodRaw = document.querySelector('input[name="pay-method"]:checked')?.value || 'à¹à¸­à¸à¹à¸à¸´à¸';
-  const method = methodRaw === 'à¸­à¸·à¹à¸à¹'
-    ? (document.getElementById('pay-method-other').value.trim() || 'à¸­à¸·à¹à¸à¹')
+  if (!amount || amount <= 0) { toast('กรุณาระบุจำนวนเงิน','warning'); return; }
+  if (!date) { toast('กรุณาระบุวันที่','warning'); return; }
+  const methodRaw = document.querySelector('input[name="pay-method"]:checked')?.value || 'โอนเงิน';
+  const method = methodRaw === 'อื่นๆ'
+    ? (document.getElementById('pay-method-other').value.trim() || 'อื่นๆ')
     : methodRaw;
   const inv = (db.invoices||[]).find(i=>i.id===invoiceId);
 
@@ -854,7 +854,7 @@ async function savePayment() {
     receipt_no:   receiptNo,
   };
   const { data: ins, error } = await supa.from('payments').insert(payData).select().single();
-  if (error) { toast('à¸à¸±à¸à¸à¸¶à¸à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸: '+error.message,'error'); return; }
+  if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
   if(!db.payments) db.payments=[];
   db.payments.unshift(mapPayment(ins));
 
@@ -867,12 +867,12 @@ async function savePayment() {
     else { inv.status = newStatus; }
   }
 
-  toast(`â à¸£à¸±à¸à¸à¸³à¸£à¸° ${formatThb(amount)} (${receiptNo}) à¹à¸£à¸µà¸¢à¸à¸£à¹à¸­à¸¢`, 'success');
+  toast(`✅ รับชำระ ${formatThb(amount)} (${receiptNo}) เรียบร้อย`, 'success');
   closeModal('modal-record-payment');
   renderBilling();
 
   // Ask to print receipt
-  if (confirm(`à¸à¸±à¸à¸à¸¶à¸à¸ªà¸³à¹à¸£à¹à¸! à¸à¹à¸­à¸à¸à¸²à¸£à¸à¸´à¸¡à¸à¹à¹à¸à¹à¸ªà¸£à¹à¸à¸£à¸±à¸à¹à¸à¸´à¸ ${receiptNo} à¸«à¸£à¸·à¸­à¹à¸¡à¹?`)) {
+  if (confirm(`บันทึกสำเร็จ! ต้องการพิมพ์ใบเสร็จรับเงิน ${receiptNo} หรือไม่?`)) {
     printReceipt(ins.id || payData.receipt_no);
   }
 }
