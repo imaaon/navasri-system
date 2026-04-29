@@ -94,14 +94,18 @@ async function openPatientProfile(id, activeTab) {
               <thead><tr><th>วันที่</th><th>รายการ</th><th>จำนวน</th><th>หน่วย</th><th>ผู้เบิก</th><th></th></tr></thead>
               <tbody>
                 ${reqs.length === 0 ? '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3);">ยังไม่มีประวัติการเบิก</td></tr>' :
-                  reqs.map(r => `<tr>
-                    <td class="number" style="font-size:12px;white-space:nowrap;">${r.date||'-'}</td>
-                    <td style="font-weight:500;">${r.itemName||'-'}</td>
-                    <td class="number">${r.qty||0}</td>
-                    <td>${r.unit||''}</td>
-                    <td style="font-size:12px;">${r.staffName||'-'}</td>
-                    <td><button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')">🖨️</button></td>
-                  </tr>`).join('')}
+                  reqs.flatMap(r => {
+                    // Phase 0: flatten lines เป็น 1 row ต่อ line (รองรับใบเบิกหลายรายการ)
+                    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName, qty: r.qty, unit: r.unit }];
+                    return lines.map((l, i) => `<tr>
+                      <td class="number" style="font-size:12px;white-space:nowrap;">${i===0 ? (r.date||'-') : ''}</td>
+                      <td style="font-weight:500;">${l.itemName||'-'}</td>
+                      <td class="number">${l.qty||0}</td>
+                      <td>${l.unit||''}</td>
+                      <td style="font-size:12px;">${i===0 ? (r.staffName||'-') : ''}</td>
+                      <td>${i===0 ? `<button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')">🖨️</button>` : ''}</td>
+                    </tr>`);
+                  }).join('')}
               </tbody>
             </table>
           </div>
@@ -580,26 +584,35 @@ async function loadPatDispense(patId) {
       '<th>วันที่</th><th>สินค้า</th><th style="text-align:right;">จำนวน</th>' +
       '<th>หน่วย</th><th>สถานะ</th><th>ผู้เบิก</th>' +
       '</tr></thead><tbody>' +
-      reqs.slice(0, 50).map(r =>
-        '<tr><td style="font-size:12px;">' + (r.date||'-') + '</td>' +
-        '<td style="font-weight:500;">' + (r.itemName||'-') + '</td>' +
-        '<td style="text-align:right;">' + (r.qty||0) + '</td>' +
-        '<td style="font-size:12px;">' + (r.unit||'') + '</td>' +
-        '<td>' + statusBadge(r.status) + '</td>' +
-        '<td style="font-size:12px;">' + (r.staffName||'-') + '</td></tr>'
-      ).join('') + '</tbody></table></div>';
+      reqs.slice(0, 50).flatMap(r => {
+        // Phase 0: flatten lines เป็น 1 row ต่อ line
+        const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName, qty: r.qty, unit: r.unit }];
+        return lines.map((l, i) =>
+          '<tr><td style="font-size:12px;">' + (i===0 ? (r.date||'-') : '') + '</td>' +
+          '<td style="font-weight:500;">' + (l.itemName||'-') + '</td>' +
+          '<td style="text-align:right;">' + (l.qty||0) + '</td>' +
+          '<td style="font-size:12px;">' + (l.unit||'') + '</td>' +
+          '<td>' + (i===0 ? statusBadge(r.status) : '') + '</td>' +
+          '<td style="font-size:12px;">' + (i===0 ? (r.staffName||'-') : '') + '</td></tr>'
+        );
+      }).join('') + '</tbody></table></div>';
   }
 
   // รายการ billable ที่ยังไม่มี invoice (unbilled)
   if (unbilledEl) {
     const items = reqs
       .filter(r => r.status === 'approved')
-      .map(r => {
-        const item = db.items.find(i => i.id == r.itemId);
-        if (!item || item.isBillable === false) return null;
-        const price = item.price || item.cost || 0;
-        return { name: r.itemName, qty: r.qty, unit: r.unit, price, total: r.qty * price, date: r.date };
-      }).filter(Boolean);
+      .flatMap(r => {
+        // Phase 0: flatten lines เป็น 1 item ต่อ line
+        const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, itemName: r.itemName, qty: r.qty, unit: r.unit }];
+        return lines.map(l => {
+          const item = db.items.find(i => i.id == l.itemId);
+          if (!item || item.isBillable === false) return null;
+          const price = item.price || item.cost || 0;
+          const qty = l.qty || 0;
+          return { name: l.itemName||item.name, qty, unit: l.unit||item.unit||'', price, total: qty * price, date: r.date };
+        }).filter(Boolean);
+      });
 
     if (items.length === 0) {
       unbilledEl.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:13px;">ไม่มีรายการค้างเบิลล์</div>';
