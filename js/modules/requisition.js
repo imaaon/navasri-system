@@ -91,6 +91,8 @@ function initReq() {
       inp.style.cursor = '';
     }
     _hideReqReturnBanner();
+    // Phase 1 fix: ล้าง allergy/bed banner ที่ค้างจาก session เก่า
+    _clearReqPatientBanners();
   }
 }
 
@@ -116,11 +118,35 @@ function _hideReqReturnBanner() {
   if (banner) banner.style.display = 'none';
 }
 
+// Phase 1 fix: ล้าง allergy banner + bed info ของหน้า requisition
+// (ใช้เมื่อ patient ถูก clear / เปลี่ยนหน้า / submit เสร็จ)
+function _clearReqPatientBanners() {
+  const allergy = document.getElementById('req-allergy-alert');
+  const bed     = document.getElementById('req-bed-info');
+  if (allergy) { allergy.style.display = 'none'; allergy.innerHTML = ''; }
+  if (bed)     { bed.style.display = 'none'; }
+  const bedText = document.getElementById('req-bed-text');
+  if (bedText) bedText.textContent = '';
+}
+
 // ยกเลิก context ปัจจุบัน + กลับหน้าคนไข้ (ถ้าผู้ใช้กดปุ่ม ← กลับ)
 function cancelReqReturnContext() {
   const ctx = reqReturnContext;
   reqReturnContext = null;
   reqItems = []; // ล้างฟอร์ม
+  // Phase 1 fix: clear banners ก่อนเปลี่ยนหน้า — ป้องกัน banner ค้างเมื่อกลับเข้าหน้านี้อีก
+  _hideReqReturnBanner();
+  _clearReqPatientBanners();
+  // unlock patient field
+  const inp = document.getElementById('ta-rp-inp');
+  if (inp) {
+    inp.value = '';
+    inp.removeAttribute('readonly');
+    inp.style.background = '';
+    inp.style.cursor = '';
+  }
+  const hid = document.getElementById('ta-rp-id');
+  if (hid) hid.value = '';
   if (ctx && ctx.type === 'patient' && ctx.patientId) {
     if (typeof openPatientProfile === 'function') {
       openPatientProfile(ctx.patientId, ctx.fromTab || 'dispense');
@@ -309,6 +335,8 @@ function clearReq() {
   document.getElementById('req-date').value = new Date().toISOString().split('T')[0];
   for (let i = 0; i < 5; i++) reqItems.push({ itemId: '', qty: 1, unit: '' });
   renderReqItems();
+  // Phase 1 fix: clear allergy + bed banners ที่อาจค้างจาก patient คนก่อน
+  _clearReqPatientBanners();
 }
 
 // ===== HISTORY =====
