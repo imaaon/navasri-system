@@ -1032,11 +1032,12 @@ async function saveQuickDispenseRequest() {
     if (headerError) throw headerError;
 
     // สร้าง requisition line
+    // Phase 0: ใช้ qty_requested ตาม schema (ก่อนหน้านี้ใช้ quantity ผิด)
     const lineData = {
       header_id: headerResult.id,
       item_id: itemId,
       item_name: item.name,
-      quantity: qty,
+      qty_requested: qty,
       unit: item.dispenseUnit || item.unit,
       note: `เบิกด่วน - ${patient.name}`
     };

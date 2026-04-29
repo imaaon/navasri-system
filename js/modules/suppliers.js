@@ -615,8 +615,10 @@ async function renderTraceability() {
   const { data: movements } = await supa.from('stock_movements')
     .select('*').eq('item_id', item.id).order('created_at', {ascending: false}).limit(50);
 
-  // ดึง requisitions
-  const reqs = (db.requisitions||[]).filter(r => r.itemId == item.id).slice(0,20);
+  // ดึง requisitions — Phase 0: เช็คทั้ง lines และ flat fallback
+  const reqs = (db.requisitions||[]).filter(r => 
+    (r.lines||[]).some(l => l.itemId == item.id) || r.itemId == item.id
+  ).slice(0,20);
 
   // ดึง purchases
   const purchases = (db.purchases||[]).filter(p => p.itemId == item.id).slice(0,10);

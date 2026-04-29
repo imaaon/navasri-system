@@ -71,9 +71,13 @@ function renderBIKPICards(month) {
   const revenue     = invs.reduce((s,i) => s + (i.grandTotal||0), 0);
   const collected   = pays.reduce((s,p) => s + (p.amount||0), 0);
   const reqs        = _reqsMonth(month);
+  // Phase 0: cost calc รองรับใบเบิกหลายรายการ (loop ทุก lines)
   const costItems   = reqs.reduce((s,r) => {
-    const item = db.items.find(i => i.id == r.itemId);
-    return s + (item?.cost||0) * (r.qty||0);
+    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, qty: r.qty }];
+    return s + lines.reduce((ls, l) => {
+      const item = db.items.find(i => i.id == l.itemId);
+      return ls + (item?.cost||0) * (l.qty||0);
+    }, 0);
   }, 0);
   const grossProfit = revenue - costItems;
   const occupancy   = totalBeds > 0 ? occupiedBeds / totalBeds * 100 : 0;
@@ -161,13 +165,17 @@ function renderBICostPerPatient(month) {
   });
 
   // ต้นทุนสินค้า per patient
+  // Phase 0: รองรับใบเบิกหลายรายการ
   const costByPat = {};
   reqs.forEach(r => {
     const pid = String(r.patientId);
-    const item = db.items.find(i => i.id == r.itemId);
-    const cost = (item?.cost || 0) * (r.qty || 0);
+    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, qty: r.qty }];
+    const lineCost = lines.reduce((ls, l) => {
+      const item = db.items.find(i => i.id == l.itemId);
+      return ls + (item?.cost || 0) * (l.qty || 0);
+    }, 0);
     if (!costByPat[pid]) costByPat[pid] = { name: r.patientName, cost: 0 };
-    costByPat[pid].cost += cost;
+    costByPat[pid].cost += lineCost;
   });
 
   // รวม
@@ -241,9 +249,13 @@ function renderBIProfitByZone(month) {
   reqs.forEach(r => {
     const pat  = activePats.find(p => String(p.id) === String(r.patientId));
     const zone = _getPatientZone(pat) || 'ไม่ระบุ';
-    const item = db.items.find(i => i.id == r.itemId);
     if (!zoneData[zone]) zoneData[zone] = { revenue: 0, cost: 0, patients: new Set() };
-    zoneData[zone].cost += (item?.cost || 0) * (r.qty || 0);
+    // Phase 0: รองรับใบเบิกหลายรายการ
+    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, qty: r.qty }];
+    lines.forEach(l => {
+      const item = db.items.find(i => i.id == l.itemId);
+      zoneData[zone].cost += (item?.cost || 0) * (l.qty || 0);
+    });
   });
 
   const rows = Object.entries(zoneData)
@@ -291,12 +303,15 @@ function renderBIPredictiveStock() {
     r.status === 'approved' && (r.date||'') >= cutoffStr
   );
 
-  // รวม usage per item
+  // รวม usage per item — Phase 0: flatten lines
   const usageMap = {};
   reqs30.forEach(r => {
-    const key = String(r.itemId);
-    if (!usageMap[key]) usageMap[key] = { itemId: r.itemId, itemName: r.itemName, totalQty: 0 };
-    usageMap[key].totalQty += r.qty || 0;
+    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, itemName: r.itemName, qty: r.qty }];
+    lines.forEach(l => {
+      const key = String(l.itemId);
+      if (!usageMap[key]) usageMap[key] = { itemId: l.itemId, itemName: l.itemName, totalQty: 0 };
+      usageMap[key].totalQty += l.qty || 0;
+    });
   });
 
   const rows = (db.items||[])
@@ -356,12 +371,16 @@ function renderBITopItems(month) {
   if (!el) return;
   const reqs = _reqsMonth(month);
   const map = {};
+  // Phase 0: flatten lines
   reqs.forEach(r => {
-    const k = String(r.itemId);
-    if (!map[k]) map[k] = { name: r.itemName||'-', qty: 0, cost: 0 };
-    const item = db.items.find(i => i.id == r.itemId);
-    map[k].qty  += r.qty || 0;
-    map[k].cost += (item?.cost||0) * (r.qty||0);
+    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, itemName: r.itemName, qty: r.qty }];
+    lines.forEach(l => {
+      const k = String(l.itemId);
+      if (!map[k]) map[k] = { name: l.itemName||'-', qty: 0, cost: 0 };
+      const item = db.items.find(i => i.id == l.itemId);
+      map[k].qty  += l.qty || 0;
+      map[k].cost += (item?.cost||0) * (l.qty||0);
+    });
   });
   const rows = Object.values(map).sort((a,b) => b.qty - a.qty).slice(0, 10);
   if (rows.length === 0) {
@@ -388,8 +407,12 @@ function renderBITrend() {
     const reqs = _reqsMonth(m);
     const revenue = invs.reduce((s,i) => s + (i.grandTotal||0), 0);
     const cost    = reqs.reduce((s,r) => {
-      const item = db.items.find(i => i.id == r.itemId);
-      return s + (item?.cost||0) * (r.qty||0);
+      // Phase 0: รองรับใบเบิกหลายรายการ
+      const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, qty: r.qty }];
+      return s + lines.reduce((ls, l) => {
+        const item = db.items.find(i => i.id == l.itemId);
+        return ls + (item?.cost||0) * (l.qty||0);
+      }, 0);
     }, 0);
     return { month: m, revenue, cost, profit: revenue - cost };
   });
@@ -437,12 +460,19 @@ function _rollingUsage(itemId, days) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
   const cutoffStr = cutoff.toISOString().slice(0, 10);
-  const reqs = (db.requisitions||[]).filter(r =>
-    r.status === 'approved' &&
-    String(r.itemId) === String(itemId) &&
-    (r.date||'') >= cutoffStr
-  );
-  const total = reqs.reduce((s, r) => s + (r.qty||0), 0);
+  // Phase 0: filter รวมจาก lines + flat fallback
+  const reqs = (db.requisitions||[]).filter(r => {
+    if (r.status !== 'approved') return false;
+    if ((r.date||'') < cutoffStr) return false;
+    return (r.lines||[]).some(l => String(l.itemId) === String(itemId)) ||
+           String(r.itemId) === String(itemId);
+  });
+  // sum qty เฉพาะ lines ที่ตรง itemId
+  const total = reqs.reduce((s, r) => {
+    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, qty: r.qty }];
+    return s + lines.reduce((ls, l) => 
+      String(l.itemId) === String(itemId) ? ls + (l.qty||0) : ls, 0);
+  }, 0);
   return total / days; // avg per day
 }
 
@@ -526,12 +556,15 @@ function renderPricingAnalysis() {
   const month = _biMonth();
   const reqs  = _reqsMonth(month);
 
-  // รวม qty used per item เดือนนี้
+  // รวม qty used per item เดือนนี้ — Phase 0: flatten lines
   const usedMap = {};
   reqs.forEach(r => {
-    const k = String(r.itemId);
-    if (!usedMap[k]) usedMap[k] = 0;
-    usedMap[k] += r.qty || 0;
+    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, qty: r.qty }];
+    lines.forEach(l => {
+      const k = String(l.itemId);
+      if (!usedMap[k]) usedMap[k] = 0;
+      usedMap[k] += l.qty || 0;
+    });
   });
 
   const rows = (db.items||[])
@@ -776,9 +809,13 @@ function renderProfitPerBed() {
   reqs.forEach(r => {
     const pat  = activePat.find(p => String(p.id)===String(r.patientId));
     const zone = _getPatientZone(pat);
-    const item = db.items.find(i => i.id==r.itemId);
     if (!zoneCost[zone]) zoneCost[zone] = 0;
-    zoneCost[zone] += (item?.cost||0) * (r.qty||0);
+    // Phase 0: รองรับใบเบิกหลายรายการ
+    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, qty: r.qty }];
+    lines.forEach(l => {
+      const item = db.items.find(i => i.id==l.itemId);
+      zoneCost[zone] += (item?.cost||0) * (l.qty||0);
+    });
   });
 
   const allZones = new Set([...Object.keys(zoneBeds), ...Object.keys(zoneRevenue)]);
@@ -911,8 +948,12 @@ function _avgMonthlyCostPerPatient() {
     const reqs = _reqsMonth(m);
     if (reqs.length === 0) return;
     const cost = reqs.reduce((s,r) => {
-      const item = db.items.find(i=>i.id==r.itemId);
-      return s + (item?.cost||0)*(r.qty||0);
+      // Phase 0: รองรับใบเบิกหลายรายการ
+      const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, qty: r.qty }];
+      return s + lines.reduce((ls, l) => {
+        const item = db.items.find(i=>i.id==l.itemId);
+        return ls + (item?.cost||0)*(l.qty||0);
+      }, 0);
     }, 0);
     const pats = new Set(reqs.map(r=>r.patientId)).size;
     if (pats > 0) { totalCost += cost/pats; totalMonths++; }
@@ -1163,8 +1204,12 @@ function renderInvestorDashboard() {
   const revenue    = invs.reduce((s,i)=>s+(i.grandTotal||0),0);
   const collected  = pays.reduce((s,p)=>s+(p.amount||0),0);
   const cogs       = reqs.reduce((s,r)=>{
-    const item=db.items.find(i=>i.id==r.itemId);
-    return s+(item?.cost||0)*(r.qty||0);
+    // Phase 0: รองรับใบเบิกหลายรายการ
+    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, qty: r.qty }];
+    return s + lines.reduce((ls, l) => {
+      const item=db.items.find(i=>i.id==l.itemId);
+      return ls+(item?.cost||0)*(l.qty||0);
+    }, 0);
   },0);
   const grossProfit = revenue - cogs;
   const margin      = revenue > 0 ? grossProfit/revenue*100 : 0;

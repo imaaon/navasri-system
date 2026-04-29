@@ -443,15 +443,21 @@ async function loadRequisitionsForInvoice() {
     return d >= fromDate && d <= toDate && r.status === 'approved';
   });
   const itemMap = {};
+  // Phase 0: รองรับทั้ง schema ใหม่ (lines[]) และเก่า (items jsonb / flat itemId)
   reqs.forEach(req => {
-    (req.items||[]).forEach(ri => {
-      const item = db.items.find(it=>String(it.id)===String(ri.itemId));
+    const lines = (req.lines && req.lines.length > 0) ? req.lines :
+                  (req.items && req.items.length > 0) ? req.items :
+                  (req.itemId ? [{ itemId: req.itemId, name: req.itemName, qty: req.qty||1, unit: req.unit }] : []);
+    lines.forEach(ri => {
+      const iid = ri.itemId || ri.item_id;
+      const item = db.items.find(it=>String(it.id)===String(iid));
       // กรองเฉพาะ Billable items
       if (item && item.isBillable === false) return;
-      const key  = ri.itemId || ri.name;
+      const key  = iid || ri.name || ri.itemName;
+      if (!key) return;
       const price= item ? (item.price||item.cost||0) : 0;
-      const unit = item?.dispenseUnit || item?.unit || '';
-      if (!itemMap[key]) itemMap[key] = { name: ri.name||item?.name||key, qty:0, price, unit };
+      const unit = item?.dispenseUnit || item?.unit || ri.unit || '';
+      if (!itemMap[key]) itemMap[key] = { name: ri.name||ri.itemName||item?.name||key, qty:0, price, unit };
       itemMap[key].qty += ri.qty||1;
     });
   });
@@ -2015,11 +2021,19 @@ async function confirmQuickInvoice() {
     const found = (db.items||[]).find(i => i.name === name);
     return found ? (found.category || 'เวชภัณฑ์') : 'เวชภัณฑ์';
   };
+  // Phase 0: รองรับใบเบิกหลายรายการ — flatten lines
   reqs.forEach(r => {
-    const key = r.itemName || r.name || '';
-    if (!key) return;
-    if (!medMap[key]) medMap[key] = { name: key, qty: 0, price: r.price || r.unit_price || 0, category: r.category || getItemCategory(key) };
-    medMap[key].qty += r.quantity || r.qty || 1;
+    const lines = (r.lines && r.lines.length > 0) 
+      ? r.lines 
+      : [{ itemName: r.itemName||r.name, qty: r.quantity||r.qty||1, unitPrice: r.price||r.unit_price||0, itemId: r.itemId }];
+    lines.forEach(l => {
+      const key = l.itemName || '';
+      if (!key) return;
+      const item = (db.items||[]).find(i => i.id == l.itemId || i.name === key);
+      const price = l.unitPrice || (item?.price) || (item?.cost) || 0;
+      if (!medMap[key]) medMap[key] = { name: key, qty: 0, price: price, category: (item?.category) || getItemCategory(key) };
+      medMap[key].qty += (l.qty || 1);
+    });
   });
   groupItems.forEach(it => {
     const key = it.name;

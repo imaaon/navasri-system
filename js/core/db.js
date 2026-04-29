@@ -3,6 +3,13 @@
 // ===== DATA STORE =====
 // ── Supabase ─────────────────────────────────────────────────
 
+// ⚠️ Phase 0: Req Schema Unification (29 เม.ย. 2569)
+// ── ทุก query requisitions ใช้ table ใหม่ (requisition_headers + requisition_lines)
+// ── ตั้ง false เพื่อ rollback กลับไปใช้ table เก่าทันที (ไม่ต้อง git revert)
+const USE_NEW_REQ_SCHEMA = true;
+const _REQ_TABLE  = USE_NEW_REQ_SCHEMA ? 'requisition_headers' : 'requisitions';
+const _REQ_SELECT = USE_NEW_REQ_SCHEMA ? '*, requisition_lines(*)' : '*';
+
 
 let db = {
   items: [],
@@ -84,7 +91,7 @@ async function loadDB() {
       supa.from('items').select('*').order('id'),
       supa.from('patients').select('*, patient_contacts(*), patient_allergies(*)').order('id'),
       supa.from('staff').select('*').order('id'),
-      supa.from('requisitions').select('*').order('id', {ascending: false}).limit(500),
+      supa.from(_REQ_TABLE).select(_REQ_SELECT).order('id', {ascending: false}).limit(500),
       supa.from('purchases').select('*').order('created_at', {ascending: false}).limit(500),
       supa.from('settings').select('*'),
       supa.from('item_lots').select('*').order('expiry_date', {ascending: true}).limit(500),
@@ -537,17 +544,22 @@ function mapReq(r) {
     qty: l.qty_requested, qtyApproved: l.qty_approved,
     unit: l.unit, unitPrice: l.unit_price||0
   }));
+  // Phase 0 detector — log warning if legacy schema record encountered
+  if (lines.length === 0 && r.item_id && USE_NEW_REQ_SCHEMA) {
+    console.warn('[mapReq] Legacy schema record detected (no lines):', r.id, r.ref_no || '');
+  }
   // backward compat: ถ้าไม่มี lines ให้ใช้ item_id/item_name จาก record เดิม
   const firstLine = lines[0] || {};
   return {
     id: r.id, refNo: r.ref_no||'', date: r.date,
+    createdAt: r.created_at || '',  // Phase 0: เพิ่ม mapping created_at
     patientId: r.patient_id, patientName: r.patient_name,
     staffId: r.staff_id, staffName: r.staff_name,
     status: r.status||'pending', note: r.note,
     approvedBy: r.approved_by||'', approvedAt: r.approved_at||'',
     createdBy: r.created_by||'',
     lines,
-    // backward compat fields
+    // backward compat fields (อ่าน firstLine ได้ — โค้ดเก่าใช้ pattern นี้อยู่)
     itemId: r.item_id || firstLine.itemId,
     itemName: r.item_name || firstLine.itemName,
     qty: r.qty || firstLine.qty,

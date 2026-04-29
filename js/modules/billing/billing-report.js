@@ -69,11 +69,19 @@ async function confirmQuickInvoice() {
     const found = (db.items||[]).find(i => i.name === name);
     return found ? (found.category || 'เวชภัณฑ์') : 'เวชภัณฑ์';
   };
+  // Phase 0: รองรับใบเบิกหลายรายการ — flatten lines
   reqs.forEach(r => {
-    const key = r.itemName || r.name || '';
-    if (!key) return;
-    if (!medMap[key]) medMap[key] = { name: key, qty: 0, price: r.price || r.unit_price || 0, category: r.category || getItemCategory(key) };
-    medMap[key].qty += r.quantity || r.qty || 1;
+    const lines = (r.lines && r.lines.length > 0) 
+      ? r.lines 
+      : [{ itemName: r.itemName||r.name, qty: r.quantity||r.qty||1, unitPrice: r.price||r.unit_price||0 }];
+    lines.forEach(l => {
+      const key = l.itemName || '';
+      if (!key) return;
+      const item = (db.items||[]).find(i => i.id == l.itemId || i.name === key);
+      const price = l.unitPrice || (item?.price) || (item?.cost) || 0;
+      if (!medMap[key]) medMap[key] = { name: key, qty: 0, price: price, category: (item?.category) || getItemCategory(key) };
+      medMap[key].qty += (l.qty || 1);
+    });
   });
   groupItems.forEach(it => {
     const key = it.name;

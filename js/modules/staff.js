@@ -114,7 +114,8 @@ async function openStaffProfile(id) {
   if (!s) { toast('ไม่พบข้อมูลพนักงาน','error'); return; }
   document.getElementById('staffprofile-breadcrumb').textContent = s.name + (s.nickname ? ` (${s.nickname})` : '');
   // Query all reqs for this staff directly
-  const { data: reqData } = await supa.from('requisitions').select('*').eq('staff_id', String(s.id)).order('id', {ascending:false});
+  // Phase 0: ใช้ requisition_headers + requisition_lines (ใหม่)
+  const { data: reqData } = await supa.from(_REQ_TABLE).select(_REQ_SELECT).eq('staff_id', String(s.id)).order('id', {ascending:false});
   const reqs = (reqData||[]).map(mapReq);
   const age    = s.dob ? calcAge(s.dob) : '-';
   const tenure = s.startDate ? calcDuration(s.startDate) : (s.start ? calcDuration(s.start) : '-');
@@ -167,14 +168,21 @@ async function openStaffProfile(id) {
             <thead><tr><th>วันที่</th><th>ผู้รับบริการ</th><th>รายการ</th><th>จำนวน</th><th>หน่วย</th><th></th></tr></thead>
             <tbody>
               ${reqs.length === 0 ? '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3);">ยังไม่มีประวัติ</td></tr>' :
-                reqs.slice(0,30).map(r => `<tr>
+                reqs.slice(0,30).map(r => {
+                  // Phase 0: รองรับใบเบิกหลายรายการ — แสดงทุก lines แบบ inline
+                  const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName, qty: r.qty, unit: r.unit }];
+                  const itemSummary = lines.map(l => l.itemName||'-').join(', ');
+                  const qtySummary  = lines.length === 1 ? (lines[0].qty||0) : lines.reduce((s,l)=>s+(l.qty||0), 0);
+                  const unitSummary = lines.length === 1 ? (lines[0].unit||'') : `${lines.length} รายการ`;
+                  return `<tr>
                   <td class="number" style="font-size:12px;white-space:nowrap;">${r.date||'-'}</td>
                   <td style="font-size:12px;">${r.patientName||'-'}</td>
-                  <td style="font-weight:500;">${r.itemName||'-'}</td>
-                  <td class="number">${r.qty||0}</td>
-                  <td>${r.unit||''}</td>
+                  <td style="font-weight:500;">${itemSummary}</td>
+                  <td class="number">${qtySummary}</td>
+                  <td>${unitSummary}</td>
                   <td><button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')">🖨️</button></td>
-                </tr>`).join('')}
+                </tr>`;
+                }).join('')}
             </tbody>
           </table>
         </div>

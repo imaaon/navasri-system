@@ -6,14 +6,18 @@ async function openPatientProfile(id, activeTab) {
   if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ','error'); return; }
   document.getElementById('patprofile-breadcrumb').textContent = p.name;
   // Query all reqs for this patient directly (no time limit — full history per patient)
-  const { data: reqData } = await supa.from('requisitions').select('*').eq('patient_id', String(p.id)).order('id', {ascending:false});
+  // Phase 0: ใช้ requisition_headers + requisition_lines (ใหม่)
+  const { data: reqData } = await supa.from(_REQ_TABLE).select(_REQ_SELECT).eq('patient_id', String(p.id)).order('id', {ascending:false});
   const reqs = (reqData||[]).map(mapReq);
   const age  = p.dob ? calcAge(p.dob) : '-';
   const dur  = p.admitDate ? calcDuration(p.admitDate, p.endDate) : '-';
   const isActive = p.status === 'active';
   const idcard = p.idcard || p.idCard || '-';
-  const totalReqs = reqs.length;
-  const totalQty  = reqs.reduce((s,r) => s+(r.qty||0), 0);
+  // Phase 0: นับ "ใบเบิก" + "รายการ" + "หน่วยรวม" จาก lines (รองรับใบเบิกหลายรายการ)
+  const totalReqs  = reqs.length;  // จำนวนใบเบิก (header)
+  const totalLines = reqs.reduce((s,r) => s + ((r.lines||[]).length || (r.itemId ? 1 : 0)), 0);  // จำนวนรายการรวม
+  const totalQty   = reqs.reduce((s,r) => 
+    s + ((r.lines||[]).reduce((ls,l) => ls + (l.qty||0), 0) || (r.qty||0)), 0);
   // Load clinical data lazily
   showPage('patprofile');
   await loadPatientClinical(id);
@@ -30,7 +34,7 @@ async function openPatientProfile(id, activeTab) {
         <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;">
           <div style="background:var(--sage-light);border-radius:8px;padding:8px 14px;text-align:center;">
             <div style="font-size:22px;font-weight:700;color:var(--accent);">${totalReqs}</div>
-            <div style="font-size:11px;color:var(--text2);">ครั้งที่เบิก</div>
+            <div style="font-size:11px;color:var(--text2);">ครั้งที่เบิก${totalLines!==totalReqs?` (${totalLines} รายการ)`:''}</div>
           </div>
           <div style="background:var(--sage-light);border-radius:8px;padding:8px 14px;text-align:center;">
             <div style="font-size:22px;font-weight:700;color:var(--accent);">${totalQty}</div>

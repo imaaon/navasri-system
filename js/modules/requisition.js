@@ -154,17 +154,31 @@ async function submitReq() {
 
     const headerId = rpcResult?.header_id;
 
-    // อัปเดต local cache (db.requisitions) เพื่อให้ approval panel เห็นทันที
-    validItems.forEach(ri => {
-      const item = db.items.find(i => i.id == ri.itemId);
-      if (!item) return;
-      db.requisitions.unshift({
-        id: headerId, refNo, date,
-        patientId: patId, patientName: patient.name,
-        itemId: item.id, itemName: item.name,
-        qty: ri.qty, unit: ri.unit || item.unit,
-        staffId, staffName: staff.name, note, status: 'pending'
-      });
+    // Phase 0: บันทึก 1 header เข้า cache (ไม่ใช่ 1 record ต่อ line — bug เดิม)
+    db.requisitions.unshift({
+      id: headerId, refNo, date,
+      createdAt: new Date().toISOString(),
+      patientId: patId, patientName: patient.name,
+      staffId, staffName: staff.name,
+      note, status: 'pending',
+      approvedBy: '', approvedAt: '',
+      createdBy: currentUser?.displayName || currentUser?.username || '',
+      lines: validItems.map(ri => {
+        const item = db.items.find(i => i.id == ri.itemId);
+        return {
+          itemId: ri.itemId,
+          itemName: item ? item.name : '',
+          qty: ri.qty,
+          qtyApproved: null,
+          unit: ri.unit || (item ? item.unit : ''),
+          unitPrice: item ? (item.price || 0) : 0,
+        };
+      }),
+      // backward compat fields (firstLine ใช้สำหรับโค้ดเก่าที่ยังไม่ migrate)
+      itemId:   validItems[0]?.itemId,
+      itemName: (db.items.find(i => i.id == validItems[0]?.itemId) || {}).name,
+      qty:      validItems[0]?.qty,
+      unit:     validItems[0]?.unit,
     });
 
     toast(`บันทึกการเบิก ${validItems.length} รายการเรียบร้อย (${refNo})`, 'success');
@@ -380,20 +394,35 @@ async function approveReq(reqId) {
       return;
     }
 
-    // อัปเดต local cache
+    // Phase 0: รองรับใบเบิกหลายรายการ
+    // RPC ฝั่ง server ตัดสต็อก FEFO + update items.qty ครบทุก line ให้แล้ว
+    // (เคยมี bug: client ตัด lot ของ firstLine ซ้ำ → double-cut. ลบออกแล้ว)
     req.status = 'approved';
-    const item = db.items.find(i => i.id == req.itemId);
-    if (item) {
-      // sync item qty จาก Supabase (trigger อัปเดตให้แล้ว แต่ sync local cache)
-      const { data: updItem } = await supa.from('items').select('qty').eq('id', item.id).single();
-      if (updItem) item.qty = updItem.qty;
+    req.approvedAt = new Date().toISOString();
+    req.approvedBy = actor;
 
-      // sync lots + FEFO (First Expired First Out)
+    // List of lines ที่ถูก approve — ใช้ lines ใหม่ ถ้าไม่มีให้ fallback flat
+    const approvedLines = (req.lines && req.lines.length > 0)
+      ? req.lines
+      : [{ itemId: req.itemId, itemName: req.itemName, qty: req.qty, unit: req.unit }];
+
+    // อัปเดต status ของ lines ใน local cache
+    approvedLines.forEach(l => { l.qtyApproved = l.qty; });
+
+    // Sync items qty + lots สำหรับทุก item ที่ถูกตัดสต็อก (loop ทุก line)
+    const itemIdsAffected = [...new Set(approvedLines.map(l => l.itemId).filter(Boolean))];
+    for (const iid of itemIdsAffected) {
+      const item = db.items.find(i => i.id == iid);
+      if (!item) continue;
+      // sync items.qty (server trigger update แล้ว)
+      const { data: updItem } = await supa.from('items').select('qty').eq('id', iid).single();
+      if (updItem) item.qty = updItem.qty;
+      // sync lots
       const { data: lotsData } = await supa.from('item_lots')
-        .select('*').eq('item_id', item.id).gt('qty_remaining', 0)
+        .select('*').eq('item_id', iid).gt('qty_remaining', 0)
         .order('expiry_date', { ascending: true, nullsFirst: false });
       if (lotsData) {
-        db.itemLots = (db.itemLots||[]).filter(l => String(l.itemId) !== String(item.id));
+        db.itemLots = (db.itemLots||[]).filter(l => String(l.itemId) !== String(iid));
         lotsData.forEach(l => db.itemLots.push({
           id: l.id, itemId: l.item_id, lotNumber: l.lot_number,
           qtyInLot: l.qty_in_lot, qtyRemaining: l.qty_remaining,
@@ -403,57 +432,55 @@ async function approveReq(reqId) {
       }
     }
 
-    // FEFO: เลือก lot ที่หมดอายุก่อน แล้วตัด qty_remaining
-    let selectedLotId = null, selectedUnitCost = 0, selectedLotNumber = null;
-    const fefoLots = (db.itemLots||[])
-      .filter(l => String(l.itemId) === String(req.itemId) && l.qtyRemaining > 0)
-      .sort((a,b) => {
-        if (!a.expiryDate && !b.expiryDate) return 0;
-        if (!a.expiryDate) return 1;
-        if (!b.expiryDate) return -1;
-        return new Date(a.expiryDate) - new Date(b.expiryDate);
-      });
-    if (fefoLots.length > 0) {
-      selectedLotId    = fefoLots[0].id;
-      selectedUnitCost = fefoLots[0].unitCost || 0;
-      selectedLotNumber= fefoLots[0].lotNumber || null;
-      // อัปเดต lot qty_remaining ใน Supabase
-      const newRemaining = Math.max(0, fefoLots[0].qtyRemaining - (req.qty || 0));
-      supa.from('item_lots').update({ qty_remaining: newRemaining }).eq('id', selectedLotId);
-      // อัปเดต local cache
-      fefoLots[0].qtyRemaining = newRemaining;
-    }
-
+    // LINE notify — ใช้จำนวน lines จริง
     sendLineNotify('approved', buildLineMsg('approved', {
-      refNo: req.refNo||('REQ#'+reqId), patient: req.patientName, itemCount: 1
-    }), { patientName: req.patientName, itemCount: 1 });
+      refNo: req.refNo||('REQ#'+reqId), patient: req.patientName, itemCount: approvedLines.length
+    }), { patientName: req.patientName, itemCount: approvedLines.length });
 
-    // บันทึก stock_movements (issue) เพื่อ traceability
+    // บันทึก stock_movements (issue) — 1 record ต่อ line เพื่อ traceability ครบ
     if (typeof mapStockMovement === 'function') {
-      const beforeQty = item ? (item.qty + req.qty) : 0;
-      const afterQty  = item ? item.qty : 0;
-      const movData = {
-        item_id:       req.itemId,
-        barcode:       item?.barcode || null,
-        movement_type: 'issue',
-        quantity:      req.qty || 0,
-        before_qty:    beforeQty,
-        after_qty:     afterQty,
-        note:          `อนุมัติใบเบิก ${req.refNo||reqId} — ${req.patientName||''}`,
-        ref_type:      'requisition',
-        ref_id:        reqId,
-        created_by:    actor,
-        lot_id:                selectedLotId,
-        requisition_header_id: reqId,
-        unit_cost:             selectedUnitCost,
-        lot_no:                selectedLotNumber,
-      };
-      supa.from('stock_movements').insert(movData).select().single().then(({ data }) => {
-        if (data) db.stockMovements.unshift(mapStockMovement(data));
-      });
+      for (const line of approvedLines) {
+        const item = db.items.find(i => i.id == line.itemId);
+        if (!item) continue;
+        // หา lot FEFO เพื่อบันทึก lot info ใน movement (ข้อมูลอ้างอิงเท่านั้น — server ตัดให้แล้ว)
+        const fefoLot = (db.itemLots||[])
+          .filter(l => String(l.itemId) === String(line.itemId))
+          .sort((a,b) => {
+            if (!a.expiryDate && !b.expiryDate) return 0;
+            if (!a.expiryDate) return 1;
+            if (!b.expiryDate) return -1;
+            return new Date(a.expiryDate) - new Date(b.expiryDate);
+          })[0];
+        const beforeQty = (item.qty || 0) + (line.qty || 0);
+        const afterQty  = item.qty || 0;
+        const movData = {
+          item_id:               line.itemId,
+          barcode:               item.barcode || null,
+          movement_type:         'issue',
+          quantity:              line.qty || 0,
+          before_qty:            beforeQty,
+          after_qty:             afterQty,
+          note:                  `อนุมัติใบเบิก ${req.refNo||reqId} — ${req.patientName||''}`,
+          ref_type:              'requisition',
+          ref_id:                reqId,
+          created_by:            actor,
+          lot_id:                fefoLot?.id || null,
+          requisition_header_id: reqId,
+          unit_cost:             fefoLot?.unitCost || 0,
+          lot_no:                fefoLot?.lotNumber || null,
+        };
+        supa.from('stock_movements').insert(movData).select().single().then(({ data }) => {
+          if (data) db.stockMovements.unshift(mapStockMovement(data));
+        });
+      }
     }
     logAudit(AUDIT_MODULES.REQUISITION, AUDIT_ACTIONS.APPROVE, reqId, {
-      ref_no: req.refNo, patient: req.patientName, item: req.itemName, qty: req.qty, actor,
+      ref_no: req.refNo,
+      patient: req.patientName,
+      item: approvedLines.map(l => l.itemName).join(', '),
+      qty: approvedLines.reduce((s,l) => s + (l.qty||0), 0),
+      itemCount: approvedLines.length,
+      actor,
     });
     toast(`✅ อนุมัติใบเบิก ${req.refNo||reqId} — ตัดสต็อกเรียบร้อย`, 'success');
     updateApprovalBadge();
@@ -478,9 +505,15 @@ function openRejectModal(reqId) {
   const req = (db.requisitions||[]).find(r=>r.id==reqId);
   if (!req) return;
   document.getElementById('reject-req-ids').value = reqId;
+  // Phase 0: รองรับใบเบิกหลายรายการ — แสดงรายการครบใน reject summary
+  const lines = (req.lines && req.lines.length > 0)
+    ? req.lines
+    : [{ itemName: req.itemName, qty: req.qty, unit: req.unit }];
+  const itemSummary = lines.map(l => `${l.itemName||'-'} (${l.qty||0} ${l.unit||''})`).join(', ');
   document.getElementById('reject-req-summary').innerHTML =
-    `<div style="font-weight:600;margin-bottom:4px;">${req.patientName} — ${req.itemName}</div>
-     <div style="font-size:12px;color:var(--text2);">จำนวน: ${req.qty} ${req.unit} · วันที่: ${req.date}</div>`;
+    `<div style="font-weight:600;margin-bottom:4px;">${req.patientName||''} — ${req.refNo||'#'+reqId}</div>
+     <div style="font-size:12px;color:var(--text2);">${itemSummary}</div>
+     <div style="font-size:12px;color:var(--text2);">วันที่: ${req.date||'-'}</div>`;
   document.getElementById('reject-reason').value = '';
   openModal('modal-reject-req');
 }
@@ -521,10 +554,18 @@ async function confirmRejectReq() {
 // ─────────────────────────────────────────────────────
 function openReturnModal() {
   // Populate req select — only approved reqs
+  // Phase 0 note: Return flow ปัจจุบันรองรับการคืนสินค้าแบบ "1 ใบ = 1 รายการ"
+  // ถ้าใบเบิกมีหลายรายการจะคืนได้แค่รายการแรก (tech debt — รอ refactor รอบหน้า)
   const sel = document.getElementById('return-req-id');
   const approved = (db.requisitions||[]).filter(r=>r.status==='approved');
   sel.innerHTML = '<option value="">-- เลือกใบเบิกต้นฉบับ --</option>' +
-    approved.map(r=>`<option value="${r.id}">${r.date} · ${r.patientName} · ${r.itemName} (${r.qty} ${r.unit})</option>`).join('');
+    approved.map(r => {
+      const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName, qty: r.qty, unit: r.unit }];
+      const label = lines.length === 1
+        ? `${lines[0].itemName||'-'} (${lines[0].qty||0} ${lines[0].unit||''})`
+        : `${lines.length} รายการ (คืนได้เฉพาะ ${lines[0].itemName||'-'})`;
+      return `<option value="${r.id}">${r.date} · ${r.patientName} · ${label}</option>`;
+    }).join('');
   document.getElementById('return-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('return-qty').value = '';
   document.getElementById('return-req-info').style.display = 'none';
@@ -541,18 +582,25 @@ function onReturnReqChange() {
   const unitEl = document.getElementById('return-unit-label');
   const maxEl  = document.getElementById('return-max-label');
   if (!req) { infoEl.style.display='none'; return; }
+  // Phase 0: ใช้ firstLine ถ้ามี lines (return flow รองรับ 1 รายการ/ครั้ง)
+  const firstLine = (req.lines && req.lines.length > 0) ? req.lines[0] : null;
+  const itemName = firstLine?.itemName || req.itemName || '-';
+  const itemQty  = firstLine?.qty || req.qty || 0;
+  const itemUnit = firstLine?.unit || req.unit || '';
+  const multilineWarn = (req.lines && req.lines.length > 1)
+    ? `<div style="color:#e67e22;font-size:11px;margin-top:6px;">⚠️ ใบนี้มี ${req.lines.length} รายการ — ปัจจุบันคืนได้เฉพาะรายการแรก</div>` : '';
   const alreadyReturned = (db.returnItems||[]).filter(x=>x.reqId==reqId).reduce((s,x)=>s+x.qtyReturned,0);
-  const canReturn = req.qty - alreadyReturned;
+  const canReturn = itemQty - alreadyReturned;
   infoEl.style.display = '';
   infoEl.innerHTML = `
     <div style="display:flex;gap:16px;flex-wrap:wrap;">
-      <span>🏥 <strong>${req.patientName}</strong></span>
-      <span>📦 ${req.itemName}</span>
-      <span>เบิกไป: <strong>${req.qty} ${req.unit}</strong></span>
-      <span style="color:${canReturn<=0?'#e74c3c':'#27ae60'};">คืนได้: <strong>${canReturn} ${req.unit}</strong></span>
-    </div>`;
-  unitEl.textContent = req.unit;
-  maxEl.textContent = `สูงสุด ${canReturn} ${req.unit}`;
+      <span>🏥 <strong>${req.patientName||''}</strong></span>
+      <span>📦 ${itemName}</span>
+      <span>เบิกไป: <strong>${itemQty} ${itemUnit}</strong></span>
+      <span style="color:${canReturn<=0?'#e74c3c':'#27ae60'};">คืนได้: <strong>${canReturn} ${itemUnit}</strong></span>
+    </div>${multilineWarn}`;
+  unitEl.textContent = itemUnit;
+  maxEl.textContent = `สูงสุด ${canReturn} ${itemUnit}`;
   document.getElementById('return-qty').max = canReturn;
 }
 
@@ -698,18 +746,26 @@ async function renderHistory() {
       myNames.includes((r.createdBy||'').toLowerCase())
     );
   }
-  if (search) reqs = reqs.filter(r =>
-    r.itemName.toLowerCase().includes(search) ||
-    r.patientName.toLowerCase().includes(search) ||
-    r.staffName.toLowerCase().includes(search));
+  if (search) reqs = reqs.filter(r => {
+    // Phase 0: search ครอบคลุมทุก lines
+    const allItemNames = ((r.lines||[]).map(l => l.itemName||'').concat([r.itemName||''])).join(' ').toLowerCase();
+    return allItemNames.includes(search) ||
+      (r.patientName||'').toLowerCase().includes(search) ||
+      (r.staffName||'').toLowerCase().includes(search);
+  });
 
   // Sync recent records back to db.requisitions (for approval panel etc.)
   reqs.forEach(r => { if(!db.requisitions.find(x=>x.id===r.id)) db.requisitions.unshift(r); });
 
-  // Summary strip
+  // Summary strip — Phase 0: นับ "ใบเบิก" + "รายการ" + "qty" จาก lines
   if (reqs.length > 0) {
-    const totalQty = reqs.reduce((s,r) => s + (r.qty||0), 0);
-    const uniqueItems = new Set(reqs.map(r => r.itemName)).size;
+    const totalLines = reqs.reduce((s,r) => s + ((r.lines||[]).length || (r.itemId?1:0)), 0);
+    const totalQty   = reqs.reduce((s,r) => 
+      s + ((r.lines||[]).reduce((ls,l) => ls + (l.qty||0), 0) || (r.qty||0)), 0);
+    const allItemNames = reqs.flatMap(r => 
+      (r.lines && r.lines.length > 0) ? r.lines.map(l => l.itemName) : [r.itemName]
+    ).filter(Boolean);
+    const uniqueItems = new Set(allItemNames).size;
     let label = 'ประวัติการเบิกสินค้า';
     if (monthFilter) { const [y,m] = monthFilter.split('-'); label += ` — ${['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][parseInt(m)-1]} ${parseInt(y)+543}`; }
     if (patFilter)   label += ` — ${patFilter}`;
@@ -717,7 +773,7 @@ async function renderHistory() {
     if (title) title.textContent = label;
     if (strip) strip.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
       <div style="background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">
-        📋 <strong>${reqs.length}</strong> รายการ
+        📋 <strong>${reqs.length}</strong> ใบเบิก${totalLines!==reqs.length?` (${totalLines} รายการ)`:''}
       </div>
       <div style="background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">
         📦 รวม <strong>${totalQty}</strong> ชิ้น/หน่วย
@@ -818,7 +874,8 @@ async function getFilteredReqs() {
   const patFilter   = document.getElementById('reportPatient')?.value || '';
   const staffFilter = document.getElementById('reportStaff')?.value   || '';
 
-  let q = supa.from('requisitions').select('*').order('id', {ascending:false}).limit(1000);
+  // Phase 0: ใช้ requisition_headers + requisition_lines (ใหม่)
+  let q = supa.from(_REQ_TABLE).select(_REQ_SELECT).order('id', {ascending:false}).limit(1000);
   if (monthFilter) {
     const [y,m] = monthFilter.split('-');
     q = q.gte('date',`${y}-${m}-01`).lte('date', new Date(parseInt(y),parseInt(m),0).toISOString().split('T')[0]);
@@ -868,11 +925,16 @@ async function renderReport() {
   const patFilter   = document.getElementById('reportPatient')?.value || '';
   const staffFilter = document.getElementById('reportStaff')?.value   || '';
 
-  // Summary strip
+  // Summary strip — Phase 0: นับ lines + qty จาก lines
   const strip = document.getElementById('reportSummaryStrip');
   if (strip && reqs.length > 0) {
-    const totalQty    = reqs.reduce((s,r) => s + (r.qty||0), 0);
-    const uniqueItems = new Set(reqs.map(r => r.itemName)).size;
+    const totalLines = reqs.reduce((s,r) => s + ((r.lines||[]).length || (r.itemId?1:0)), 0);
+    const totalQty   = reqs.reduce((s,r) => 
+      s + ((r.lines||[]).reduce((ls,l) => ls + (l.qty||0), 0) || (r.qty||0)), 0);
+    const allItemNames = reqs.flatMap(r =>
+      (r.lines && r.lines.length > 0) ? r.lines.map(l => l.itemName) : [r.itemName]
+    ).filter(Boolean);
+    const uniqueItems = new Set(allItemNames).size;
     const uniquePats  = new Set(reqs.map(r => r.patientName)).size;
     let monthLabel = '';
     if (monthFilter) { const [y,m] = monthFilter.split('-'); monthLabel = `${MONTHS_TH[parseInt(m)-1]} ${parseInt(y)+543}`; }
@@ -880,7 +942,7 @@ async function renderReport() {
       ${monthLabel ? `<div style="background:var(--accent-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--accent);">📅 ${monthLabel}</div>` : ''}
       ${patFilter   ? `<div style="background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">🏥 ${patFilter}</div>` : ''}
       ${staffFilter ? `<div style="background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">👤 ${staffFilter}</div>` : ''}
-      <div style="background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">📋 <strong>${reqs.length}</strong> รายการ</div>
+      <div style="background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">📋 <strong>${reqs.length}</strong> ใบเบิก${totalLines!==reqs.length?` (${totalLines} รายการ)`:''}</div>
       <div style="background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">📦 รวม <strong>${totalQty}</strong> หน่วย</div>
       <div style="background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">🗂️ <strong>${uniqueItems}</strong> ชนิด / <strong>${uniquePats}</strong> คน</div>
     </div>`;
@@ -891,7 +953,15 @@ async function renderReport() {
   if (reportTab === 'summary') {
     const tb = document.getElementById('reportTable');
     if (!tb) return;
-    tb.innerHTML = reqs.length === 0 ? empty : reqs.map(r => `<tr>
+    // Phase 0: flatten lines เป็น 1 row ต่อ line ใน summary table
+    const flatRows = reqs.flatMap(r => {
+      const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName, qty: r.qty, unit: r.unit }];
+      return lines.map(l => ({
+        date: r.date, itemName: l.itemName||'-', patientName: r.patientName||'-',
+        qty: l.qty||0, unit: l.unit||'', staffName: r.staffName||'-'
+      }));
+    });
+    tb.innerHTML = flatRows.length === 0 ? empty : flatRows.map(r => `<tr>
       <td class="number" style="white-space:nowrap;">${r.date}</td>
       <td style="font-weight:500;">${r.itemName}</td>
       <td>${r.patientName}</td>
@@ -903,10 +973,12 @@ async function renderReport() {
 
   if (reportTab === 'bypatient') {
     const map = {};
+    // Phase 0: flatten lines เพื่อให้ items count ถูกต้อง
     reqs.forEach(r => {
       if (!map[r.patientName]) map[r.patientName] = { count: 0, items: new Set(), last: r.date };
       map[r.patientName].count++;
-      map[r.patientName].items.add(r.itemName);
+      const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName }];
+      lines.forEach(l => { if (l.itemName) map[r.patientName].items.add(l.itemName); });
       if (r.date > map[r.patientName].last) map[r.patientName].last = r.date;
     });
     const tb = document.getElementById('reportByPatient');
@@ -924,10 +996,15 @@ async function renderReport() {
 
   if (reportTab === 'byitem') {
     const map = {};
+    // Phase 0: flatten lines เพื่อ aggregate ตามชนิดสินค้าให้ครบ
     reqs.forEach(r => {
-      if (!map[r.itemName]) map[r.itemName] = { total: 0, unit: r.unit, count: 0 };
-      map[r.itemName].total += r.qty;
-      map[r.itemName].count++;
+      const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName, qty: r.qty, unit: r.unit }];
+      lines.forEach(l => {
+        const name = l.itemName || '-';
+        if (!map[name]) map[name] = { total: 0, unit: l.unit||'', count: 0 };
+        map[name].total += (l.qty||0);
+        map[name].count++;
+      });
     });
     const tb = document.getElementById('reportByItem');
     if (!tb) return;
@@ -944,10 +1021,12 @@ async function renderReport() {
 
   if (reportTab === 'bystaff') {
     const map = {};
+    // Phase 0: flatten items names ให้ครบทุก line
     reqs.forEach(r => {
       if (!map[r.staffName]) map[r.staffName] = { count: 0, items: new Set(), last: r.date };
       map[r.staffName].count++;
-      map[r.staffName].items.add(r.itemName);
+      const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName }];
+      lines.forEach(l => { if (l.itemName) map[r.staffName].items.add(l.itemName); });
       if (r.date > map[r.staffName].last) map[r.staffName].last = r.date;
     });
     const tb = document.getElementById('reportByStaff');
@@ -970,13 +1049,22 @@ async function renderReport() {
 function openReqForm(reqId) {
   const group = db.reqGroups ? db.reqGroups.find(g => g.id === reqId) : null;
   // Fallback: build from individual requisitions with same id
-  const reqs = group
+  let reqs = group
     ? group.items.map(ri => ({ ...ri, patientName: group.patientName, staffName: group.staffName, date: group.date, note: group.note, status: group.status, refNo: group.refNo }))
     : db.requisitions.filter(r => r.groupId === reqId || r.id === reqId);
 
   if (!reqs.length) { toast('ไม่พบข้อมูลใบเบิก', 'warning'); return; }
 
+  // Phase 0: flatten lines เป็น 1 row ต่อ line สำหรับใบเบิกฟอร์ม
+  // (โครงเดิม schema 1 row = 1 line — ตอนนี้ต้อง expand lines[] ของ header เป็น rows)
   const first = reqs[0];
+  if (first.lines && first.lines.length > 0) {
+    reqs = first.lines.map(l => ({
+      ...first,
+      itemId: l.itemId, itemName: l.itemName,
+      qty: l.qty, qtyApproved: l.qtyApproved, unit: l.unit, unitPrice: l.unitPrice,
+    }));
+  }
   renderReqForm({ reqs, first, group });
   document.getElementById('reqFormPageTitle').textContent = `ใบเบิกสินค้า — ${first.refNo || ('#' + first.id)}`;
   showPage('reqform');
@@ -1274,14 +1362,20 @@ function exportRequisitionExcel() {
   const rows = [
     ['#', 'วันที่', 'เลขอ้างอิง', 'ผู้รับบริการ', 'สินค้า', 'จำนวน', 'หน่วย', 'ผู้เบิก', 'สถานะ', 'หมายเหตุ']
   ];
-  db.requisitions.forEach((r, i) => {
+  let rowNum = 0;
+  // Phase 0: flatten lines เป็น 1 row ต่อ line ใน Excel
+  db.requisitions.forEach(r => {
     const statusLabel = r.status === 'approved' ? 'อนุมัติแล้ว' : r.status === 'rejected' ? 'ไม่อนุมัติ' : 'รออนุมัติ';
-    rows.push([
-      i+1, r.date || '', r.refNo || r.id || '',
-      r.patientName || '', r.itemName || '',
-      r.qty || 0, r.unit || '',
-      r.staffName || '', statusLabel, r.note || ''
-    ]);
+    const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName, qty: r.qty, unit: r.unit }];
+    lines.forEach(l => {
+      rowNum++;
+      rows.push([
+        rowNum, r.date || '', r.refNo || r.id || '',
+        r.patientName || '', l.itemName || '',
+        l.qty || 0, l.unit || '',
+        r.staffName || '', statusLabel, r.note || ''
+      ]);
+    });
   });
   _xlsxDownload(rows, 'ใบเบิกสินค้า', 'navasri_requisitions_' + new Date().toISOString().slice(0,10));
 }
@@ -1333,14 +1427,18 @@ function renderCostReport() {
   const byPatEl = document.getElementById('cost-bypatient');
   if (byPatEl) {
     const patMap = {};
+    // Phase 0: flatten lines
     reqs.forEach(r => {
-      const item  = db.items.find(i => i.id == r.itemId);
-      const price = item?.price || item?.cost || 0;
-      const amt   = (r.qty || 0) * price;
-      const billable = item?.isBillable !== false;
-      if (!patMap[r.patientId]) patMap[r.patientId] = { name: r.patientName || '-', bill: 0, nonBill: 0 };
-      if (billable) patMap[r.patientId].bill += amt;
-      else          patMap[r.patientId].nonBill += amt;
+      const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, qty: r.qty }];
+      lines.forEach(l => {
+        const item  = db.items.find(i => i.id == l.itemId);
+        const price = item?.price || item?.cost || 0;
+        const amt   = (l.qty || 0) * price;
+        const billable = item?.isBillable !== false;
+        if (!patMap[r.patientId]) patMap[r.patientId] = { name: r.patientName || '-', bill: 0, nonBill: 0 };
+        if (billable) patMap[r.patientId].bill += amt;
+        else          patMap[r.patientId].nonBill += amt;
+      });
     });
     const sorted = Object.entries(patMap).sort((a,b) => (b[1].bill+b[1].nonBill) - (a[1].bill+a[1].nonBill));
     if (sorted.length === 0) {
@@ -1361,12 +1459,16 @@ function renderCostReport() {
   const topEl = document.getElementById('cost-topitems');
   if (topEl) {
     const itemMap = {};
+    // Phase 0: flatten lines
     reqs.forEach(r => {
-      const item  = db.items.find(i => i.id == r.itemId);
-      const price = item?.price || item?.cost || 0;
-      if (!itemMap[r.itemId]) itemMap[r.itemId] = { name: r.itemName || '-', qty: 0, value: 0 };
-      itemMap[r.itemId].qty   += (r.qty || 0);
-      itemMap[r.itemId].value += (r.qty || 0) * price;
+      const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, itemName: r.itemName, qty: r.qty }];
+      lines.forEach(l => {
+        const item  = db.items.find(i => i.id == l.itemId);
+        const price = item?.price || item?.cost || 0;
+        if (!itemMap[l.itemId]) itemMap[l.itemId] = { name: l.itemName || '-', qty: 0, value: 0 };
+        itemMap[l.itemId].qty   += (l.qty || 0);
+        itemMap[l.itemId].value += (l.qty || 0) * price;
+      });
     });
     const sorted = Object.entries(itemMap).sort((a,b) => b[1].value - a[1].value).slice(0, 10);
     if (sorted.length === 0) {
@@ -1384,12 +1486,16 @@ function renderCostReport() {
   const billEl = document.getElementById('cost-billable-summary');
   if (billEl) {
     let billAmt = 0, nonBillAmt = 0;
+    // Phase 0: flatten lines
     reqs.forEach(r => {
-      const item  = db.items.find(i => i.id == r.itemId);
-      const price = item?.price || item?.cost || 0;
-      const amt   = (r.qty || 0) * price;
-      if (item?.isBillable !== false) billAmt += amt;
-      else nonBillAmt += amt;
+      const lines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemId: r.itemId, qty: r.qty }];
+      lines.forEach(l => {
+        const item  = db.items.find(i => i.id == l.itemId);
+        const price = item?.price || item?.cost || 0;
+        const amt   = (l.qty || 0) * price;
+        if (item?.isBillable !== false) billAmt += amt;
+        else nonBillAmt += amt;
+      });
     });
     const total = billAmt + nonBillAmt;
     const billPct    = total > 0 ? Math.round(billAmt / total * 100) : 0;
