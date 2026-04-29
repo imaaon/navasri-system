@@ -794,6 +794,13 @@ function openQuickDispenseModal(presetPatId, presetPatName) {
   // populate staff
   makeTypeahead({inputId:'ta-qds-inp',listId:'ta-qds-list',hiddenId:'ta-qds-id',dataFn:()=>taStaff()});
   (function(){var me=(db.staff||[]).find(s=>s.name===currentUser?.displayName);if(me){var _h=document.getElementById('ta-qds-id');var _i=document.getElementById('ta-qds-inp');if(_h)_h.value=me.id;if(_i)_i.value=me.name;}})();
+  
+  // ตั้งค่าวันที่เบิกเป็นวันปัจจุบัน
+  const requestDateInput = document.getElementById('qd-request-date');
+  if (requestDateInput) {
+    requestDateInput.value = new Date().toISOString().split('T')[0];
+  }
+  
   // reset
   const fields = ['qd-barcode','qd-note'];
   fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -972,6 +979,85 @@ async function _saveQuickDispenseFallback(item, patient, staff, qty, note, actor
   item.qty = afterQty;
   if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
   toast(`✅ เบิกด่วน ${item.name} ${qty} ${item.unit} ให้ ${patient.name}`, 'success');
+}
+
+// Enhanced Quick Dispense Request (ส่งคำขอเบิก - รอการอนุมัติ)
+async function saveQuickDispenseRequest() {
+  const itemId = document.getElementById('qd-item-id').value;
+  const patId = document.getElementById('ta-qd-id').value;
+  const staffId = document.getElementById('ta-qds-id').value;
+  const requestDate = document.getElementById('qd-request-date').value;
+  const qty = parseFloat(document.getElementById('qd-qty').value);
+  const note = document.getElementById('qd-note').value.trim();
+
+  // Validation
+  if (!requestDate) { toast('กรุณาเลือกวันที่เบิก', 'warning'); return; }
+  if (!itemId) { toast('กรุณาระบุสินค้า (ยิงบาร์โค้ดหรือพิมพ์รหัส)', 'warning'); return; }
+  if (!patId) { toast('กรุณาเลือกผู้รับบริการ', 'warning'); return; }
+  if (!qty || qty < 1) { toast('กรุณาระบุจำนวน (ต้องมากกว่า 0)', 'warning'); return; }
+
+  const item = db.items.find(i => i.id == itemId);
+  const patient = db.patients.find(p => p.id == patId);
+  const staff = db.staff.find(s => s.id == staffId);
+  if (!item) { toast('ไม่พบสินค้านี้ในระบบ', 'error'); return; }
+  if (!patient) { toast('ไม่พบผู้รับบริการนี้ในระบบ', 'error'); return; }
+
+  showLoadingOverlay(true);
+  try {
+    const actor = currentUser?.username || '';
+    
+    // สร้างเลขที่อ้างอิง
+    const timestamp = Date.now().toString().slice(-6);
+    const refNo = `QD${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${timestamp}`;
+    
+    // สร้าง requisition header
+    const headerData = {
+      ref_no: refNo,
+      date: requestDate,
+      patient_id: patId,
+      patient_name: patient.name,
+      staff_id: staffId || null,
+      staff_name: staff?.name || actor,
+      note: `เบิกด่วน: ${note || 'ไม่มีหมายเหตุ'}`,
+      status: 'pending',
+      created_by: actor
+    };
+
+    const { data: headerResult, error: headerError } = await supa
+      .from('requisition_headers')
+      .insert([headerData])
+      .select()
+      .single();
+
+    if (headerError) throw headerError;
+
+    // สร้าง requisition line
+    const lineData = {
+      header_id: headerResult.id,
+      item_id: itemId,
+      item_name: item.name,
+      quantity: qty,
+      unit: item.dispenseUnit || item.unit,
+      note: `เบิกด่วน - ${patient.name}`
+    };
+
+    const { error: lineError } = await supa
+      .from('requisition_lines')
+      .insert([lineData]);
+
+    if (lineError) throw lineError;
+
+    toast(`📝 ส่งคำขอเบิก ${item.name} ${qty} ${item.unit} สำเร็จ\nรอการอนุมัติจากเจ้าหน้าที่`, 'success');
+    
+    closeModal('modal-quick-dispense');
+    renderPage(currentPage);
+
+  } catch (error) {
+    console.error('Error saving quick dispense request:', error);
+    toast('เกิดข้อผิดพลาด: ' + error.message, 'error');
+  } finally {
+    showLoadingOverlay(false);
+  }
 }
 
 // ===== CAMERA SCAN (Phase 5 — ZXing lazy load) =====
