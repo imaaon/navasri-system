@@ -15,6 +15,20 @@ function openEditAllergyModal(patId, allergyId) {
 }
 // ===== PATIENTS MODULE =====
 
+// ===== Helper: แปล Postgres error เป็นข้อความภาษาไทยที่อ่านง่าย =====
+function _translatePatientError(error) {
+  if (!error) return 'บันทึกไม่สำเร็จ: เกิดข้อผิดพลาดไม่ทราบสาเหตุ';
+  const msg = (error.message || '').toLowerCase();
+  // Postgres unique violation (code 23505)
+  if (error.code === '23505' || msg.includes('duplicate key') || msg.includes('unique constraint')) {
+    if (msg.includes('idcard')) {
+      return '❌ เลขบัตรประชาชนนี้มีในระบบแล้ว กรุณาตรวจสอบรายชื่อผู้รับบริการที่มีอยู่';
+    }
+    return '❌ ข้อมูลซ้ำกับที่มีในระบบแล้ว กรุณาตรวจสอบ';
+  }
+  return 'บันทึกไม่สำเร็จ: ' + (error.message || 'unknown');
+}
+
 // ===== PATIENTS =====
 function renderPatients() {
   const search = (document.getElementById('patSearch')?.value || '').toLowerCase();
@@ -269,7 +283,7 @@ async function savePatient() {
 
 
     const { error } = await supa.from('patients').update(row).eq('id', editId);
-    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+    if (error) { toast(_translatePatientError(error), 'error'); return; }
     // บันทึก status log ถ้า status เปลี่ยน
     const oldPat = db.patients.find(p => p.id == editId);
     if (oldPat && oldPat.status !== data.status) {
@@ -286,7 +300,7 @@ async function savePatient() {
     if (idx >= 0) db.patients[idx] = { ...db.patients[idx], ...data };
   } else {
     const { data: ins, error } = await supa.from('patients').insert(row).select().single();
-    if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+    if (error) { toast(_translatePatientError(error), 'error'); return; }
     db.patients.push({ ...data, id: ins.id, medicalLog: [], medsLog: [], allergies: [], contacts: [] });
   }
   // Mark bed as occupied — atomic via admit_patient RPC
