@@ -32,6 +32,23 @@ function onReqPatientChange() {
   }
 }
 
+// Phase 1: ใช้สำหรับเก็บ context เมื่อเข้าหน้า requisition จากหน้าคนไข้
+// — preset patient + กลับหน้าคนไข้หลัง save
+let reqReturnContext = null;
+
+// Phase 1: helper เปิดหน้า requisition พร้อม preset patient (เรียกจากปุ่ม "+ เบิกสินค้า" ในหน้าคนไข้)
+function openReqPageForPatient(patientId, patientName) {
+  reqReturnContext = {
+    type: 'patient',
+    patientId: patientId,
+    patientName: patientName,
+    fromTab: 'dispense'  // กลับไปแท็บ "เบิกสินค้า"
+  };
+  // reset reqItems ก่อนเข้าหน้า เพื่อไม่เอาข้อมูลจากครั้งก่อนมา
+  reqItems = [];
+  showPage('requisition');
+}
+
 function initReq() {
   // Populate selects
   makeTypeahead({inputId:'ta-rp-inp',listId:'ta-rp-list',hiddenId:'ta-rp-id',dataFn:()=>taPatients(true),onSelect:(id)=>{ if(typeof onReqPatientChange==='function') onReqPatientChange(); }});
@@ -45,6 +62,73 @@ function initReq() {
   if (reqItems.length === 0) {
     for (let i = 0; i < 5; i++) addReqItem();
   } else renderReqItems();
+
+  // Phase 1: ถ้ามี return context จากหน้าคนไข้ → preset patient + lock
+  if (reqReturnContext && reqReturnContext.type === 'patient') {
+    const ctx = reqReturnContext;
+    const patient = db.patients.find(p => p.id == ctx.patientId);
+    if (patient) {
+      const inp = document.getElementById('ta-rp-inp');
+      const hid = document.getElementById('ta-rp-id');
+      if (inp) {
+        inp.value = patient.name + (patient.idcard ? ` (${patient.idcard})` : '');
+        inp.setAttribute('readonly', 'readonly');
+        inp.style.background = 'var(--surface2)';
+        inp.style.cursor = 'not-allowed';
+      }
+      if (hid) hid.value = patient.id;
+      // trigger allergy banner / bed info display
+      if (typeof onReqPatientChange === 'function') onReqPatientChange();
+    }
+    // เพิ่ม banner แจ้งว่ามาจากหน้าคนไข้ + ปุ่มกลับ
+    _showReqReturnBanner(ctx);
+  } else {
+    // ถ้าไม่มี context → unlock patient field (เผื่อมาจาก context เก่า)
+    const inp = document.getElementById('ta-rp-inp');
+    if (inp && inp.hasAttribute('readonly')) {
+      inp.removeAttribute('readonly');
+      inp.style.background = '';
+      inp.style.cursor = '';
+    }
+    _hideReqReturnBanner();
+  }
+}
+
+// Phase 1: แสดง banner "← กลับไปหน้าคนไข้" บนหัวฟอร์ม
+function _showReqReturnBanner(ctx) {
+  let banner = document.getElementById('req-return-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'req-return-banner';
+    banner.style.cssText = 'background:var(--accent-light);border:1px solid var(--accent);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;';
+    const card = document.querySelector('#page-requisition .card-body');
+    if (card) card.insertBefore(banner, card.firstChild);
+  }
+  banner.innerHTML = `
+    <div>📋 กำลังเบิกสินค้าให้: <strong>${ctx.patientName||'-'}</strong></div>
+    <button class="btn btn-ghost btn-sm" onclick="cancelReqReturnContext()" style="padding:4px 10px;font-size:12px;">← กลับ</button>
+  `;
+  banner.style.display = 'flex';
+}
+
+function _hideReqReturnBanner() {
+  const banner = document.getElementById('req-return-banner');
+  if (banner) banner.style.display = 'none';
+}
+
+// ยกเลิก context ปัจจุบัน + กลับหน้าคนไข้ (ถ้าผู้ใช้กดปุ่ม ← กลับ)
+function cancelReqReturnContext() {
+  const ctx = reqReturnContext;
+  reqReturnContext = null;
+  reqItems = []; // ล้างฟอร์ม
+  if (ctx && ctx.type === 'patient' && ctx.patientId) {
+    if (typeof openPatientProfile === 'function') {
+      openPatientProfile(ctx.patientId, ctx.fromTab || 'dispense');
+      return;
+    }
+  }
+  // Fallback
+  showPage('patients');
 }
 
 function addReqItem() {
@@ -199,6 +283,17 @@ async function submitReq() {
     });
 
     clearReq();
+
+    // Phase 1: ถ้ามาจากหน้าคนไข้ → กลับไปหน้าคนไข้ (แท็บประวัติเบิก)
+    if (reqReturnContext && reqReturnContext.type === 'patient' && reqReturnContext.patientId) {
+      const ctx = reqReturnContext;
+      reqReturnContext = null;  // clear context
+      showLoadingOverlay(false);
+      if (typeof openPatientProfile === 'function') {
+        openPatientProfile(ctx.patientId, ctx.fromTab || 'dispense');
+      }
+      return;
+    }
   } catch(e) {
     toast('เกิดข้อผิดพลาด: ' + e.message, 'error');
   } finally {

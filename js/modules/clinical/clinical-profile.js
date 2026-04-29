@@ -235,7 +235,7 @@ async function openPatientProfile(id, activeTab) {
         <div class="card">
           <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
             <div class="card-title" style="font-size:13px;">💊 ประวัติการเบิกสินค้า</div>
-            <button class="btn btn-primary btn-sm" onclick="openQuickDispenseModal('${p.id}','${(p.name||'').replace(/'/g, "\\'")}')">⚡ เบิกด่วน</button>
+            <button class="btn btn-primary btn-sm" onclick="openReqPageForPatient('${p.id}','${(p.name||'').replace(/'/g, "\\'")}')">+ เบิกสินค้า</button>
           </div>
           <div id="pat-dispense-list-${p.id}"></div>
         </div>
