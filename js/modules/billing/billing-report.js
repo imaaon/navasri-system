@@ -4,7 +4,7 @@ function openQuickInvoiceModal() {
   // Check role permission
   const role = currentUser?.role;
   if (!['admin','manager','officer'].includes(role)) {
-    toast('ไม่มีสิทธิ์สร้างใบวางบิล','error'); return;
+    toast('à¹à¸¡à¹à¸¡à¸µà¸ªà¸´à¸à¸à¸´à¹à¸ªà¸£à¹à¸²à¸à¹à¸à¸§à¸²à¸à¸à¸´à¸¥','error'); return;
   }
   initBilling();
 
@@ -31,24 +31,24 @@ async function confirmQuickInvoice() {
   const dateFrom = document.getElementById('qi-date-from').value;
   const dateTo   = document.getElementById('qi-date-to').value;
 
-  if (!patId)    { toast('กรุณาเลือกผู้รับบริการ','warning'); return; }
-  if (!dateFrom) { toast('กรุณาระบุวันที่เริ่มต้น','warning'); return; }
-  if (!dateTo)   { toast('กรุณาระบุวันที่สิ้นสุด','warning'); return; }
-  if (dateFrom > dateTo) { toast('วันที่เริ่มต้นต้องน้อยกว่าวันที่สิ้นสุด','warning'); return; }
+  if (!patId)    { toast('à¸à¸£à¸¸à¸à¸²à¹à¸¥à¸·à¸­à¸à¸à¸¹à¹à¸£à¸±à¸à¸à¸£à¸´à¸à¸²à¸£','warning'); return; }
+  if (!dateFrom) { toast('à¸à¸£à¸¸à¸à¸²à¸£à¸°à¸à¸¸à¸§à¸±à¸à¸à¸µà¹à¹à¸£à¸´à¹à¸¡à¸à¹à¸','warning'); return; }
+  if (!dateTo)   { toast('à¸à¸£à¸¸à¸à¸²à¸£à¸°à¸à¸¸à¸§à¸±à¸à¸à¸µà¹à¸ªà¸´à¹à¸à¸ªà¸¸à¸','warning'); return; }
+  if (dateFrom > dateTo) { toast('à¸§à¸±à¸à¸à¸µà¹à¹à¸£à¸´à¹à¸¡à¸à¹à¸à¸à¹à¸­à¸à¸à¹à¸­à¸¢à¸à¸§à¹à¸²à¸§à¸±à¸à¸à¸µà¹à¸ªà¸´à¹à¸à¸ªà¸¸à¸','warning'); return; }
 
   const patient = db.patients.find(p=>String(p.id)===String(patId));
-  if (!patient) { toast('ไม่พบข้อมูลผู้รับบริการ','error'); return; }
+  if (!patient) { toast('à¹à¸¡à¹à¸à¸à¸à¹à¸­à¸¡à¸¹à¸¥à¸à¸¹à¹à¸£à¸±à¸à¸à¸£à¸´à¸à¸²à¸£','error'); return; }
 
   closeModal('modal-quick-invoice');
 
-  // ── ดึงรายการเบิกสินค้าที่อนุมัติแล้วในช่วงวันที่ ──
+  // ââ à¸à¸¶à¸à¸£à¸²à¸¢à¸à¸²à¸£à¹à¸à¸´à¸à¸ªà¸´à¸à¸à¹à¸²à¸à¸µà¹à¸­à¸à¸¸à¸¡à¸±à¸à¸´à¹à¸¥à¹à¸§à¹à¸à¸à¹à¸§à¸à¸§à¸±à¸à¸à¸µà¹ ââ
   const reqs = (db.requisitions||[]).filter(r =>
     String(r.patientId || r.patient_id) === String(patId) &&
     r.status === 'approved' &&
     r.date >= dateFrom && r.date <= dateTo
   );
 
-  // รวมจาก reqGroups ด้วย
+  // à¸£à¸§à¸¡à¸à¸²à¸ reqGroups à¸à¹à¸§à¸¢
   const groupItems = [];
   (db.reqGroups||[]).forEach(g => {
     if (String(g.patientId || g.patient_id) === String(patId) &&
@@ -63,15 +63,15 @@ async function confirmQuickInvoice() {
     }
   });
 
-  // === Phase 1 fix: รวม logic เดียวกับ loadRequisitionsForInvoice() ===
+  // === Phase 1 fix: à¸£à¸§à¸¡ logic à¹à¸à¸µà¸¢à¸§à¸à¸±à¸ loadRequisitionsForInvoice() ===
   // Phase 1.5 fix: package logic override isBillable
-  //   - ถ้า item อยู่ใน package → ใช้ package logic (qty_limit) — ไม่สนใจ isBillable
-  //   - ถ้าไม่อยู่ใน package + isBillable=false → ฟรีตลอด ไม่ขึ้นในบิล
+  //   - à¸à¹à¸² item à¸­à¸¢à¸¹à¹à¹à¸ package â à¹à¸à¹ package logic (qty_limit) â à¹à¸¡à¹à¸ªà¸à¹à¸ isBillable
+  //   - à¸à¹à¸²à¹à¸¡à¹à¸­à¸¢à¸¹à¹à¹à¸ package + isBillable=false â à¸à¸£à¸µà¸à¸¥à¸­à¸ à¹à¸¡à¹à¸à¸¶à¹à¸à¹à¸à¸à¸´à¸¥
   const contract = (typeof getActiveContract === 'function') ? getActiveContract(patId) : null;
   const includedProducts = contract ? getIncludedProducts(contract.items||[]) : [];
   const packagedItemIds = new Set((includedProducts||[]).map(p => String(p.item_id)));
 
-  // Phase 0: รองรับใบเบิกหลายรายการ — flatten lines
+  // Phase 0: à¸£à¸­à¸à¸£à¸±à¸à¹à¸à¹à¸à¸´à¸à¸«à¸¥à¸²à¸¢à¸£à¸²à¸¢à¸à¸²à¸£ â flatten lines
   const allItems = [];
   reqs.forEach(r => {
     const lines = (r.lines && r.lines.length > 0)
@@ -81,8 +81,9 @@ async function confirmQuickInvoice() {
       const iid = l.itemId || l.item_id;
       const item = (db.items||[]).find(i => String(i.id) === String(iid) || i.name === l.itemName);
       // Phase 1.5: package items override isBillable check
-      const inPackage = iid && packagedItemIds.has(String(iid));
-      if (!inPackage && item && item.isBillable === false) return;
+      // Phase 1.6: ทุกรายการเข้าใบบิล — กฎ: นอก package คิดเงินทุกชิ้น
+      // ของในแพ็คเกจ → allocate ตาม qty_limit (ฟรี+เกินคิดเงิน)
+      // ของนอกแพ็คเกจ → คิดเงินทุกชิ้นตามราคา (เลิกใช้ isBillable filter)
       const key = item?.id || l.itemName || '';
       if (!key) return;
       const price = l.unitPrice || (item?.price) || (item?.cost) || 0;
@@ -92,35 +93,34 @@ async function confirmQuickInvoice() {
         qty: l.qty || 1,
         price: price,
         unit: l.unit || item?.dispenseUnit || item?.unit || '',
-        category: item?.category || 'เวชภัณฑ์'
+        category: item?.category || 'à¹à¸§à¸à¸ à¸±à¸à¸à¹'
       });
     });
   });
-  // Group items (legacy) — ตรวจ isBillable + package override เหมือนกัน
+  // Group items (legacy) â à¸à¸£à¸§à¸ isBillable + package override à¹à¸«à¸¡à¸·à¸­à¸à¸à¸±à¸
   groupItems.forEach(it => {
     const item = (db.items||[]).find(i => String(i.id) === String(it.itemId) || i.name === it.name);
-    const inPackage = it.itemId && packagedItemIds.has(String(it.itemId));
-    if (!inPackage && item && item.isBillable === false) return;
+    // Phase 1.6: ทุกรายการเข้าบิล (เลิกใช้ isBillable filter)
     allItems.push({
       itemId: it.itemId,
       name: it.name,
       qty: it.qty,
       price: it.price,
       unit: '',
-      category: item?.category || 'เวชภัณฑ์'
+      category: item?.category || 'à¹à¸§à¸à¸ à¸±à¸à¸à¹'
     });
   });
 
-  // แยก package items (free/charged) ออกจาก billable items
+  // à¹à¸¢à¸ package items (free/charged) à¸­à¸­à¸à¸à¸²à¸ billable items
   const allocated = (typeof allocateIncludedProducts === 'function')
     ? allocateIncludedProducts(allItems, includedProducts)
     : { billable: allItems, included: [] };
 
-  // รวม billable items ที่ชื่อเดียวกัน (จาก allocated.billable + charge_qty ของ included)
+  // à¸£à¸§à¸¡ billable items à¸à¸µà¹à¸à¸·à¹à¸­à¹à¸à¸µà¸¢à¸§à¸à¸±à¸ (à¸à¸²à¸ allocated.billable + charge_qty à¸à¸­à¸ included)
   const medMap = {};
   const getItemCategory = (name) => {
     const found = (db.items||[]).find(i => i.name === name);
-    return found ? (found.category || 'เวชภัณฑ์') : 'เวชภัณฑ์';
+    return found ? (found.category || 'à¹à¸§à¸à¸ à¸±à¸à¸à¹') : 'à¹à¸§à¸à¸ à¸±à¸à¸à¹';
   };
   allocated.billable.forEach(it => {
     const key = it.name || '';
@@ -128,22 +128,19 @@ async function confirmQuickInvoice() {
     if (!medMap[key]) medMap[key] = { name: key, qty: 0, price: it.price || 0, category: it.category || getItemCategory(key) };
     medMap[key].qty += (it.qty || 0);
   });
-  // included items ที่ qty_limit เกิน → charge_qty ส่วนที่เกินก็ต้องคิดเงิน
+  // included items à¸à¸µà¹ qty_limit à¹à¸à¸´à¸ â charge_qty à¸ªà¹à¸§à¸à¸à¸µà¹à¹à¸à¸´à¸à¸à¹à¸à¹à¸­à¸à¸à¸´à¸à¹à¸à¸´à¸
   const includedMap = {};
   allocated.included.forEach(it => {
     const key = it.name || '';
     if (!key) return;
     if (!includedMap[key]) includedMap[key] = { name: key, qty: 0, price: it.price || 0, unit: it.unit, category: it.category || getItemCategory(key), is_included: true };
     includedMap[key].qty += (it.free_qty || 0);
-    if (it.charge_qty > 0) {
-      if (!medMap[key]) medMap[key] = { name: key, qty: 0, price: it.price || 0, category: it.category || getItemCategory(key) };
-      medMap[key].qty += it.charge_qty;
-    }
+    // Phase 1.6 fix: ลบการนับ charge_qty ออก (มีอยู่ใน allocated.billable แล้ว — นับซ้ำทำให้ qty × 2)
   });
   const medItems = Object.values(medMap).filter(i => i.name && i.qty > 0);
   const includedItems = Object.values(includedMap).filter(i => i.name && i.qty > 0);
 
-  // คำนวณช่วงวันที่
+  // à¸à¸³à¸à¸§à¸à¸à¹à¸§à¸à¸§à¸±à¸à¸à¸µà¹
   const dFrom = new Date(dateFrom);
   const dTo   = new Date(dateTo);
   const days  = Math.round((dTo - dFrom) / (1000*60*60*24)) + 1;
@@ -151,11 +148,11 @@ async function confirmQuickInvoice() {
   const fmtDate = d => {
     if (!d) return '';
     const [y,m,day] = d.split('-');
-    return `${day}/${m}/${parseInt(y)+543}`;  // แปลงเป็น พ.ศ.
+    return `${day}/${m}/${parseInt(y)+543}`;  // à¹à¸à¸¥à¸à¹à¸à¹à¸ à¸.à¸¨.
   };
-  const jobName = `${patient.name} — ${fmtDate(dateFrom)} ถึง ${fmtDate(dateTo)}`;
+  const jobName = `${patient.name} â ${fmtDate(dateFrom)} à¸à¸¶à¸ ${fmtDate(dateTo)}`;
 
-  // ── เปิด modal ใบวางบิล พร้อม pre-fill ──
+  // ââ à¹à¸à¸´à¸ modal à¹à¸à¸§à¸²à¸à¸à¸´à¸¥ à¸à¸£à¹à¸­à¸¡ pre-fill ââ
   initBilling();
   document.getElementById('inv-edit-id').value  = '';
   document.getElementById('inv-type').value     = 'invoice';
@@ -167,7 +164,7 @@ async function confirmQuickInvoice() {
   document.getElementById('inv-vat-rate').value = getBillingSettings().vatRate || 0;
   document.getElementById('inv-wht-rate').value = '0';
 
-  // ค่าห้อง/ค่าดูแล — ปิดไว้ก่อน ให้กรอกเอง
+  // à¸à¹à¸²à¸«à¹à¸­à¸/à¸à¹à¸²à¸à¸¹à¹à¸¥ â à¸à¸´à¸à¹à¸§à¹à¸à¹à¸­à¸ à¹à¸«à¹à¸à¸£à¸­à¸à¹à¸­à¸
   document.getElementById('inv-room-enabled').checked = false;
   document.getElementById('inv-room-type').value      = 'monthly';
   document.getElementById('inv-room-qty').value       = '1';
@@ -176,18 +173,18 @@ async function confirmQuickInvoice() {
   document.getElementById('inv-room-label').value     = '';
   document.getElementById('inv-room-autofill').style.display = 'none';
 
-  // ค่ากายภาพ — ปิดไว้ก่อน
+  // à¸à¹à¸²à¸à¸²à¸¢à¸ à¸²à¸ â à¸à¸´à¸à¹à¸§à¹à¸à¹à¸­à¸
   document.getElementById('inv-pt-enabled').checked = false;
   document.getElementById('inv-pt-qty').value       = '1';
   document.getElementById('inv-pt-rate').value      = '0';
   document.getElementById('inv-pt-total').value     = '0.00';
   document.getElementById('inv-pt-type').value      = 'monthly';
 
-  // ช่วงเดือนสำหรับเวชภัณฑ์
+  // à¸à¹à¸§à¸à¹à¸à¸·à¸­à¸à¸ªà¸³à¸«à¸£à¸±à¸à¹à¸§à¸à¸ à¸±à¸à¸à¹
   document.getElementById('inv-med-from').value = dateFrom.slice(0,7);
   document.getElementById('inv-med-to').value   = dateTo.slice(0,7);
 
-  // เลือกผู้รับบริการ (ผ่าน typeahead)
+  // à¹à¸¥à¸·à¸­à¸à¸à¸¹à¹à¸£à¸±à¸à¸à¸£à¸´à¸à¸²à¸£ (à¸à¹à¸²à¸ typeahead)
   const taInvId = document.getElementById('ta-inv-id');
   const taInvInp = document.getElementById('ta-inv-inp');
   if (taInvId) taInvId.value = String(patId);
@@ -201,14 +198,14 @@ async function confirmQuickInvoice() {
   const roomRate = parseFloat(document.getElementById('inv-room-rate').value||0);
   if (roomRate > 0) document.getElementById('inv-room-enabled').checked = true;
 
-  // ใส่รายการเบิกสินค้าที่ดึงมา (Phase 1 fix: รวม included items ที่ฟรีตามแพ็คเกจด้วย)
+  // à¹à¸ªà¹à¸£à¸²à¸¢à¸à¸²à¸£à¹à¸à¸´à¸à¸ªà¸´à¸à¸à¹à¸²à¸à¸µà¹à¸à¸¶à¸à¸¡à¸² (Phase 1 fix: à¸£à¸§à¸¡ included items à¸à¸µà¹à¸à¸£à¸µà¸à¸²à¸¡à¹à¸à¹à¸à¹à¸à¸à¸à¹à¸§à¸¢)
   document.getElementById('inv-req-items-data').value   = JSON.stringify(medItems);
   const incEl = document.getElementById('inv-included-items-data');
   if (incEl) incEl.value = JSON.stringify(includedItems);
-  // ค่าอื่นๆ — เพิ่ม placeholder ให้ 1 รายการว่างสำหรับกรอกเอง
+  // à¸à¹à¸²à¸­à¸·à¹à¸à¹ â à¹à¸à¸´à¹à¸¡ placeholder à¹à¸«à¹ 1 à¸£à¸²à¸¢à¸à¸²à¸£à¸§à¹à¸²à¸à¸ªà¸³à¸«à¸£à¸±à¸à¸à¸£à¸­à¸à¹à¸­à¸
   const defaultOther = [
-    { name:'ค่ารถพยาบาล', qty:1, price:0 },
-    { name:'ค่าใช้จ่ายอื่นๆ', qty:1, price:0 },
+    { name:'à¸à¹à¸²à¸£à¸à¸à¸¢à¸²à¸à¸²à¸¥', qty:1, price:0 },
+    { name:'à¸à¹à¸²à¹à¸à¹à¸à¹à¸²à¸¢à¸­à¸·à¹à¸à¹', qty:1, price:0 },
   ];
   document.getElementById('inv-other-items-data').value = JSON.stringify(defaultOther);
   document.getElementById('inv-hide-items').checked = false;
@@ -221,13 +218,13 @@ async function confirmQuickInvoice() {
 
   const medCount = medItems.length;
   if (medCount > 0) {
-    toast(`✅ ดึงรายการเบิกสินค้าสำเร็จ: ${medCount} รายการ (${days} วัน)`, 'success');
+    toast(`â à¸à¸¶à¸à¸£à¸²à¸¢à¸à¸²à¸£à¹à¸à¸´à¸à¸ªà¸´à¸à¸à¹à¸²à¸ªà¸³à¹à¸£à¹à¸: ${medCount} à¸£à¸²à¸¢à¸à¸²à¸£ (${days} à¸§à¸±à¸)`, 'success');
   } else {
-    toast(`⚠️ ไม่พบรายการเบิกสินค้าในช่วงวันที่เลือก (${days} วัน) — กรอกรายการเองได้เลย`, 'warning');
+    toast(`â ï¸ à¹à¸¡à¹à¸à¸à¸£à¸²à¸¢à¸à¸²à¸£à¹à¸à¸´à¸à¸ªà¸´à¸à¸à¹à¸²à¹à¸à¸à¹à¸§à¸à¸§à¸±à¸à¸à¸µà¹à¹à¸¥à¸·à¸­à¸ (${days} à¸§à¸±à¸) â à¸à¸£à¸­à¸à¸£à¸²à¸¢à¸à¸²à¸£à¹à¸­à¸à¹à¸à¹à¹à¸¥à¸¢`, 'warning');
   }
 }
 
-// ── Duplicate doc number check (real-time) ───────────
+// ââ Duplicate doc number check (real-time) âââââââââââ
 function checkDocNoDuplicate(val, pool) {
   if (!val) return;
   const editId = document.getElementById(pool==='expense' ? 'exp-edit-id' : 'inv-edit-id')?.value;
@@ -247,21 +244,21 @@ function checkDocNoDuplicate(val, pool) {
     const warn = document.createElement('div');
     warn.id = warnId;
     warn.style.cssText = 'color:#e74c3c;font-size:11px;margin-top:3px;';
-    warn.textContent = `⚠️ เลขที่ซ้ำกับ: ${dup.patientName||dup.vendorName||dup.job||'-'} (${dup.date||'-'})`;
+    warn.textContent = `â ï¸ à¹à¸¥à¸à¸à¸µà¹à¸à¹à¸³à¸à¸±à¸: ${dup.patientName||dup.vendorName||dup.job||'-'} (${dup.date||'-'})`;
     inputEl.parentNode.appendChild(warn);
   } else {
     inputEl.style.borderColor = '';
   }
 }
 
-// ─────────────────────────────────────────────────────
-// ── SAVE / LOAD ──────────────────────────────────────
-// ─────────────────────────────────────────────────────
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ââ SAVE / LOAD ââââââââââââââââââââââââââââââââââââââ
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function saveBillingDB() {
-  // invoices & expenses now saved row-by-row — only persist billingSettings here
+  // invoices & expenses now saved row-by-row â only persist billingSettings here
   try {
     await supa.from('settings').upsert({ key:'billingSettings', value: db.billingSettings||{} });
-  } catch(e) { console.error('saveBillingDB',e); toast('บันทึกการตั้งค่าไม่สำเร็จ','error'); }
+  } catch(e) { console.error('saveBillingDB',e); toast('à¸à¸±à¸à¸à¸¶à¸à¸à¸²à¸£à¸à¸±à¹à¸à¸à¹à¸²à¹à¸¡à¹à¸ªà¸³à¹à¸£à¹à¸','error'); }
 }
 
 function loadBillingFromSettings(settingsData) {
@@ -270,9 +267,9 @@ function loadBillingFromSettings(settingsData) {
   db.billingSettings = find('billingSettings') || { ...DEFAULT_BILLING_SETTINGS };
 }
 
-// ─────────────────────────────────────────────────────
-// ── BILLING SETTINGS ─────────────────────────────────
-// ─────────────────────────────────────────────────────
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ââ BILLING SETTINGS âââââââââââââââââââââââââââââââââ
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function loadBillingSettingsUI() {
   const bs = getBillingSettings();
   document.getElementById('bs-company').value    = bs.company||'';
@@ -298,32 +295,32 @@ async function saveBillingSettings() {
   };
   db.billingSettings=bs;
   await saveBillingDB();
-  toast('บันทึกการตั้งค่าแล้ว','success');
+  toast('à¸à¸±à¸à¸à¸¶à¸à¸à¸²à¸£à¸à¸±à¹à¸à¸à¹à¸²à¹à¸¥à¹à¸§','success');
 }
 
-// ─────────────────────────────────────────────────────
-// ── PRINT: INVOICE ───────────────────────────────────
-// ─────────────────────────────────────────────────────
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ââ PRINT: INVOICE âââââââââââââââââââââââââââââââââââ
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function printInvoice(id) {
   const inv=(db.invoices||[]).find(i=>i.id===id); if(!inv) return;
   const bs=getBillingSettings();
   const patient=db.patients.find(p=>String(p.id)===String(inv.patientId));
-  const TYPE_LABELS={invoice:'ใบแจ้งหนี้ / วางบิล',receipt:'ใบเสร็จรับเงิน',quotation:'ใบเสนอราคา',tax_invoice:'ใบกำกับภาษี'};
+  const TYPE_LABELS={invoice:'à¹à¸à¹à¸à¹à¸à¸«à¸à¸µà¹ / à¸§à¸²à¸à¸à¸´à¸¥',receipt:'à¹à¸à¹à¸ªà¸£à¹à¸à¸£à¸±à¸à¹à¸à¸´à¸',quotation:'à¹à¸à¹à¸ªà¸à¸­à¸£à¸²à¸à¸²',tax_invoice:'à¹à¸à¸à¸³à¸à¸±à¸à¸ à¸²à¸©à¸µ'};
 
   // Build rows table
   const rows = [];
   if(inv.roomEnabled && inv.roomTotal>0) {
-    const roomLabel = inv.roomLabel || `ค่าห้องและค่าดูแล (${inv.roomType==='daily'?'รายวัน':'รายเดือน'})`;
-    rows.push({name:roomLabel, qty:inv.roomQty, unit:inv.roomType==='daily'?'วัน':'เดือน', price:inv.roomRate, total:inv.roomTotal});
+    const roomLabel = inv.roomLabel || `à¸à¹à¸²à¸«à¹à¸­à¸à¹à¸¥à¸°à¸à¹à¸²à¸à¸¹à¹à¸¥ (${inv.roomType==='daily'?'à¸£à¸²à¸¢à¸§à¸±à¸':'à¸£à¸²à¸¢à¹à¸à¸·à¸­à¸'})`;
+    rows.push({name:roomLabel, qty:inv.roomQty, unit:inv.roomType==='daily'?'à¸§à¸±à¸':'à¹à¸à¸·à¸­à¸', price:inv.roomRate, total:inv.roomTotal});
   }
   if(inv.ptEnabled && inv.ptTotal>0) {
-    const ptLabel = inv.ptType==='session'?'ครั้ง':inv.ptType==='daily'?'วัน':'เดือน';
-    rows.push({name:'ค่ากายภาพบำบัด', qty:inv.ptQty, unit:ptLabel, price:inv.ptRate, total:inv.ptTotal});
+    const ptLabel = inv.ptType==='session'?'à¸à¸£à¸±à¹à¸':inv.ptType==='daily'?'à¸§à¸±à¸':'à¹à¸à¸·à¸­à¸';
+    rows.push({name:'à¸à¹à¸²à¸à¸²à¸¢à¸ à¸²à¸à¸à¸³à¸à¸±à¸', qty:inv.ptQty, unit:ptLabel, price:inv.ptRate, total:inv.ptTotal});
   }
   if(!inv.hideItems) {
     (inv.medItems||[]).forEach(it=>rows.push({name:it.name,qty:it.qty,unit:'',price:it.price,total:it.qty*it.price}));
   } else if(inv.medTotal>0) {
-    rows.push({name:'ค่าเวชภัณฑ์ / ยา',qty:1,unit:'รายการ',price:inv.medTotal,total:inv.medTotal});
+    rows.push({name:'à¸à¹à¸²à¹à¸§à¸à¸ à¸±à¸à¸à¹ / à¸¢à¸²',qty:1,unit:'à¸£à¸²à¸¢à¸à¸²à¸£',price:inv.medTotal,total:inv.medTotal});
   }
   (inv.otherItems||[]).forEach(it=>rows.push({name:it.name,qty:it.qty||1,unit:'',price:it.price||0,total:(it.qty||1)*(it.price||0)}));
 
@@ -337,13 +334,13 @@ function printInvoice(id) {
 
   // Number in Thai words (simple)
   function thaiNum(n) {
-    const s=['ศูนย์','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า'];
-    const u=['','สิบ','ร้อย','พัน','หมื่น','แสน','ล้าน'];
-    if(n===0) return 'ศูนย์บาทถ้วน';
+    const s=['à¸¨à¸¹à¸à¸¢à¹','à¸«à¸à¸¶à¹à¸','à¸ªà¸­à¸','à¸ªà¸²à¸¡','à¸ªà¸µà¹','à¸«à¹à¸²','à¸«à¸','à¹à¸à¹à¸','à¹à¸à¸','à¹à¸à¹à¸²'];
+    const u=['','à¸ªà¸´à¸','à¸£à¹à¸­à¸¢','à¸à¸±à¸','à¸«à¸¡à¸·à¹à¸','à¹à¸ªà¸','à¸¥à¹à¸²à¸'];
+    if(n===0) return 'à¸¨à¸¹à¸à¸¢à¹à¸à¸²à¸à¸à¹à¸§à¸';
     const intPart=Math.floor(n), decPart=Math.round((n-intPart)*100);
     let str=''; let tmp=intPart; let pos=0;
-    while(tmp>0){const d=tmp%10;if(d>0||pos>0)str=(d===1&&pos===1?'สิบ':d===2&&pos===1?'ยี่สิบ':s[d]+u[pos])+str;tmp=Math.floor(tmp/10);pos++;}
-    str+='บาท'; if(decPart>0){let ds='';let dt=decPart;let dp=0;while(dt>0){const d=dt%10;if(d>0)ds=(s[d]+u[dp])+ds;dt=Math.floor(dt/10);dp++;}str+=ds+'สตางค์';}else str+='ถ้วน';
+    while(tmp>0){const d=tmp%10;if(d>0||pos>0)str=(d===1&&pos===1?'à¸ªà¸´à¸':d===2&&pos===1?'à¸¢à¸µà¹à¸ªà¸´à¸':s[d]+u[pos])+str;tmp=Math.floor(tmp/10);pos++;}
+    str+='à¸à¸²à¸'; if(decPart>0){let ds='';let dt=decPart;let dp=0;while(dt>0){const d=dt%10;if(d>0)ds=(s[d]+u[dp])+ds;dt=Math.floor(dt/10);dp++;}str+=ds+'à¸ªà¸à¸²à¸à¸à¹';}else str+='à¸à¹à¸§à¸';
     return str;
   }
 
@@ -389,78 +386,78 @@ function printInvoice(id) {
     @media print{.print-btn{display:none;}body{padding:15px;}}
   </style>
   </head><body>
-  <button class="print-btn" onclick="window.print()">🖨️ พิมพ์</button>
+  <button class="print-btn" onclick="window.print()">ð¨ï¸ à¸à¸´à¸¡à¸à¹</button>
   <div class="header">
     <div>
-      <div class="co-name">${bs.company||'นวศรี เนอร์สซิ่งโฮม'}</div>
+      <div class="co-name">${bs.company||'à¸à¸§à¸¨à¸£à¸µ à¹à¸à¸­à¸£à¹à¸ªà¸à¸´à¹à¸à¹à¸®à¸¡'}</div>
       <div class="co-sub">
         ${bs.address?bs.address.split('\n').join('<br>'):''}
-        ${bs.taxId?`<br>เลขประจำตัวผู้เสียภาษี ${bs.taxId}`:''}
-        ${bs.phone?`<br>โทร. ${bs.phone}`:''}
-        ${bs.email?`<br>อีเมล ${bs.email}`:''}
+        ${bs.taxId?`<br>à¹à¸¥à¸à¸à¸£à¸°à¸à¸³à¸à¸±à¸§à¸à¸¹à¹à¹à¸ªà¸µà¸¢à¸ à¸²à¸©à¸µ ${bs.taxId}`:''}
+        ${bs.phone?`<br>à¹à¸à¸£. ${bs.phone}`:''}
+        ${bs.email?`<br>à¸­à¸µà¹à¸¡à¸¥ ${bs.email}`:''}
       </div>
     </div>
     <div class="doc-box">
       <div class="doc-title">${TYPE_LABELS[inv.type]||inv.type}</div>
-      <div class="doc-sub">ต้นฉบับ</div>
+      <div class="doc-sub">à¸à¹à¸à¸à¸à¸±à¸</div>
       <table class="meta-table" style="margin-top:8px;">
-        <tr><td class="meta-label">เลขที่</td><td class="meta-val" style="font-family:monospace;">${inv.docNo||'-'}</td></tr>
-        <tr><td class="meta-label">วันที่</td><td class="meta-val">${inv.date||'-'}</td></tr>
-        ${inv.dueDate?`<tr><td class="meta-label">กำหนดชำระ</td><td class="meta-val">${inv.dueDate}</td></tr>`:''}
+        <tr><td class="meta-label">à¹à¸¥à¸à¸à¸µà¹</td><td class="meta-val" style="font-family:monospace;">${inv.docNo||'-'}</td></tr>
+        <tr><td class="meta-label">à¸§à¸±à¸à¸à¸µà¹</td><td class="meta-val">${inv.date||'-'}</td></tr>
+        ${inv.dueDate?`<tr><td class="meta-label">à¸à¸³à¸«à¸à¸à¸à¸³à¸£à¸°</td><td class="meta-val">${inv.dueDate}</td></tr>`:''}
       </table>
     </div>
   </div>
 
   <div style="display:flex;gap:16px;margin-bottom:16px;">
     <div class="to-box" style="flex:1;">
-      <div class="to-label">ลูกค้า / Customer</div>
+      <div class="to-label">à¸¥à¸¹à¸à¸à¹à¸² / Customer</div>
       <div class="to-name">${inv.patientName||'-'}</div>
       ${patient?.address?`<div class="to-sub">${patient.address}</div>`:''}
-      ${patient?.phone?`<div class="to-sub">โทร. ${patient.phone}</div>`:''}
+      ${patient?.phone?`<div class="to-sub">à¹à¸à¸£. ${patient.phone}</div>`:''}
     </div>
-    ${inv.jobName?`<div class="to-box" style="flex:1;"><div class="to-label">ชื่องาน</div><div style="font-weight:600;margin-top:4px;">${inv.jobName}</div></div>`:''}
+    ${inv.jobName?`<div class="to-box" style="flex:1;"><div class="to-label">à¸à¸·à¹à¸­à¸à¸²à¸</div><div style="font-weight:600;margin-top:4px;">${inv.jobName}</div></div>`:''}
   </div>
 
   <table class="items-table">
     <thead><tr>
       <th style="width:36px;text-align:center;">#</th>
-      <th style="text-align:left;">รายละเอียด</th>
-      <th style="text-align:center;width:100px;">จำนวน</th>
-      <th style="text-align:right;width:110px;">ราคาต่อหน่วย</th>
-      <th style="text-align:right;width:110px;">มูลค่า</th>
+      <th style="text-align:left;">à¸£à¸²à¸¢à¸¥à¸°à¹à¸­à¸µà¸¢à¸</th>
+      <th style="text-align:center;width:100px;">à¸à¸³à¸à¸§à¸</th>
+      <th style="text-align:right;width:110px;">à¸£à¸²à¸à¸²à¸à¹à¸­à¸«à¸à¹à¸§à¸¢</th>
+      <th style="text-align:right;width:110px;">à¸¡à¸¹à¸¥à¸à¹à¸²</th>
     </tr></thead>
-    <tbody>${rowsHtml||'<tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">ไม่มีรายการ</td></tr>'}</tbody>
+    <tbody>${rowsHtml||'<tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">à¹à¸¡à¹à¸¡à¸µà¸£à¸²à¸¢à¸à¸²à¸£</td></tr>'}</tbody>
   </table>
 
   <div class="totals-wrap">
     <div class="totals-box">
-      <div class="tot-row"><span>รวมเป็นเงิน</span><span>${formatThb(inv.subtotal||0)}</span></div>
-      ${(inv.vatRate||0)>0?`<div class="tot-row"><span>ภาษีมูลค่าเพิ่ม ${inv.vatRate}%</span><span>${formatThb(inv.vatAmt||0)}</span></div>`:''}
-      <div class="tot-row sep grand"><span>จำนวนเงินรวมทั้งสิ้น</span><span>${formatThb(inv.beforeWht||inv.grandTotal||0)}</span></div>
-      ${(inv.whtRate||0)>0?`<div class="tot-row"><span style="color:#c0392b;">หัก ณ ที่จ่าย ${inv.whtRate}%</span><span style="color:#c0392b;">${formatThb(inv.whtAmt||0)}</span></div>`:''}
-      <div class="tot-row net"><span>ยอดชำระ</span><span>${formatThb(inv.grandTotal||0)}</span></div>
+      <div class="tot-row"><span>à¸£à¸§à¸¡à¹à¸à¹à¸à¹à¸à¸´à¸</span><span>${formatThb(inv.subtotal||0)}</span></div>
+      ${(inv.vatRate||0)>0?`<div class="tot-row"><span>à¸ à¸²à¸©à¸µà¸¡à¸¹à¸¥à¸à¹à¸²à¹à¸à¸´à¹à¸¡ ${inv.vatRate}%</span><span>${formatThb(inv.vatAmt||0)}</span></div>`:''}
+      <div class="tot-row sep grand"><span>à¸à¸³à¸à¸§à¸à¹à¸à¸´à¸à¸£à¸§à¸¡à¸à¸±à¹à¸à¸ªà¸´à¹à¸</span><span>${formatThb(inv.beforeWht||inv.grandTotal||0)}</span></div>
+      ${(inv.whtRate||0)>0?`<div class="tot-row"><span style="color:#c0392b;">à¸«à¸±à¸ à¸ à¸à¸µà¹à¸à¹à¸²à¸¢ ${inv.whtRate}%</span><span style="color:#c0392b;">${formatThb(inv.whtAmt||0)}</span></div>`:''}
+      <div class="tot-row net"><span>à¸¢à¸­à¸à¸à¸³à¸£à¸°</span><span>${formatThb(inv.grandTotal||0)}</span></div>
     </div>
   </div>
   <div class="amount-words">(${thaiNum(inv.grandTotal||0)})</div>
 
-  ${inv.note?`<div class="note-box"><strong>หมายเหตุ:</strong> ${inv.note}</div>`:''}
+  ${inv.note?`<div class="note-box"><strong>à¸«à¸¡à¸²à¸¢à¹à¸«à¸à¸¸:</strong> ${inv.note}</div>`:''}
 
   <div class="sign-row">
-    <div class="sign-box"><div class="sign-line"><div class="sign-name">( ผู้รับวางบิล )</div><div class="sign-date">วันที่ ................................</div></div></div>
-    <div style="text-align:center;padding-bottom:4px;"><div style="font-size:10px;color:#bbb;margin-bottom:6px;">ตราประทับ</div><div style="width:74px;height:74px;border:1px dashed #ccc;border-radius:50%;margin:0 auto;"></div></div>
-    <div class="sign-box"><div class="sign-line"><div class="sign-name">( ผู้วางบิล )</div><div class="sign-date">วันที่ ................................</div></div></div>
+    <div class="sign-box"><div class="sign-line"><div class="sign-name">( à¸à¸¹à¹à¸£à¸±à¸à¸§à¸²à¸à¸à¸´à¸¥ )</div><div class="sign-date">à¸§à¸±à¸à¸à¸µà¹ ................................</div></div></div>
+    <div style="text-align:center;padding-bottom:4px;"><div style="font-size:10px;color:#bbb;margin-bottom:6px;">à¸à¸£à¸²à¸à¸£à¸°à¸à¸±à¸</div><div style="width:74px;height:74px;border:1px dashed #ccc;border-radius:50%;margin:0 auto;"></div></div>
+    <div class="sign-box"><div class="sign-line"><div class="sign-name">( à¸à¸¹à¹à¸§à¸²à¸à¸à¸´à¸¥ )</div><div class="sign-date">à¸§à¸±à¸à¸à¸µà¹ ................................</div></div></div>
   </div>
   </body></html>`);
   w.document.close();
 }
 
-// ─────────────────────────────────────────────────────
-// ── PRINT: EXPENSE ───────────────────────────────────
-// ─────────────────────────────────────────────────────
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ââ PRINT: EXPENSE âââââââââââââââââââââââââââââââââââ
+// âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function printExpense(id) {
   const exp=(db.expenses||[]).find(e=>e.id===id); if(!exp) return;
   const bs=getBillingSettings();
-  const PAY_LABELS={cash:'เงินสด',transfer:'โอนเงิน',cheque:'เช็ค'};
+  const PAY_LABELS={cash:'à¹à¸à¸´à¸à¸ªà¸',transfer:'à¹à¸­à¸à¹à¸à¸´à¸',cheque:'à¹à¸à¹à¸'};
   const rowsHtml=(exp.items||[]).map((it,i)=>`<tr>
     <td style="border:1px solid #ddd;padding:7px 10px;">${i+1}</td>
     <td style="border:1px solid #ddd;padding:7px 10px;">${it.desc||''}</td>
@@ -472,7 +469,7 @@ function printExpense(id) {
 
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head>
-  <meta charset="UTF-8"><title>บันทึกค่าใช้จ่าย ${exp.docNo}</title>
+  <meta charset="UTF-8"><title>à¸à¸±à¸à¸à¸¶à¸à¸à¹à¸²à¹à¸à¹à¸à¹à¸²à¸¢ ${exp.docNo}</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -504,73 +501,73 @@ function printExpense(id) {
     @media print{.print-btn{display:none;}}
   </style>
   </head><body>
-  <button class="print-btn" onclick="window.print()">🖨️ พิมพ์</button>
+  <button class="print-btn" onclick="window.print()">ð¨ï¸ à¸à¸´à¸¡à¸à¹</button>
   <div class="header">
     <div>
-      <div class="co-name">${bs.company||'นวศรี เนอร์สซิ่งโฮม'}</div>
+      <div class="co-name">${bs.company||'à¸à¸§à¸¨à¸£à¸µ à¹à¸à¸­à¸£à¹à¸ªà¸à¸´à¹à¸à¹à¸®à¸¡'}</div>
       <div class="co-sub">
-        ${bs.taxId?`เลขประจำตัวผู้เสียภาษี ${bs.taxId}<br>`:''}
-        ${bs.phone?`โทร. ${bs.phone}<br>`:''}
-        ${bs.email?`อีเมล ${bs.email}`:''}
+        ${bs.taxId?`à¹à¸¥à¸à¸à¸£à¸°à¸à¸³à¸à¸±à¸§à¸à¸¹à¹à¹à¸ªà¸µà¸¢à¸ à¸²à¸©à¸µ ${bs.taxId}<br>`:''}
+        ${bs.phone?`à¹à¸à¸£. ${bs.phone}<br>`:''}
+        ${bs.email?`à¸­à¸µà¹à¸¡à¸¥ ${bs.email}`:''}
       </div>
     </div>
     <div class="doc-box">
-      <div class="doc-title">บันทึกค่าใช้จ่าย</div>
+      <div class="doc-title">à¸à¸±à¸à¸à¸¶à¸à¸à¹à¸²à¹à¸à¹à¸à¹à¸²à¸¢</div>
       <div class="doc-sub">Expense Note</div>
       <table class="meta-table">
-        <tr><td style="color:#777;width:80px;">เลขที่</td><td style="font-weight:600;font-family:monospace;">${exp.docNo||'-'}</td></tr>
-        <tr><td style="color:#777;">วันที่</td><td style="font-weight:600;">${exp.date||'-'}</td></tr>
-        ${exp.preparer?`<tr><td style="color:#777;">ผู้จัดทำ</td><td style="font-weight:600;">${exp.preparer}</td></tr>`:''}
-        ${exp.job?`<tr><td style="color:#777;">ชื่องาน</td><td style="font-weight:600;">${exp.job}</td></tr>`:''}
+        <tr><td style="color:#777;width:80px;">à¹à¸¥à¸à¸à¸µà¹</td><td style="font-weight:600;font-family:monospace;">${exp.docNo||'-'}</td></tr>
+        <tr><td style="color:#777;">à¸§à¸±à¸à¸à¸µà¹</td><td style="font-weight:600;">${exp.date||'-'}</td></tr>
+        ${exp.preparer?`<tr><td style="color:#777;">à¸à¸¹à¹à¸à¸±à¸à¸à¸³</td><td style="font-weight:600;">${exp.preparer}</td></tr>`:''}
+        ${exp.job?`<tr><td style="color:#777;">à¸à¸·à¹à¸­à¸à¸²à¸</td><td style="font-weight:600;">${exp.job}</td></tr>`:''}
       </table>
     </div>
   </div>
 
   ${exp.vendorName?`<div style="background:#f8f8f8;border:1px solid #e8e8e8;border-radius:6px;padding:12px 16px;margin-bottom:14px;">
-    <div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">ผู้จำหน่าย / Vendor</div>
+    <div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">à¸à¸¹à¹à¸à¸³à¸«à¸à¹à¸²à¸¢ / Vendor</div>
     <div style="font-weight:700;font-size:14px;">${exp.vendorName}</div>
     ${exp.vendorAddr?`<div style="font-size:12px;color:#666;margin-top:2px;">${exp.vendorAddr}</div>`:''}
-    ${exp.vendorTaxId?`<div style="font-size:12px;color:#666;">เลขประจำตัวผู้เสียภาษี ${exp.vendorTaxId}</div>`:''}
+    ${exp.vendorTaxId?`<div style="font-size:12px;color:#666;">à¹à¸¥à¸à¸à¸£à¸°à¸à¸³à¸à¸±à¸§à¸à¸¹à¹à¹à¸ªà¸µà¸¢à¸ à¸²à¸©à¸µ ${exp.vendorTaxId}</div>`:''}
   </div>`:''}
 
   <table class="items-table">
     <thead><tr>
       <th style="text-align:center;width:36px;">#</th>
-      <th style="text-align:left;">รายละเอียด</th>
-      <th style="text-align:left;width:150px;">หมวดหมู่</th>
-      <th style="text-align:center;width:60px;">จำนวน</th>
-      <th style="text-align:right;width:110px;">ราคาต่อหน่วย</th>
-      <th style="text-align:right;width:110px;">ยอดรวม</th>
+      <th style="text-align:left;">à¸£à¸²à¸¢à¸¥à¸°à¹à¸­à¸µà¸¢à¸</th>
+      <th style="text-align:left;width:150px;">à¸«à¸¡à¸§à¸à¸«à¸¡à¸¹à¹</th>
+      <th style="text-align:center;width:60px;">à¸à¸³à¸à¸§à¸</th>
+      <th style="text-align:right;width:110px;">à¸£à¸²à¸à¸²à¸à¹à¸­à¸«à¸à¹à¸§à¸¢</th>
+      <th style="text-align:right;width:110px;">à¸¢à¸­à¸à¸£à¸§à¸¡</th>
     </tr></thead>
-    <tbody>${rowsHtml||'<tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">ไม่มีรายการ</td></tr>'}</tbody>
+    <tbody>${rowsHtml||'<tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">à¹à¸¡à¹à¸¡à¸µà¸£à¸²à¸¢à¸à¸²à¸£</td></tr>'}</tbody>
   </table>
 
   <div class="totals-wrap">
     <div class="totals-box">
-      <div class="tot-row"><span>ราคาไม่รวม VAT</span><span>${formatThb(exp.subtotal||0)}</span></div>
-      <div class="tot-row"><span>ภาษีมูลค่าเพิ่ม 7%</span><span>${formatThb(exp.vatAmt||0)}</span></div>
-      <div class="tot-row sep" style="font-weight:600;"><span>จำนวนเงินรวมทั้งสิ้น</span><span>${formatThb(exp.totalVat||0)}</span></div>
-      ${(exp.whtRate||0)>0?`<div class="tot-row"><span style="color:#c0392b;">หัก ณ ที่จ่าย ${exp.whtRate}%</span><span style="color:#c0392b;">${formatThb(exp.whtAmt||0)}</span></div>`:''}
-      <div class="tot-row net"><span>ยอดชำระ</span><span>${formatThb(exp.net||0)}</span></div>
+      <div class="tot-row"><span>à¸£à¸²à¸à¸²à¹à¸¡à¹à¸£à¸§à¸¡ VAT</span><span>${formatThb(exp.subtotal||0)}</span></div>
+      <div class="tot-row"><span>à¸ à¸²à¸©à¸µà¸¡à¸¹à¸¥à¸à¹à¸²à¹à¸à¸´à¹à¸¡ 7%</span><span>${formatThb(exp.vatAmt||0)}</span></div>
+      <div class="tot-row sep" style="font-weight:600;"><span>à¸à¸³à¸à¸§à¸à¹à¸à¸´à¸à¸£à¸§à¸¡à¸à¸±à¹à¸à¸ªà¸´à¹à¸</span><span>${formatThb(exp.totalVat||0)}</span></div>
+      ${(exp.whtRate||0)>0?`<div class="tot-row"><span style="color:#c0392b;">à¸«à¸±à¸ à¸ à¸à¸µà¹à¸à¹à¸²à¸¢ ${exp.whtRate}%</span><span style="color:#c0392b;">${formatThb(exp.whtAmt||0)}</span></div>`:''}
+      <div class="tot-row net"><span>à¸¢à¸­à¸à¸à¸³à¸£à¸°</span><span>${formatThb(exp.net||0)}</span></div>
     </div>
   </div>
 
   <div class="pay-section">
-    <strong>รายละเอียดการชำระเงิน:</strong>
-    ช่องทาง: ${PAY_LABELS[exp.payMethod]||exp.payMethod||'-'}
-    ${exp.bank?` &nbsp;|&nbsp; ธนาคาร: ${exp.bank}`:''}
-    ${exp.bankNo?` &nbsp;|&nbsp; เลขที่: ${exp.bankNo}`:''}
-    ${exp.payDate?` &nbsp;|&nbsp; วันที่ชำระ: ${exp.payDate}`:''}
-    &nbsp;|&nbsp; ยอดชำระ: <strong>${formatThb(exp.net||0)}</strong>
-    ${exp.whtAmt>0?` &nbsp;|&nbsp; หัก ณ ที่จ่าย: ${formatThb(exp.whtAmt)}`:''}
+    <strong>à¸£à¸²à¸¢à¸¥à¸°à¹à¸­à¸µà¸¢à¸à¸à¸²à¸£à¸à¸³à¸£à¸°à¹à¸à¸´à¸:</strong>
+    à¸à¹à¸­à¸à¸à¸²à¸: ${PAY_LABELS[exp.payMethod]||exp.payMethod||'-'}
+    ${exp.bank?` &nbsp;|&nbsp; à¸à¸à¸²à¸à¸²à¸£: ${exp.bank}`:''}
+    ${exp.bankNo?` &nbsp;|&nbsp; à¹à¸¥à¸à¸à¸µà¹: ${exp.bankNo}`:''}
+    ${exp.payDate?` &nbsp;|&nbsp; à¸§à¸±à¸à¸à¸µà¹à¸à¸³à¸£à¸°: ${exp.payDate}`:''}
+    &nbsp;|&nbsp; à¸¢à¸­à¸à¸à¸³à¸£à¸°: <strong>${formatThb(exp.net||0)}</strong>
+    ${exp.whtAmt>0?` &nbsp;|&nbsp; à¸«à¸±à¸ à¸ à¸à¸µà¹à¸à¹à¸²à¸¢: ${formatThb(exp.whtAmt)}`:''}
   </div>
 
-  ${exp.note?`<div style="margin-top:12px;font-size:12px;color:#666;"><strong>หมายเหตุ:</strong> ${exp.note}</div>`:''}
+  ${exp.note?`<div style="margin-top:12px;font-size:12px;color:#666;"><strong>à¸«à¸¡à¸²à¸¢à¹à¸«à¸à¸¸:</strong> ${exp.note}</div>`:''}
 
   <div class="sign-row">
-    <div class="sign-box"><div class="sign-line"><div class="sign-name">ผู้รับเงิน</div><div class="sign-date">วันที่ ................................</div></div></div>
-    <div class="sign-box"><div class="sign-line">ผู้จัดทำ / วันที่</div></div>
-    <div class="sign-box"><div class="sign-line">ผู้อนุมัติ / วันที่</div></div>
+    <div class="sign-box"><div class="sign-line"><div class="sign-name">à¸à¸¹à¹à¸£à¸±à¸à¹à¸à¸´à¸</div><div class="sign-date">à¸§à¸±à¸à¸à¸µà¹ ................................</div></div></div>
+    <div class="sign-box"><div class="sign-line">à¸à¸¹à¹à¸à¸±à¸à¸à¸³ / à¸§à¸±à¸à¸à¸µà¹</div></div>
+    <div class="sign-box"><div class="sign-line">à¸à¸¹à¹à¸­à¸à¸¸à¸¡à¸±à¸à¸´ / à¸§à¸±à¸à¸à¸µà¹</div></div>
   </div>
   </body></html>`);
   w.document.close();
@@ -578,5 +575,5 @@ function printExpense(id) {
 
 
 // =======================================================
-// ── INCIDENT & WOUND CARE SYSTEM ────────────────────────
+// ââ INCIDENT & WOUND CARE SYSTEM ââââââââââââââââââââââââ
 // =======================================================

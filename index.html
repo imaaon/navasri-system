@@ -4,7 +4,7 @@
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>นวศรี เนอร์สซิ่งโฮม -- ระบบบริหารจัดการ</title>
+  <title>à¸à¸§à¸¨à¸£à¸µ à¹à¸à¸­à¸£à¹à¸ªà¸à¸´à¹à¸à¹à¸®à¸¡ -- à¸£à¸°à¸à¸à¸à¸£à¸´à¸«à¸²à¸£à¸à¸±à¸à¸à¸²à¸£</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -23,19 +23,19 @@
     <div id="sidebarOverlay" onclick="closeSidebar()"></div>
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:4px;">
-        <button id="hamburgerBtn" onclick="toggleSidebar()">☰</button>
+        <button id="hamburgerBtn" onclick="toggleSidebar()">â°</button>
         <div class="page-title" id="pageTitle">Dashboard</div>
       </div>
       <div class="topbar-right">
         <span class="topbar-date" id="todayDate"></span>
         <div id="notif-bell-wrap" style="position:relative;display:inline-flex;align-items:center;" class="no-print">
-          <button id="notif-bell-btn" onclick="toggleNotifPanel()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:2px 4px;position:relative;" title="แจ้งเตือน">
-            🔔<span id="notif-badge" style="display:none;position:absolute;top:0;right:0;background:#e74c3c;color:#fff;border-radius:50%;font-size:10px;font-weight:700;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;"></span>
+          <button id="notif-bell-btn" onclick="toggleNotifPanel()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:2px 4px;position:relative;" title="à¹à¸à¹à¸à¹à¸à¸·à¸­à¸">
+            ð<span id="notif-badge" style="display:none;position:absolute;top:0;right:0;background:#e74c3c;color:#fff;border-radius:50%;font-size:10px;font-weight:700;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;"></span>
           </button>
           <div id="notif-panel" style="display:none;position:absolute;top:36px;right:0;width:320px;max-height:400px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:9999;"></div>
         </div>
         <span id="line-status-dot" style="font-size:18px;cursor:pointer;" onclick="showPage('settings')" title="LINE Status">&#x26AA;</span>
-        <div class="user-chip no-print" onclick="doLogout()" title="ออกจากระบบ">
+        <div class="user-chip no-print" onclick="doLogout()" title="à¸­à¸­à¸à¸à¸²à¸à¸£à¸°à¸à¸">
           <div class="user-avatar" id="userAvatar">?</div>
           <span id="userDisplayName">-</span>
           <span style="color:var(--text3);font-size:11px;">&#x21BB;</span>
@@ -73,12 +73,12 @@
 <script src="js/modules/health.js?v=13"></script>
 <script src="js/modules/physio.js?v=7"></script>
 <script src="js/modules/billing/billing-reset.js?v=1"></script>
-<script src="js/modules/billing/billing-core.js?v=18"></script>
+<script src="js/modules/billing/billing-core.js?v=19"></script>
 <script src="js/modules/billing/billing-package-helpers.js?v=2"></script>
 <script src="js/modules/billing/billing-physio.js?v=3"></script>
 <script src="js/modules/billing/billing-contract.js?v=16"></script>
 <script src="js/modules/billing/billing-print.js?v=3"></script>
-<script src="js/modules/billing/billing-report.js?v=6"></script>
+<script src="js/modules/billing/billing-report.js?v=7"></script>
 <script src="js/modules/billing/billing-clinical.js?v=16"></script>
 <script src="js/modules/suppliers.js?v=25"></script>
 <script src="js/modules/expenses.js?v=6"></script>
@@ -137,12 +137,12 @@ window.onload = async function() {
 </script>
 <script src="js/fix-features.js?v=78" defer></script>
 
-<!-- MODAL: Patient Contracts (popup จากหน้า patient profile) -->
+<!-- MODAL: Patient Contracts (popup à¸à¸²à¸à¸«à¸à¹à¸² patient profile) -->
 <div id="modal-patient-contracts" class="modal-overlay" style="z-index:190;">
   <div class="modal" style="max-width:900px;max-height:90vh;display:flex;flex-direction:column;width:95vw;">
     <div class="modal-header">
-      <div id="patient-contracts-title" class="modal-title">📋 แพ็กเกจของผู้รับบริการ</div>
-      <button class="modal-close" onclick="closePatientContractsModal()">✕</button>
+      <div id="patient-contracts-title" class="modal-title">ð à¹à¸à¹à¸à¹à¸à¸à¸à¸­à¸à¸à¸¹à¹à¸£à¸±à¸à¸à¸£à¸´à¸à¸²à¸£</div>
+      <button class="modal-close" onclick="closePatientContractsModal()">â</button>
     </div>
     <div id="patient-contracts-body" style="padding:16px 24px;overflow-y:auto;flex:1;"></div>
   </div>
@@ -164,9 +164,9 @@ window.onload = async function() {
       
       if (hasDb && hasFn && hasEl) {
         var el = document.getElementById('dashboard-appts');
-        // Only render if widget is currently empty/default OR shows "ไม่มีนัดหมาย"
+        // Only render if widget is currently empty/default OR shows "à¹à¸¡à¹à¸¡à¸µà¸à¸±à¸à¸«à¸¡à¸²à¸¢"
         var currentText = el.textContent || '';
-        if (currentText.length < 5 || currentText.includes('ไม่มีนัดหมาย')) {
+        if (currentText.length < 5 || currentText.includes('à¹à¸¡à¹à¸¡à¸µà¸à¸±à¸à¸«à¸¡à¸²à¸¢')) {
           window.renderUpcomingAppts();
           rendered = true;
         }
@@ -174,7 +174,7 @@ window.onload = async function() {
     } catch(e) { console.warn('uaPoll error:', e); }
   }
   
-  // Start poller — runs every 1 sec forever
+  // Start poller â runs every 1 sec forever
   var iv = setInterval(tryRender, 1000);
   
   // Also hook into showPage to re-render when returning to dashboard
