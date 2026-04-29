@@ -184,14 +184,11 @@ function renderReqItems() {
       </div>
       <div class="form-group" style="flex:1;margin:0;min-width:72px;">
         <label class="form-label" style="font-size:11px;">จำนวน</label>
-        <input class="form-control number" type="number" min="1" value="${ri.qty}" onchange="updateReqItem(${idx},'qty',this.value)" style="text-align:center;">
+        <input class="form-control number" type="number" min="1" value="${ri.qty}" onchange="updateReqItem(${idx},'qty',this.value)" style="text-align:center;height:38px;box-sizing:border-box;">
       </div>
       <div class="form-group" style="flex:1;margin:0;min-width:90px;">
         <label class="form-label" style="font-size:11px;">หน่วยนับ</label>
-        <select class="form-control" onchange="updateReqItem(${idx},'unit',this.value)">
-          <option value="">-</option>
-          ${UNITS.map(u => `<option value="${u}" ${unitVal===u?'selected':''}>${u}</option>`).join('')}
-        </select>
+        <input type="text" class="form-control" value="${unitVal||'-'}" readonly style="background:var(--surface2);cursor:not-allowed;text-align:center;" title="หน่วยนับถูก lock ตามหน่วยเบิกจ่ายของสินค้า — แก้ที่หน้าคลังสต็อก">
       </div>
       <button class="btn btn-ghost btn-sm" onclick="removeReqItem(${idx})" style="margin-bottom:2px;padding:5px 8px;color:var(--text3);" title="ลบรายการ">✕</button>
     </div>`;
