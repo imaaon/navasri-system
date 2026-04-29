@@ -1305,7 +1305,7 @@ function renderReqForm({ reqs, first, group }) {
           <td style="font-weight:500;">${r.itemName}</td>
           <td class="center" style="font-weight:700;">${r.qty}</td>
           <td class="center" style="color:#555;">${r.unit}</td>
-          <td class="center" style="color:#aaa;">______</td>
+          <td class="center" style="font-weight:500;">${r.qtyApproved || r.qty || ''}</td>
           <td class="center" style="color:#555;">${r.unit}</td>
           <td style="color:#aaa;">____________</td>
         </tr>`).join('')}
