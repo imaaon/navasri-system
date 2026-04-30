@@ -226,6 +226,13 @@ async function confirmQuickInvoice() {
   renderOtherItems();
   recalcInvoice();
   openModal('modal-createInvoice');
+  // ===== Step 4.5: Auto-load physio sessions ใน Quick =====
+  // เรียกหลัง openModal — ให้ autoFillPhysio ทำงานเอง (handle case ไม่มี session, แล้วซ้ำ ฯลฯ)
+  setTimeout(function() {
+    if (typeof autoFillPhysioToInvoice === 'function') {
+      autoFillPhysioToInvoice();
+    }
+  }, 250);
 
   const medCount = medItems.length;
   if (medCount > 0) {
