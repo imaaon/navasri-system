@@ -728,6 +728,34 @@ async function saveInvoice(status) {
   } catch (e) {
     console.warn('Mark requisition_headers exception:', e);
   }
+  
+  // ===== Step 5.2: Sync FE in-memory state สำหรับ db.requisitions (หลัง Layer B) =====
+  // หลัง Layer B mark DB → sync state ที่ FE เพื่อให้ Quick ครั้งถัดไปกรอง req ใหม่ได้ถูก
+  try {
+    if (!editId && Array.isArray(db.requisitions)) {
+      var fromVal2 = (document.getElementById('inv-med-from') || {}).value;
+      var toVal2 = (document.getElementById('inv-med-to') || {}).value;
+      if (fromVal2 && toVal2) {
+        var fp = fromVal2.split('-');
+        var tp = toVal2.split('-');
+        if (fp.length === 2 && tp.length === 2) {
+          var sd = fp[0] + '-' + fp[1] + '-01';
+          var ey = parseInt(tp[0], 10);
+          var em = parseInt(tp[1], 10);
+          if (em === 12) { ey++; em = 1; } else { em++; }
+          var ed = ey + '-' + String(em).padStart(2, '0') + '-01';
+          db.requisitions.forEach(function(r) {
+            if (r && r.patientId === inv.patientId && r.date >= sd && r.date < ed && !r.invoiceId) {
+              r.billed = true;
+              r.invoiceId = inv.id;
+            }
+          });
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Sync FE state after save failed:', e);
+  }
     logAudit(AUDIT_MODULES.BILLING, editId ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
     editId || row.doc_no,
     { doc_no: row.doc_no, patient: row.patient_name, status, total: row.grand_total });
