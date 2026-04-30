@@ -826,6 +826,19 @@ async function deleteInvoice(id) {
   } catch (e) {
     console.warn('Unmark requisition_headers exception:', e);
   }
+  
+  // ===== Step 5.1: Sync FE in-memory state สำหรับ db.requisitions =====
+  // หลัง Layer C update DB → sync state ที่ FE ด้วย ป้องกัน stale data ใน Quick รอบเดียวกัน
+  // Note: physio_sessions ไม่ต้อง sync เพราะ autoFillPhysioToInvoice query DB ตรงทุกครั้ง
+  try {
+    if (Array.isArray(db.requisitions)) {
+      db.requisitions.forEach(function(r) {
+        if (r && r.invoiceId === id) { r.billed = false; r.invoiceId = null; }
+      });
+    }
+  } catch (e) {
+    console.warn('Sync FE state after delete failed:', e);
+  }
   const { error } = await supa.from('invoices').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
   db.invoices=(db.invoices||[]).filter(i=>i.id!==id);
