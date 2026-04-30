@@ -667,7 +667,37 @@ async function saveInvoice(status) {
   if (saveErr) { toast('บันทึกไม่สำเร็จ: '+saveErr.message,'error'); return; }
   if(editId) { const idx=db.invoices.findIndex(i=>i.id===editId); if(idx>=0) db.invoices[idx]={...db.invoices[idx],...inv}; else db.invoices.unshift(inv); }
   else db.invoices.unshift(inv);
-  logAudit(AUDIT_MODULES.BILLING, editId ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
+  // ===== Layer B: Mark physio sessions as billed (Step 3) =====
+  // เฉพาะใบใหม่ (ไม่ใช่ edit) + ต้องมี ptEnabled
+  try {
+    if (!editId && inv.ptEnabled) {
+      var fromVal = (document.getElementById('inv-med-from') || {}).value;
+      var toVal = (document.getElementById('inv-med-to') || {}).value;
+      if (fromVal && toVal) {
+        var fParts = fromVal.split('-');
+        var tParts = toVal.split('-');
+        if (fParts.length === 2 && tParts.length === 2) {
+          var startDate = fParts[0] + '-' + fParts[1] + '-01';
+          var endY = parseInt(tParts[0], 10);
+          var endM = parseInt(tParts[1], 10);
+          if (endM === 12) { endY++; endM = 1; } else { endM++; }
+          var endDate = endY + '-' + String(endM).padStart(2, '0') + '-01';
+          var markResp = await supa.from('physio_sessions')
+            .update({ invoice_id: inv.id, billed: true })
+            .eq('patient_id', inv.patientId)
+            .is('invoice_id', null)
+            .gte('session_date', startDate)
+            .lt('session_date', endDate);
+          if (markResp.error) {
+            console.warn('Mark physio_sessions failed:', markResp.error);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Mark physio_sessions exception:', e);
+  }
+    logAudit(AUDIT_MODULES.BILLING, editId ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
     editId || row.doc_no,
     { doc_no: row.doc_no, patient: row.patient_name, status, total: row.grand_total });
   toast(status==='draft'?'บันทึกร่างแล้ว':'บันทึกเอกสารแล้ว','success');
@@ -742,6 +772,17 @@ function editInvoice(id) {
 
 async function deleteInvoice(id) {
   if(!confirm('ลบเอกสารนี้หรือไม่?')) return;
+  // ===== Layer C: Unmark physio sessions ก่อน delete invoice (Step 3) =====
+  try {
+    var unmarkResp = await supa.from('physio_sessions')
+      .update({ invoice_id: null, billed: false })
+      .eq('invoice_id', id);
+    if (unmarkResp.error) {
+      console.warn('Unmark physio_sessions failed:', unmarkResp.error);
+    }
+  } catch (e) {
+    console.warn('Unmark physio_sessions exception:', e);
+  }
   const { error } = await supa.from('invoices').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
   db.invoices=(db.invoices||[]).filter(i=>i.id!==id);
