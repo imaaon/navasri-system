@@ -986,8 +986,24 @@ async function autoFillPhysioToInvoice() {
     
     var sessions = qResp.data || [];
     if (sessions.length === 0) {
-      toast('info', 'ไม่พบ session กายภาพในช่วงเดือนที่เลือกค่ะ');
-      // clear banner ถ้ามี
+      // ตรวจว่ามี sessions ในเดือนนี้แต่ถูกผูกกับใบบิลก่อนหน้าไหม
+      var totalResp = await supa.from('physio_sessions')
+        .select('id, invoice_id', { count: 'exact' })
+        .eq('patient_id', patientId)
+        .gte('session_date', startDate)
+        .lt('session_date', endDate);
+      var totalCount = (totalResp.data || []).length;
+      var billedCount = (totalResp.data || []).filter(function(s) { return !!s.invoice_id; }).length;
+      
+      if (totalCount > 0 && billedCount === totalCount) {
+        // ทุก session ในเดือนนี้ถูกออกบิลไปแล้ว — หา doc_no ของใบเก่า
+        var billedInvoiceIds = (totalResp.data || []).map(function(s) { return s.invoice_id; }).filter(function(id, i, arr) { return arr.indexOf(id) === i; });
+        var docNos = (db.invoices || []).filter(function(inv) { return billedInvoiceIds.indexOf(inv.id) !== -1; }).map(function(inv) { return inv.docNo; });
+        var docNoStr = docNos.length > 0 ? docNos.join(', ') : '';
+        toast(docNoStr ? ('กายภาพในเดือนนี้ถูกเรียกเก็บในใบบิล ' + docNoStr + ' แล้วค่ะ') : 'กายภาพในเดือนนี้ถูกเรียกเก็บไปแล้วค่ะ', 'info');
+      } else {
+        toast('ไม่พบ session กายภาพในเดือนที่เลือกค่ะ', 'info');
+      }
       var bnr = document.getElementById('inv-pt-included-banner');
       if (bnr) { bnr.style.display = 'none'; bnr.innerHTML = ''; }
       return;

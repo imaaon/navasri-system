@@ -194,7 +194,20 @@ async function confirmQuickInvoice() {
   onInvoicePatientChange();
   // Enable room checkbox if rate was found
   const roomRate = parseFloat(document.getElementById('inv-room-rate').value||0);
-  if (roomRate > 0) document.getElementById('inv-room-enabled').checked = true;
+  // ===== Issue 2: ตรวจค่าห้องซ้ำในเดือนเดียวกัน (Step 4) =====
+  // ตรวจ invoice เก่าที่ทับซ้อน period — ถ้ามี room_total > 0 → ไม่ติ๊ก
+  var roomDup = (db.invoices || []).find(function(inv) {
+    if (inv.patientId !== patId) return false;
+    if (!inv.roomEnabled || (parseFloat(inv.roomTotal) || 0) <= 0) return false;
+    // ทับซ้อน period: ใช้ inv.date เทียบ — ถ้า dateFrom <= inv.date <= dateTo ถือว่าซ้ำ
+    if (!inv.date) return false;
+    return inv.date >= dateFrom && inv.date <= dateTo;
+  });
+  var roomBlocked = !!roomDup;
+  if (roomBlocked) {
+    toast('ค่าห้องในช่วงนี้ถูกเรียกเก็บในใบบิล ' + (roomDup.docNo || '-') + ' แล้วค่ะ', 'info');
+  }
+  if (roomRate > 0 && !roomBlocked) document.getElementById('inv-room-enabled').checked = true;
 
   // ใส่รายการเบิกสินค้าที่ดึงมา (Phase 1 fix: รวม included items ที่ฟรีตามแพ็คเกจด้วย)
   document.getElementById('inv-req-items-data').value   = JSON.stringify(medItems);
