@@ -559,6 +559,9 @@ function mapReq(r) {
     approvedBy: r.approved_by||'', approvedAt: r.approved_at||'',
     createdBy: r.created_by||'',
     lines,
+    // Step 5: billing tracking fields
+    billed: r.billed||false,
+    invoiceId: r.invoice_id||null,
     // backward compat fields (อ่าน firstLine ได้ — โค้ดเก่าใช้ pattern นี้อยู่)
     itemId: r.item_id || firstLine.itemId,
     itemName: r.item_name || firstLine.itemName,

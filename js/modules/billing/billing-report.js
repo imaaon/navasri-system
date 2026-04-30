@@ -45,7 +45,7 @@ async function confirmQuickInvoice() {
   const reqs = (db.requisitions||[]).filter(r =>
     String(r.patientId || r.patient_id) === String(patId) &&
     r.status === 'approved' &&
-    r.date >= dateFrom && r.date <= dateTo
+    r.date >= dateFrom && r.date <= dateTo && !r.invoiceId
   );
 
   // รวมจาก reqGroups ด้วย

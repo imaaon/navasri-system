@@ -697,6 +697,37 @@ async function saveInvoice(status) {
   } catch (e) {
     console.warn('Mark physio_sessions exception:', e);
   }
+  
+  // ===== Layer B for Requisitions: Mark requisition_headers as billed (Step 5) =====
+  // เฉพาะใบใหม่ + filter ใบเบิกของ patient + อยู่ในช่วง period
+  try {
+    if (!editId) {
+      var reqFromVal = (document.getElementById('inv-med-from') || {}).value;
+      var reqToVal = (document.getElementById('inv-med-to') || {}).value;
+      if (reqFromVal && reqToVal) {
+        var rfParts = reqFromVal.split('-');
+        var rtParts = reqToVal.split('-');
+        if (rfParts.length === 2 && rtParts.length === 2) {
+          var reqStartDate = rfParts[0] + '-' + rfParts[1] + '-01';
+          var reqEndY = parseInt(rtParts[0], 10);
+          var reqEndM = parseInt(rtParts[1], 10);
+          if (reqEndM === 12) { reqEndY++; reqEndM = 1; } else { reqEndM++; }
+          var reqEndDate = reqEndY + '-' + String(reqEndM).padStart(2, '0') + '-01';
+          var markReqResp = await supa.from('requisition_headers')
+            .update({ invoice_id: inv.id, billed: true })
+            .eq('patient_id', inv.patientId)
+            .is('invoice_id', null)
+            .gte('date', reqStartDate)
+            .lt('date', reqEndDate);
+          if (markReqResp.error) {
+            console.warn('Mark requisition_headers failed:', markReqResp.error);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Mark requisition_headers exception:', e);
+  }
     logAudit(AUDIT_MODULES.BILLING, editId ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
     editId || row.doc_no,
     { doc_no: row.doc_no, patient: row.patient_name, status, total: row.grand_total });
@@ -782,6 +813,18 @@ async function deleteInvoice(id) {
     }
   } catch (e) {
     console.warn('Unmark physio_sessions exception:', e);
+  }
+  
+  // ===== Layer C for Requisitions: Unmark requisition_headers (Step 5) =====
+  try {
+    var unmarkReqResp = await supa.from('requisition_headers')
+      .update({ invoice_id: null, billed: false })
+      .eq('invoice_id', id);
+    if (unmarkReqResp.error) {
+      console.warn('Unmark requisition_headers failed:', unmarkReqResp.error);
+    }
+  } catch (e) {
+    console.warn('Unmark requisition_headers exception:', e);
   }
   const { error } = await supa.from('invoices').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
