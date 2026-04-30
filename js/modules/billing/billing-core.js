@@ -876,3 +876,217 @@ async function savePayment() {
     printReceipt(ins.id || payData.receipt_no);
   }
 }
+
+/**
+ * Auto-fill ค่ากายภาพในใบแจ้งหนี้
+ * - ดึง physio_sessions ของผู้ป่วยในเดือนที่เลือก (filter: invoice_id IS NULL)
+ * - ใช้ helpers: getActiveContract, getPhysioRule, allocatePhysioSessions
+ * - ใส่ค่าใน UI (inv-pt-enabled, inv-pt-type, inv-pt-qty, inv-pt-rate)
+ * - แสดง banner รายการ session แยก in_package vs over
+ */
+async function autoFillPhysioToInvoice() {
+  try {
+    // Guards: ตรวจ dependencies
+    if (typeof supa === 'undefined' || typeof db === 'undefined') {
+      if (typeof toast === 'function') toast('warning', 'ระบบยังไม่พร้อม กรุณาลองอีกครั้ง');
+      return;
+    }
+    if (typeof getActiveContract !== 'function' ||
+        typeof getPhysioRule !== 'function' ||
+        typeof allocatePhysioSessions !== 'function') {
+      if (typeof toast === 'function') toast('error', 'helper functions ไม่พร้อมใช้งาน');
+      return;
+    }
+    
+    // Get patient + period
+    var patientIdEl = document.getElementById('ta-inv-id');
+    var patientId = patientIdEl ? patientIdEl.value : '';
+    if (!patientId) {
+      toast('warning', 'กรุณาเลือกผู้รับบริการก่อนค่ะ');
+      return;
+    }
+    
+    var fromEl = document.getElementById('inv-med-from');
+    var toEl = document.getElementById('inv-med-to');
+    var periodFrom = fromEl ? fromEl.value : '';
+    var periodTo = toEl ? toEl.value : '';
+    if (!periodFrom || !periodTo) {
+      toast('warning', 'กรุณาเลือกช่วงเดือนก่อนค่ะ');
+      return;
+    }
+    
+    // Convert "YYYY-MM" → "YYYY-MM-DD" range
+    var startParts = periodFrom.split('-');
+    var endParts = periodTo.split('-');
+    if (startParts.length !== 2 || endParts.length !== 2) {
+      toast('warning', 'รูปแบบเดือนไม่ถูกต้อง');
+      return;
+    }
+    var startDate = startParts[0] + '-' + startParts[1] + '-01';
+    var endY = parseInt(endParts[0], 10);
+    var endM = parseInt(endParts[1], 10);
+    if (endM === 12) { endY++; endM = 1; } else { endM++; }
+    var endDate = endY + '-' + String(endM).padStart(2, '0') + '-01';
+    
+    // Query physio_sessions
+    var qResp = await supa.from('physio_sessions')
+      .select('*')
+      .eq('patient_id', patientId)
+      .is('invoice_id', null)
+      .gte('session_date', startDate)
+      .lt('session_date', endDate)
+      .order('session_date', { ascending: true });
+    
+    if (qResp.error) {
+      console.error('autoFillPhysio query error:', qResp.error);
+      toast('error', 'ดึงข้อมูล session ไม่สำเร็จ: ' + qResp.error.message);
+      return;
+    }
+    
+    var sessions = qResp.data || [];
+    if (sessions.length === 0) {
+      toast('info', 'ไม่พบ session กายภาพในช่วงเดือนที่เลือกค่ะ');
+      // clear banner ถ้ามี
+      var bnr = document.getElementById('inv-pt-included-banner');
+      if (bnr) { bnr.style.display = 'none'; bnr.innerHTML = ''; }
+      return;
+    }
+    
+    // หา contract + physio rule
+    var contract = getActiveContract(patientId);
+    var physioRule = (contract && contract.items) ? getPhysioRule(contract.items) : null;
+    
+    // Allocate (in_package vs over)
+    // ถ้าไม่มี contract physio_included → ใช้ rate จากแต่ละ session (fallback)
+    var allocation;
+    if (physioRule) {
+      allocation = allocatePhysioSessions(sessions, physioRule);
+    } else {
+      // Fallback: ทุก session คิดเงินตาม rate ที่ทีมกายภาพบันทึก
+      var charged = sessions.map(function(s) {
+        var amt = Math.round(((s.duration_minutes||0)/60) * (s.rate_per_hour||0) * 100) / 100;
+        return Object.assign({}, s, { billing_source: 'no_package', charge_amount: amt });
+      });
+      allocation = {
+        free: [],
+        charged: charged,
+        extra_amount: charged.reduce(function(sum, s) { return sum + s.charge_amount; }, 0)
+      };
+    }
+    
+    // คำนวณ qty + rate (Option a — session unit)
+    var chargedSessions = allocation.charged || [];
+    var displayQty = chargedSessions.length;
+    var displayRate = 0;
+    var rateInconsistent = false;
+    
+    if (chargedSessions.length > 0) {
+      // หา rate ของแต่ละ session: ถ้าทุกอันเท่ากัน → ใช้ค่าจริง, ถ้าไม่ → effective
+      var perSessionRates = chargedSessions.map(function(s) {
+        return s.charge_amount; // ราคาต่อ session
+      });
+      var uniqueRates = [];
+      perSessionRates.forEach(function(r) {
+        if (uniqueRates.indexOf(r) === -1) uniqueRates.push(r);
+      });
+      if (uniqueRates.length === 1) {
+        displayRate = uniqueRates[0];
+      } else {
+        displayRate = displayQty > 0 ? Math.round((allocation.extra_amount / displayQty) * 100) / 100 : 0;
+        rateInconsistent = true;
+      }
+    }
+    
+    // Set UI
+    var ptEnabled = document.getElementById('inv-pt-enabled');
+    var ptType = document.getElementById('inv-pt-type');
+    var ptQty = document.getElementById('inv-pt-qty');
+    var ptRate = document.getElementById('inv-pt-rate');
+    
+    if (ptEnabled) ptEnabled.checked = (sessions.length > 0);
+    if (ptType) ptType.value = 'session';
+    if (ptQty) ptQty.value = displayQty;
+    if (ptRate) ptRate.value = displayRate;
+    
+    // Render banner (เซสชันใน package + เกิน)
+    renderPhysioBannerInInvoice(allocation);
+    
+    // Recalc invoice
+    if (typeof recalcInvoice === 'function') recalcInvoice();
+    
+    // Toast summary
+    var inPkg = (allocation.free || []).length;
+    var msg = 'ดึง ' + sessions.length + ' session — ฟรีในแพ็กเกจ ' + inPkg + 
+              ' ครั้ง, คิดเงิน ' + chargedSessions.length + ' ครั้ง';
+    if (allocation.extra_amount > 0) msg += ' = ' + allocation.extra_amount + ' ฿';
+    if (rateInconsistent) msg += ' (rate ต่างกัน — ใช้ rate เฉลี่ย)';
+    toast('success', msg);
+  } catch (err) {
+    console.error('autoFillPhysioToInvoice exception:', err);
+    if (typeof toast === 'function') {
+      toast('error', 'เกิดข้อผิดพลาด: ' + (err && err.message ? err.message : String(err)));
+    }
+  }
+}
+
+/**
+ * Render banner สรุป physio sessions ในใบแจ้งหนี้
+ */
+function renderPhysioBannerInInvoice(allocation) {
+  var banner = document.getElementById('inv-pt-included-banner');
+  if (!banner) return;
+  
+  var freeArr = (allocation && allocation.free) || [];
+  var chargedArr = (allocation && allocation.charged) || [];
+  var allSessions = freeArr.concat(chargedArr);
+  
+  if (allSessions.length === 0) {
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+    return;
+  }
+  
+  var inPkgCount = freeArr.length;
+  var overCount = chargedArr.length;
+  
+  // List item HTML (sort by date)
+  allSessions.sort(function(a, b) {
+    return (a.session_date || '').localeCompare(b.session_date || '');
+  });
+  
+  var listHtml = '';
+  for (var i = 0; i < allSessions.length; i++) {
+    var s = allSessions[i];
+    var isFree = (s.billing_source === 'contract_included');
+    var dateStr = '';
+    try {
+      var d = new Date(s.session_date);
+      dateStr = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch (e) {
+      dateStr = s.session_date || '-';
+    }
+    var hrs = ((s.duration_minutes || 0) / 60).toFixed(1).replace(/.0$/, '');
+    var therapist = s.therapist_name || '-';
+    var label = isFree
+      ? '<span style="color:#059669;">✅ อยู่ใน package</span>'
+      : '<span style="color:#b45309;">💰 เกิน package: ' + (s.charge_amount || 0) + ' ฿</span>';
+    listHtml += '<div style="font-size:11px;padding:2px 0;">📅 ' + dateStr + 
+                ' — ' + hrs + ' ชม. (' + therapist + ') — ' + label + '</div>';
+  }
+  
+  // Banner — pattern เดียวกับ "มีสินค้ารวมใน package" ของเวชภัณฑ์
+  var summary = '🤸 มีกายภาพรวมใน package ' + inPkgCount + ' ครั้ง';
+  if (overCount > 0) summary += ', เกิน ' + overCount + ' ครั้ง';
+  
+  var html = '<div style="font-size:12px;color:#3a6a3a;padding:6px 8px;background:#f0fff4;border-radius:4px;">' +
+             summary + ' — ' +
+             '<span style="text-decoration:underline;cursor:pointer;" ' +
+             'onclick="var l=this.parentElement.parentElement.querySelector(' + "'.pt-list'" + 
+             ');l.style.display=l.style.display===' + "'none'" + '?' + "'block'" + ':' + "'none'" + ';">' +
+             'คลิกเพื่อดู</span>' +
+             '<div class="pt-list" style="display:none;margin-top:6px;">' + listHtml + '</div>' +
+             '</div>';
+  
+  banner.innerHTML = html;
+  banner.style.display = 'block';
+}
