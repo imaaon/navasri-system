@@ -321,21 +321,43 @@ async function savePR(status = 'draft') {
   if (insPRLErr) { toast('บันทึก line items ไม่สำเร็จ: ' + insPRLErr.message, 'error'); return; }
   toast('บันทึกคำขอซื้อ ' + refNo + ' เรียบร้อย', 'success');
   closeModal('modal-addPR');
+  
+  // ===== Issue 9 Bug B: ส่ง LINE notify + refresh กริ่ง =====
+  try {
+    if (!editId) {
+      const lineMsg = '📋 มีคำขอซื้อใหม่\n━━━━━━━━━━━━━━\n🔖 ' + refNo + '\n👤 ผู้ขอ: ' + requester + '\n🏢 ผู้จำหน่าย: ' + (supplier?.name || '-') + '\n📦 ' + validItems.length + ' รายการ\n🔥 ความเร่งด่วน: ' + (document.getElementById('pr-urgency').value || 'normal') + '\n━━━━━━━━━━━━━━';
+      await sendLineNotify('pr_new', lineMsg, { refNo, requester, lineCount: validItems.length });
+    }
+  } catch (e) {
+    console.warn('LINE notify pr_new failed:', e);
+  }
+  
   renderPurchaseRequests();
+  if (typeof renderNotifPanel === 'function') renderNotifPanel();
 }
 
 async function approvePR(id) {
-  if (!canApproveReq()) { toast('ไม่มีสิทธิ์อนุมัติ', 'error'); return; }
-  const pr = db.purchaseRequests.find(r => r.id == id);
+  if (!canApproveReq()) { toast('คุณไม่มีสิทธิอนุมัติ', 'error'); return; }
+  const pr = (db.purchaseRequests || []).find(r => r.id === id);
   if (!pr) return;
-  const actor = currentUser?.displayName || currentUser?.username || '';
+  const actor = auth?.currentUser?.full_name || auth?.currentUser?.username || 'admin';
   const { error } = await supa.from('purchase_requests').update({
     status: 'approved', approved_by: actor, approved_at: new Date().toISOString()
   }).eq('id', id);
-  if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
-  pr.status = 'approved'; pr.approvedBy = actor;
+  if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+  pr.status = 'approved'; pr.approvedBy = actor; pr.approvedAt = new Date().toISOString();
+  
+  // ===== Issue 9 Bug B: ส่ง LINE notify + refresh กริ่ง =====
+  try {
+    const lineMsg = '✅ คำขอซื้ออนุมัติแล้ว\n━━━━━━━━━━━━━━\n🔖 ' + pr.refNo + '\n👤 ผู้อนุมัติ: ' + actor + '\n🏢 ผู้จำหน่าย: ' + (pr.supplierName || '-') + '\n📦 ' + (pr.lines || []).length + ' รายการ\n👉 กรุณาดำเนินการสั่งซื้อต่อไป\n━━━━━━━━━━━━━━';
+    await sendLineNotify('pr_approved', lineMsg, { refNo: pr.refNo, lineCount: (pr.lines||[]).length });
+  } catch (e) {
+    console.warn('LINE notify pr_approved failed:', e);
+  }
+  
   toast('อนุมัติคำขอซื้อแล้ว', 'success');
   renderPurchaseRequests();
+  if (typeof renderNotifPanel === 'function') renderNotifPanel();
 }
 
 async function deletePR(id) {
@@ -433,8 +455,17 @@ async function rejectPR(id) {
     if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
     pr.status = 'rejected'; pr.rejectReason = reason; pr.approvedBy = actor;
     overlay.remove();
+    // ===== Issue 9 Bug B: ส่ง LINE notify + refresh กริ่ง =====
+    try {
+      const lineMsg = '❌ คำขอซื้อถูกปฏิเสธ\n━━━━━━━━━━━━━━\n🔖 ' + pr.refNo + '\n👤 ปฏิเสธโดย: ' + actor + '\n📝 เหตุผล: ' + reason + '\n━━━━━━━━━━━━━━';
+      await sendLineNotify('pr_rejected', lineMsg, { refNo: pr.refNo, reason });
+    } catch (e) {
+      console.warn('LINE notify pr_rejected failed:', e);
+    }
+    
     toast('ปฏิเสธคำขอซื้อแล้ว', 'success');
     renderPurchaseRequests();
+    if (typeof renderNotifPanel === 'function') renderNotifPanel();
   };
 }
 // ── Operational Reports ───────────────────────────────────────
