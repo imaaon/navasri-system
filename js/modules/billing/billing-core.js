@@ -663,6 +663,44 @@ async function saveInvoice(status) {
     updated_at: new Date().toISOString(),
   };
   if (!editId) row.created_at = new Date().toISOString();
+  // ===== Layer D: Pre-upsert unmark (สำหรับ edit case) (Step 6) =====
+  // ก่อน upsert — ถ้าเป็น edit case → unmark req/physio ที่ผูก editId เดิม
+  // เพราะ Layer B/Sync ด้านล่างจะ mark ใหม่ตาม period ปัจจุบัน
+  if (editId) {
+    try {
+      var preUnmarkPhysio = await supa.from('physio_sessions')
+        .update({ invoice_id: null, billed: false })
+        .eq('invoice_id', editId);
+      if (preUnmarkPhysio.error) {
+        console.warn('Pre-unmark physio_sessions failed:', preUnmarkPhysio.error);
+      }
+    } catch (e) {
+      console.warn('Pre-unmark physio_sessions exception:', e);
+    }
+    try {
+      var preUnmarkReq = await supa.from('requisition_headers')
+        .update({ invoice_id: null, billed: false })
+        .eq('invoice_id', editId);
+      if (preUnmarkReq.error) {
+        console.warn('Pre-unmark requisition_headers failed:', preUnmarkReq.error);
+      }
+    } catch (e) {
+      console.warn('Pre-unmark requisition_headers exception:', e);
+    }
+    try {
+      if (Array.isArray(db.requisitions)) {
+        db.requisitions.forEach(function(r) {
+          if (r && r.invoiceId === editId) {
+            r.billed = false;
+            r.invoiceId = null;
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Pre-unmark FE sync failed:', e);
+    }
+  }
+  
   const { error: saveErr } = await supa.from('invoices').upsert(row);
   if (saveErr) { toast('บันทึกไม่สำเร็จ: '+saveErr.message,'error'); return; }
   if(editId) { const idx=db.invoices.findIndex(i=>i.id===editId); if(idx>=0) db.invoices[idx]={...db.invoices[idx],...inv}; else db.invoices.unshift(inv); }
@@ -670,7 +708,7 @@ async function saveInvoice(status) {
   // ===== Layer B: Mark physio sessions as billed (Step 3) =====
   // เฉพาะใบใหม่ (ไม่ใช่ edit) + ต้องมี ptEnabled
   try {
-    if (!editId && inv.ptEnabled) {
+    if (inv.ptEnabled) {
       var fromVal = (document.getElementById('inv-med-from') || {}).value;
       var toVal = (document.getElementById('inv-med-to') || {}).value;
       if (fromVal && toVal) {
@@ -701,7 +739,7 @@ async function saveInvoice(status) {
   // ===== Layer B for Requisitions: Mark requisition_headers as billed (Step 5) =====
   // เฉพาะใบใหม่ + filter ใบเบิกของ patient + อยู่ในช่วง period
   try {
-    if (!editId) {
+    if (true) {
       var reqFromVal = (document.getElementById('inv-med-from') || {}).value;
       var reqToVal = (document.getElementById('inv-med-to') || {}).value;
       if (reqFromVal && reqToVal) {
@@ -732,7 +770,7 @@ async function saveInvoice(status) {
   // ===== Step 5.2: Sync FE in-memory state สำหรับ db.requisitions (หลัง Layer B) =====
   // หลัง Layer B mark DB → sync state ที่ FE เพื่อให้ Quick ครั้งถัดไปกรอง req ใหม่ได้ถูก
   try {
-    if (!editId && Array.isArray(db.requisitions)) {
+    if (Array.isArray(db.requisitions)) {
       var fromVal2 = (document.getElementById('inv-med-from') || {}).value;
       var toVal2 = (document.getElementById('inv-med-to') || {}).value;
       if (fromVal2 && toVal2) {
