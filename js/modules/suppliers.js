@@ -360,7 +360,7 @@ async function approvePR(id) {
   if (!canApproveReq()) { toast('คุณไม่มีสิทธิอนุมัติ', 'error'); return; }
   const pr = (db.purchaseRequests || []).find(r => r.id === id);
   if (!pr) return;
-  const actor = auth?.currentUser?.full_name || auth?.currentUser?.username || 'admin';
+  const actor = currentUser?.displayName || currentUser?.username || 'admin';
   const { error } = await supa.from('purchase_requests').update({
     status: 'approved', approved_by: actor, approved_at: new Date().toISOString()
   }).eq('id', id);
