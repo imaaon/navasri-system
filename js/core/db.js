@@ -150,7 +150,7 @@ stockMovementsRes, suppliersRes, purchaseRequestsRes, supplierInvoicesRes, suppl
       supa.from('invoice_reset_logs').select('*').order('reset_at', {ascending: false}).limit(200),
       supa.from('stock_movements').select('*').order('created_at', {ascending: false}).limit(200),
       supa.from('suppliers').select('*').order('supplier_name'),
-      supa.from('purchase_requests').select('*').order('created_at', {ascending: false}).limit(200),
+      supa.from('purchase_requests').select('*, purchase_request_lines(*)').order('created_at', {ascending: false}).limit(200),
       supa.from('supplier_invoices').select('*').order('created_at', {ascending: false}).limit(200),
       supa.from('supplier_invoice_lines').select('*').order('id'),
       supa.from('assets').select('*').order('asset_no'),
@@ -255,6 +255,17 @@ function mapSupplier(r) {
 }
 
 function mapPurchaseRequest(r) {
+  // Step Issue 9.1: ดึง lines จาก nested select (purchase_request_lines)
+  const lines = (r.purchase_request_lines || []).map(l => ({
+    id: l.id,
+    itemId: l.item_id,
+    itemName: l.item_name,
+    qty: Number(l.qty_requested) || 0,
+    qtyReceived: Number(l.qty_received) || 0,
+    unit: l.unit || '',
+    unitCost: Number(l.unit_cost) || 0,
+    note: l.note || ''
+  }));
   return {
     id: r.id, refNo: r.ref_no, date: r.request_date,
     requesterName: r.requester_name,
@@ -265,7 +276,7 @@ function mapPurchaseRequest(r) {
     approvedBy: r.approved_by || '', approvedAt: r.approved_at,
     rejectReason: r.reject_reason || '',
     createdBy: r.created_by || '', createdAt: r.created_at,
-    lines: [],
+    lines: lines,
   };
 }
 function mapItem(r) {
