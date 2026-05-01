@@ -319,6 +319,26 @@ async function savePR(status = 'draft') {
   }));
   const { error: insPRLErr } = await supa.from('purchase_request_lines').insert(linesData);
   if (insPRLErr) { toast('บันทึก line items ไม่สำเร็จ: ' + insPRLErr.message, 'error'); return; }
+
+  // ===== Issue 9 Bug B Fix: Sync pr.lines ใน FE state หลัง insert =====
+  // ป้องกัน pr.lines = [] ใน FE state เมื่อ approve ในรอบเดียวกันหลัง create
+  try {
+    const targetPr = (db.purchaseRequests || []).find(r => r.id === prId);
+    if (targetPr) {
+      targetPr.lines = validItems.map(it => ({
+        itemId: it.itemId,
+        itemName: it.itemName,
+        qtyRequested: it.qty,
+        qty: it.qty,
+        unit: it.unit || '',
+        unitCost: it.unitCost || 0,
+        note: it.note || ''
+      }));
+    }
+  } catch (e) {
+    console.warn('Sync pr.lines after save failed:', e);
+  }
+
   toast('บันทึกคำขอซื้อ ' + refNo + ' เรียบร้อย', 'success');
   closeModal('modal-addPR');
   
