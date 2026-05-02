@@ -244,7 +244,20 @@ function onInvoicePatientChange() {
   const autoDiv  = document.getElementById('inv-room-autofill');
   const autoText = document.getElementById('inv-room-autofill-text');
 
-  if (room || bed) {
+  // ── Issue 8 Fix (2 พ.ค. 2569): priority สูงสุด — ถ้ามีแพ็คเกจ (patient_contracts) ที่ active ──
+  // ใช้ totalMonthly จาก contract แทน room rate (ครอบคลุมกรณีผู้ป่วยมีแพ็คเกจแบบเหมาจ่าย)
+  const contract = (typeof getActiveContract === 'function') ? getActiveContract(p.id) : null;
+  if (contract && (contract.totalMonthly||0) > 0) {
+    const bedLabel = bed ? ` · เตียง ${bed.bedCode}` : '';
+    const roomLabel = room ? ` · ${room.name}` : '';
+    if (autoText) autoText.textContent = `📋 แพ็คเกจ: ${contract.name||'ค่าบริการรายเดือน'} · ${(contract.totalMonthly).toLocaleString('th-TH')} ฿/เดือน${roomLabel}${bedLabel}`;
+    if (autoDiv) autoDiv.style.display = 'flex';
+    document.getElementById('inv-room-type').value = 'monthly';
+    document.getElementById('inv-room-rate').value = contract.totalMonthly;
+    document.getElementById('inv-room-label').value = contract.name || 'ค่าบริการรายเดือน';
+    document.getElementById('inv-room-enabled').checked = true;
+    if (typeof onInvRoomTypeChange === 'function') onInvRoomTypeChange();
+  } else if (room || bed) {
     const bedLabel  = bed  ? `เตียง ${bed.bedCode}` : '';
     const roomLabel = room ? `${room.name} (${room.roomType})` : '';
     const rateMonthly = room?.monthlyRate || 0;
