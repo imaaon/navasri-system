@@ -358,7 +358,7 @@ async function savePR(status = 'draft') {
 
 async function approvePR(id) {
   if (!canApproveReq()) { toast('คุณไม่มีสิทธิอนุมัติ', 'error'); return; }
-  const pr = (db.purchaseRequests || []).find(r => r.id === id);
+  const pr = (db.purchaseRequests || []).find(r => r.id == id);
   if (!pr) return;
   const actor = currentUser?.displayName || currentUser?.username || 'admin';
   const { error } = await supa.from('purchase_requests').update({
@@ -866,28 +866,10 @@ function updatePRRequesterList() {
 }
 
 
-function updatePRRequesterList() {
-  const dl = document.getElementById('pr-requester-list');
-  if (!dl) return;
-  const staff = (db.staff || []).filter(s => s.status === 'active' || !s.status);
-  dl.innerHTML = staff.map(s => `<option value="${s.name}">`).join('');
-}
 
 
-function updatePRRequesterList() {
-  const dl = document.getElementById('pr-requester-list');
-  if (!dl) return;
-  const staff = (db.staff || []).filter(s => s.status === 'active' || !s.status);
-  dl.innerHTML = staff.map(s => `<option value="${s.name}">`).join('');
-}
 
 
-function updatePRRequesterList() {
-  const dl = document.getElementById('pr-requester-list');
-  if (!dl) return;
-  const staff = (db.staff || []).filter(s => s.status === 'active' || !s.status);
-  dl.innerHTML = staff.map(s => `<option value="${s.name}">`).join('');
-}
 
 function viewSupInv(id) {
   const r = db.supplierInvoices.find(x => x.id == id); if (!r) return;
