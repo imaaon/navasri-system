@@ -254,6 +254,7 @@ async function submitReq() {
       p_note:         note || '',
       p_lines:        lines,
       p_created_by:   currentUser?.displayName || currentUser?.username || '',
+      p_date:         date || null,
     });
 
     if (rpcErr) { toast('บันทึกไม่สำเร็จ: ' + rpcErr.message, 'error'); return; }
