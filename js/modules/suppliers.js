@@ -843,6 +843,8 @@ function calcSupInvTotal() {
   const vat = parseFloat(document.getElementById('supinv-vat').value) || 0;
   const vatAmt = sub * vat / 100;
   document.getElementById('supinv-total').value = (sub + vatAmt).toFixed(2);
+  // ── Issue 5 Fix (2 พ.ค. 2569): chain calcSupInvNet ให้ยอดสุทธิอัปเดตอัตโนมัติ ──
+  if (typeof calcSupInvNet === 'function') calcSupInvNet();
 }
 
 function calcSupInvNet() {
@@ -863,16 +865,6 @@ function updatePRRequesterList() {
   dl.innerHTML = staff.map(s => `<option value="${s.name}">`).join('');
 }
 
-function calcSupInvNet() {
-  const sub = parseFloat(document.getElementById('supinv-subtotal')?.value) || 0;
-  const vat = parseFloat(document.getElementById('supinv-vat')?.value) || 0;
-  const wht = parseFloat(document.getElementById('supinv-wht-rate')?.value) || 0;
-  const total = sub * (1 + vat/100);
-  const whtAmt = sub * wht / 100;
-  const net = total - whtAmt;
-  const el = document.getElementById('supinv-net-payable');
-  if (el) el.value = net.toFixed(2);
-}
 
 function updatePRRequesterList() {
   const dl = document.getElementById('pr-requester-list');
@@ -881,16 +873,6 @@ function updatePRRequesterList() {
   dl.innerHTML = staff.map(s => `<option value="${s.name}">`).join('');
 }
 
-function calcSupInvNet() {
-  const sub = parseFloat(document.getElementById('supinv-subtotal')?.value) || 0;
-  const vat = parseFloat(document.getElementById('supinv-vat')?.value) || 0;
-  const wht = parseFloat(document.getElementById('supinv-wht-rate')?.value) || 0;
-  const total = sub * (1 + vat/100);
-  const whtAmt = sub * wht / 100;
-  const net = total - whtAmt;
-  const el = document.getElementById('supinv-net-payable');
-  if (el) el.value = net.toFixed(2);
-}
 
 function updatePRRequesterList() {
   const dl = document.getElementById('pr-requester-list');
@@ -899,16 +881,6 @@ function updatePRRequesterList() {
   dl.innerHTML = staff.map(s => `<option value="${s.name}">`).join('');
 }
 
-function calcSupInvNet() {
-  const sub = parseFloat(document.getElementById('supinv-subtotal')?.value) || 0;
-  const vat = parseFloat(document.getElementById('supinv-vat')?.value) || 0;
-  const wht = parseFloat(document.getElementById('supinv-wht-rate')?.value) || 0;
-  const total = sub * (1 + vat/100);
-  const whtAmt = sub * wht / 100;
-  const net = total - whtAmt;
-  const el = document.getElementById('supinv-net-payable');
-  if (el) el.value = net.toFixed(2);
-}
 
 function updatePRRequesterList() {
   const dl = document.getElementById('pr-requester-list');
