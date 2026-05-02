@@ -960,6 +960,14 @@ async function saveSupplierInvoice(andConfirm = false) {
   if (!invNo) { toast('กรุณาระบุเลขที่ใบแจ้งหนี้', 'warning'); return; }
   if (!supplierId && !supplierNameManual) { toast('กรุณาเลือกหรือระบุชื่อผู้จำหน่าย', 'warning'); return; }
 
+  // ── Issue 5 Fix: Pre-check ห้ามบันทึก invoice ถ้าไม่มี line item ──
+  const _preLinesContainer = document.getElementById('supinv-lines-container');
+  const _preRows = _preLinesContainer ? _preLinesContainer.querySelectorAll('.supinv-line-row') : [];
+  if (!_preRows.length) {
+    toast('⚠️ กรุณาเพิ่มรายการสินค้าอย่างน้อย 1 รายการก่อนบันทึก', 'warning');
+    return;
+  }
+
   const supplier   = db.suppliers.find(s => s.id == supplierId);
   const subtotal   = parseFloat(document.getElementById('supinv-subtotal').value) || 0;
   const vatRate    = parseFloat(document.getElementById('supinv-vat').value) || 0;
@@ -1012,10 +1020,21 @@ async function saveSupplierInvoice(andConfirm = false) {
   }
 
   // บันทึก invoice lines (ถ้ามี) และ stock movements (ถ้า confirm)
+  let linesResult = { ok: true };
   if (invoiceId) {
-    await saveSupInvLines(invoiceId, andConfirm);
-    // ถ้ามี PO ให้ link ด้วย
-    if (prId && !editId) {
+    linesResult = await saveSupInvLines(invoiceId, andConfirm) || { ok: true };
+    // ── Issue 5 Fix: ถ้า insert lines ไม่สำเร็จและเป็นการสร้างใหม่ → rollback header (ลบทิ้ง) ──
+    if (linesResult && linesResult.ok === false && !editId) {
+      await supa.from('supplier_invoices').delete().eq('id', invoiceId);
+      // เอาออกจาก local db ด้วย
+      const idx = (db.supplierInvoices || []).findIndex(x => x.id == invoiceId);
+      if (idx >= 0) db.supplierInvoices.splice(idx, 1);
+      // toast error ถูกแสดงโดย saveSupInvLines แล้ว — ไม่ต้อง toast success
+      renderSupplierInvoices();
+      return;
+    }
+    // ถ้ามี PO ให้ link ด้วย (เฉพาะกรณี lines insert สำเร็จ)
+    if (linesResult.ok !== false && prId && !editId) {
   const { error: silErr } = await supa.from('supplier_invoice_links').upsert(
     { invoice_id: invoiceId, purchase_request_id: prId, linked_by: currentUser?.username || '' },
     { onConflict: 'invoice_id,purchase_request_id', ignoreDuplicates: true }
@@ -1030,25 +1049,43 @@ async function saveSupplierInvoice(andConfirm = false) {
 
 async function saveSupInvLines(invoiceId, updateStock) {
   const container = document.getElementById('supinv-lines-container');
-  if (!container) return;
+  if (!container) return { ok: false, reason: 'no-container' };
   const rows = container.querySelectorAll('.supinv-line-row');
-  if (!rows.length) return;
+  if (!rows.length) return { ok: false, reason: 'no-rows' };
 
   // ลบ lines เดิมของ invoice นี้ก่อน (ถ้ามี)
   const { error: delLinesErr } = await supa.from('supplier_invoice_lines').delete().eq('invoice_id', invoiceId);
-  if (delLinesErr) { toast('❌ ลบรายการเดิมไม่สำเร็จ: ' + delLinesErr.message, 'error'); return; }
+  if (delLinesErr) { toast('❌ ลบรายการเดิมไม่สำเร็จ: ' + delLinesErr.message, 'error'); return { ok: false, reason: 'delete-failed' }; }
 
   const linesToInsert = [];
-  rows.forEach(row => {
+  const skippedRows = [];
+  rows.forEach((row, idx) => {
     const itemId    = row.getAttribute('data-item-id') || null;
-    const itemName  = row.querySelector('.siline-name')?.value.trim() || '';
+    // ── BUG FIX (Issue 5, 2 พ.ค. 2569): ดึงชื่อสินค้าจาก dropdown หรือ manual input ──
+    // เดิม: ดึงจาก .siline-name อย่างเดียว → ถ้าเลือกจาก dropdown (ไม่ใช่ manual) → itemName='' → skip line
+    // ใหม่: priority 1) manual input ถ้ามี value, 2) dropdown selected option text, 3) lookup db.items
+    let itemName = row.querySelector('.siline-name')?.value.trim() || '';
+    if (!itemName) {
+      const sel = row.querySelector('.siline-item');
+      if (sel && sel.value && sel.value !== '__manual__') {
+        const selectedOpt = sel.options[sel.selectedIndex];
+        itemName = selectedOpt ? selectedOpt.textContent.trim() : '';
+      }
+      if (!itemName && itemId) {
+        const it = (db.items || []).find(x => x.id === itemId);
+        if (it) itemName = it.name || '';
+      }
+    }
     const qty       = parseFloat(row.querySelector('.siline-qty')?.value) || 0;
     const unit      = row.querySelector('.siline-unit')?.value.trim() || '';
     const unitPrice = parseFloat(row.querySelector('.siline-price')?.value) || 0;
     const lineType  = row.querySelector('.siline-type')?.value || 'product';
     const lotNumber = row.querySelector('.siline-lot')?.value.trim() || null;
     const expiryDate = row.querySelector('.siline-expiry')?.value || null;
-    if (!itemName || qty <= 0) return;
+    if (!itemName || qty <= 0) {
+      skippedRows.push({ rowNum: idx + 1, hasName: !!itemName, qty });
+      return;
+    }
     linesToInsert.push({
       invoice_id: invoiceId,
       item_id:    itemId || null,
@@ -1062,9 +1099,16 @@ async function saveSupInvLines(invoiceId, updateStock) {
     });
   });
 
-  if (!linesToInsert.length) return;
+  // Validation: ถ้ามี rows แต่ insert ไม่ได้สักรายการ → แจ้ง error (ห้าม silent fail)
+  if (!linesToInsert.length) {
+    const detail = skippedRows.length
+      ? ` (ข้ามไป ${skippedRows.length} แถว — กรุณาตรวจสอบชื่อสินค้าและจำนวน)`
+      : '';
+    toast('❌ บันทึกรายการสินค้าไม่ได้: ไม่มีรายการที่ผ่านการตรวจสอบ' + detail, 'error');
+    return { ok: false, reason: 'no-valid-lines', skipped: skippedRows };
+  }
   const { data: insertedLines, error } = await supa.from('supplier_invoice_lines').insert(linesToInsert).select();
-  if (error) { toast('เกิดข้อผิดพลาดบันทึกรายการ: ' + error.message, 'error'); return; }
+  if (error) { toast('เกิดข้อผิดพลาดบันทึกรายการ: ' + error.message, 'error'); return { ok: false, reason: 'insert-failed', error: error.message }; }
 
   // ถ้า updateStock ให้สร้าง stock_movements และ item_lots
   if (updateStock && insertedLines) {
