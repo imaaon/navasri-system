@@ -903,14 +903,59 @@ function _renderExcretionTab(patId) {
 
   var canEdit = (typeof canEditExcretion === 'function') ? canEditExcretion() : false;
 
-  // Header
+  // ── Issue 1 Fix (2 พ.ค. 2569): เก็บ date range filter ที่ระดับ tab ──
+  // default = today (backward compatible — behavior เดิมเมื่อยังไม่แตะ filter)
+  var todayStr = new Date().toISOString().slice(0, 10);
+  if (!el.dataset.dateFrom) el.dataset.dateFrom = todayStr;
+  if (!el.dataset.dateTo)   el.dataset.dateTo   = todayStr;
+
+  // Header + date range picker
   var hdr = document.createElement('div');
   hdr.className = 'section-header';
-  hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px';
+  hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px';
   var title = document.createElement('h4');
   title.style.margin = '0';
   title.textContent = String.fromCodePoint(0x1F6BD) + ' ' + 'ขับถ่าย / น้ำเข้าออก';
   hdr.appendChild(title);
+
+  // Date range filter
+  var filterWrap = document.createElement('div');
+  filterWrap.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:13px';
+  var lblFrom = document.createElement('span'); lblFrom.textContent = 'จาก'; lblFrom.style.cssText = 'color:#666';
+  var inpFrom = document.createElement('input');
+  inpFrom.type = 'date'; inpFrom.value = el.dataset.dateFrom;
+  inpFrom.className = 'form-control form-control-sm';
+  inpFrom.style.cssText = 'width:140px';
+  var lblTo = document.createElement('span'); lblTo.textContent = 'ถึง'; lblTo.style.cssText = 'color:#666';
+  var inpTo = document.createElement('input');
+  inpTo.type = 'date'; inpTo.value = el.dataset.dateTo;
+  inpTo.className = 'form-control form-control-sm';
+  inpTo.style.cssText = 'width:140px';
+  var btnToday = document.createElement('button');
+  btnToday.className = 'btn btn-ghost btn-sm';
+  btnToday.textContent = 'วันนี้';
+  btnToday.style.cssText = 'font-size:12px';
+  btnToday.addEventListener('click', function() {
+    inpFrom.value = todayStr; inpTo.value = todayStr;
+    el.dataset.dateFrom = todayStr; el.dataset.dateTo = todayStr;
+    _loadExcretionData(patId, el, canEdit);
+  });
+  inpFrom.addEventListener('change', function() {
+    el.dataset.dateFrom = inpFrom.value;
+    if (inpFrom.value > inpTo.value) { inpTo.value = inpFrom.value; el.dataset.dateTo = inpFrom.value; }
+    _loadExcretionData(patId, el, canEdit);
+  });
+  inpTo.addEventListener('change', function() {
+    el.dataset.dateTo = inpTo.value;
+    if (inpTo.value < inpFrom.value) { inpFrom.value = inpTo.value; el.dataset.dateFrom = inpTo.value; }
+    _loadExcretionData(patId, el, canEdit);
+  });
+  filterWrap.appendChild(lblFrom);
+  filterWrap.appendChild(inpFrom);
+  filterWrap.appendChild(lblTo);
+  filterWrap.appendChild(inpTo);
+  filterWrap.appendChild(btnToday);
+  hdr.appendChild(filterWrap);
   el.appendChild(hdr);
 
   // Load data and render sections
@@ -918,21 +963,36 @@ function _renderExcretionTab(patId) {
 }
 
 function _loadExcretionData(patId, el, canEdit) {
-  var today = new Date().toISOString().slice(0, 10);
+  // ── Issue 1 Fix: ใช้ date range จาก dataset แทน hardcode today ──
+  var todayStr = new Date().toISOString().slice(0, 10);
+  var dateFrom = (el && el.dataset && el.dataset.dateFrom) ? el.dataset.dateFrom : todayStr;
+  var dateTo   = (el && el.dataset && el.dataset.dateTo)   ? el.dataset.dateTo   : todayStr;
+  var fromTs = dateFrom + 'T00:00:00';
+  var toTs   = dateTo   + 'T23:59:59';
   Promise.all([
-    supa.from('patient_excretions').select('*').eq('patient_id', patId).gte('recorded_at', today + 'T00:00:00').order('recorded_at', {ascending: true}),
-    supa.from('patient_fluid_records').select('*').eq('patient_id', patId).gte('recorded_at', today + 'T00:00:00').order('recorded_at', {ascending: true})
+    supa.from('patient_excretions').select('*').eq('patient_id', patId).gte('recorded_at', fromTs).lte('recorded_at', toTs).order('recorded_at', {ascending: true}),
+    supa.from('patient_fluid_records').select('*').eq('patient_id', patId).gte('recorded_at', fromTs).lte('recorded_at', toTs).order('recorded_at', {ascending: true})
   ]).then(function(results) {
     var excretions = (results[0].data || []);
     var fluids = (results[1].data || []);
-    _renderExcretionSections(el, patId, excretions, fluids, canEdit, today);
+    _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFrom, dateTo);
   }).catch(function(e) {
     el.innerHTML = '<p style="color:red">เกิดข้อผิด: ' + e.message + '</p>';
   });
 }
 
-function _renderExcretionSections(el, patId, excretions, fluids, canEdit, today) {
-  el.innerHTML = '';
+function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFrom, dateTo) {
+  // ── Issue 1 Fix: ลบเฉพาะ sections เก่า (ไม่ลบ header + date filter ที่เพิ่งสร้าง) ──
+  var existing = el.querySelector('[data-excretion-sections]');
+  if (existing) existing.remove();
+  var sectionsWrap = document.createElement('div');
+  sectionsWrap.setAttribute('data-excretion-sections', '1');
+
+  // backward compat: ถ้าโค้ดเก่าส่ง today เดียว → ใช้เป็นทั้ง from+to
+  if (dateTo === undefined) dateTo = dateFrom;
+  // ค่า default ตอนเปิด modal: ใช้ dateFrom (ถ้า user เลือกย้อนหลัง — บันทึกใหม่ไปวันแรกของ range)
+  var modalDefaultDate = dateFrom;
+  var rangeLabel = (dateFrom === dateTo) ? dateFrom : (dateFrom + ' ถึง ' + dateTo);
 
   // ===== SECTION 1: EXCRETIONS =====
   var sec1 = document.createElement('div');
@@ -946,7 +1006,7 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, today)
     var btnAdd1 = document.createElement('button');
     btnAdd1.className = 'btn btn-sm btn-primary';
     btnAdd1.textContent = '+ เพิ่มรายการ';
-    btnAdd1.addEventListener('click', function() { _openExcretionModal(null, patId, today); });
+    btnAdd1.addEventListener('click', function() { _openExcretionModal(null, patId, modalDefaultDate); });
     s1hdr.appendChild(btnAdd1);
   }
   sec1.appendChild(s1hdr);
@@ -954,28 +1014,29 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, today)
   if (excretions.length === 0) {
     var nodata1 = document.createElement('p');
     nodata1.style.color = '#888';
-    nodata1.textContent = 'ยังไม่มีข้อมูลวันนี้';
+    nodata1.textContent = 'ไม่มีข้อมูลในช่วง ' + rangeLabel;
     sec1.appendChild(nodata1);
   } else {
     var tbl1 = document.createElement('table');
     tbl1.className = 'table table-sm table-bordered';
     tbl1.style.fontSize = '13px';
     var thead1 = document.createElement('thead');
-    thead1.innerHTML = '<tr><th>เวลา</th><th>เวร</th><th>ประเภท</th><th>จำนวนครั้ง</th><th>ปริมาณ(ml)</th><th>ลักษณะ</th><th>หมายเหตุ</th>' + (canEdit ? '<th></th>' : '') + '</tr>';
+    thead1.innerHTML = '<tr><th>วันที่</th><th>เวลา</th><th>เวร</th><th>ประเภท</th><th>จำนวนครั้ง</th><th>ปริมาณ(ml)</th><th>ลักษณะ</th><th>หมายเหตุ</th>' + (canEdit ? '<th></th>' : '') + '</tr>';
     tbl1.appendChild(thead1);
     var tbody1 = document.createElement('tbody');
     excretions.forEach(function(r) {
       var tr = document.createElement('tr');
+      var d = r.recorded_at ? r.recorded_at.slice(0,10) : '';
       var t = r.recorded_at ? r.recorded_at.slice(11,16) : '';
       var typeLabel = r.type === 'urine' ? 'ปัสสาวะ' : r.type === 'stool' ? 'อุจจาระ' : (r.type || '');
-      tr.innerHTML = '<td>' + t + '</td><td>' + (r.shift||'') + '</td><td>' + typeLabel + '</td><td>' + (r.count||'') + '</td><td>' + (r.volume_ml||'') + '</td><td>' + (r.characteristics||'') + '</td><td>' + (r.note||'') + '</td>';
+      tr.innerHTML = '<td>' + d + '</td><td>' + t + '</td><td>' + (r.shift||'') + '</td><td>' + typeLabel + '</td><td>' + (r.count||'') + '</td><td>' + (r.volume_ml||'') + '</td><td>' + (r.characteristics||'') + '</td><td>' + (r.note||'') + '</td>';
       if (canEdit) {
         var tdAct = document.createElement('td');
         var btnE = document.createElement('button');
         btnE.className = 'btn btn-xs btn-outline-secondary';
         btnE.textContent = '✒';
         btnE.style.marginRight = '4px';
-        btnE.addEventListener('click', (function(rec){ return function(){ _openExcretionModal(rec, patId, today); }; })(r));
+        btnE.addEventListener('click', (function(rec){ return function(){ _openExcretionModal(rec, patId, modalDefaultDate); }; })(r));
         var btnD = document.createElement('button');
         btnD.className = 'btn btn-xs btn-outline-danger';
         btnD.textContent = '✕';
@@ -988,7 +1049,7 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, today)
     tbl1.appendChild(tbody1);
     sec1.appendChild(tbl1);
   }
-  el.appendChild(sec1);
+  sectionsWrap.appendChild(sec1);
 
   // ===== SECTION 2: FLUID INTAKE =====
   var intakeFluids = fluids.filter(function(f){ return f.direction === 'intake'; });
@@ -1003,12 +1064,12 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, today)
     var btnAdd2 = document.createElement('button');
     btnAdd2.className = 'btn btn-sm btn-success';
     btnAdd2.textContent = '+ เพิ่มน้ำเข้า';
-    btnAdd2.addEventListener('click', function() { _openFluidModal(null, patId, 'intake', today); });
+    btnAdd2.addEventListener('click', function() { _openFluidModal(null, patId, 'intake', modalDefaultDate); });
     s2hdr.appendChild(btnAdd2);
   }
   sec2.appendChild(s2hdr);
-  _renderFluidTable(sec2, intakeFluids, canEdit, patId, 'intake', today);
-  el.appendChild(sec2);
+  _renderFluidTable(sec2, intakeFluids, canEdit, patId, 'intake', modalDefaultDate, rangeLabel);
+  sectionsWrap.appendChild(sec2);
 
   // ===== SECTION 2b: FLUID OUTPUT (other) =====
   var outputFluids = fluids.filter(function(f){ return f.direction === 'output'; });
@@ -1023,22 +1084,24 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, today)
     var btnAdd2b = document.createElement('button');
     btnAdd2b.className = 'btn btn-sm btn-danger';
     btnAdd2b.textContent = '+ เพิ่มน้ำออก';
-    btnAdd2b.addEventListener('click', function() { _openFluidModal(null, patId, 'output', today); });
+    btnAdd2b.addEventListener('click', function() { _openFluidModal(null, patId, 'output', modalDefaultDate); });
     s2bhdr.appendChild(btnAdd2b);
   }
   sec2b.appendChild(s2bhdr);
-  _renderFluidTable(sec2b, outputFluids, canEdit, patId, 'output', today);
-  el.appendChild(sec2b);
+  _renderFluidTable(sec2b, outputFluids, canEdit, patId, 'output', modalDefaultDate, rangeLabel);
+  sectionsWrap.appendChild(sec2b);
 
   // ===== SECTION 3: BALANCE SUMMARY =====
-  _renderBalanceSummary(el, excretions, fluids);
+  _renderBalanceSummary(sectionsWrap, excretions, fluids, rangeLabel);
+
+  el.appendChild(sectionsWrap);
 }
 
-function _renderFluidTable(container, rows, canEdit, patId, direction, today) {
+function _renderFluidTable(container, rows, canEdit, patId, direction, modalDefaultDate, rangeLabel) {
   if (rows.length === 0) {
     var p = document.createElement('p');
     p.style.color = '#888';
-    p.textContent = 'ยังไม่มีข้อมูลวันนี้';
+    p.textContent = 'ไม่มีข้อมูลในช่วง ' + (rangeLabel || 'วันนี้');
     container.appendChild(p);
     return;
   }
@@ -1046,20 +1109,21 @@ function _renderFluidTable(container, rows, canEdit, patId, direction, today) {
   tbl.className = 'table table-sm table-bordered';
   tbl.style.fontSize = '13px';
   var th = document.createElement('thead');
-  th.innerHTML = '<tr><th>เวลา</th><th>เวร</th><th>ประเภทน้ำ</th><th>ปริมาณ(ml)</th><th>หมายเหตุ</th>' + (canEdit ? '<th></th>' : '') + '</tr>';
+  th.innerHTML = '<tr><th>วันที่</th><th>เวลา</th><th>เวร</th><th>ประเภทน้ำ</th><th>ปริมาณ(ml)</th><th>หมายเหตุ</th>' + (canEdit ? '<th></th>' : '') + '</tr>';
   tbl.appendChild(th);
   var tb = document.createElement('tbody');
   rows.forEach(function(r) {
     var tr = document.createElement('tr');
+    var d = r.recorded_at ? r.recorded_at.slice(0,10) : '';
     var t = r.recorded_at ? r.recorded_at.slice(11,16) : '';
-    tr.innerHTML = '<td>' + t + '</td><td>' + (r.shift||'') + '</td><td>' + (r.fluid_type||'') + '</td><td>' + (r.volume_ml||'') + '</td><td>' + (r.note||'') + '</td>';
+    tr.innerHTML = '<td>' + d + '</td><td>' + t + '</td><td>' + (r.shift||'') + '</td><td>' + (r.fluid_type||'') + '</td><td>' + (r.volume_ml||'') + '</td><td>' + (r.note||'') + '</td>';
     if (canEdit) {
       var tdA = document.createElement('td');
       var bE = document.createElement('button');
       bE.className = 'btn btn-xs btn-outline-secondary';
       bE.textContent = '✒';
       bE.style.marginRight = '4px';
-      bE.addEventListener('click', (function(rec){ return function(){ _openFluidModal(rec, patId, direction, today); }; })(r));
+      bE.addEventListener('click', (function(rec){ return function(){ _openFluidModal(rec, patId, direction, modalDefaultDate); }; })(r));
       var bD = document.createElement('button');
       bD.className = 'btn btn-xs btn-outline-danger';
       bD.textContent = '✕';
@@ -1073,7 +1137,7 @@ function _renderFluidTable(container, rows, canEdit, patId, direction, today) {
   container.appendChild(tbl);
 }
 
-function _renderBalanceSummary(container, excretions, fluids) {
+function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
   var shifts = [
     {key:'เช้า', start:6, end:14},
     {key:'บ่าย', start:14, end:22},
@@ -1082,7 +1146,8 @@ function _renderBalanceSummary(container, excretions, fluids) {
   var sec3 = document.createElement('div');
   sec3.style.cssText = 'background:#fffbe6;border-radius:8px;padding:16px;margin-bottom:16px';
   var title3 = document.createElement('strong');
-  title3.textContent = String.fromCodePoint(0x1F4CA) + ' สรุป Balance วันนี้';
+  // ── Issue 1 Fix: แสดง range ที่เลือก แทน "วันนี้" ──
+  title3.textContent = String.fromCodePoint(0x1F4CA) + ' สรุป Balance' + (rangeLabel ? ' (' + rangeLabel + ')' : '');
   sec3.appendChild(title3);
 
   var tbl = document.createElement('table');
@@ -1126,7 +1191,7 @@ function _renderBalanceSummary(container, excretions, fluids) {
   sec3.appendChild(tbl);
   var note3 = document.createElement('p');
   note3.style.cssText = 'font-size:11px;color:#888;margin:4px 0 0';
-  note3.textContent = 'หมายเหตุ: น้ำออก = ปัสสาวะ (ml) + น้ำออกอื่นๆ | เฉพาะข้อมูลวันนี้';
+  note3.textContent = 'หมายเหตุ: น้ำออก = ปัสสาวะ (ml) + น้ำออกอื่นๆ' + (rangeLabel ? ' | ช่วง ' + rangeLabel : ' | เฉพาะข้อมูลวันนี้');
   sec3.appendChild(note3);
   container.appendChild(sec3);
 }
@@ -1134,6 +1199,9 @@ function _renderBalanceSummary(container, excretions, fluids) {
 function _openExcretionModal(rec, patId, today) {
   var isEdit = !!rec;
   var title = isEdit ? 'แก้ไขปัสสาวะ/อุจจาระ' : 'บันทึกปัสสาวะ/อุจจาระ';
+  // ── Issue 1 Fix: เก็บค่าวันที่ default — ใช้จาก rec ถ้า edit, else ใช้ today (อาจเป็น dateFrom ของ filter) ──
+  var todayStr = new Date().toISOString().slice(0, 10);
+  var dateVal = (rec && rec.recorded_at) ? rec.recorded_at.slice(0,10) : (today || todayStr);
   var nowStr = (rec && rec.recorded_at) ? rec.recorded_at.slice(11,16) : new Date().toTimeString().slice(0,5);
   var shiftVal = (rec && rec.shift) ? rec.shift : '';
   var typeVal = (rec && rec.type) ? rec.type : 'urine';
@@ -1184,6 +1252,7 @@ function _openExcretionModal(rec, patId, today) {
     return sel;
   }
 
+  var inpDate = mkInput('date', dateVal);
   var inpTime = mkInput('time', nowStr);
   var selShift = mkSelect(shiftOpts, shiftVal);
   var selType = mkSelect(typeOpts, typeVal);
@@ -1201,6 +1270,7 @@ function _openExcretionModal(rec, patId, today) {
   selType.addEventListener('change', toggleFields);
   toggleFields();
 
+  modal.appendChild(mkRow('วันที่', inpDate));
   modal.appendChild(mkRow('เวลา', inpTime));
   modal.appendChild(mkRow('เวร', selShift));
   modal.appendChild(mkRow('ประเภท', selType));
@@ -1227,8 +1297,11 @@ function _openExcretionModal(rec, patId, today) {
   overlay.addEventListener('click', function(e) { if (e.target === overlay) document.body.removeChild(overlay); });
 
   btnSave.addEventListener('click', function() {
-    var timeVal = inpTime.value;
-    var _dObj1 = new Date(today + 'T' + timeVal + ':00');
+    var dateValSel = inpDate.value || dateVal;
+    var timeVal = inpTime.value || '00:00';
+    if (!dateValSel) { alert('กรุณาเลือกวันที่'); return; }
+    var _dObj1 = new Date(dateValSel + 'T' + timeVal + ':00');
+    if (isNaN(_dObj1.getTime())) { alert('วันที่/เวลาไม่ถูกต้อง'); return; }
     var dateTime = new Date(_dObj1.getTime() - _dObj1.getTimezoneOffset() * 60000).toISOString().slice(0, 19) + 'Z';
     var user = (window._currentUser && window._currentUser.username) ? window._currentUser.username : 'user';
     var payload = {
@@ -1267,6 +1340,9 @@ function _openFluidModal(rec, patId, direction, today) {
   var title = isEdit
     ? ('แก้ไขน้ำ' + (isIntake ? 'เข้า' : 'ออก'))
     : ('บันทึกน้ำ' + (isIntake ? 'เข้า' : 'ออก'));
+  // ── Issue 1 Fix: เก็บค่าวันที่ default — ใช้จาก rec ถ้า edit, else ใช้ today (อาจเป็น dateFrom ของ filter) ──
+  var todayStr = new Date().toISOString().slice(0, 10);
+  var dateVal = (rec && rec.recorded_at) ? rec.recorded_at.slice(0,10) : (today || todayStr);
   var nowStr = (rec && rec.recorded_at) ? rec.recorded_at.slice(11,16) : new Date().toTimeString().slice(0,5);
   var shiftVal = (rec && rec.shift) ? rec.shift : '';
   var typeVal = (rec && rec.fluid_type) ? rec.fluid_type : '';
@@ -1310,6 +1386,8 @@ function _openFluidModal(rec, patId, direction, today) {
     return sel;
   }
 
+  var inpDate = document.createElement('input');
+  inpDate.type = 'date'; inpDate.value = dateVal; inpDate.className = 'form-control form-control-sm';
   var inpTime = document.createElement('input');
   inpTime.type = 'time'; inpTime.value = nowStr; inpTime.className = 'form-control form-control-sm';
   var selShift = mkSelect2(shiftOpts, shiftVal);
@@ -1337,6 +1415,7 @@ function _openFluidModal(rec, patId, direction, today) {
   inpNote.type = 'text'; inpNote.value = noteVal; inpNote.placeholder = 'หมายเหตุ';
   inpNote.className = 'form-control form-control-sm';
 
+  modal.appendChild(mkRow2('วันที่', inpDate));
   modal.appendChild(mkRow2('เวลา', inpTime));
   modal.appendChild(mkRow2('เวร', selShift));
   modal.appendChild(mkRow2('ประเภทน้ำ (เลือกหรือพิมพ์เอง)', inpType));
@@ -1360,8 +1439,11 @@ function _openFluidModal(rec, patId, direction, today) {
   overlay.addEventListener('click', function(e) { if (e.target === overlay) document.body.removeChild(overlay); });
 
   btnSave.addEventListener('click', function() {
-    var timeVal = inpTime.value;
-    var _dObj2 = new Date(today + 'T' + timeVal + ':00');
+    var dateValSel = inpDate.value || dateVal;
+    var timeVal = inpTime.value || '00:00';
+    if (!dateValSel) { alert('กรุณาเลือกวันที่'); return; }
+    var _dObj2 = new Date(dateValSel + 'T' + timeVal + ':00');
+    if (isNaN(_dObj2.getTime())) { alert('วันที่/เวลาไม่ถูกต้อง'); return; }
     var dateTime = new Date(_dObj2.getTime() - _dObj2.getTimezoneOffset() * 60000).toISOString().slice(0, 19) + 'Z';
     var user = (window._currentUser && window._currentUser.username) ? window._currentUser.username : 'user';
     var payload = {
