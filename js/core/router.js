@@ -35,6 +35,21 @@ function showPage(page) {
 }
 
 function renderPage(page) {
+  // ✅ หน้าที่ใช้ข้อมูลจาก loadDBSecondary() ต้องรอให้ secondary โหลดเสร็จก่อน render
+  // ป้องกัน race: user สร้าง record → secondary fetch overwrite → record ใหม่หาย
+  // หรือ open menu ก่อน secondary โหลดเสร็จ → ตารางว่าง
+  const SECONDARY_PAGES = new Set([
+    'billing','expenses','suppliers','supplierinvoices','purchaserequests',
+    'assets','healthreport','bi','deposits','incident','audit','report','history','stockreport'
+  ]);
+  if (SECONDARY_PAGES.has(page) && typeof ensureSecondaryDB === 'function') {
+    ensureSecondaryDB().then(() => _renderPageInner(page));
+    return;
+  }
+  _renderPageInner(page);
+}
+
+function _renderPageInner(page) {
   if (page === 'dashboard') renderDashboard();
   else if (page === 'stock') renderStock();
   else if (page === 'history') { renderHistory(); updateApprovalBadge(); }
