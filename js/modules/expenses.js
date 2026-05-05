@@ -168,7 +168,9 @@ async function saveExpense() {
   toast(id?'แก้ไขค่าใช้จ่ายแล้ว':'บันทึกค่าใช้จ่ายแล้ว','success');
   logAudit('expenses', id?'edit':'add', id||'new', {job,type:expType,net});
   closeModal('modal-addExpense');
-  renderExpenses();
+  // Defensive refresh: เรียก render ของหน้าที่ mounted อยู่เท่านั้น
+  if (document.getElementById('expTable') && typeof renderExpenses === 'function') renderExpenses();
+  if (document.getElementById('billing-table-body') && typeof renderBilling === 'function') renderBilling();
 }
 
 function editExpense(id) {
@@ -206,7 +208,9 @@ async function deleteExpense(id) {
   if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
   db.expenses = (db.expenses||[]).filter(x=>x.id!==id);
   toast('ลบแล้ว','success');
-  renderExpenses();
+  // Defensive refresh: เรียก render ของหน้าที่ mounted อยู่เท่านั้น
+  if (document.getElementById('expTable') && typeof renderExpenses === 'function') renderExpenses();
+  if (document.getElementById('billing-table-body') && typeof renderBilling === 'function') renderBilling();
 }
 
 function mapExpense(r) {

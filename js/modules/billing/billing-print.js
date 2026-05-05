@@ -147,98 +147,14 @@ function recalcExpense() {
   if(document.getElementById('expv-net'))       document.getElementById('expv-net').textContent       = formatThb(net);
 }
 
-async function saveExpense() {
-  const date = document.getElementById('exp-date').value;
-  if(!date) { toast('กรุณาระบุวันที่','warning'); return; }
-  // Check duplicate doc number
-  const editId_ = document.getElementById('exp-edit-id').value;
-  const docNo_  = document.getElementById('exp-docno').value.trim();
-  if (docNo_) {
-    const dup = (db.expenses||[]).find(e => e.docNo === docNo_ && e.id !== editId_);
-    if (dup) {
-      const proceed = confirm(`⚠️ เลขที่เอกสาร "${docNo_}" ซ้ำกับรายการที่มีอยู่แล้ว!\n\nรายการเดิม: ${dup.vendorName || dup.job || '-'} (${dup.date || '-'})\n\nต้องการบันทึกทับหรือไม่?`);
-      if (!proceed) return;
-    }
-  }
-  let items=[]; try{items=JSON.parse(document.getElementById('exp-items-data').value||'[]');}catch(e){}
-  const subtotal    = items.reduce((s,it)=>s+(it.qty||1)*(it.price||0),0);
-  const vatIncluded = subtotal*(7/107);
-  const whtRate     = parseFloat(document.getElementById('exp-wht-rate').value||0);
-  const whtAmt      = subtotal*(whtRate/100);
-  const net         = subtotal-whtAmt;
-  const payMethod   = document.querySelector('input[name="exp-payment"]:checked')?.value||'cash';
-  const editId      = document.getElementById('exp-edit-id').value;
-
-  const exp = {
-    id: editId||('exp_'+Date.now()),
-    docNo:       document.getElementById('exp-docno').value||generateDocNo('expense'),
-    date,
-    preparer:    document.getElementById('exp-preparer').value,
-    job:         document.getElementById('exp-job').value,
-    vendorName:  document.getElementById('exp-vendor-name').value,
-    vendorAddr:  document.getElementById('exp-vendor-addr').value,
-    vendorTaxId: document.getElementById('exp-vendor-taxid').value,
-    items, subtotal: subtotal-(subtotal*(7/107)), vatAmt: vatIncluded, totalVat: subtotal,
-    whtRate, whtAmt, net,
-    payMethod, bank: document.getElementById('exp-bank').value,
-    bankNo: document.getElementById('exp-bank-no').value,
-    payDate: document.getElementById('exp-pay-date').value,
-    note: document.getElementById('exp-note').value,
-    updatedAt: new Date().toISOString(),
-    createdAt: editId ? undefined : new Date().toISOString(),
-  };
-
-  if(!db.expenses) db.expenses=[];
-  const expRow = {
-    id: exp.id, doc_no: exp.docNo||null,
-    date: exp.date||null, preparer: exp.preparer||null, job: exp.job||null,
-    vendor_name: exp.vendorName||null, vendor_addr: exp.vendorAddr||null,
-    vendor_tax_id: exp.vendorTaxId||null,
-    items: exp.items||[],
-    subtotal: exp.subtotal||0, vat_amt: exp.vatAmt||0, total_vat: exp.totalVat||0,
-    wht_rate: exp.whtRate||0, wht_amt: exp.whtAmt||0, net: exp.net||0,
-    pay_method: exp.payMethod||'cash', bank: exp.bank||null, bank_no: exp.bankNo||null,
-    pay_date: exp.payDate||null, note: exp.note||null,
-    updated_at: new Date().toISOString(),
-  };
-  if (!editId) expRow.created_at = new Date().toISOString();
-  const { error: expErr } = await supa.from('expenses').upsert(expRow);
-  if (expErr) { toast('บันทึกไม่สำเร็จ: '+expErr.message,'error'); return; }
-  if(editId){ const idx=db.expenses.findIndex(e=>e.id===editId); if(idx>=0) db.expenses[idx]={...db.expenses[idx],...exp}; else db.expenses.unshift(exp); }
-  else db.expenses.unshift(exp); toast('บันทึกค่าใช้จ่ายแล้ว','success');
-  closeModal('modal-expense'); renderBilling();
-}
-
-function editExpense(id) {
-  const exp=(db.expenses||[]).find(e=>e.id===id); if(!exp) return;
-  document.getElementById('exp-edit-id').value      = exp.id;
-  document.getElementById('exp-docno').value        = exp.docNo||'';
-  document.getElementById('exp-date').value         = exp.date||'';
-  document.getElementById('exp-preparer').value     = exp.preparer||'';
-  document.getElementById('exp-job').value          = exp.job||'';
-  document.getElementById('exp-vendor-name').value  = exp.vendorName||'';
-  document.getElementById('exp-vendor-addr').value  = exp.vendorAddr||'';
-  document.getElementById('exp-vendor-taxid').value = exp.vendorTaxId||'';
-  document.getElementById('exp-bank').value         = exp.bank||'';
-  document.getElementById('exp-bank-no').value      = exp.bankNo||'';
-  document.getElementById('exp-pay-date').value     = exp.payDate||'';
-  document.getElementById('exp-note').value         = exp.note||'';
-  document.getElementById('exp-wht-rate').value     = exp.whtRate||0;
-  document.getElementById('exp-items-data').value   = JSON.stringify(exp.items||[]);
-  const payEl = document.getElementById(`exp-pay-${exp.payMethod||'cash'}`);
-  if(payEl) payEl.checked=true;
-  renderExpenseItems(); recalcExpense();
-  document.getElementById('modal-expense-title').textContent='แก้ไขค่าใช้จ่าย';
-  openModal('modal-expense');
-}
-
-async function deleteExpense(id) {
-  if(!confirm('ลบรายการค่าใช้จ่ายนี้หรือไม่?')) return;
-  const { error } = await supa.from('expenses').delete().eq('id', id);
-  if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
-  db.expenses=(db.expenses||[]).filter(e=>e.id!==id);
-  toast('ลบแล้ว','success'); renderBilling();
-}
+// ─────────────────────────────────────────────────────
+// NOTE: saveExpense() / editExpense() / deleteExpense()
+// ถูกย้ายไปใช้ตัวที่อยู่ใน js/modules/expenses.js (modal-addExpense)
+// เพื่อแก้ bug "ลบรายการค่าใช้จ่ายแล้วตารางหน้า billing ไม่ refresh"
+// (deleteExpense เดิมเรียก renderBilling() แต่ถูก override โดย expenses.js
+// ที่เรียก renderExpenses() เท่านั้น → ตาราง billing-table-body ไม่อัปเดต)
+// expenses.js เวอร์ชัน v=7+ ทำ defensive refresh ทั้ง 2 ตารางแล้ว
+// ─────────────────────────────────────────────────────
 
 // ─────────────────────────────────────────────────────
 // ── PREVIEW / EXPORT FUNCTIONS ───────────────────────
