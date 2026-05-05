@@ -120,7 +120,19 @@ async function saveMedLog() {
   closeModal('modal-addMedLog');
   await loadPatientClinical(patId);
   const tabEl = document.getElementById(`patprofile-tab-${type}`);
-  if (tabEl) tabEl.innerHTML = renderMedLogTab(patId, type);
+  if (tabEl) {
+    tabEl.innerHTML = renderMedLogTab(patId, type);
+    // คืน div files-section + เรียก render ใหม่ (เฉพาะ tab medical)
+    if (type === 'medical') {
+      const filesDiv = document.createElement('div');
+      filesDiv.id = 'med-files-section-' + patId;
+      filesDiv.style.marginTop = '12px';
+      tabEl.appendChild(filesDiv);
+      if (typeof _renderMedicalFilesSection === 'function') {
+        _renderMedicalFilesSection(patId);
+      }
+    }
+  }
 }
 
 async function deleteMedLog(patId, type, supaId) {
@@ -138,7 +150,19 @@ async function deleteMedLog(patId, type, supaId) {
   if (realIdx >= 0) p[key].splice(realIdx, 1);
   toast('ลบรายการเรียบร้อย', 'success');
   const tabEl = document.getElementById(`patprofile-tab-${type}`);
-  if (tabEl) tabEl.innerHTML = renderMedLogTab(patId, type);
+  if (tabEl) {
+    tabEl.innerHTML = renderMedLogTab(patId, type);
+    // คืน div files-section + เรียก render ใหม่ (เฉพาะ tab medical)
+    if (type === 'medical') {
+      const filesDiv = document.createElement('div');
+      filesDiv.id = 'med-files-section-' + patId;
+      filesDiv.style.marginTop = '12px';
+      tabEl.appendChild(filesDiv);
+      if (typeof _renderMedicalFilesSection === 'function') {
+        _renderMedicalFilesSection(patId);
+      }
+    }
+  }
 }
 
 // ===== HEALTH REPORT =====

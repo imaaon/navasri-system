@@ -867,7 +867,7 @@ async function deleteLabResult(labId, patientId) {
 // ─── Patient Profile Tab Bar (role-aware) ────────────────────
 function renderPatientTabBar(p, totalReqs) {
   const allTabs = [
-    { k:'medical',    perm:'nursing',       label:'🏥 โรคประจำตัว/ประวัติการรักษา' },
+    { k:'medical',    perm:'nursing',       label:'📋 ประวัติการรักษา' },
     { k:'meds',       perm:'mar',           label:'💊 ยาประจำ' },
     { k:'allergy',    perm:'allergy',       label:'🚨 แพ้ยา/อาหาร' + (p.allergies?.length ? '<span style="background:#c0392b;color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">' + p.allergies.length + '</span>' : '') },
     { k:'nursing',    perm:'nursing',       label:'📋 บันทึกพยาบาล' },
