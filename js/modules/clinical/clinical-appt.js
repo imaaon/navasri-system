@@ -96,11 +96,16 @@ orders:   (document.getElementById('appt-orders') || {}).value || null,
     if(error){toast('บันทึกไม่สำเร็จ: '+error.message,'error');return;}
     db.appointments.push(mapAppointment(ins));
   // Send LINE notification: 3 days before and 1 day before
-  const daysLeft = Math.ceil((new Date(apptDate)-new Date())/(86400000));
-  if (daysLeft === 3 || daysLeft === 1) {
-    const urgencyTxt = daysLeft === 1 ? '🔴 ⚠️ ด่วนมาก!' : '🟡 ใกล้แล้ว';
-    const timeTxt = daysLeft === 1 ? 'พรุ่งนี้!' : 'อีก 3 วัน';
-    sendLineNotify('appt_reminder', '🚐 นัดหมาย: '+timeTxt+' '+urgencyTxt+'\n━━━━━━━━━━━━━━\n👤 ผู้รับบริการ: '+_apptPatName+'\n🏥 '+hospital+'\n📅 '+apptDate+(apptTime?' '+apptTime:'')+'\n🎯 วัตถุประสงค์: '+(row.purpose||'-'), {patientName:_apptPatName});
+  // Wrap with try/catch — กัน notify error ทำให้ flow หลัก kill (UI ไม่ refresh)
+  try {
+    const daysLeft = Math.ceil((new Date(apptDate)-new Date())/(86400000));
+    if (daysLeft === 3 || daysLeft === 1) {
+      const urgencyTxt = daysLeft === 1 ? '🔴 ⚠️ ด่วนมาก!' : '🟡 ใกล้แล้ว';
+      const timeTxt = daysLeft === 1 ? 'พรุ่งนี้!' : 'อีก 3 วัน';
+      sendLineNotify('appt_reminder', '🚐 นัดหมาย: '+timeTxt+' '+urgencyTxt+'\n━━━━━━━━━━━━━━\n👤 ผู้รับบริการ: '+_apptPatName+'\n🏥 '+hospital+'\n📅 '+apptDate+(row.appt_time?' '+row.appt_time:'')+'\n🎯 วัตถุประสงค์: '+(row.purpose||'-'), {patientName:_apptPatName});
+    }
+  } catch(e) {
+    console.error('[saveAppt] LINE notify failed:', e);
   }
     toast('เพิ่มนัดหมายเรียบร้อย','success');
   }
