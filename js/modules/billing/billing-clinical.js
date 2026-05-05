@@ -636,6 +636,7 @@ async function openDepositModal(id) {
 }
 
 async function saveDeposit() {
+  await ensureSecondaryDB();
   const patientId = document.getElementById("ta-dep-id").value;
   const amount = parseFloat(document.getElementById('deposit-amount').value)||0;
   if (!patientId||!amount) { toast('กรุณากรอกข้อมูลที่จำเป็น','error'); return; }
@@ -797,6 +798,7 @@ function openDepositModalFromProfile(depId, patId) {
 }
 
 async function deleteDepositFromProfile(depId, patId) {
+  await ensureSecondaryDB();
   if (!confirm('ลบรายการมัดจำนี้?')) return;
   const { error } = await supa.from('patient_deposits').delete().eq('id', depId);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
