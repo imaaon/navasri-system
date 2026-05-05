@@ -746,25 +746,42 @@ function renderLabTab(patientId) {
         var results = [];
         try { results = typeof r.results === 'string' ? JSON.parse(r.results) : (Array.isArray(r.results) ? r.results : []); } catch(e) {}
         var abn = results.filter(function(x) { return x.status === 'high' || x.status === 'low'; });
-        html += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">' +
-          '<div style="display:flex;justify-content:space-between;">' +
-          '<div><div style="font-weight:600;">📅 ' + (r.test_date||'-') + ' ' +
-          (r.hospital ? '<span style="font-size:12px;color:var(--text2);">' + r.hospital + '</span>' : '') + '</div>' +
-          (r.summary ? '<div style="font-size:12px;color:var(--text2);">' + r.summary + '</div>' : '') + '</div>' +
-          '<div><button class="btn btn-ghost btn-sm" onclick="openEditLabModal(\'' + r.id + '\',\'' + patientId + '\')">✏️</button>' +
-          '<button class="btn btn-ghost btn-sm" onclick="deleteLabResult(\'' + r.id + '\',\'' + patientId + '\')" style="color:#e74c3c;">🗑️</button></div></div>' +
-          (abn.length ? '<div style="margin-top:4px;">' + abn.map(function(x) {
+        // Option B: card layout — แสดงครบทุก field (date, hospital, doctor, summary, note)
+        html += '<div style="border:1.5px solid var(--border);border-radius:10px;margin:12px 0;background:white;overflow:hidden;">' +
+          // Header: date + actions
+          '<div style="background:#f0faf5;padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">' +
+          '<div style="font-weight:700;font-size:15px;color:#2d8f3f;">📅 ' + (r.test_date||'-') + '</div>' +
+          '<div>' +
+          '<button class="btn btn-ghost btn-sm" onclick="openEditLabModal(\'' + r.id + '\',\'' + patientId + '\')">✏️</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="deleteLabResult(\'' + r.id + '\',\'' + patientId + '\')" style="color:#e74c3c;">🗑️</button>' +
+          '</div></div>' +
+          // Body: grid 2 columns
+          '<div style="padding:14px 16px;">' +
+          '<div style="display:grid;grid-template-columns:130px 1fr;gap:8px 12px;font-size:13px;">' +
+          '<div style="color:#888;font-weight:600;">🏥 โรงพยาบาล</div>' +
+          '<div style="color:#222;">' + (r.hospital ? r.hospital : '<span style="color:#bbb;">-</span>') + '</div>' +
+          '<div style="color:#888;font-weight:600;">👨‍⚕️ แพทย์ผู้ตรวจ</div>' +
+          '<div style="color:#222;">' + (r.doctor ? r.doctor : '<span style="color:#bbb;">-</span>') + '</div>' +
+          '<div style="color:#888;font-weight:600;">📋 สรุปผล</div>' +
+          '<div style="color:#222;line-height:1.5;">' + (r.summary ? r.summary : '<span style="color:#bbb;">-</span>') + '</div>' +
+          '<div style="color:#888;font-weight:600;">📝 หมายเหตุ</div>' +
+          '<div style="color:#222;line-height:1.5;">' + (r.note ? '<div style="font-style:italic;background:#fffbea;padding:6px 10px;border-radius:6px;border-left:3px solid #f59e0b;">' + r.note + '</div>' : '<span style="color:#bbb;">-</span>') + '</div>' +
+          '</div>' +
+          // Abnormal badges
+          (abn.length ? '<div style="margin-top:10px;">' + abn.map(function(x) {
             return '<span style="font-size:11px;padding:2px 6px;border-radius:10px;background:' +
-              (x.status==='high'?'#fde8e8':'#fff3e0') + ';color:' + (x.status==='high'?'#c0392b':'#d35400') + '">' +
+              (x.status==='high'?'#fde8e8':'#fff3e0') + ';color:' + (x.status==='high'?'#c0392b':'#d35400') + ';margin-right:4px;">' +
               x.test_name + ': ' + x.value + '</span>';
           }).join(' ') + '</div>' : '') +
-          (results.length ? '<details style="margin-top:4px;"><summary style="font-size:12px;color:var(--text2);cursor:pointer;">ดูทั้งหมด (' + results.length + ')</summary>' +
-          '<div style="margin-top:4px;">' + results.map(function(x) {
+          // Detailed results (collapsible)
+          (results.length ? '<details style="margin-top:10px;"><summary style="font-size:12px;color:var(--text2);cursor:pointer;">ดูผลทั้งหมด (' + results.length + ' รายการ)</summary>' +
+          '<div style="margin-top:6px;">' + results.map(function(x) {
             var sc = x.status==='high'?'#e74c3c':x.status==='low'?'#e67e22':'#27ae60';
             return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 6px;background:var(--surface2);border-radius:4px;margin-bottom:2px;">' +
               '<span>' + x.test_name + '</span><span style="color:' + sc + '">' + x.value + ' ' + (x.unit||'') +
               (x.reference_range ? ' (' + x.reference_range + ')' : '') + '</span></div>';
-          }).join('') + '</div></details>' : '') + '</div>';
+          }).join('') + '</div></details>' : '') +
+          '</div></div>';
       });
       html += '</div></div>';
       el.innerHTML = html;
