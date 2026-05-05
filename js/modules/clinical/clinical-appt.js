@@ -64,6 +64,7 @@ function openApptModal(id, patientId, patientName) {
 }
 
 async function saveAppt() {
+  await ensureSecondaryDB();
   const apptDate = document.getElementById('appt-date').value;
   const hospital = document.getElementById('appt-hospital').value.trim();
   if (!apptDate || !hospital) { toast('กรุณาระบุวันที่และโรงพยาบาล','warning'); return; }
@@ -119,6 +120,7 @@ async function markApptDone(id) {
 }
 
 async function deleteAppt(id, patientId) {
+  await ensureSecondaryDB();
   if(!confirm('ลบนัดหมายนี้?')) return;
   const { error } = await supa.from('patient_appointments').delete().eq('id',id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }

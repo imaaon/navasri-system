@@ -28,6 +28,7 @@ function openInvoiceResetModal(id) {
 }
 
 async function saveInvoiceReset() {
+  await ensureSecondaryDB();
   const id     = document.getElementById('reset-invoice-id').value;
   const newStatus = document.getElementById('reset-invoice-status').value;
   const reason = document.getElementById('reset-invoice-reason').value.trim();

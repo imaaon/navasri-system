@@ -487,6 +487,7 @@ async function renderApprovalPanel() {
 }
 
 async function approveReq(reqId) {
+  await ensureSecondaryDB();
   const req = (db.requisitions||[]).find(r=>r.id==reqId);
   if (!req) return;
   if (!canApproveReq()) { toast('ไม่มีสิทธิ์อนุมัติ','error'); return; }
@@ -737,6 +738,7 @@ function toggleReturnOther() {
 }
 
 async function saveReturnItem() {
+  await ensureSecondaryDB();
   const reqId   = document.getElementById('return-req-id').value;
   const qty     = parseFloat(document.getElementById('return-qty').value)||0;
   const dateVal = document.getElementById('return-date').value;
@@ -949,6 +951,7 @@ async function renderHistory() {
 
 // ลบใบเบิก (เฉพาะ pending เท่านั้น)
 async function deleteReq(reqId) {
+  await ensureSecondaryDB();
   const req = (db.requisitions||[]).find(r => r.id == reqId);
   if (!req) return;
   if (req.status !== 'pending') { toast('ลบได้เฉพาะใบเบิกที่ยังไม่อนุมัติเท่านั้น', 'warning'); return; }

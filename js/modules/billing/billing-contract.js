@@ -53,6 +53,7 @@ function renderPaymentsTab() {
 }
 
 async function deletePayment(id) {
+  await ensureSecondaryDB();
   if(!confirm('ลบรายการชำระนี้? ยอดค้างชำระในบิลจะเพิ่มขึ้น')) return;
   const { error } = await supa.from('payments').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ','error'); return; }
@@ -119,6 +120,7 @@ function updateContractTotal() {
 }
 
 async function saveContract() {
+  await ensureSecondaryDB();
   const editId     = document.getElementById('contract-edit-id').value;
   const patientId  = document.getElementById('ta-con-id')?.value || document.getElementById('contract-patient')?.value || '';
   const name       = document.getElementById('contract-name').value.trim();
@@ -159,6 +161,7 @@ async function saveContract() {
 }
 
 async function deleteContract(id) {
+  await ensureSecondaryDB();
   if(!confirm('ลบแพ็กเกจนี้?')) return;
   const { error } = await supa.from('patient_contracts').delete().eq('id', id);
   if(error) { toast('ลบไม่สำเร็จ','error'); return; }
@@ -271,6 +274,7 @@ async function runAutoBilling() {
 }
 
 async function generateContractInvoice(contractId, silent=false) {
+  await ensureSecondaryDB();
   const c = (db.contracts||[]).find(x=>x.id==contractId);
   if (!c) return;
   const today = new Date();

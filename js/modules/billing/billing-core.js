@@ -596,6 +596,7 @@ function recalcInvoice() {
 
 // ── Save invoice ─────────────────────────────────────
 async function saveInvoice(status) {
+  await ensureSecondaryDB();
   const patId = document.getElementById("ta-inv-id").value;
   if (!patId) { toast('กรุณาเลือกผู้รับบริการ','warning'); return; }
   // Check duplicate doc number
@@ -881,6 +882,7 @@ function editInvoice(id) {
 }
 
 async function deleteInvoice(id) {
+  await ensureSecondaryDB();
   if(!confirm('ลบเอกสารนี้หรือไม่?')) return;
   // ===== Layer C: Unmark physio sessions ก่อน delete invoice (Step 3) =====
   try {
@@ -1004,6 +1006,7 @@ function togglePayOther() {
 }
 
 async function savePayment() {
+  await ensureSecondaryDB();
   const invoiceId = document.getElementById('pay-invoice-id').value;
   const amount    = parseFloat(document.getElementById('pay-amount').value||0);
   const date      = document.getElementById('pay-date').value;

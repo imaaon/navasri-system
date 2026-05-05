@@ -120,6 +120,7 @@ function toggleRecurring() {
 function onExpTypeChange() { /* placeholder สำหรับ logic เพิ่มเติมตามประเภท */ }
 
 async function saveExpense() {
+  await ensureSecondaryDB();
   const id     = document.getElementById('editExpenseId').value;
   const date   = document.getElementById('exp-date').value;
   const expType= document.getElementById('exp-type').value;
@@ -202,6 +203,7 @@ function editExpense(id) {
 }
 
 async function deleteExpense(id) {
+  await ensureSecondaryDB();
   const r = (db.expenses||[]).find(x=>x.id===id); if(!r) return;
   if (!confirm('ลบค่าใช้จ่าย "'+r.job+'" ?')) return;
   const { error } = await supa.from('expenses').delete().eq('id',id);

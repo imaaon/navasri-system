@@ -138,6 +138,7 @@ function openAddAssetModal() {
 }
 
 async function saveAsset() {
+  await ensureSecondaryDB();
   const id   = document.getElementById('editAssetId').value;
   const name = document.getElementById('asset-name').value.trim();
   const loc  = document.getElementById('asset-location').value.trim();
@@ -208,6 +209,7 @@ function editAsset(id) {
 }
 
 async function deleteAsset(id) {
+  await ensureSecondaryDB();
   const a=(db.assets||[]).find(x=>String(x.id)===String(id)); if(!a) return;
   if(!confirm('ลบครุภัณฑ์ "'+a.name+'" และประวัติซ่อมทั้งหมด?')) return;
   const {error}=await supa.from('assets').delete().eq('id',id);
@@ -238,6 +240,7 @@ function openAddMaintenanceModal(assetId) {
 }
 
 async function saveMaintenance() {
+  await ensureSecondaryDB();
   const assetId = document.getElementById('maintAssetId').value;
   const date    = document.getElementById('maint-date').value;
   const desc    = document.getElementById('maint-desc').value.trim();
@@ -333,6 +336,7 @@ function openMaintenanceHistoryModal(assetId) {
 }
 
 async function deleteMaintenanceLog(logId, assetId) {
+  await ensureSecondaryDB();
   if (!hasRole('admin','manager','officer')) { toast('ไม่มีสิทธิ์ลบ','error'); return; }
   if (!confirm('ลบประวัติการซ่อมรายการนี้?')) return;
   const { error } = await supa.from('asset_maintenance_logs').delete().eq('id', logId);

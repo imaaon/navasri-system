@@ -517,6 +517,7 @@ async function receiveItem() {
 }
 
 async function _receiveItemFallback(item, qty, qtyDispense, cost, lotNum, mfgDate, expiry, recvDate, po, supplier, note) {
+  await ensureSecondaryDB();
   // Fallback แบบ multi-step (ใช้ถ้า RPC ยังไม่ได้รัน)
   const newQty = item.qty + qtyDispense;
 
@@ -952,6 +953,7 @@ async function saveQuickDispense() {
 }
 
 async function _saveQuickDispenseFallback(item, patient, staff, qty, note, actor, date) {
+  await ensureSecondaryDB();
   // Fallback: ใช้ Supabase ตรงถ้า RPC ยังไม่ได้สร้าง
   const beforeQty = item.qty;
   const afterQty  = item.qty - qty;

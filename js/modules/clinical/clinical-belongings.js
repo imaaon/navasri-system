@@ -78,6 +78,7 @@ function openBelongingModal(id, patientId) {
 }
 
 async function saveBelonging() {
+  await ensureSecondaryDB();
   const itemName = document.getElementById('belonging-item-name').value.trim();
   if(!itemName){toast('กรุณาระบุชื่อสิ่งของ','warning');return;}
   const actor = currentUser?.displayName || currentUser?.username || '';
@@ -133,6 +134,7 @@ async function returnBelonging(id, patientId) {
 }
 
 async function deleteBelonging(id, patientId) {
+  await ensureSecondaryDB();
   if(!confirm('ลบรายการนี้?')) return;
   const { error } = await supa.from('patient_belongings').delete().eq('id',id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
@@ -146,6 +148,7 @@ async function deleteBelonging(id, patientId) {
 // ==========================================
 
 async function clearDnr(patientId, patientName) {
+  await ensureSecondaryDB();
   if (!confirm(`ล้างข้อมูล DNR & Consent ของ ${patientName}?\nข้อมูลทั้งหมดจะถูกลบถาวร`)) return;
   const c = (db.patientConsents||[]).find(x=>String(x.patientId)===String(patientId));
   if (c) {
@@ -224,6 +227,7 @@ function openDnrModal(patientId, patientName) {
 }
 
 async function saveDnr() {
+  await ensureSecondaryDB();
   const cprVal  = document.getElementById('dnr-cpr').value;
   const ventVal = document.getElementById('dnr-vent').value;
   const row = {

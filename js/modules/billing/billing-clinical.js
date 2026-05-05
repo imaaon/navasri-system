@@ -112,6 +112,7 @@ function mapIncident(r) {
 }
 
 async function deleteIncident(id) {
+  await ensureSecondaryDB();
   if (!confirm('ลบรายงานอุบัติเหตุนี้?')) return;
   const { error } = await supa.from('incident_reports').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
@@ -279,6 +280,7 @@ function showPhotoModal(url) {
 }
 
 async function deleteWound(id) {
+  await ensureSecondaryDB();
   if (!confirm('ลบบันทึกแผลนี้?')) return;
   const { error } = await supa.from('patient_wounds').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
@@ -435,6 +437,7 @@ function mapDiet(r) {
 }
 
 async function deleteDiet(id) {
+  await ensureSecondaryDB();
   if (!confirm('ลบแผนอาหารนี้?')) return;
   const { error } = await supa.from('patient_diets').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
@@ -509,6 +512,7 @@ function mapTubeFeed(r) {
 }
 
 async function deleteTubeFeed(id) {
+  await ensureSecondaryDB();
   if (!confirm('ลบบันทึกนี้?')) return;
   const { error } = await supa.from('tube_feedings').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
@@ -667,6 +671,7 @@ function mapDeposit(r) {
 }
 
 async function deleteDeposit(id) {
+  await ensureSecondaryDB();
   if (!confirm('ลบรายการมัดจำนี้?')) return;
   const { error } = await supa.from('patient_deposits').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }

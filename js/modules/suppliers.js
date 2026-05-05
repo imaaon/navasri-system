@@ -85,6 +85,7 @@ function editSupplier(id) {
 }
 
 async function saveSupplier() {
+  await ensureSecondaryDB();
   const editId = document.getElementById('editSupplierId').value;
   const name   = document.getElementById('supplier-name').value.trim();
   if (!name) { toast('กรุณาระบุชื่อผู้จำหน่าย', 'warning'); return; }
@@ -127,6 +128,7 @@ async function saveSupplier() {
 }
 
 async function deleteSupplier(id) {
+  await ensureSecondaryDB();
   if (!confirm('ลบผู้จำหน่ายนี้?')) return;
   const { error } = await supa.from('suppliers').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
@@ -266,6 +268,7 @@ function removePRItem(i) {
 }
 
 async function savePR(status = 'draft') {
+  await ensureSecondaryDB();
   const requester = document.getElementById('pr-requester').value.trim();
   if (!requester) { toast('กรุณาระบุผู้ขอ', 'warning'); return; }
   const validItems = prItems.filter(it => it.itemId && it.qty > 0);
@@ -357,6 +360,7 @@ async function savePR(status = 'draft') {
 }
 
 async function approvePR(id) {
+  await ensureSecondaryDB();
   if (!canApproveReq()) { toast('คุณไม่มีสิทธิอนุมัติ', 'error'); return; }
   const pr = (db.purchaseRequests || []).find(r => r.id == id);
   if (!pr) return;
@@ -381,6 +385,7 @@ async function approvePR(id) {
 }
 
 async function deletePR(id) {
+  await ensureSecondaryDB();
   const pr = db.purchaseRequests.find(r => r.id == id);
   if (!pr) return;
   if (pr.status === 'approved' && !canApproveReq()) {
@@ -444,6 +449,7 @@ async function editPR(id) {
 }
 
 async function rejectPR(id) {
+  await ensureSecondaryDB();
   const pr = db.purchaseRequests.find(r => r.id == id);
   if (!pr) return;
   if (!canApproveReq()) { toast('ไม่มีสิทธิ์ปฏิเสธคำขอ', 'error'); return; }
@@ -907,6 +913,7 @@ function viewSupplier(id) {
 }
 
 async function saveSupplierInvoice(andConfirm = false) {
+  await ensureSecondaryDB();
   const editId     = document.getElementById('editSupInvId').value;
   const invNo      = document.getElementById('supinv-no').value.trim();
   const supplierId = document.getElementById("ta-sis-id").value;
@@ -1368,6 +1375,7 @@ function autoFillSupInvFromPO() {
 }
 
 async function confirmInvoiceStock(id) {
+  await ensureSecondaryDB();
   if (!confirm('ยืนยันรับสินค้าและเพิ่มสต็อก? ไม่สามารถยกเลิกได้')) return;
   const inv = db.supplierInvoices.find(x => x.id == id);
   if (!inv) return;
@@ -1415,6 +1423,7 @@ async function confirmInvoiceStock(id) {
 }
 
 async function deleteSupplierInvoice(id, invoiceNo) {
+  await ensureSecondaryDB();
   const role = currentUser?.role;
   if (role !== 'admin' && role !== 'manager') { toast('ไม่มีสิทธิ์ลบรายการ', 'error'); return; }
   const inv = db.supplierInvoices.find(x => x.id == id);
