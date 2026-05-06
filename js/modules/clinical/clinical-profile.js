@@ -1042,6 +1042,44 @@ function _renderExcretionTab(patId) {
     el.dataset.dateFrom = todayStr; el.dataset.dateTo = todayStr;
     _loadExcretionData(patId, el, canEdit);
   });
+  // Preset buttons: 7 วันล่าสุด / เดือนนี้ / เดือนที่แล้ว
+  var btn7days = document.createElement('button');
+  btn7days.className = 'btn btn-ghost btn-sm';
+  btn7days.textContent = '7 วันล่าสุด';
+  btn7days.style.cssText = 'font-size:12px';
+  btn7days.addEventListener('click', function() {
+    var t = new Date();
+    var past = new Date(t); past.setDate(t.getDate() - 6);
+    var fromD = past.toISOString().slice(0,10);
+    inpFrom.value = fromD; inpTo.value = todayStr;
+    el.dataset.dateFrom = fromD; el.dataset.dateTo = todayStr;
+    _loadExcretionData(patId, el, canEdit);
+  });
+  var btnThisMonth = document.createElement('button');
+  btnThisMonth.className = 'btn btn-ghost btn-sm';
+  btnThisMonth.textContent = 'เดือนนี้';
+  btnThisMonth.style.cssText = 'font-size:12px';
+  btnThisMonth.addEventListener('click', function() {
+    var t = new Date();
+    var fromD = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-01';
+    inpFrom.value = fromD; inpTo.value = todayStr;
+    el.dataset.dateFrom = fromD; el.dataset.dateTo = todayStr;
+    _loadExcretionData(patId, el, canEdit);
+  });
+  var btnLastMonth = document.createElement('button');
+  btnLastMonth.className = 'btn btn-ghost btn-sm';
+  btnLastMonth.textContent = 'เดือนที่แล้ว';
+  btnLastMonth.style.cssText = 'font-size:12px';
+  btnLastMonth.addEventListener('click', function() {
+    var t = new Date();
+    var lastMonth = new Date(t.getFullYear(), t.getMonth()-1, 1);
+    var lastDayLastMonth = new Date(t.getFullYear(), t.getMonth(), 0);
+    var fromD = lastMonth.toISOString().slice(0,10);
+    var toD = lastDayLastMonth.toISOString().slice(0,10);
+    inpFrom.value = fromD; inpTo.value = toD;
+    el.dataset.dateFrom = fromD; el.dataset.dateTo = toD;
+    _loadExcretionData(patId, el, canEdit);
+  });
   inpFrom.addEventListener('change', function() {
     el.dataset.dateFrom = inpFrom.value;
     if (inpFrom.value > inpTo.value) { inpTo.value = inpFrom.value; el.dataset.dateTo = inpFrom.value; }
@@ -1057,6 +1095,9 @@ function _renderExcretionTab(patId) {
   filterWrap.appendChild(lblTo);
   filterWrap.appendChild(inpTo);
   filterWrap.appendChild(btnToday);
+  filterWrap.appendChild(btn7days);
+  filterWrap.appendChild(btnThisMonth);
+  filterWrap.appendChild(btnLastMonth);
   hdr.appendChild(filterWrap);
   el.appendChild(hdr);
 
