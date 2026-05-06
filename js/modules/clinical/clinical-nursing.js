@@ -9,17 +9,35 @@ const SHIFT_TIMES = {'เวรเช้า':'07:00–19:00','เวรดึก
 const SHIFT_COLORS = {'เวรเช้า':'#e67e22','เวรดึก':'#8e44ad'};
 
 function renderNursingTab(pid, patientId) {
-  const notes = (db.nursingNotes[pid]||[]);
+  const allNotes = (db.nursingNotes[pid]||[]);
   const today = new Date().toISOString().split('T')[0];
+
+  // Filter by date range — default = today
+  let fromDate, toDate, filteredNotes;
+  try {
+    fromDate = document.getElementById('nursing-filter-from')?.value || today;
+    toDate   = document.getElementById('nursing-filter-to')?.value   || today;
+    if (fromDate > toDate) { const tmp = fromDate; fromDate = toDate; toDate = tmp; }
+    filteredNotes = allNotes.filter(n => n.date >= fromDate && n.date <= toDate);
+  } catch(e) {
+    console.error('[nursing-filter]', e);
+    fromDate = today; toDate = today;
+    filteredNotes = allNotes.filter(n => n.date === today);
+  }
+
   const byDate = {};
-  notes.forEach(n => {
+  filteredNotes.forEach(n => {
     if(!byDate[n.date]) byDate[n.date]=[];
     byDate[n.date].push(n);
   });
   Object.values(byDate).forEach(arr => arr.sort((a,b)=>(a.time||'00:00').localeCompare(b.time||'00:00')));
-  const noteCards = Object.entries(byDate)
-    .sort((a,b)=>b[0].localeCompare(a[0]))
-    .slice(0,30)
+  
+  const MAX_DAYS = 100;
+  const allDates = Object.entries(byDate).sort((a,b)=>b[0].localeCompare(a[0]));
+  const tooMany = allDates.length > MAX_DAYS;
+  const dates = tooMany ? allDates.slice(0, MAX_DAYS) : allDates;
+  
+  const noteCards = dates
     .map(([date, dayNotes]) => {
       const isToday = date === today;
       const dateLabel = isToday ? '📅 วันนี้' : '📅 '+date;
@@ -58,20 +76,70 @@ function renderNursingTab(pid, patientId) {
           <div style="padding:0 14px;">${entryRows}</div>
         </div>`;
     }).join('');
-  const addTodayBtn = !byDate[today] ? `
+  
+  const warning = tooMany 
+    ? `<div style="padding:10px;text-align:center;background:#fef3c7;color:#92400e;font-size:12px;border-radius:6px;margin-bottom:8px;">⚠️ พบ ${allDates.length} วัน — แสดง ${MAX_DAYS} วันล่าสุด กรุณาเลือกช่วงให้แคบลง</div>` 
+    : '';
+  
+  const isTodayInRange = today >= fromDate && today <= toDate;
+  const addTodayBtn = (isTodayInRange && !byDate[today]) ? `
     <div style="padding:16px;text-align:center;">
       <button class="btn btn-primary" onclick="openAddNursingModal('${patientId}','${today}','')">+ บันทึกประจำวันนี้</button>
     </div>` : '';
+  
+  const rangeText = (fromDate === toDate) ? '' : ` (${fromDate} ถึง ${toDate})`;
+  const emptyMsg = !noteCards 
+    ? `<div style="padding:24px;text-align:center;color:var(--text3);">ไม่มีบันทึกในช่วงที่เลือก${rangeText}</div>`
+    : '';
+  
   return `<div class="card">
-    <div class="card-header">
-      <div class="card-title" style="font-size:13px;">📋 บันทึกพยาบาลประจำวัน (${notes.length} รายการ)</div>
-      <button class="btn btn-primary btn-sm" onclick="openAddNursingModal('${patientId}','${today}','')">+ บันทึกใหม่</button>
+    <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+      <div class="card-title" style="font-size:13px;">📋 บันทึกพยาบาลประจำวัน (${filteredNotes.length} รายการ)</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:12px;color:var(--text3);">จาก:</span>
+        <input type="date" id="nursing-filter-from" class="form-control" style="width:140px;font-size:12px;padding:4px 8px;"
+          value="${fromDate}" onchange="document.getElementById('patprofile-tab-nursing').innerHTML=renderNursingTab('${pid}','${patientId}')">
+        <span style="font-size:12px;color:var(--text3);">ถึง:</span>
+        <input type="date" id="nursing-filter-to" class="form-control" style="width:140px;font-size:12px;padding:4px 8px;"
+          value="${toDate}" onchange="document.getElementById('patprofile-tab-nursing').innerHTML=renderNursingTab('${pid}','${patientId}')">
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setNursingDateRange('today','${pid}','${patientId}')">วันนี้</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setNursingDateRange('7days','${pid}','${patientId}')">7 วันล่าสุด</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setNursingDateRange('thisMonth','${pid}','${patientId}')">เดือนนี้</button>
+        <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setNursingDateRange('lastMonth','${pid}','${patientId}')">เดือนที่แล้ว</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddNursingModal('${patientId}','${today}','')">+ บันทึกใหม่</button>
+      </div>
     </div>
     <div style="padding:12px 16px;">
+      ${warning}
       ${addTodayBtn}
-      ${noteCards || '<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีบันทึกพยาบาล</div>'}
+      ${noteCards || emptyMsg}
     </div>
   </div>`;
+}
+
+// Helper: ปุ่ม preset date range สำหรับ Nursing
+function setNursingDateRange(preset, pid, patientId) {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  let fromDate = todayStr, toDate = todayStr;
+  if (preset === 'today') { fromDate = todayStr; toDate = todayStr; }
+  else if (preset === '7days') {
+    const past = new Date(today); past.setDate(today.getDate() - 6);
+    fromDate = past.toISOString().split('T')[0]; toDate = todayStr;
+  } else if (preset === 'thisMonth') {
+    fromDate = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-01';
+    toDate = todayStr;
+  } else if (preset === 'lastMonth') {
+    const lastMonth = new Date(today.getFullYear(), today.getMonth()-1, 1);
+    const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    fromDate = lastMonth.toISOString().split('T')[0];
+    toDate = lastDayLastMonth.toISOString().split('T')[0];
+  }
+  const fromEl = document.getElementById('nursing-filter-from');
+  const toEl = document.getElementById('nursing-filter-to');
+  if (fromEl) fromEl.value = fromDate;
+  if (toEl) toEl.value = toDate;
+  document.getElementById('patprofile-tab-nursing').innerHTML = renderNursingTab(pid, patientId);
 }
 
 function getCurrentShift() {

@@ -764,18 +764,44 @@ function renderLabTab(patientId) {
   var el = document.getElementById('lab-list-' + patientId);
   if (!el) return;
   el.innerHTML = '<div style="text-align:center;padding:20px;">กำลังโหลด...</div>';
+  
+  // Date range filter — default = today
+  var today = new Date().toISOString().split('T')[0];
+  var fromDate, toDate;
+  try {
+    fromDate = document.getElementById('lab-filter-from')?.value || today;
+    toDate   = document.getElementById('lab-filter-to')?.value   || today;
+    if (fromDate > toDate) { var tmp = fromDate; fromDate = toDate; toDate = tmp; }
+  } catch(e) {
+    fromDate = today; toDate = today;
+  }
+  
   supa.from('patient_lab_results').select('*').eq('patient_id', patientId)
+    .gte('test_date', fromDate).lte('test_date', toDate)
     .order('test_date', { ascending: false })
     .then(function(res) {
       var rows = res.data || [];
+      var rangeText = (fromDate === toDate) ? '' : ' (' + fromDate + ' ถึง ' + toDate + ')';
+      var headerHtml = '<div class="card-header" style="flex-wrap:wrap;gap:8px;">' +
+        '<div class="card-title">🧪 ผลแล็บ (' + rows.length + ')</div>' +
+        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
+        '<span style="font-size:12px;color:var(--text3);">จาก:</span>' +
+        '<input type="date" id="lab-filter-from" class="form-control" style="width:140px;font-size:12px;padding:4px 8px;" value="' + fromDate + '" onchange="renderLabTab(\'' + patientId + '\')">' +
+        '<span style="font-size:12px;color:var(--text3);">ถึง:</span>' +
+        '<input type="date" id="lab-filter-to" class="form-control" style="width:140px;font-size:12px;padding:4px 8px;" value="' + toDate + '" onchange="renderLabTab(\'' + patientId + '\')">' +
+        '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setLabDateRange(\'today\',\'' + patientId + '\')">วันนี้</button>' +
+        '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setLabDateRange(\'7days\',\'' + patientId + '\')">7 วันล่าสุด</button>' +
+        '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setLabDateRange(\'thisMonth\',\'' + patientId + '\')">เดือนนี้</button>' +
+        '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setLabDateRange(\'lastMonth\',\'' + patientId + '\')">เดือนที่แล้ว</button>' +
+        '<button class="btn btn-primary btn-sm" onclick="openAddLabModal(\''+patientId+'\')">+ บันทึก</button>' +
+        '</div></div>';
+      
       if (!rows.length) {
-        el.innerHTML = '<div class="card"><div class="card-header"><div class="card-title">🧪 ผลแล็บ</div>' +
-          '<button class="btn btn-primary btn-sm" onclick="openAddLabModal(\''+patientId+'\')" style="margin-left:auto;">+ บันทึก</button></div>' +
-          '<div style="padding:32px;text-align:center;">ยังไม่มีผลแล็บ</div></div>';
+        el.innerHTML = '<div class="card">' + headerHtml +
+          '<div style="padding:32px;text-align:center;color:var(--text3);">ไม่มีผลแล็บในช่วงที่เลือก' + rangeText + '</div></div>';
         return;
       }
-      var html = '<div class="card"><div class="card-header"><div class="card-title">🧪 ผลแล็บ (' + rows.length + ')</div>' +
-        '<button class="btn btn-primary btn-sm" onclick="openAddLabModal(\''+patientId+'\')" style="margin-left:auto;">+ บันทึก</button></div><div style="padding:0 16px;">';
+      var html = '<div class="card">' + headerHtml + '<div style="padding:0 16px;">';
       rows.forEach(function(r) {
         var results = [];
         try { results = typeof r.results === 'string' ? JSON.parse(r.results) : (Array.isArray(r.results) ? r.results : []); } catch(e) {}
@@ -820,6 +846,31 @@ function renderLabTab(patientId) {
       html += '</div></div>';
       el.innerHTML = html;
     });
+}
+
+// Helper: ปุ่ม preset date range สำหรับ Lab
+function setLabDateRange(preset, patientId) {
+  var today = new Date();
+  var todayStr = today.toISOString().split('T')[0];
+  var fromDate = todayStr, toDate = todayStr;
+  if (preset === 'today') { fromDate = todayStr; toDate = todayStr; }
+  else if (preset === '7days') {
+    var past = new Date(today); past.setDate(today.getDate() - 6);
+    fromDate = past.toISOString().split('T')[0]; toDate = todayStr;
+  } else if (preset === 'thisMonth') {
+    fromDate = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-01';
+    toDate = todayStr;
+  } else if (preset === 'lastMonth') {
+    var lastMonth = new Date(today.getFullYear(), today.getMonth()-1, 1);
+    var lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    fromDate = lastMonth.toISOString().split('T')[0];
+    toDate = lastDayLastMonth.toISOString().split('T')[0];
+  }
+  var fromEl = document.getElementById('lab-filter-from');
+  var toEl = document.getElementById('lab-filter-to');
+  if (fromEl) fromEl.value = fromDate;
+  if (toEl) toEl.value = toDate;
+  renderLabTab(patientId);
 }
 
 function _renderLabRows() {
