@@ -11,6 +11,8 @@ function openEditAllergyModal(patId, allergyId) {
   document.getElementById('allergy-severity').value = a.severity || 'ปานกลาง';
   document.getElementById('allergy-reaction').value = a.reaction || '';
   document.getElementById('allergy-note').value = a.note || '';
+  var titleEl = document.getElementById('allergy-modal-title');
+  if (titleEl) titleEl.textContent = '✏️ แก้ไขประวัติการแพ้ยา / อาหาร';
   openModal('modal-add-allergy');
 }
 // ===== PATIENTS MODULE =====
@@ -330,11 +332,14 @@ async function savePatient() {
 // ===== ALLERGY CRUD =====
 function openAddAllergyModal(patId) {
   document.getElementById('allergy-pat-id').value = patId;
+  document.getElementById('allergy-pat-id').dataset.editId = '';  // clear edit mode
   document.getElementById('allergy-allergen').value = '';
   document.getElementById('allergy-type').value = 'ยา';
   document.getElementById('allergy-severity').value = '';
   document.getElementById('allergy-reaction').value = '';
   document.getElementById('allergy-note').value = '';
+  var titleEl = document.getElementById('allergy-modal-title');
+  if (titleEl) titleEl.textContent = '🚨 เพิ่มประวัติการแพ้ยา / อาหาร';
   openModal('modal-add-allergy');
 }
 async function saveAllergy() {
@@ -359,11 +364,20 @@ async function saveAllergy() {
   }
   if (error) { toast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
   const patient = db.patients.find(p => p.id == patId);
+  const cacheData = { id: ins.id, allergen, allergyType: data.allergy_type, severity: data.severity, reaction: data.reaction, note: data.note };
   if (patient) {
     if (!patient.allergies) patient.allergies = [];
-    patient.allergies.push({ id: ins.id, allergen, allergyType: data.allergy_type, severity: data.severity, reaction: data.reaction, note: data.note });
+    if (editAllergyId) {
+      // UPDATE mode: replace existing record in cache
+      const idx = patient.allergies.findIndex(x => x.id == editAllergyId);
+      if (idx >= 0) patient.allergies[idx] = cacheData;
+      else patient.allergies.push(cacheData);
+    } else {
+      // INSERT mode: push new record
+      patient.allergies.push(cacheData);
+    }
   }
-  toast(`บันทึกประวัติแพ้ "${allergen}" เรียบร้อย`, 'success');
+  toast(editAllergyId ? `แก้ไขประวัติแพ้ "${allergen}" เรียบร้อย` : `บันทึกประวัติแพ้ "${allergen}" เรียบร้อย`, 'success');
   closeModal('modal-add-allergy');
   openPatientProfile(patId, 'allergy');
 }

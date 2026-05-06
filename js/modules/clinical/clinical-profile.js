@@ -316,6 +316,7 @@ function _renderPatAllergyTab(pid, listEl) {
         '<th>ประเภท</th>' +
         '<th>อาการ</th>' +
         '<th>ความรุนแรง</th>' +
+        '<th>หมายเหตุ</th>' +
         '<th>จัดการ</th>' +
         '</tr></thead><tbody>';
       rows.forEach(function(r) {
@@ -325,9 +326,10 @@ function _renderPatAllergyTab(pid, listEl) {
           '<td>' + (r.allergy_type || '') + '</td>' +
           '<td>' + (r.reaction || '') + '</td>' +
           '<td>' + (r.severity || '') + '</td>' +
+          '<td>' + (r.note || '') + '</td>' +
           '<td style="white-space:nowrap">';
-        row += '<button class="btn btn-ghost btn-sm" onclick="openEditAllergyModal(' + eid + ',&quot;' + pid + '&quot;)">✏️</button>';
-        row += '<button class="btn btn-ghost btn-sm" onclick="deleteAllergy(' + eid + ',&quot;' + pid + '&quot;)">🗑️</button>';
+        row += '<button class="btn btn-ghost btn-sm" onclick="openEditAllergyModal(&quot;' + pid + '&quot;,' + eid + ')">✏️</button>';
+        row += '<button class="btn btn-ghost btn-sm" onclick="deleteAllergy(&quot;' + pid + '&quot;,' + eid + ')">🗑️</button>';
         row += '</td></tr>';
         html += row;
       });
