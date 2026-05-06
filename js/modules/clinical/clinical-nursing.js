@@ -8,16 +8,22 @@ const SHIFTS = ['เวรเช้า','เวรดึก'];
 const SHIFT_TIMES = {'เวรเช้า':'07:00–19:00','เวรดึก':'19:00–07:00'};
 const SHIFT_COLORS = {'เวรเช้า':'#e67e22','เวรดึก':'#8e44ad'};
 
-function renderNursingTab(pid, patientId) {
+function renderNursingTab(pid, patientId, overrideFrom, overrideTo) {
   const allNotes = (db.nursingNotes[pid]||[]);
   const today = new Date().toISOString().split('T')[0];
 
   // Filter by date range — default = today
+  // ถ้ามี override (จาก preset) ใช้ค่าที่ส่งมา; ถ้า re-render จาก onchange อ่านจาก DOM
   let fromDate, toDate, filteredNotes;
   try {
-    fromDate = document.getElementById('nursing-filter-from')?.value || today;
-    toDate   = document.getElementById('nursing-filter-to')?.value   || today;
-    if (fromDate > toDate) { const tmp = fromDate; fromDate = toDate; toDate = tmp; }
+    if (overrideFrom && overrideTo) {
+      fromDate = overrideFrom;
+      toDate = overrideTo;
+    } else {
+      fromDate = document.getElementById('nursing-filter-from')?.value || today;
+      toDate   = document.getElementById('nursing-filter-to')?.value   || today;
+      if (fromDate > toDate) { const tmp = fromDate; fromDate = toDate; toDate = tmp; }
+    }
     filteredNotes = allNotes.filter(n => n.date >= fromDate && n.date <= toDate);
   } catch(e) {
     console.error('[nursing-filter]', e);
@@ -139,7 +145,8 @@ function setNursingDateRange(preset, pid, patientId) {
   const toEl = document.getElementById('nursing-filter-to');
   if (fromEl) fromEl.value = fromDate;
   if (toEl) toEl.value = toDate;
-  document.getElementById('patprofile-tab-nursing').innerHTML = renderNursingTab(pid, patientId);
+  // ส่ง fromDate/toDate ตรงๆ ไม่อ่านจาก DOM
+  document.getElementById('patprofile-tab-nursing').innerHTML = renderNursingTab(pid, patientId, fromDate, toDate);
 }
 
 function getCurrentShift() {

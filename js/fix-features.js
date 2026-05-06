@@ -323,10 +323,11 @@ console.log('[fix] v98 snippet loaded');
     if (fromEl) fromEl.value = fromD;
     if (toEl) toEl.value = toD;
     var listEl = document.getElementById('pat-dietary-list-' + pid) || document.querySelector('#patprofile-tab-dietary [id^="pat-dietary-list"]');
-    if (listEl) window._renderPatDietaryTab(pid, listEl);
+    // ส่ง fromD/toD ตรงๆ ไม่อ่านจาก DOM
+    if (listEl) window._renderPatDietaryTab(pid, listEl, fromD, toD);
   };
   
-  window._renderPatDietaryTab = function(pid, listEl) {
+  window._renderPatDietaryTab = function(pid, listEl, overrideFrom, overrideTo) {
     if (!document.getElementById('pat-dietary-btns-'+pid)) {
       var wrap = document.createElement('div');
       wrap.id = 'pat-dietary-btns-'+pid;
@@ -344,14 +345,19 @@ console.log('[fix] v98 snippet loaded');
     }
     listEl.innerHTML = '<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
     
-    // Read filter values BEFORE re-render (graceful fallback)
+    // Read filter values — ใช้ override หรืออ่านจาก DOM ก่อน clear (graceful fallback)
     var today = new Date().toISOString().slice(0,10);
     var fromDate, toDate;
-    try {
-      fromDate = document.getElementById('tubefeed-filter-from')?.value || today;
-      toDate   = document.getElementById('tubefeed-filter-to')?.value   || today;
-      if (fromDate > toDate) { var tmp = fromDate; fromDate = toDate; toDate = tmp; }
-    } catch(e) { fromDate = today; toDate = today; }
+    if (overrideFrom && overrideTo) {
+      fromDate = overrideFrom;
+      toDate = overrideTo;
+    } else {
+      try {
+        fromDate = document.getElementById('tubefeed-filter-from')?.value || today;
+        toDate   = document.getElementById('tubefeed-filter-to')?.value   || today;
+        if (fromDate > toDate) { var tmp = fromDate; fromDate = toDate; toDate = tmp; }
+      } catch(e) { fromDate = today; toDate = today; }
+    }
     
     Promise.all([
       supa.from('patient_diets').select('*').eq('patient_id', pid).order('updated_at',{ascending:false}),

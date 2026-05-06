@@ -30,7 +30,7 @@ async function openEditVitalModal(patientId, pid, vitalId) {
 
 // ===== VITAL SIGNS ========================
 // ==========================================
-function renderVitalsTab(pid, patientId) {
+function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
   const allVitals = (db.vitalSigns[pid]||[]);  // ใช้สำหรับ chart sparkline ไม่กระทบ filter
   const recent7 = allVitals.slice(0, 14);
 
@@ -47,6 +47,16 @@ function renderVitalsTab(pid, patientId) {
 
   // Date range filter — default = today
   const today = new Date().toISOString().split('T')[0];
+  // ถ้ามี override (จาก preset) ใช้ค่าที่ส่งมา; ถ้า re-render จาก onchange อ่านจาก DOM
+  let fromDate, toDate;
+  if (overrideFrom && overrideTo) {
+    fromDate = overrideFrom;
+    toDate = overrideTo;
+  } else {
+    fromDate = document.getElementById('vital-filter-from')?.value || today;
+    toDate   = document.getElementById('vital-filter-to')?.value   || today;
+    if (fromDate > toDate) { const tmp = fromDate; fromDate = toDate; toDate = tmp; }
+  }
 
   return `
     <div class="card" style="margin-bottom:14px;">
@@ -77,10 +87,10 @@ function renderVitalsTab(pid, patientId) {
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <span style="font-size:12px;color:var(--text3);">จาก:</span>
           <input type="date" id="vital-filter-from" class="form-control" style="width:140px;font-size:12px;padding:4px 8px;"
-            value="${today}" onchange="document.getElementById('patprofile-tab-vitals').innerHTML=renderVitalsTab('${pid}','${patientId}')">
+            value="${fromDate}" onchange="document.getElementById('patprofile-tab-vitals').innerHTML=renderVitalsTab('${pid}','${patientId}')">
           <span style="font-size:12px;color:var(--text3);">ถึง:</span>
           <input type="date" id="vital-filter-to" class="form-control" style="width:140px;font-size:12px;padding:4px 8px;"
-            value="${today}" onchange="document.getElementById('patprofile-tab-vitals').innerHTML=renderVitalsTab('${pid}','${patientId}')">
+            value="${toDate}" onchange="document.getElementById('patprofile-tab-vitals').innerHTML=renderVitalsTab('${pid}','${patientId}')">
           <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setVitalDateRange('today','${pid}','${patientId}')">วันนี้</button>
           <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setVitalDateRange('7days','${pid}','${patientId}')">7 วันล่าสุด</button>
           <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setVitalDateRange('thisMonth','${pid}','${patientId}')">เดือนนี้</button>
@@ -108,9 +118,7 @@ function renderVitalsTab(pid, patientId) {
           <tbody>
             ${(() => {
               try {
-                let fromDate = document.getElementById('vital-filter-from')?.value || today;
-                let toDate   = document.getElementById('vital-filter-to')?.value   || today;
-                if (fromDate > toDate) { const tmp = fromDate; fromDate = toDate; toDate = tmp; }
+                // ใช้ fromDate/toDate จาก outer scope (อ่าน override หรือ DOM ไปแล้ว)
                 // Filter ใช้ recordedAt prefix 10 chars (YYYY-MM-DD)
                 const filteredAll = allVitals.filter(v => {
                   const d = v.recordedAt ? String(v.recordedAt).slice(0,10) : '';
@@ -177,7 +185,8 @@ function setVitalDateRange(preset, pid, patientId) {
   const toEl = document.getElementById('vital-filter-to');
   if (fromEl) fromEl.value = fromDate;
   if (toEl) toEl.value = toDate;
-  document.getElementById('patprofile-tab-vitals').innerHTML = renderVitalsTab(pid, patientId);
+  // ส่ง fromDate/toDate ตรงๆ ไม่อ่านจาก DOM (เพราะ DOM อาจ flush ไม่ทัน)
+  document.getElementById('patprofile-tab-vitals').innerHTML = renderVitalsTab(pid, patientId, fromDate, toDate);
 }
 
 function vitalsSparkline(values, color, min, max) {

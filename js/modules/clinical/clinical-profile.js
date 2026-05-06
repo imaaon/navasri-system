@@ -760,19 +760,25 @@ function loadPatDeposits(patId) {
 // LAB RESULTS — moved from fix-features.js
 // ═══════════════════════════════════════════
 
-function renderLabTab(patientId) {
+function renderLabTab(patientId, overrideFrom, overrideTo) {
   var el = document.getElementById('lab-list-' + patientId);
   if (!el) return;
   
   // ⚠️ อ่านค่า filter ก่อน clear innerHTML (ไม่งั้น input หายก่อน)
+  // ถ้ามี override (จาก preset) ใช้ค่าที่ส่งมา ไม่อ่าน DOM
   var today = new Date().toISOString().split('T')[0];
   var fromDate, toDate;
-  try {
-    fromDate = document.getElementById('lab-filter-from')?.value || today;
-    toDate   = document.getElementById('lab-filter-to')?.value   || today;
-    if (fromDate > toDate) { var tmp = fromDate; fromDate = toDate; toDate = tmp; }
-  } catch(e) {
-    fromDate = today; toDate = today;
+  if (overrideFrom && overrideTo) {
+    fromDate = overrideFrom;
+    toDate = overrideTo;
+  } else {
+    try {
+      fromDate = document.getElementById('lab-filter-from')?.value || today;
+      toDate   = document.getElementById('lab-filter-to')?.value   || today;
+      if (fromDate > toDate) { var tmp = fromDate; fromDate = toDate; toDate = tmp; }
+    } catch(e) {
+      fromDate = today; toDate = today;
+    }
   }
   
   el.innerHTML = '<div style="text-align:center;padding:20px;">กำลังโหลด...</div>';
@@ -871,7 +877,8 @@ function setLabDateRange(preset, patientId) {
   var toEl = document.getElementById('lab-filter-to');
   if (fromEl) fromEl.value = fromDate;
   if (toEl) toEl.value = toDate;
-  renderLabTab(patientId);
+  // ส่ง fromDate/toDate ตรงๆ ไม่อ่านจาก DOM (เพราะ DOM อาจ flush ไม่ทัน)
+  renderLabTab(patientId, fromDate, toDate);
 }
 
 function _renderLabRows() {
