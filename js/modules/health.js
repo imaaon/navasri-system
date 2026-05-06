@@ -61,7 +61,7 @@ function openAddMedLog(patId, type) {
 
 function editMedLog(patId, type, supaId) {
   const p = db.patients.find(x => x.id == patId);
-  if (!p) return;
+  if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   const key  = type === 'medical' ? 'medicalLog' : 'medsLog';
   const logs = (p[key] || []).slice().sort((a,b) => b.date.localeCompare(a.date));
   const entry = logs.find(e => String(e._supaId) === String(supaId));
@@ -91,7 +91,7 @@ async function saveMedLog() {
   if (!detail) { toast('กรุณากรอกรายละเอียด','warning'); return; }
 
   const p = db.patients.find(x => x.id == patId);
-  if (!p) return;
+  if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   const key = type === 'medical' ? 'medicalLog' : 'medsLog';
   if (!p[key]) p[key] = [];
   const byUser = document.getElementById('medlog-by')?.value.trim() || currentUser?.displayName || currentUser?.username || '';
@@ -138,7 +138,7 @@ async function saveMedLog() {
 async function deleteMedLog(patId, type, supaId) {
   if (!confirm('ลบรายการนี้?')) return;
   const p = db.patients.find(x => x.id == patId);
-  if (!p) return;
+  if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   const key  = type === 'medical' ? 'medicalLog' : 'medsLog';
   const logs = (p[key] || []).slice().sort((a,b) => b.date.localeCompare(a.date));
   const entry = logs.find(e => String(e._supaId) === String(supaId));
@@ -407,7 +407,7 @@ function exportHealthPDF() {
 
 function exportPatMedExcel(patId, type) {
   const p = db.patients.find(x => x.id == patId);
-  if (!p) return;
+  if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   const key   = type === 'medical' ? 'medicalLog' : 'medsLog';
   const label = type === 'medical' ? 'ประวัติการรักษา' : 'ยาประจำ';
   const logs  = (p[key] || []).slice().sort((a,b) => b.date.localeCompare(a.date));
@@ -426,7 +426,7 @@ function exportPatMedExcel(patId, type) {
 
 function exportPatMedPDF(patId, type) {
   const p = db.patients.find(x => x.id == patId);
-  if (!p) return;
+  if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   const key   = type === 'medical' ? 'medicalLog' : 'medsLog';
   const icon  = type === 'medical' ? '🏥' : '💊';
   const label = type === 'medical' ? 'ประวัติการรักษา' : 'ยาประจำ';
