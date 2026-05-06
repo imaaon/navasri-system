@@ -79,19 +79,40 @@ function renderMARTab(pid, patientId) {
 
   return medRows + `
     <div class="card">
-      <div class="card-header">
+      <div class="card-header" style="flex-wrap:wrap;gap:8px;">
         <div class="card-title" style="font-size:13px;">📋 ประวัติการให้ยาทั้งหมด</div>
-        <input type="date" id="mar-filter-date" class="form-control" style="width:160px;font-size:12px;padding:4px 8px;"
-          value="${today}" onchange="document.getElementById('patprofile-tab-mar').innerHTML=renderMARTab('${pid}','${patientId}')">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:12px;color:var(--text3);">จาก:</span>
+          <input type="date" id="mar-filter-from" class="form-control" style="width:140px;font-size:12px;padding:4px 8px;"
+            value="${today}" onchange="document.getElementById('patprofile-tab-mar').innerHTML=renderMARTab('${pid}','${patientId}')">
+          <span style="font-size:12px;color:var(--text3);">ถึง:</span>
+          <input type="date" id="mar-filter-to" class="form-control" style="width:140px;font-size:12px;padding:4px 8px;"
+            value="${today}" onchange="document.getElementById('patprofile-tab-mar').innerHTML=renderMARTab('${pid}','${patientId}')">
+          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setMARDateRange('today','${pid}','${patientId}')">วันนี้</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setMARDateRange('7days','${pid}','${patientId}')">7 วันล่าสุด</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setMARDateRange('thisMonth','${pid}','${patientId}')">เดือนนี้</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setMARDateRange('lastMonth','${pid}','${patientId}')">เดือนที่แล้ว</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
           <thead><tr><th>วัน</th><th>เวลาให้จริง</th><th>ยา</th><th>ขนาด</th><th>มื้อ/ครั้งที่</th><th>สถานะ</th><th>ผู้ให้</th><th>หมายเหตุ</th><th></th></tr></thead>
           <tbody>
             ${(() => {
-              const filterDate = document.getElementById('mar-filter-date')?.value || today;
-              const filtered = mar.filter(r => r.date === filterDate).sort((a,b)=>(b.givenAt||'').localeCompare(a.givenAt||''));
-              return filtered.length ? filtered.map(r => {
+              let fromDate = document.getElementById('mar-filter-from')?.value || today;
+              let toDate   = document.getElementById('mar-filter-to')?.value   || today;
+              // Auto-swap ถ้า from > to
+              if (fromDate > toDate) { const tmp = fromDate; fromDate = toDate; toDate = tmp; }
+              const filteredAll = mar.filter(r => r.date >= fromDate && r.date <= toDate)
+                                     .sort((a,b)=>(b.date+' '+(b.givenAt||'')).localeCompare(a.date+' '+(a.givenAt||'')));
+              const MAX_ROWS = 100;
+              const tooMany = filteredAll.length > MAX_ROWS;
+              const filtered = tooMany ? filteredAll.slice(0, MAX_ROWS) : filteredAll;
+              const warning = tooMany 
+                ? `<tr><td colspan="9" style="text-align:center;padding:10px;background:#fef3c7;color:#92400e;font-size:12px;">⚠️ พบ ${filteredAll.length} รายการ — แสดง ${MAX_ROWS} รายการล่าสุด กรุณาเลือกช่วงให้แคบลง</td></tr>` 
+                : '';
+              const rangeText = (fromDate === toDate) ? '' : ` (${fromDate} ถึง ${toDate})`;
+              return filtered.length ? warning + filtered.map(r => {
                 const med = (db.medications[pid]||[]).find(m=>m.id==r.medicationId);
                 return `<tr>
                   <td class="number" style="font-size:12px;">${r.date}</td>
@@ -104,12 +125,40 @@ function renderMARTab(pid, patientId) {
                   <td style="font-size:12px;color:var(--text3);">${r.note||''}</td>
                   <td><button class="btn btn-ghost btn-sm" onclick="deleteMAREntry('${pid}','${patientId}','${r.id}')">🗑️</button></td>
                 </tr>`;
-              }).join('') : '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text3);">ไม่มีรายการวันนี้</td></tr>';
+              }).join('') : `<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text3);">ไม่มีรายการในช่วงที่เลือก${rangeText}</td></tr>`;
             })()}
           </tbody>
         </table>
       </div>
     </div>`;
+}
+
+// Helper: ปุ่ม preset date range
+function setMARDateRange(preset, pid, patientId) {
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  let fromDate = todayStr, toDate = todayStr;
+  
+  if (preset === 'today') {
+    fromDate = todayStr; toDate = todayStr;
+  } else if (preset === '7days') {
+    const past = new Date(today); past.setDate(today.getDate() - 6);
+    fromDate = past.toISOString().split('T')[0]; toDate = todayStr;
+  } else if (preset === 'thisMonth') {
+    fromDate = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-01';
+    toDate = todayStr;
+  } else if (preset === 'lastMonth') {
+    const lastMonth = new Date(today.getFullYear(), today.getMonth()-1, 1);
+    const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    fromDate = lastMonth.toISOString().split('T')[0];
+    toDate = lastDayLastMonth.toISOString().split('T')[0];
+  }
+  
+  const fromEl = document.getElementById('mar-filter-from');
+  const toEl   = document.getElementById('mar-filter-to');
+  if (fromEl) fromEl.value = fromDate;
+  if (toEl) toEl.value = toDate;
+  document.getElementById('patprofile-tab-mar').innerHTML = renderMARTab(pid, patientId);
 }
 
 let _marMedId = null, _marPid = null, _marPatientId = null;
