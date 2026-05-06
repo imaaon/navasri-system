@@ -407,6 +407,9 @@ function mapAppointment(r) {
     purpose: r.purpose||'', preparation: r.preparation||'',
     transport: r.transport||'รถคลินิก', transportNote: r.transport_note||'',
     status: r.status||'upcoming', note: r.note||'',
+    coverage: r.coverage||'', orders: r.orders||'',
+    companion: r.companion||'', departTime: r.depart_time||'',
+    cardPhotoUrl: r.card_photo_url||'',
     createdBy: r.created_by||'', createdAt: r.created_at||''
   };
 }

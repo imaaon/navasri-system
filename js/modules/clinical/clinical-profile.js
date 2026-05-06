@@ -404,13 +404,37 @@ function _renderPatIncidentTab(pid, listEl) {
       var stageBadge=x.stage?'<span style="background:#e67e2222;color:#d35400;border-radius:4px;padding:1px 8px;font-size:11px;">Stage '+x.stage+'</span>':'';
       var wndStatus={'active':'<span style="background:#e74c3c22;color:#c0392b;border-radius:4px;padding:1px 8px;font-size:11px;">กำลังรักษา</span>','healed':'<span style="background:#27ae6022;color:#27ae60;border-radius:4px;padding:1px 8px;font-size:11px;">หายแล้ว</span>','monitoring':'<span style="background:#3498db22;color:#2980b9;border-radius:4px;padding:1px 8px;font-size:11px;">เฝ้าระวัง</span>'}[x.status]||(x.status?'<span style="background:var(--surface2);border-radius:4px;padding:1px 8px;font-size:11px;">'+x.status+'</span>':'');
       var wndPhoto=x.photo_url?'<div style="margin-top:8px;"><img src="'+x.photo_url+'" style="max-width:180px;max-height:140px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>':'';
+      // Parse size_cm "WxLxD" และ extract treatment/trend จาก note
+      var sizeStr = '';
+      if (x.size_cm) {
+        var parts = String(x.size_cm).split('x');
+        if (parts.length >= 3) {
+          var w = parseFloat(parts[0])||0, l = parseFloat(parts[1])||0, dp = parseFloat(parts[2])||0;
+          if (w || l || dp) sizeStr = 'กว้าง '+w+' × ยาว '+l+' × ลึก '+dp+' cm';
+        } else if (x.size_cm) {
+          sizeStr = String(x.size_cm) + ' cm';
+        }
+      }
+      // Extract treatment + trend + remaining note
+      var treatmentStr = '', trendStr = '', remainingNote = '';
+      if (x.note) {
+        var noteText = String(x.note);
+        var tMatch = noteText.match(/การรักษา:\s*([^]*?)(?=\s*แนวโน้ม:|$)/);
+        var trMatch = noteText.match(/แนวโน้ม:\s*([^]*?)(?=\s*$|\s{2,})/);
+        if (tMatch) treatmentStr = tMatch[1].trim();
+        if (trMatch) trendStr = trMatch[1].trim();
+        // remaining คือ note ที่ไม่มี prefix การรักษา/แนวโน้ม
+        remainingNote = noteText.replace(/การรักษา:[^]*?(?=\s*แนวโน้ม:|$)/, '').replace(/แนวโน้ม:[^]*?(?=\s*$|\s{2,})/, '').trim();
+      }
       info.innerHTML=
         '<div style="font-weight:600;font-size:13px;">🩹 '+(x.location||'-')+' '+stageBadge+' '+wndStatus+'</div>'
         +'<div style="font-size:12px;color:var(--text3);margin-top:3px;">📅 '+(x.wound_date||'-')+(x.patient_name?' &nbsp;|&nbsp; 👤 '+x.patient_name:'')+'</div>'
-        +(x.size_cm?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">📏 ขนาด: '+x.size_cm+' cm</div>':'')
+        +(sizeStr?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">📏 ขนาด: '+sizeStr+'</div>':'')
         +(x.appearance?'<div style="font-size:13px;margin-top:4px;">ลักษณะ: '+x.appearance+'</div>':'')
         +(x.exudate?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">💧 ของเหลว: '+x.exudate+'</div>':'')
-        +(x.dressing?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">🩹 การรักษา: '+x.dressing+'</div>':'')
+        +(treatmentStr?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">🏥 การรักษา: '+treatmentStr+'</div>':(x.dressing?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">🩹 การรักษา: '+x.dressing+'</div>':''))
+        +(trendStr?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">📈 แนวโน้ม: '+trendStr+'</div>':'')
+        +(remainingNote?'<div style="font-size:12px;color:var(--text3);margin-top:2px;">💬 หมายเหตุ: '+remainingNote+'</div>':'')
         +(x.pain_score!=null&&x.pain_score!==''?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">😣 ความเจ็บปวด: '+x.pain_score+'/10</div>':'')
         +'<div style="font-size:11px;color:var(--text3);margin-top:3px;">✍️ ผู้บันทึก: '+(x.created_by||'-')+'</div>'
         +wndPhoto;
@@ -489,7 +513,15 @@ function _renderPatDietaryTab(pid, listEl) {
       var d=document.createElement('div'); d.className='card';
       d.style.cssText='margin-bottom:8px;padding:12px;border-left:3px solid #27ae60;display:flex;justify-content:space-between;align-items:flex-start;';
       var info=document.createElement('div');
-      info.innerHTML='<div style="font-weight:600;">🧪 สายให้อาหาร</div><div style="font-size:13px;color:var(--text2);">'+(x.date||'')+' | '+(x.formula||'')+'</div>';
+      info.innerHTML=
+        '<div style="font-weight:600;font-size:13px;">🧪 สายให้อาหาร '+(x.meal?'· '+x.meal:'')+'</div>'
+        +'<div style="font-size:12px;color:var(--text3);margin-top:2px;">📅 '+(x.date||'-')+(x.time?' '+x.time:'')+'</div>'
+        +(x.formula?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">🥛 สูตร: '+x.formula+'</div>':'')
+        +(x.volume?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">💧 ปริมาณ: '+x.volume+' ml</div>':'')
+        +(x.water?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">🚰 น้ำตาม: '+x.water+' ml</div>':'')
+        +(x.residual!=null&&x.residual!==''?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">📊 Residual: '+x.residual+' ml</div>':'')
+        +(x.note?'<div style="font-size:12px;color:var(--text2);margin-top:2px;">หมายเหตุ: '+x.note+'</div>':'')
+        +'<div style="font-size:11px;color:var(--text3);margin-top:3px;">✍️ ผู้บันทึก: '+(x.recorder||'-')+'</div>';
       var btns=document.createElement('div'); btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
       eb.addEventListener('click',function(){openTubeFeedModal(x.id);});

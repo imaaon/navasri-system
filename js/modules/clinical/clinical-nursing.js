@@ -42,7 +42,7 @@ function renderNursingTab(pid, patientId) {
             note.handoverNote ? '🔹 ส่งเวร: '+note.handoverNote : '',
           ].filter(Boolean).join('\n') || '-'}</div>
           <div style="flex-shrink:0;font-size:11px;color:var(--text3);text-align:right;">
-            ${note.by||''}<br>
+            ${note.recordedBy||note.by||''}<br>
             <div style="display:flex;gap:4px;margin-top:2px;">
               <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="editNursingNote('${patientId}','${pid}','${note.id}')">✏️แก้ไข</button>
               <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:#e74c3c;" onclick="deleteNursingNote('${patientId}','${pid}','${note.id}')">🗑️ลบ</button>

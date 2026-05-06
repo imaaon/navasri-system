@@ -83,13 +83,15 @@ function renderVitalsTab(pid, patientId) {
             <th style="text-align:center;color:#27ae60;">🫁 SpO₂</th>
             <th style="text-align:center;color:#8e44ad;">🍬 DTX</th>
             <th style="text-align:center;color:#16a085;">🫀 RR</th>
+            <th style="text-align:center;">⚖️ น้ำหนัก</th>
+            <th style="text-align:center;">📏 ส่วนสูง</th>
             <th>อื่นๆ</th>
             <th>ผู้บันทึก</th>
             <th>หมายเหตุ</th>
             <th></th>
           </tr></thead>
           <tbody>
-            ${vitals.length===0 ? '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--text3);">ยังไม่มีข้อมูล</td></tr>' :
+            ${vitals.length===0 ? '<tr><td colspan="13" style="text-align:center;padding:24px;color:var(--text3);">ยังไม่มีข้อมูล</td></tr>' :
               vitals.slice(0,30).map(v => {
                 const bpAlert = v.bp_sys && (v.bp_sys>=160||v.bp_sys<=90);
                 const spo2Alert = v.spo2 && v.spo2<95;
@@ -102,8 +104,8 @@ function renderVitalsTab(pid, patientId) {
                   <td style="text-align:center;font-weight:${spo2Alert?'700':'400'};color:${spo2Alert?'#e74c3c':'inherit'};">${v.spo2 ? v.spo2+'%' : '-'}</td>
                   <td style="text-align:center;">${v.dtx ? v.dtx+' mg/dL' : '-'}</td>
                   <td style="text-align:center;">${v.rr ? v.rr+'/min' : '-'}</td>
-                  <td style="font-size:12px;color:var(--text2);max-width:80px;">${v.weight ? v.weight+'kg' : '-'}</td>
-                  <td style="text-align:center;font-size:12px;color:var(--text2);">${v.height ? v.height+'cm' : '-'}</td>
+                  <td style="text-align:center;font-size:12px;">${v.weight ? v.weight+' kg' : '-'}</td>
+                  <td style="text-align:center;font-size:12px;">${v.height ? v.height+' cm' : '-'}</td>
                   <td style="font-size:12px;color:var(--text2);max-width:120px;">${v.otherFields||'-'}</td>
                   <td style="font-size:12px;">${v.recordedBy||'-'}</td>
                   <td style="font-size:12px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis;">${v.note||''}</td>

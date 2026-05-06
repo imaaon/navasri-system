@@ -28,6 +28,8 @@ function renderApptList(patientId) {
             <div style="font-size:13px;color:var(--text2);">${a.department?'แผนก '+a.department+' ':''} ${a.doctor?'นพ./พญ. '+a.doctor:''}</div>
             <div style="font-size:12px;margin-top:4px;">🎯 ${a.purpose||'-'}</div>
             ${a.preparation?`<div style="font-size:12px;color:#e67e22;margin-top:2px;">📋 เตรียม: ${a.preparation}</div>`:''}
+            ${a.coverage?`<div style="font-size:12px;color:var(--text2);margin-top:2px;">💳 สิทธิ/ผู้จ่าย: ${a.coverage}</div>`:''}
+            ${a.orders?`<div style="font-size:12px;color:var(--text2);margin-top:2px;">📝 คำสั่งแพทย์: ${a.orders}</div>`:''}
             <div style="font-size:12px;margin-top:4px;">${TRANSPORT_ICON[a.transport]||'🚗'} ${a.transport} ${a.transportNote?'('+a.transportNote+')':''}</div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -60,6 +62,9 @@ function openApptModal(id, patientId, patientName) {
   document.getElementById('appt-transport-note').value = a?.transportNote || '';
   document.getElementById('appt-status').value     = a?.status      || 'upcoming';
   document.getElementById('appt-note').value       = a?.note        || '';
+  // Optional fields (อาจไม่มี element ในบาง deploy)
+  var covEl = document.getElementById('appt-coverage'); if (covEl) covEl.value = a?.coverage || '';
+  var ordEl = document.getElementById('appt-orders'); if (ordEl) ordEl.value = a?.orders || '';
   openModal('modal-appt');
 }
 
