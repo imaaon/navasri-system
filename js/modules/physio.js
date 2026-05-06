@@ -234,17 +234,26 @@ function showPhysioPackageBanner(rule, patientId) {
   var monthStart = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-01";
   var monthEnd = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().split("T")[0];
   
-  // Async: load count แล้ว update banner
-  supa.from("physio_sessions").select("id", { count: "exact", head: true })
+  // Async: load sessions แล้ว filter ที่ตรงสเปคเท่านั้น (in_package)
+  supa.from("physio_sessions").select("duration_minutes, rate_per_session, rate_per_hour")
     .eq("patient_id", patientId)
     .gte("session_date", monthStart)
     .lte("session_date", monthEnd)
     .then(function(res) {
-      var used = res.count || 0;
+      var allSessions = res.data || [];
+      // นับเฉพาะ session ที่ตรงสเปค (matchesSpec) — เฉพาะที่กิน quota จริง
+      var inPackageCount = allSessions.filter(function(s) {
+        var sessionRate = (s.rate_per_session && s.rate_per_session > 0) 
+          ? Number(s.rate_per_session) 
+          : Math.round(((s.duration_minutes||0)/60) * (s.rate_per_hour||0) * 100) / 100;
+        return Number(s.duration_minutes) === Number(dur) && sessionRate === Number(rate);
+      }).length;
+      var used = Math.min(inPackageCount, qty); // cap ที่ quota
+      
       var html = '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-bottom:8px;">' +
         '<div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:4px;">📦 แพ็คเกจของลูกค้า</div>' +
         '<div style="font-size:12px;color:#15803d;">' + dur + ' นาที × ' + rate.toLocaleString("th-TH") + ' บาท/session × ' + qty + ' ครั้ง/เดือน</div>' +
-        '<div style="font-size:11px;color:#16a34a;margin-top:2px;">ใช้แล้ว ' + used + '/' + qty + ' ครั้งในเดือนนี้</div>' +
+        '<div style="font-size:11px;color:#16a34a;margin-top:2px;">ใช้แล้ว ' + used + '/' + qty + ' ครั้งในเดือนนี้ (เฉพาะที่ตรงสเปค)</div>' +
         '<button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:11px;padding:2px 8px;" onclick="resetPhysioToPackage()">↺ ใช้สเปคแพ็คเกจ</button>' +
         '</div>';
       banner.innerHTML = html;
