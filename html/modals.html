@@ -2696,11 +2696,11 @@
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="form-group">
-          <label class="form-label">วันที่ทำกายภาพ *</label>
+          <label class="form-label">วันที่ทำกายภาพ <span class="required">*</span></label>
           <input class="form-control" type="date" id="physio-date">
         </div>
         <div class="form-group">
-          <label class="form-label">นักกายภาพที่ทำ *</label>
+          <label class="form-label">นักกายภาพที่ทำ <span class="required">*</span></label>
           <div style="position:relative;">
             <input type="text" id="ta-pt-inp" class="form-control" style="font-size:13px;" placeholder="เลือกชื่อนักกายภาพจากรายการ..." autocomplete="off">
             <div id="ta-pt-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
@@ -2711,11 +2711,11 @@
 
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
         <div class="form-group">
-          <label class="form-label">ระยะเวลา (นาที) *</label>
+          <label class="form-label">ระยะเวลา (นาที) <span class="required">*</span></label>
           <input class="form-control" type="number" id="physio-duration" min="1" max="480" placeholder="0" value="0" oninput="calcPhysioAmount()">
         </div>
         <div class="form-group">
-          <label class="form-label">ราคา/session (฿) *</label>
+          <label class="form-label">ราคา/session (฿) <span class="required">*</span></label>
           <input class="form-control number" type="number" id="physio-rate" min="0" placeholder="0" oninput="calcPhysioAmount()">
         </div>
         <div class="form-group">
