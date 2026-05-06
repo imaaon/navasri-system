@@ -295,10 +295,37 @@ console.log('[fix] v98 snippet loaded');
 })();
 
 
-// [3] _renderPatDietaryTab — แสดงข้อมูลครบ (โภชนาการ + สายให้อาหาร)
+// [3] _renderPatDietaryTab — แสดงข้อมูลครบ (โภชนาการ + สายให้อาหาร) + date filter เฉพาะสายให้อาหาร
 (function() {
   var _orig = window._renderPatDietaryTab;
   if (typeof _orig !== 'function') return;
+  
+  // Helper: สร้าง date range from preset สำหรับ tube feed
+  window.setTubeFeedDateRange = function(preset, pid) {
+    var t = new Date();
+    var todayStr = t.toISOString().slice(0,10);
+    var fromD = todayStr, toD = todayStr;
+    if (preset === 'today') { fromD = todayStr; toD = todayStr; }
+    else if (preset === '7days') {
+      var past = new Date(t); past.setDate(t.getDate() - 6);
+      fromD = past.toISOString().slice(0,10); toD = todayStr;
+    } else if (preset === 'thisMonth') {
+      fromD = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-01';
+      toD = todayStr;
+    } else if (preset === 'lastMonth') {
+      var lm = new Date(t.getFullYear(), t.getMonth()-1, 1);
+      var ldlm = new Date(t.getFullYear(), t.getMonth(), 0);
+      fromD = lm.toISOString().slice(0,10);
+      toD = ldlm.toISOString().slice(0,10);
+    }
+    var fromEl = document.getElementById('tubefeed-filter-from');
+    var toEl = document.getElementById('tubefeed-filter-to');
+    if (fromEl) fromEl.value = fromD;
+    if (toEl) toEl.value = toD;
+    var listEl = document.getElementById('pat-dietary-list-' + pid) || document.querySelector('#patprofile-tab-dietary [id^="pat-dietary-list"]');
+    if (listEl) window._renderPatDietaryTab(pid, listEl);
+  };
+  
   window._renderPatDietaryTab = function(pid, listEl) {
     if (!document.getElementById('pat-dietary-btns-'+pid)) {
       var wrap = document.createElement('div');
@@ -316,77 +343,146 @@ console.log('[fix] v98 snippet loaded');
       listEl.parentNode.insertBefore(wrap, listEl);
     }
     listEl.innerHTML = '<div style="padding:20px;text-align:center">⏳ โหลด...</div>';
+    
+    // Read filter values BEFORE re-render (graceful fallback)
+    var today = new Date().toISOString().slice(0,10);
+    var fromDate, toDate;
+    try {
+      fromDate = document.getElementById('tubefeed-filter-from')?.value || today;
+      toDate   = document.getElementById('tubefeed-filter-to')?.value   || today;
+      if (fromDate > toDate) { var tmp = fromDate; fromDate = toDate; toDate = tmp; }
+    } catch(e) { fromDate = today; toDate = today; }
+    
     Promise.all([
       supa.from('patient_diets').select('*').eq('patient_id', pid).order('updated_at',{ascending:false}),
-      supa.from('tube_feedings').select('*').eq('patient_id', pid).order('created_at',{ascending:false})
+      // Tube feeding filter ที่ DB query: gte/lte
+      supa.from('tube_feedings').select('*').eq('patient_id', pid)
+        .gte('date', fromDate).lte('date', toDate)
+        .order('date',{ascending:false}).order('time',{ascending:false})
     ]).then(function(rs) {
       var dD = rs[0].data || [], tD = rs[1].data || [];
-      if (!dD.length && !tD.length) {
-        listEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3)">ไม่มีข้อมูล</div>';
-        return;
-      }
+      
+      var rangeText = (fromDate === toDate) ? '' : ' (' + fromDate + ' ถึง ' + toDate + ')';
       var frag = document.createDocumentFragment();
 
-      // โภชนาการ
-      dD.forEach(function(x) {
-        var restrictions = [];
-        try { restrictions = Array.isArray(x.restrictions) ? x.restrictions : JSON.parse(x.restrictions||'[]'); } catch(e){}
-        var d = document.createElement('div');
-        d.className = 'card';
-        d.style.cssText = 'margin-bottom:8px;padding:12px;';
-        d.innerHTML =
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
-            '<div style="flex:1;">' +
-              '<div style="font-weight:600;font-size:13px;">🍽️ ' + (x.diet_type||'') + ' | ' + (x.meals||'3 มื้อ') + '</div>' +
-              (restrictions.length ? '<div style="font-size:12px;color:var(--text2);margin-top:2px;">ข้อจำกัด: ' + restrictions.join(', ') + '</div>' : '') +
-              (x.calories ? '<div style="font-size:12px;color:var(--text2);margin-top:2px;">แคลอรี: ' + x.calories + ' kcal' + (x.protein ? ' | โปรตีน: ' + x.protein + 'g' : '') + '</div>' : '') +
-              (x.note ? '<div style="font-size:12px;margin-top:2px;">หมายเหตุ: ' + x.note + '</div>' : '') +
-              '<div style="font-size:11px;color:var(--text3);margin-top:2px;">ผู้บันทึก: ' + (x.recorder||'-') + '</div>' +
-            '</div>' +
-            '<div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">' +
-              '<button class="btn btn-ghost btn-sm" data-diet-id="'+x.id+'">✏️</button>' +
-              '<button class="btn btn-ghost btn-sm" style="color:#c0392b;" data-diet-del="'+x.id+'">🗑️</button>' +
-            '</div>' +
-          '</div>';
-        d.querySelector('[data-diet-id]').addEventListener('click', function(){ openDietModal(this.dataset.dietId); });
-        d.querySelector('[data-diet-del]').addEventListener('click', function(){
-          var id = this.dataset.dietDel;
-          if (!confirm('ลบรายการนี้?')) return;
-          supa.from('patient_diets').delete().eq('id', id).then(function(){
-            switchPatTab('dietary'); toast('ลบแล้ว','success');
+      // ========== Section 1: โภชนาการ (Dietary) — ไม่ filter ==========
+      if (dD.length > 0) {
+        var dietHeader = document.createElement('div');
+        dietHeader.style.cssText = 'font-weight:700;font-size:13px;color:var(--text2);margin:8px 0 4px 0;padding:0 4px;';
+        dietHeader.textContent = '🍽️ แผนโภชนาการ (' + dD.length + ')';
+        frag.appendChild(dietHeader);
+        
+        dD.forEach(function(x) {
+          var restrictions = [];
+          try { restrictions = Array.isArray(x.restrictions) ? x.restrictions : JSON.parse(x.restrictions||'[]'); } catch(e){}
+          var d = document.createElement('div');
+          d.className = 'card';
+          d.style.cssText = 'margin-bottom:8px;padding:12px;';
+          d.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+              '<div style="flex:1;">' +
+                '<div style="font-weight:600;font-size:13px;">🍽️ ' + (x.diet_type||'') + ' | ' + (x.meals||'3 มื้อ') + '</div>' +
+                (restrictions.length ? '<div style="font-size:12px;color:var(--text2);margin-top:2px;">ข้อจำกัด: ' + restrictions.join(', ') + '</div>' : '') +
+                (x.calories ? '<div style="font-size:12px;color:var(--text2);margin-top:2px;">แคลอรี: ' + x.calories + ' kcal' + (x.protein ? ' | โปรตีน: ' + x.protein + 'g' : '') + '</div>' : '') +
+                (x.note ? '<div style="font-size:12px;margin-top:2px;">หมายเหตุ: ' + x.note + '</div>' : '') +
+                '<div style="font-size:11px;color:var(--text3);margin-top:2px;">ผู้บันทึก: ' + (x.recorder||'-') + '</div>' +
+              '</div>' +
+              '<div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">' +
+                '<button class="btn btn-ghost btn-sm" data-diet-id="'+x.id+'">✏️</button>' +
+                '<button class="btn btn-ghost btn-sm" style="color:#c0392b;" data-diet-del="'+x.id+'">🗑️</button>' +
+              '</div>' +
+            '</div>';
+          d.querySelector('[data-diet-id]').addEventListener('click', function(){ openDietModal(this.dataset.dietId); });
+          d.querySelector('[data-diet-del]').addEventListener('click', function(){
+            var id = this.dataset.dietDel;
+            if (!confirm('ลบรายการนี้?')) return;
+            supa.from('patient_diets').delete().eq('id', id).then(function(){
+              switchPatTab('dietary'); toast('ลบแล้ว','success');
+            });
           });
+          frag.appendChild(d);
         });
-        frag.appendChild(d);
-      });
+      }
 
-      // สายให้อาหาร
-      tD.forEach(function(x) {
-        var d = document.createElement('div');
-        d.className = 'card';
-        d.style.cssText = 'margin-bottom:8px;padding:12px;border-left:3px solid #27ae60;';
-        d.innerHTML =
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
-            '<div style="flex:1;">' +
-              '<div style="font-weight:600;font-size:13px;">🧪 สายให้อาหาร | ' + (x.date||'') + ' ' + (x.time||'') + ' (' + (x.meal||'') + ')</div>' +
-              '<div style="font-size:12px;color:var(--text2);margin-top:2px;">สูตร: ' + (x.formula||'-') + ' | ปริมาณ: ' + (x.volume||0) + ' ml | น้ำตาม: ' + (x.water||0) + ' ml | Residual: ' + (x.residual||0) + ' ml</div>' +
-              (x.note ? '<div style="font-size:12px;margin-top:2px;">หมายเหตุ: ' + x.note + '</div>' : '') +
-              '<div style="font-size:11px;color:var(--text3);margin-top:2px;">ผู้บันทึก: ' + (x.recorder||'-') + '</div>' +
-            '</div>' +
-            '<div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">' +
-              '<button class="btn btn-ghost btn-sm" data-tube-id="'+x.id+'">✏️</button>' +
-              '<button class="btn btn-ghost btn-sm" style="color:#c0392b;" data-tube-del="'+x.id+'">🗑️</button>' +
-            '</div>' +
-          '</div>';
-        d.querySelector('[data-tube-id]').addEventListener('click', function(){ openTubeFeedModal(this.dataset.tubeId); });
-        d.querySelector('[data-tube-del]').addEventListener('click', function(){
-          var id = this.dataset.tubeDel;
-          if (!confirm('ลบรายการนี้?')) return;
-          supa.from('tube_feedings').delete().eq('id', id).then(function(){
-            switchPatTab('dietary'); toast('ลบแล้ว','success');
+      // ========== Section 2: สายให้อาหาร (Tube Feed) — filter date range ==========
+      var tubeSection = document.createElement('div');
+      tubeSection.style.cssText = 'margin-top:16px;';
+      
+      var tubeHeader = document.createElement('div');
+      tubeHeader.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;padding:8px;background:var(--surface2);border-radius:8px;';
+      tubeHeader.innerHTML = 
+        '<div style="font-weight:700;font-size:13px;color:var(--text2);">🧪 สายให้อาหาร (' + tD.length + ')</div>' +
+        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
+          '<span style="font-size:12px;color:var(--text3);">จาก:</span>' +
+          '<input type="date" id="tubefeed-filter-from" class="form-control" style="width:130px;font-size:12px;padding:4px 8px;" value="' + fromDate + '">' +
+          '<span style="font-size:12px;color:var(--text3);">ถึง:</span>' +
+          '<input type="date" id="tubefeed-filter-to" class="form-control" style="width:130px;font-size:12px;padding:4px 8px;" value="' + toDate + '">' +
+          '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setTubeFeedDateRange(\'today\',\'' + pid + '\')">วันนี้</button>' +
+          '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setTubeFeedDateRange(\'7days\',\'' + pid + '\')">7 วันล่าสุด</button>' +
+          '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setTubeFeedDateRange(\'thisMonth\',\'' + pid + '\')">เดือนนี้</button>' +
+          '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setTubeFeedDateRange(\'lastMonth\',\'' + pid + '\')">เดือนที่แล้ว</button>' +
+        '</div>';
+      tubeSection.appendChild(tubeHeader);
+      
+      // wire up onchange for inputs (after innerHTML set)
+      setTimeout(function() {
+        var fromInp = document.getElementById('tubefeed-filter-from');
+        var toInp = document.getElementById('tubefeed-filter-to');
+        if (fromInp) fromInp.onchange = function(){ window._renderPatDietaryTab(pid, listEl); };
+        if (toInp) toInp.onchange = function(){ window._renderPatDietaryTab(pid, listEl); };
+      }, 50);
+      
+      if (tD.length === 0) {
+        var emptyMsg = document.createElement('div');
+        emptyMsg.style.cssText = 'padding:20px;text-align:center;color:var(--text3);font-size:13px;';
+        emptyMsg.textContent = 'ไม่มีบันทึกสายให้อาหารในช่วงที่เลือก' + rangeText;
+        tubeSection.appendChild(emptyMsg);
+      } else {
+        // Limit 100 + warning
+        var MAX = 100;
+        var tooMany = tD.length > MAX;
+        var tDshow = tooMany ? tD.slice(0, MAX) : tD;
+        if (tooMany) {
+          var warn = document.createElement('div');
+          warn.style.cssText = 'padding:10px;text-align:center;background:#fef3c7;color:#92400e;font-size:12px;border-radius:6px;margin-bottom:8px;';
+          warn.textContent = '⚠️ พบ ' + tD.length + ' รายการ — แสดง ' + MAX + ' รายการล่าสุด กรุณาเลือกช่วงให้แคบลง';
+          tubeSection.appendChild(warn);
+        }
+        
+        tDshow.forEach(function(x) {
+          var d = document.createElement('div');
+          d.className = 'card';
+          d.style.cssText = 'margin-bottom:8px;padding:12px;border-left:3px solid #27ae60;';
+          d.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+              '<div style="flex:1;">' +
+                '<div style="font-weight:600;font-size:13px;">🧪 สายให้อาหาร | ' + (x.date||'') + ' ' + (x.time||'') + ' (' + (x.meal||'') + ')</div>' +
+                '<div style="font-size:12px;color:var(--text2);margin-top:2px;">สูตร: ' + (x.formula||'-') + ' | ปริมาณ: ' + (x.volume||0) + ' ml | น้ำตาม: ' + (x.water||0) + ' ml | Residual: ' + (x.residual||0) + ' ml</div>' +
+                (x.note ? '<div style="font-size:12px;margin-top:2px;">หมายเหตุ: ' + x.note + '</div>' : '') +
+                '<div style="font-size:11px;color:var(--text3);margin-top:2px;">ผู้บันทึก: ' + (x.recorder||'-') + '</div>' +
+              '</div>' +
+              '<div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">' +
+                '<button class="btn btn-ghost btn-sm" data-tube-id="'+x.id+'">✏️</button>' +
+                '<button class="btn btn-ghost btn-sm" style="color:#c0392b;" data-tube-del="'+x.id+'">🗑️</button>' +
+              '</div>' +
+            '</div>';
+          d.querySelector('[data-tube-id]').addEventListener('click', function(){ openTubeFeedModal(this.dataset.tubeId); });
+          d.querySelector('[data-tube-del]').addEventListener('click', function(){
+            var id = this.dataset.tubeDel;
+            if (!confirm('ลบรายการนี้?')) return;
+            supa.from('tube_feedings').delete().eq('id', id).then(function(){
+              switchPatTab('dietary'); toast('ลบแล้ว','success');
+            });
           });
+          tubeSection.appendChild(d);
         });
-        frag.appendChild(d);
-      });
+      }
+      frag.appendChild(tubeSection);
+      
+      // ถ้าไม่มี data ทั้ง 2 sections
+      if (dD.length === 0 && tD.length === 0) {
+        // เก็บ tube section header ไว้ + empty msg อยู่ในนั้นแล้ว — ไม่ต้องทำอะไรเพิ่ม
+      }
 
       listEl.innerHTML = ''; listEl.appendChild(frag);
     });
