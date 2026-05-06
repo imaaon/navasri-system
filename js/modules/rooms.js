@@ -221,7 +221,7 @@ async function deleteBed(id) {
 // ===== ROOM TRANSFER (ย้ายห้อง) =====
 function openTransferRoomModal(patientId) {
   const p = db.patients.find(x => x.id == patientId);
-  if (!p) return;
+  if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   const bed = db.beds.find(b => b.id == p.currentBedId);
   const room = db.rooms.find(r => r.id == (bed?.roomId || p.currentRoomId));
 
@@ -266,7 +266,7 @@ async function saveTransferRoom() {
   if (!date)      { toast('กรุณาระบุวันที่ย้าย', 'warning'); return; }
 
   const p = db.patients.find(x => x.id == patId);
-  if (!p) return;
+  if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
 
   showLoadingOverlay(true);
   try {
