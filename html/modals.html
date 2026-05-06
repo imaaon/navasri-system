@@ -333,7 +333,7 @@
       <input type="hidden" id="nursing-pat-id">
       <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
         <div class="form-group">
-          <label class="form-label">วันที่</label>
+          <label class="form-label">วันที่ <span class="required">*</span></label>
           <input class="form-control" type="date" id="nursing-date">
         </div>
         <div class="form-group">
@@ -2987,7 +2987,7 @@
       <input type="hidden" id="lab-edit-id">
       <input type="hidden" id="lab-patient-id">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="form-group"><label class="form-label">วันที่ตรวจ *</label>
+        <div class="form-group"><label class="form-label">วันที่ตรวจ <span class="required">*</span></label>
           <input class="form-control" type="date" id="lab-test-date"></div>
         <div class="form-group"><label class="form-label">โรงพยาบาล/สถานพยาบาล</label>
           <input class="form-control" type="text" id="lab-hospital" placeholder="ชื่อโรงพยาบาล"></div>
@@ -3029,7 +3029,7 @@
       <input type="hidden" id="editExpenseId">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
-          <label class="form-label">วันที่ <span style="color:red">*</span></label>
+          <label class="form-label">วันที่ <span class="required">*</span></label>
           <input type="date" id="exp-date" class="form-control">
         </div>
         <div>
@@ -3037,7 +3037,7 @@
           <input type="text" id="exp-doc-no" class="form-control" placeholder="EXP-0001 (auto)">
         </div>
         <div>
-          <label class="form-label">ประเภท <span style="color:red">*</span></label>
+          <label class="form-label">ประเภท <span class="required">*</span></label>
           <select id="exp-type" class="form-control" onchange="onExpTypeChange()">
             <option value="utilities">🔌 สาธารณูปโภค (ไฟ/น้ำ/เน็ต)</option>
             <option value="maintenance">🔧 ซ่อมแซม/บำรุงรักษา</option>
@@ -3055,7 +3055,7 @@
           </select>
         </div>
         <div>
-          <label class="form-label">รายการ/ชื่องาน <span style="color:red">*</span></label>
+          <label class="form-label">รายการ/ชื่องาน <span class="required">*</span></label>
           <input type="text" id="exp-job" class="form-control" placeholder="เช่น ค่าไฟ เม.ย. 2568">
         </div>
         <div>
@@ -3087,7 +3087,7 @@
       <!-- ยอดเงิน -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:12px;">
         <div>
-          <label class="form-label">ยอดก่อน VAT <span style="color:red">*</span></label>
+          <label class="form-label">ยอดก่อน VAT <span class="required">*</span></label>
           <input type="number" id="exp-subtotal" class="form-control number" min="0" step="0.01" oninput="calcExpTotal()">
         </div>
         <div>
@@ -3179,11 +3179,11 @@
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
-          <label class="form-label">ชื่ออุปกรณ์ <span style="color:red">*</span></label>
+          <label class="form-label">ชื่ออุปกรณ์ <span class="required">*</span></label>
           <input type="text" id="asset-name" class="form-control" placeholder="เช่น เครื่องวัดความดัน">
         </div>
         <div>
-          <label class="form-label">ประเภท <span style="color:red">*</span></label>
+          <label class="form-label">ประเภท <span class="required">*</span></label>
           <select id="asset-category" class="form-control" onchange="onAssetCategoryChange(this)">
             <option value="medical_equipment">🏥 เครื่องมือแพทย์</option>
             <option value="furniture">🛏️ เฟอร์นิเจอร์/เตียง</option>
@@ -3215,7 +3215,7 @@
           <input type="text" id="asset-internal-code" class="form-control" placeholder="รหัสของนวศรี (ถ้ามี)">
         </div>
         <div>
-          <label class="form-label">ตำแหน่งที่ตั้ง <span style="color:red">*</span></label>
+          <label class="form-label">ตำแหน่งที่ตั้ง <span class="required">*</span></label>
           <input type="text" id="asset-location" class="form-control" placeholder="เช่น ห้องพยาบาล ชั้น 1">
         </div>
         <div>
@@ -3277,11 +3277,11 @@
       <div id="maint-asset-name-badge" style="background:var(--surface2);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-weight:600;font-size:13px;"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
-          <label class="form-label">วันที่ซ่อม <span style="color:red">*</span></label>
+          <label class="form-label">วันที่ซ่อม <span class="required">*</span></label>
           <input type="date" id="maint-date" class="form-control">
         </div>
         <div>
-          <label class="form-label">ประเภทการซ่อม <span style="color:red">*</span></label>
+          <label class="form-label">ประเภทการซ่อม <span class="required">*</span></label>
           <select id="maint-type" class="form-control">
             <option value="preventive">📅 ซ่อมบำรุงตามแผน</option>
             <option value="corrective">🔨 แก้ไขที่พัง</option>
@@ -3289,7 +3289,7 @@
           </select>
         </div>
         <div style="grid-column:1/-1;">
-          <label class="form-label">รายละเอียดที่ทำ <span style="color:red">*</span></label>
+          <label class="form-label">รายละเอียดที่ทำ <span class="required">*</span></label>
           <textarea id="maint-desc" class="form-control" rows="2" placeholder="เช่น ล้างแอร์ เปลี่ยนฟิลเตอร์ ตรวจเช็คระบบ"></textarea>
         </div>
         <div>

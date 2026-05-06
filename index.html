@@ -61,7 +61,7 @@
 <script src="js/modules/requisition.js?v=20"></script>
 <script src="js/modules/patients.js?v=10"></script>
 <script src="js/modules/clinical/clinical-photo.js?v=1"></script>
-<script src="js/modules/clinical/clinical-profile.js?v=56"></script>
+<script src="js/modules/clinical/clinical-profile.js?v=57"></script>
 <script src="js/modules/clinical/clinical-appt.js?v=10"></script>
 <script src="js/modules/clinical/clinical-belongings.js?v=4"></script>
 <script src="js/modules/clinical/clinical-mar.js?v=20"></script>
@@ -80,7 +80,7 @@
 <script src="js/modules/billing/billing-print.js?v=4"></script>
 <script src="js/modules/billing/billing-report.js?v=11"></script>
 <script src="js/modules/billing/billing-clinical.js?v=18"></script>
-<script src="js/modules/suppliers.js?v=33"></script>
+<script src="js/modules/suppliers.js?v=34"></script>
 <script src="js/modules/expenses.js?v=8"></script>
 <script src="js/modules/assets.js?v=10"></script>
 <script src="js/modules/bi.js?v=2"></script>
@@ -91,7 +91,7 @@ async function loadHTMLPartials() {
     { id: 'login-placeholder',   file: 'html/login.html' },
     { id: 'sidebar-placeholder', file: 'html/sidebar.html?v=3' },
     { id: 'pages-placeholder',   file: 'html/pages.html' },
-    { id: 'modals-placeholder',  file: 'html/modals.html?v=18' },
+    { id: 'modals-placeholder',  file: 'html/modals.html?v=19' },
   ];
   await Promise.all(parts.map(async p => {
     try {
@@ -135,7 +135,7 @@ window.onload = async function() {
   startClock();
 };
 </script>
-<script src="js/fix-features.js?v=79" defer></script>
+<script src="js/fix-features.js?v=80" defer></script>
 
 <!-- MODAL: Patient Contracts (popup จากหน้า patient profile) -->
 <div id="modal-patient-contracts" class="modal-overlay" style="z-index:190;">

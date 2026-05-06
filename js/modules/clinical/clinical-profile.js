@@ -763,9 +763,8 @@ function loadPatDeposits(patId) {
 function renderLabTab(patientId) {
   var el = document.getElementById('lab-list-' + patientId);
   if (!el) return;
-  el.innerHTML = '<div style="text-align:center;padding:20px;">กำลังโหลด...</div>';
   
-  // Date range filter — default = today
+  // ⚠️ อ่านค่า filter ก่อน clear innerHTML (ไม่งั้น input หายก่อน)
   var today = new Date().toISOString().split('T')[0];
   var fromDate, toDate;
   try {
@@ -775,6 +774,8 @@ function renderLabTab(patientId) {
   } catch(e) {
     fromDate = today; toDate = today;
   }
+  
+  el.innerHTML = '<div style="text-align:center;padding:20px;">กำลังโหลด...</div>';
   
   supa.from('patient_lab_results').select('*').eq('patient_id', patientId)
     .gte('test_date', fromDate).lte('test_date', toDate)

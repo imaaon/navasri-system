@@ -462,7 +462,7 @@ async function rejectPR(id) {
   box.style.cssText = 'background:var(--surface,#fff);border-radius:12px;padding:24px;width:420px;max-width:95vw;';
   box.innerHTML =
     '<div style="font-size:15px;font-weight:600;margin-bottom:16px;">❌ ปฏิเสธคำขอซื้อ: ' + pr.refNo + '</div>' +
-    '<div class="form-group"><label class="form-label">เหตุผลที่ปฏิเสธ *</label>' +
+    '<div class="form-group"><label class="form-label">เหตุผลที่ปฏิเสธ <span class="required">*</span></label>' +
     '<textarea class="form-control" id="reject-reason-input" rows="3" placeholder="ระบุเหตุผล..." style="margin-top:6px;"></textarea></div>' +
     '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">' +
     '<button class="btn btn-ghost" id="reject-cancel-btn">ยกเลิก</button>' +
