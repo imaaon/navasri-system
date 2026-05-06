@@ -327,6 +327,18 @@ console.log('[fix] v98 snippet loaded');
     if (listEl) window._renderPatDietaryTab(pid, listEl, fromD, toD);
   };
   
+  // Handler เมื่อ user เปลี่ยน input filter ตรงๆ (ไม่ใช่ผ่าน preset)
+  // อ่าน value จาก input ก่อน clear innerHTML แล้วส่ง override
+  window._tubeFeedFilterChange = function(pid) {
+    var fromEl = document.getElementById('tubefeed-filter-from');
+    var toEl = document.getElementById('tubefeed-filter-to');
+    var fromD = fromEl?.value || new Date().toISOString().slice(0,10);
+    var toD = toEl?.value || fromD;
+    if (fromD > toD) { var tmp = fromD; fromD = toD; toD = tmp; }
+    var listEl = document.getElementById('pat-dietary-list-' + pid) || document.querySelector('#patprofile-tab-dietary [id^="pat-dietary-list"]');
+    if (listEl) window._renderPatDietaryTab(pid, listEl, fromD, toD);
+  };
+  
   window._renderPatDietaryTab = function(pid, listEl, overrideFrom, overrideTo) {
     if (!document.getElementById('pat-dietary-btns-'+pid)) {
       var wrap = document.createElement('div');
@@ -420,23 +432,15 @@ console.log('[fix] v98 snippet loaded');
         '<div style="font-weight:700;font-size:13px;color:var(--text2);">🧪 สายให้อาหาร (' + tD.length + ')</div>' +
         '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
           '<span style="font-size:12px;color:var(--text3);">จาก:</span>' +
-          '<input type="date" id="tubefeed-filter-from" class="form-control" style="width:130px;font-size:12px;padding:4px 8px;" value="' + fromDate + '">' +
+          '<input type="date" id="tubefeed-filter-from" class="form-control" style="width:130px;font-size:12px;padding:4px 8px;" value="' + fromDate + '" onchange="window._tubeFeedFilterChange(\'' + pid + '\')">' +
           '<span style="font-size:12px;color:var(--text3);">ถึง:</span>' +
-          '<input type="date" id="tubefeed-filter-to" class="form-control" style="width:130px;font-size:12px;padding:4px 8px;" value="' + toDate + '">' +
+          '<input type="date" id="tubefeed-filter-to" class="form-control" style="width:130px;font-size:12px;padding:4px 8px;" value="' + toDate + '" onchange="window._tubeFeedFilterChange(\'' + pid + '\')">' +
           '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setTubeFeedDateRange(\'today\',\'' + pid + '\')">วันนี้</button>' +
           '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setTubeFeedDateRange(\'7days\',\'' + pid + '\')">7 วันล่าสุด</button>' +
           '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setTubeFeedDateRange(\'thisMonth\',\'' + pid + '\')">เดือนนี้</button>' +
           '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setTubeFeedDateRange(\'lastMonth\',\'' + pid + '\')">เดือนที่แล้ว</button>' +
         '</div>';
       tubeSection.appendChild(tubeHeader);
-      
-      // wire up onchange for inputs (after innerHTML set)
-      setTimeout(function() {
-        var fromInp = document.getElementById('tubefeed-filter-from');
-        var toInp = document.getElementById('tubefeed-filter-to');
-        if (fromInp) fromInp.onchange = function(){ window._renderPatDietaryTab(pid, listEl); };
-        if (toInp) toInp.onchange = function(){ window._renderPatDietaryTab(pid, listEl); };
-      }, 50);
       
       if (tD.length === 0) {
         var emptyMsg = document.createElement('div');
