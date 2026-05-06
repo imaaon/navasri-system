@@ -55,7 +55,8 @@ function openIncidentModal(id) {
 async function saveIncident() {
   const patientId = document.getElementById("ta-inc-id").value;
   const detail = document.getElementById('incident-detail').value.trim();
-  if (!patientId||!detail) { toast('กรุณากรอกข้อมูลที่จำเป็น','error'); return; }
+  if (!patientId) { toast('กรุณาเลือกผู้รับบริการ', 'warning'); return; }
+  if (!detail)    { toast('กรุณากรอกรายละเอียดเหตุการณ์', 'warning'); return; }
   const patient = (db.patients||[]).find(p=>String(p.id)===String(patientId));
 
   // upload รูปถ้ามี pending file
@@ -167,7 +168,8 @@ function openWoundModal(id) {
 async function saveWound() {
   const patientId = document.getElementById("ta-wnd-id").value;
   const location = document.getElementById('wound-location').value;
-  if (!patientId||!location) { toast('กรุณาเลือกผู้ป่วยและตำแหน่งแผล','error'); return; }
+  if (!patientId) { toast('กรุณาเลือกผู้รับบริการ', 'warning'); return; }
+  if (!location)  { toast('กรุณาระบุตำแหน่งแผล', 'warning'); return; }
   const patient = (db.patients||[]).find(p=>String(p.id)===String(patientId));
 
   // upload รูปถ้ามี pending file
@@ -639,7 +641,8 @@ async function saveDeposit() {
   await ensureSecondaryDB();
   const patientId = document.getElementById("ta-dep-id").value;
   const amount = parseFloat(document.getElementById('deposit-amount').value)||0;
-  if (!patientId||!amount) { toast('กรุณากรอกข้อมูลที่จำเป็น','error'); return; }
+  if (!patientId)   { toast('กรุณาเลือกผู้รับบริการ', 'warning'); return; }
+  if (!amount)      { toast('กรุณาระบุจำนวนเงินมัดจำ', 'warning'); return; }
   const patient = (db.patients||[]).find(p=>String(p.id)===String(patientId));
   const row = {
     patient_id: patientId, patient_name: patient?.name||'',

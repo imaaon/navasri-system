@@ -261,9 +261,9 @@ async function saveTransferRoom() {
   const date      = document.getElementById('transfer-date').value;
   const note      = document.getElementById('transfer-note').value.trim();
 
-  if (!newRoomId || !newBedId || !date) {
-    toast('กรุณากรอกข้อมูลให้ครบ', 'warning'); return;
-  }
+  if (!newRoomId) { toast('กรุณาเลือกห้องที่จะย้ายไป', 'warning'); return; }
+  if (!newBedId)  { toast('กรุณาเลือกเตียงที่จะย้ายไป', 'warning'); return; }
+  if (!date)      { toast('กรุณาระบุวันที่ย้าย', 'warning'); return; }
 
   const p = db.patients.find(x => x.id == patId);
   if (!p) return;

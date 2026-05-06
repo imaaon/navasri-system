@@ -274,7 +274,8 @@ async function saveDischarge() {
   const date = document.getElementById('discharge-date').value;
   const reason = document.getElementById('discharge-reason').value;
   const summary = document.getElementById('discharge-summary').value.trim();
-  if (!date || !reason) { toast('กรุณากรอกข้อมูลให้ครบถ้วน','warning'); return; }
+  if (!date)   { toast('กรุณาระบุวันที่จำหน่าย', 'warning'); return; }
+  if (!reason) { toast('กรุณาเลือกเหตุผลในการจำหน่าย', 'warning'); return; }
   const p = db.patients.find(x => x.id == patId);
   if (!p) return;
   const { error } = await supa.from('patients').update({

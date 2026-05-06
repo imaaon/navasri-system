@@ -126,7 +126,9 @@ async function saveExpense() {
   const expType= document.getElementById('exp-type').value;
   const job    = document.getElementById('exp-job').value.trim();
   const _subEl = document.getElementById('exp-subtotal'); const sub = parseFloat(_subEl?.value || _subEl?.textContent?.replace(/[^0-9.]/g,''))||0;
-  if (!date || !job || sub <= 0) { toast('กรุณากรอกวันที่ รายการ และยอดเงิน', 'error'); return; }
+  if (!date)    { toast('กรุณาระบุวันที่', 'warning'); return; }
+  if (!job)     { toast('กรุณาระบุรายการ/ชื่องาน', 'warning'); return; }
+  if (sub <= 0) { toast('กรุณาระบุยอดก่อน VAT (ต้องมากกว่า 0)', 'warning'); return; }
 
   const vatRate = parseFloat(document.getElementById('exp-vat-rate').value)||0;
   const whtRate = parseFloat(document.getElementById('exp-wht-rate').value)||0;

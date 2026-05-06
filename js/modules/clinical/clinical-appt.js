@@ -72,7 +72,8 @@ async function saveAppt() {
   await ensureSecondaryDB();
   const apptDate = document.getElementById('appt-date').value;
   const hospital = document.getElementById('appt-hospital').value.trim();
-  if (!apptDate || !hospital) { toast('กรุณาระบุวันที่และโรงพยาบาล','warning'); return; }
+  if (!apptDate) { toast('กรุณาระบุวันที่นัด', 'warning'); return; }
+  if (!hospital) { toast('กรุณาระบุชื่อโรงพยาบาล', 'warning'); return; }
   const actor = currentUser?.displayName || currentUser?.username || '';
   const row = {
     patient_id: _apptPatId, patient_name: _apptPatName,
