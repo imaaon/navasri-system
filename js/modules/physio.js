@@ -14,11 +14,15 @@ function getThaiMonths() {
 }
 
 function calcPhysioAmount() {
-  var dur = parseInt(document.getElementById("physio-duration").value || 60);
+  // Per-session pricing: ยอดรวม = ราคา/session ตรงๆ (ไม่ × dur/60)
   var rate = parseFloat(document.getElementById("physio-rate").value || 0);
-  var amt = Math.round((dur / 60) * rate * 100) / 100;
+  var amt = Math.round(rate * 100) / 100;
   var el = document.getElementById("physio-amount");
   if (el) el.value = amt.toLocaleString("th-TH", { minimumFractionDigits: 2 });
+  // Validate กับ package (ถ้ามี function)
+  if (typeof validatePhysioAgainstPackage === 'function') {
+    try { validatePhysioAgainstPackage(); } catch(e) { console.warn('[physio] validate err:', e); }
+  }
   return amt;
 }
 
@@ -33,8 +37,23 @@ function openPhysioSessionModal(patientId, patientName, editId) {
   document.getElementById("physio-amount").value = "0.00";
   var today = new Date().toISOString().split("T")[0];
   document.getElementById("physio-date").value = today;
-  document.getElementById("physio-rate").value = 0;
-    document.getElementById("physio-duration").value = "60";
+  
+  // ดึง contract package + cache สำหรับ validation
+  var contract = (typeof getActiveContract === 'function') ? getActiveContract(patientId) : null;
+  var physioRule = (contract && typeof getPhysioRule === 'function') ? getPhysioRule(contract.items) : null;
+  window._currentPhysioPackage = physioRule;
+  
+  // Pre-fill: ถ้ามี contract → ค่าตาม package, ถ้าไม่มี → 0
+  if (physioRule) {
+    document.getElementById("physio-duration").value = physioRule.duration_minutes || 0;
+    document.getElementById("physio-rate").value = physioRule.rate_per_session || physioRule.rate_per_hour_extra || 0;
+    if (typeof showPhysioPackageBanner === 'function') showPhysioPackageBanner(physioRule, patientId);
+  } else {
+    document.getElementById("physio-duration").value = 0;
+    document.getElementById("physio-rate").value = 0;
+    if (typeof hidePhysioPackageBanner === 'function') hidePhysioPackageBanner();
+  }
+  
   var sel2 = document.getElementById("ta-pt-id");
   if (sel2) {
     sel2.innerHTML = "<option value=\"\">เลือกพนักงาน</option>" +
@@ -46,6 +65,11 @@ function openPhysioSessionModal(patientId, patientName, editId) {
   if (editId) loadPhysioSessionForEdit(editId);
   makeTypeahead({inputId:"ta-pt-inp",listId:"ta-pt-list",hiddenId:"ta-pt-id",dataFn:()=>taStaff()});
   openModal("modal-physio-session");
+  // Calc + validate ทันทีหลังเปิด
+  setTimeout(function() {
+    calcPhysioAmount();
+    if (typeof validatePhysioAgainstPackage === 'function') validatePhysioAgainstPackage();
+  }, 50);
 }
 
 async function loadPhysioSessionForEdit(sessionId) {
@@ -54,7 +78,9 @@ async function loadPhysioSessionForEdit(sessionId) {
   if (!data) return;
   document.getElementById("physio-date").value = data.session_date;
   document.getElementById("physio-duration").value = String(data.duration_minutes);
-  document.getElementById("physio-rate").value = data.rate_per_hour;
+  // Per-session pricing: ใช้ rate_per_session ก่อน, fallback rate_per_hour
+  var rate = (data.rate_per_session && data.rate_per_session > 0) ? data.rate_per_session : data.rate_per_hour;
+  document.getElementById("physio-rate").value = rate;
   document.getElementById("physio-note").value = data.note || "";
   (function(){var _v=data.therapist_id || "";var _h=document.getElementById("ta-pt-id");if(_h)_h.value=_v||"";var _i=document.getElementById("ta-pt-inp");if(_i){var _all=(db.patients||[]).concat(db.staff||[]).concat(db.suppliers||[]);var _p=_all.find(x=>String(x.id)===String(_v));_i.value=_p?(_p.name||""):"";}})();
   calcPhysioAmount();
@@ -73,11 +99,29 @@ async function savePhysioSession() {
   if (!date) { toast("กรุณาเลือกวันที่", "warning"); return; }
   if (!duration) { toast("กรุณาเลือกระยะเวลา", "warning"); return; }
   if (!rate) { toast("กรุณาระบุราคา", "warning"); return; }
+  
+  // Validation: ถ้าไม่ตรงสเปคแพ็ค ต้องติ๊ก confirm
+  var confirmCB = document.getElementById("physio-addon-confirm");
+  var pkg = window._currentPhysioPackage;
+  if (pkg) {
+    var pkgRate = Number(pkg.rate_per_session || pkg.rate_per_hour_extra || 0);
+    var pkgDur = Number(pkg.duration_minutes || 0);
+    var matchSpec = (Number(duration) === pkgDur && Number(rate) === pkgRate);
+    if (!matchSpec && confirmCB && !confirmCB.checked) {
+      toast("กรุณาติ๊กยืนยันว่าต้องการบันทึกเป็น Add-on นอกแพ็คเกจ", "warning");
+      return;
+    }
+  }
+  
+  // Per-session pricing: rate_per_session = ค่าที่กรอก, rate_per_hour = converted (backward compat)
+  var rateHourCompat = duration > 0 ? Math.round((rate * 60 / duration) * 100) / 100 : 0;
   var row = {
     patient_id: patientId, therapist_id: therapistId,
     therapist_name: therapist ? therapist.name : null,
     session_date: date, duration_minutes: duration,
-    rate_per_hour: rate, note: note || null,
+    rate_per_hour: rateHourCompat,        // backward compat (column NOT NULL)
+    rate_per_session: rate,                // ค่าจริงต่อ session
+    note: note || null,
     created_by: currentUser ? currentUser.username : null
   };
   var res;
@@ -89,6 +133,8 @@ async function savePhysioSession() {
   if (res.error) { toast("บันทึกไม่สำเร็จ: " + res.error.message, "error"); return; }
   toast(sessionId ? "แก้ไขเรียบร้อย" : "บันทึกเรียบร้อย", "success");
   closeModal("modal-physio-session");
+  // Clear cached package
+  window._currentPhysioPackage = null;
   renderPhysioTab(patientId);
   // delayed re-render เพื่อ handle filter dropdown ที่อาจยังไม่ load
   setTimeout(function(){
@@ -173,4 +219,92 @@ async function exportPhysioExcel() {
     rows.push([i+1, s.session_date||"", (s.patients && s.patients.name)||"", s.therapist_name||"", s.duration_minutes||0, s.amount||0, s.billed ? "แล้ว" : "ยังไม่"]);
   });
   if (typeof _xlsxDownload === "function") _xlsxDownload(rows, "กายภาพ", "navasri_physio_" + new Date().toISOString().slice(0,10));
+}
+// ===== Per-Session Pricing: Package Banner + Validation =====
+
+function showPhysioPackageBanner(rule, patientId) {
+  var banner = document.getElementById("physio-pkg-info");
+  if (!banner) return;
+  var dur = rule.duration_minutes || 0;
+  var rate = rule.rate_per_session || rule.rate_per_hour_extra || 0;
+  var qty = rule.sessions_included || 0;
+  
+  // Count sessions ในเดือนปัจจุบัน
+  var now = new Date();
+  var monthStart = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-01";
+  var monthEnd = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString().split("T")[0];
+  
+  // Async: load count แล้ว update banner
+  supa.from("physio_sessions").select("id", { count: "exact", head: true })
+    .eq("patient_id", patientId)
+    .gte("session_date", monthStart)
+    .lte("session_date", monthEnd)
+    .then(function(res) {
+      var used = res.count || 0;
+      var html = '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-bottom:8px;">' +
+        '<div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:4px;">📦 แพ็คเกจของลูกค้า</div>' +
+        '<div style="font-size:12px;color:#15803d;">' + dur + ' นาที × ' + rate.toLocaleString("th-TH") + ' บาท/session × ' + qty + ' ครั้ง/เดือน</div>' +
+        '<div style="font-size:11px;color:#16a34a;margin-top:2px;">ใช้แล้ว ' + used + '/' + qty + ' ครั้งในเดือนนี้</div>' +
+        '<button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:11px;padding:2px 8px;" onclick="resetPhysioToPackage()">↺ ใช้สเปคแพ็คเกจ</button>' +
+        '</div>';
+      banner.innerHTML = html;
+      banner.style.display = 'block';
+    });
+}
+
+function hidePhysioPackageBanner() {
+  var banner = document.getElementById("physio-pkg-info");
+  if (banner) { banner.style.display = 'none'; banner.innerHTML = ''; }
+  var warn = document.getElementById("physio-mismatch-warning");
+  if (warn) { warn.style.display = 'none'; }
+}
+
+function resetPhysioToPackage() {
+  var pkg = window._currentPhysioPackage;
+  if (!pkg) return;
+  document.getElementById("physio-duration").value = pkg.duration_minutes || 0;
+  document.getElementById("physio-rate").value = pkg.rate_per_session || pkg.rate_per_hour_extra || 0;
+  var cb = document.getElementById("physio-addon-confirm");
+  if (cb) cb.checked = false;
+  calcPhysioAmount();
+}
+
+function validatePhysioAgainstPackage() {
+  var warn = document.getElementById("physio-mismatch-warning");
+  var saveBtn = document.getElementById("physio-save-btn");
+  var confirmCB = document.getElementById("physio-addon-confirm");
+  var pkg = window._currentPhysioPackage;
+  
+  if (!pkg) {
+    // ไม่มีแพ็ค → ไม่ต้องตรวจ
+    if (warn) warn.style.display = 'none';
+    if (saveBtn) saveBtn.disabled = false;
+    return;
+  }
+  
+  var dur = parseInt(document.getElementById("physio-duration").value || 0);
+  var rate = parseFloat(document.getElementById("physio-rate").value || 0);
+  var pkgDur = Number(pkg.duration_minutes || 0);
+  var pkgRate = Number(pkg.rate_per_session || pkg.rate_per_hour_extra || 0);
+  var matchSpec = (Number(dur) === pkgDur && Number(rate) === pkgRate);
+  
+  if (matchSpec) {
+    if (warn) warn.style.display = 'none';
+    if (saveBtn) saveBtn.disabled = false;
+    if (confirmCB) confirmCB.checked = false;
+  } else {
+    if (warn) {
+      warn.innerHTML = '<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 12px;">' +
+        '<div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;">⚠️ ค่ากรอกไม่ตรงสเปคแพ็คเกจ</div>' +
+        '<div style="font-size:11px;color:#78350f;margin-bottom:6px;">จะคิดเป็น Add-on นอกแพ็คเกจ — ลูกค้าจะถูกเรียกเก็บ ' + (rate || 0).toLocaleString("th-TH") + ' บาท</div>' +
+        '<label style="font-size:11px;display:flex;align-items:center;gap:6px;color:#78350f;">' +
+        '<input type="checkbox" id="physio-addon-confirm" onchange="validatePhysioAgainstPackage()"' + (confirmCB && confirmCB.checked ? ' checked' : '') + '>' +
+        'ฉันยืนยันว่าต้องการบันทึกเป็น Add-on' +
+        '</label>' +
+        '</div>';
+      warn.style.display = 'block';
+    }
+    var nowCB = document.getElementById("physio-addon-confirm");
+    if (saveBtn) saveBtn.disabled = !(nowCB && nowCB.checked);
+  }
 }

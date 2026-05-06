@@ -75,16 +75,50 @@ function allocateIncludedProducts(requisitionItems, includedProducts) {
 
 function allocatePhysioSessions(sessions, physioRule) {
   var sessionsIncluded = (physioRule && physioRule.sessions_included) || 0;
-  var ratePerHour = (physioRule && physioRule.rate_per_hour_extra) || 0;
+  // รับทั้ง schema ใหม่ (rate_per_session, duration_minutes) และเก่า (rate_per_hour_extra)
+  var pkgDuration = (physioRule && physioRule.duration_minutes != null) ? Number(physioRule.duration_minutes) : null;
+  var pkgRate = null;
+  if (physioRule) {
+    if (physioRule.rate_per_session != null && physioRule.rate_per_session > 0) {
+      pkgRate = Number(physioRule.rate_per_session);
+    } else if (physioRule.rate_per_hour_extra != null) {
+      pkgRate = Number(physioRule.rate_per_hour_extra);
+    }
+  }
+  
   var free = [], charged = [], extra_amount = 0;
-  (sessions || []).forEach(function(s, idx) {
-    if (idx < sessionsIncluded) {
-      free.push(Object.assign({}, s, { billing_source: 'contract_included' }));
+  var matchedCount = 0;
+  
+  (sessions || []).forEach(function(s) {
+    // ราคาต่อ session: ใช้ rate_per_session ก่อน, fallback amount, สุดท้าย infer
+    var sessionRate;
+    if (s.rate_per_session != null && s.rate_per_session > 0) {
+      sessionRate = Number(s.rate_per_session);
+    } else if (s.amount != null && s.amount > 0) {
+      sessionRate = Number(s.amount);
     } else {
-      var mins = s.duration_minutes || 0;
-      var amount = Math.round((mins / 60) * ratePerHour * 100) / 100;
-      charged.push(Object.assign({}, s, { billing_source: 'extra_charge', charge_amount: amount }));
-      extra_amount += amount;
+      sessionRate = Math.round(((s.duration_minutes||0)/60) * (s.rate_per_hour||0) * 100) / 100;
+    }
+    
+    // Spec match: ตรงทั้ง duration AND rate
+    var matchesSpec = (
+      pkgDuration !== null && pkgRate !== null &&
+      Number(s.duration_minutes) === pkgDuration &&
+      sessionRate === pkgRate
+    );
+    
+    if (matchesSpec && matchedCount < sessionsIncluded) {
+      // ตรงสเปค + ยังไม่เกิน quota → ฟรี
+      free.push(Object.assign({}, s, { billing_source: 'package_free', charge_amount: 0 }));
+      matchedCount++;
+    } else if (matchesSpec) {
+      // ตรงสเปคแต่เกิน quota → คิดเงิน rate ของ pkg
+      charged.push(Object.assign({}, s, { billing_source: 'package_overflow', charge_amount: sessionRate }));
+      extra_amount += sessionRate;
+    } else {
+      // ไม่ตรงสเปค → addon (คิดราคาที่กรอกใน session)
+      charged.push(Object.assign({}, s, { billing_source: 'addon_different_spec', charge_amount: sessionRate }));
+      extra_amount += sessionRate;
     }
   });
   return { free: free, charged: charged, extra_amount: extra_amount };

@@ -398,15 +398,24 @@ function renderContractItems() {
   var physioHTML = '';
   if (physioItem) {
     var pi = physioItem.i; var pitem = physioItem.item;
+    // Backward compat: ถ้าไม่มี new fields → infer
+    var dispDur = pitem.duration_minutes != null ? pitem.duration_minutes : 0;
+    var dispRate = pitem.rate_per_session != null && pitem.rate_per_session > 0 
+      ? pitem.rate_per_session 
+      : (pitem.rate_per_hour_extra || 0);
     physioHTML = '<div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:8px;">' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:center;">' +
         '<div class="form-group" style="margin:0;">' +
-          '<label style="font-size:11px;color:var(--text3);">จำนวน session ที่รวม</label>' +
+          '<label style="font-size:11px;color:var(--text3);">จำนวน session/เดือน</label>' +
           '<input class="form-control number" type="number" value="'+(pitem.sessions_included||0)+'" min="0" oninput="_contractItems['+pi+'].sessions_included=parseInt(this.value)||0">' +
         '</div>' +
         '<div class="form-group" style="margin:0;">' +
-          '<label style="font-size:11px;color:var(--text3);">ราคา/ชม. ที่เกิน (บาท)</label>' +
-          '<input class="form-control number" type="number" value="'+(pitem.rate_per_hour_extra||0)+'" min="0" oninput="_contractItems['+pi+'].rate_per_hour_extra=parseFloat(this.value)||0">' +
+          '<label style="font-size:11px;color:var(--text3);">ระยะเวลา/session (นาที)</label>' +
+          '<input class="form-control number" type="number" value="'+dispDur+'" min="0" oninput="_contractItems['+pi+'].duration_minutes=parseInt(this.value)||0">' +
+        '</div>' +
+        '<div class="form-group" style="margin:0;">' +
+          '<label style="font-size:11px;color:var(--text3);">ราคา/session (฿)</label>' +
+          '<input class="form-control number" type="number" value="'+dispRate+'" min="0" oninput="_contractItems['+pi+'].rate_per_session=parseFloat(this.value)||0;_contractItems['+pi+'].rate_per_hour_extra=parseFloat(this.value)||0">' +
         '</div>' +
         '<button class="btn btn-ghost btn-sm" style="margin-top:18px;" onclick="_contractItems.splice('+pi+',1);renderContractItems()">✕</button>' +
       '</div>' +
@@ -435,7 +444,13 @@ function addChargeItem() {
 function addPhysioIncluded() {
   var existing = _contractItems.find(function(i){ return i.type === 'physio_included'; });
   if (existing) { toast('มีกายภาพใน package อยู่แล้วค่ะ', 'warning'); return; }
-  _contractItems.push({ type:'physio_included', sessions_included:0, rate_per_hour_extra:0 });
+  _contractItems.push({ 
+    type:'physio_included', 
+    sessions_included:0, 
+    duration_minutes:0,           // NEW: ระยะเวลา/session
+    rate_per_session:0,           // NEW: ราคา/session
+    rate_per_hour_extra:0         // เก็บ legacy compat
+  });
   renderContractItems();
 }
 

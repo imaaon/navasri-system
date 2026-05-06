@@ -1157,9 +1157,17 @@ async function autoFillPhysioToInvoice() {
     if (physioRule) {
       allocation = allocatePhysioSessions(sessions, physioRule);
     } else {
-      // Fallback: ทุก session คิดเงินตาม rate ที่ทีมกายภาพบันทึก
+      // Fallback: ทุก session คิดเงินตาม rate_per_session ที่กรอก (per-session pricing)
       var charged = sessions.map(function(s) {
-        var amt = Math.round(((s.duration_minutes||0)/60) * (s.rate_per_hour||0) * 100) / 100;
+        // Per-session: ใช้ rate_per_session ก่อน, fallback (dur/60)*rate_per_hour
+        var amt;
+        if (s.rate_per_session != null && s.rate_per_session > 0) {
+          amt = Number(s.rate_per_session);
+        } else if (s.amount != null && s.amount > 0) {
+          amt = Number(s.amount);
+        } else {
+          amt = Math.round(((s.duration_minutes||0)/60) * (s.rate_per_hour||0) * 100) / 100;
+        }
         return Object.assign({}, s, { billing_source: 'no_package', charge_amount: amt });
       });
       allocation = {
@@ -1242,7 +1250,9 @@ function renderPhysioBannerInInvoice(allocation) {
   }
   
   var inPkgCount = freeArr.length;
-  var overCount = chargedArr.length;
+  var overflowArr = chargedArr.filter(function(s) { return s.billing_source === 'package_overflow'; });
+  var addonArr = chargedArr.filter(function(s) { return s.billing_source === 'addon_different_spec' || s.billing_source === 'addon_confirmed'; });
+  var noPackageArr = chargedArr.filter(function(s) { return s.billing_source === 'no_package'; });
   
   // List item HTML (sort by date)
   allSessions.sort(function(a, b) {
@@ -1252,7 +1262,6 @@ function renderPhysioBannerInInvoice(allocation) {
   var listHtml = '';
   for (var i = 0; i < allSessions.length; i++) {
     var s = allSessions[i];
-    var isFree = (s.billing_source === 'contract_included');
     var dateStr = '';
     try {
       var d = new Date(s.session_date);
@@ -1260,23 +1269,35 @@ function renderPhysioBannerInInvoice(allocation) {
     } catch (e) {
       dateStr = s.session_date || '-';
     }
-    var hrs = ((s.duration_minutes || 0) / 60).toFixed(1).replace(/.0$/, '');
+    var dur = s.duration_minutes || 0;
     var therapist = s.therapist_name || '-';
-    var label = isFree
-      ? '<span style="color:#059669;">✅ อยู่ใน package</span>'
-      : '<span style="color:#b45309;">💰 เกิน package: ' + (s.charge_amount || 0) + ' ฿</span>';
-    listHtml += '<div style="font-size:11px;padding:2px 0;">📅 ' + dateStr + 
-                ' — ' + hrs + ' ชม. (' + therapist + ') — ' + label + '</div>';
+    var label;
+    if (s.billing_source === 'package_free') {
+      label = '<span style="color:#059669;">✅ ใน package</span>';
+    } else if (s.billing_source === 'package_overflow') {
+      label = '<span style="color:#b45309;">🟠 เกิน quota: ' + (s.charge_amount || 0).toLocaleString('th-TH') + ' ฿</span>';
+    } else if (s.billing_source === 'no_package') {
+      label = '<span style="color:#7c3aed;">💰 ' + (s.charge_amount || 0).toLocaleString('th-TH') + ' ฿</span>';
+    } else {
+      label = '<span style="color:#2563eb;">🔵 Add-on: ' + (s.charge_amount || 0).toLocaleString('th-TH') + ' ฿</span>';
+    }
+    listHtml += '<div style="font-size:11px;padding:2px 0;">📅 ' + dateStr +
+                ' — ' + dur + ' นาที (' + therapist + ') — ' + label + '</div>';
   }
   
-  // Banner — pattern เดียวกับ "มีสินค้ารวมใน package" ของเวชภัณฑ์
-  var summary = '🤸 มีกายภาพรวมใน package ' + inPkgCount + ' ครั้ง';
-  if (overCount > 0) summary += ', เกิน ' + overCount + ' ครั้ง';
+  // Summary
+  var summary = '🤸';
+  var parts = [];
+  if (inPkgCount > 0) parts.push('ใน package ' + inPkgCount + ' ครั้ง');
+  if (overflowArr.length > 0) parts.push('เกิน quota ' + overflowArr.length + ' ครั้ง');
+  if (addonArr.length > 0) parts.push('Add-on ' + addonArr.length + ' ครั้ง');
+  if (noPackageArr.length > 0) parts.push('ไม่มี package ' + noPackageArr.length + ' ครั้ง');
+  summary += ' ' + parts.join(', ');
   
   var html = '<div style="font-size:12px;color:#3a6a3a;padding:6px 8px;background:#f0fff4;border-radius:4px;">' +
              summary + ' — ' +
              '<span style="text-decoration:underline;cursor:pointer;" ' +
-             'onclick="var l=this.parentElement.parentElement.querySelector(' + "'.pt-list'" + 
+             'onclick="var l=this.parentElement.parentElement.querySelector(' + "'.pt-list'" +
              ');l.style.display=l.style.display===' + "'none'" + '?' + "'block'" + ':' + "'none'" + ';">' +
              'คลิกเพื่อดู</span>' +
              '<div class="pt-list" style="display:none;margin-top:6px;">' + listHtml + '</div>' +

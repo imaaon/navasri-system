@@ -2691,6 +2691,9 @@
         <input type="hidden" id="physio-session-id">
       </div>
 
+      <!-- Banner: package info (ค้างถาวรเมื่อมี contract) -->
+      <div id="physio-pkg-info" style="display:none;"></div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="form-group">
           <label class="form-label">วันที่ทำกายภาพ *</label>
@@ -2709,10 +2712,10 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
         <div class="form-group">
           <label class="form-label">ระยะเวลา (นาที) *</label>
-          <input class="form-control" type="number" id="physio-duration" min="1" max="480" placeholder="60" value="60">
+          <input class="form-control" type="number" id="physio-duration" min="1" max="480" placeholder="0" value="0" oninput="calcPhysioAmount()">
         </div>
         <div class="form-group">
-          <label class="form-label">ราคา/ชั่วโมง (฿) *</label>
+          <label class="form-label">ราคา/session (฿) *</label>
           <input class="form-control number" type="number" id="physio-rate" min="0" placeholder="0" oninput="calcPhysioAmount()">
         </div>
         <div class="form-group">
@@ -2720,6 +2723,9 @@
           <input class="form-control number" id="physio-amount" readonly style="background:var(--surface2);font-weight:700;color:var(--accent);text-align:right;">
         </div>
       </div>
+
+      <!-- Warning: ค่ากรอกไม่ตรงสเปคแพ็คเกจ -->
+      <div id="physio-mismatch-warning" style="display:none;"></div>
 
       <div class="form-group">
         <label class="form-label">หมายเหตุ</label>
@@ -2729,7 +2735,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-physio-session')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="savePhysioSession()">💾 บันทึก</button>
+      <button class="btn btn-primary" id="physio-save-btn" onclick="savePhysioSession()">💾 บันทึก</button>
     </div>
   </div>
 </div>
