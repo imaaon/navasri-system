@@ -99,6 +99,9 @@ async function savePhysioSession() {
   if (!date) { toast("กรุณาเลือกวันที่", "warning"); return; }
   if (!duration) { toast("กรุณาเลือกระยะเวลา", "warning"); return; }
   if (!rate) { toast("กรุณาระบุราคา", "warning"); return; }
+  if (!therapistId) { toast("กรุณาระบุชื่อนักกายภาพ", "warning"); return; }
+  // ถ้าระบุชื่อแต่หาไม่เจอใน db.staff = พิมพ์ชื่ออิสระ ไม่ได้เลือก autocomplete
+  if (therapistId && !therapist) { toast("กรุณาเลือกนักกายภาพจากรายการ (ไม่ใช่พิมพ์อิสระ)", "warning"); return; }
   
   // Validation: ถ้าไม่ตรงสเปคแพ็ค ต้องติ๊ก confirm
   var confirmCB = document.getElementById("physio-addon-confirm");
