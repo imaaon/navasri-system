@@ -249,6 +249,8 @@ async function saveMaintenance() {
   const desc    = document.getElementById('maint-desc').value.trim();
   if (!assetId) { toast('ไม่พบรหัสอุปกรณ์ — กรุณาปิด modal แล้วลองใหม่', 'error'); return; }
   if (!date)    { toast('กรุณาระบุวันที่ซ่อม', 'warning'); return; }
+  const maintType = document.getElementById('maint-type').value;
+  if (!maintType) { toast('กรุณาเลือกประเภทการซ่อม', 'warning'); return; }
   if (!desc)    { toast('กรุณาระบุรายละเอียดที่ทำ', 'warning'); return; }
 
   const payload = {

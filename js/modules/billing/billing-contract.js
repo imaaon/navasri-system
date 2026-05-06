@@ -126,6 +126,10 @@ async function saveContract() {
   const name       = document.getElementById('contract-name').value.trim();
   if (!patientId) { toast('กรุณาเลือกผู้รับบริการ','warning'); return; }
   if (!name)      { toast('กรุณาระบุชื่อแพ็กเกจ','warning'); return; }
+  const billingDayVal = parseInt(document.getElementById('contract-billing-day').value);
+  if (!billingDayVal || billingDayVal < 1 || billingDayVal > 28) {
+    toast('กรุณาระบุวันออกบิลในเดือน (1-28)','warning'); return;
+  }
   if (!editId) {
     const existing = (db.contracts||[]).find(c => String(c.patientId)===String(patientId) && c.isActive);
     if (existing) { toast('ผู้รับบริการนี้มีแพ็กเกจ active อยู่แล้ว กรุณาปิดอันเก่าก่อนค่ะ','error'); return; }
