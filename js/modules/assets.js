@@ -142,7 +142,10 @@ async function saveAsset() {
   const id   = document.getElementById('editAssetId').value;
   const name = document.getElementById('asset-name').value.trim();
   const loc  = document.getElementById('asset-location').value.trim();
-  if (!name||!loc) { toast('กรุณากรอกชื่ออุปกรณ์และตำแหน่ง','error'); return; }
+  const cat  = document.getElementById('asset-category').value;
+  if (!name) { toast('กรุณากรอกชื่ออุปกรณ์', 'warning'); return; }
+  if (!cat)  { toast('กรุณาเลือกประเภทอุปกรณ์', 'warning'); return; }
+  if (!loc)  { toast('กรุณากรอกตำแหน่งที่ตั้ง', 'warning'); return; }
 
   const mi = parseInt(document.getElementById('asset-maint-interval').value)||null;
   const pd = document.getElementById('asset-purchase-date').value||null;
@@ -244,7 +247,9 @@ async function saveMaintenance() {
   const assetId = document.getElementById('maintAssetId').value;
   const date    = document.getElementById('maint-date').value;
   const desc    = document.getElementById('maint-desc').value.trim();
-  if (!assetId||!date||!desc) { toast('กรุณากรอกวันที่และรายละเอียด','error'); return; }
+  if (!assetId) { toast('ไม่พบรหัสอุปกรณ์ — กรุณาปิด modal แล้วลองใหม่', 'error'); return; }
+  if (!date)    { toast('กรุณาระบุวันที่ซ่อม', 'warning'); return; }
+  if (!desc)    { toast('กรุณาระบุรายละเอียดที่ทำ', 'warning'); return; }
 
   const payload = {
     asset_id:             parseInt(assetId),
