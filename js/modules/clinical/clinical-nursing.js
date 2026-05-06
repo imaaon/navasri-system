@@ -260,7 +260,7 @@ function onPatStatusChange(sel) {
 
 function openDischargeModal(patientId) {
   const p = db.patients.find(x => x.id == patientId);
-  if (!p) return;
+  if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   document.getElementById('discharge-patient-id').value = patientId;
   document.getElementById('discharge-patient-name').textContent = p.name;
   document.getElementById('discharge-date').value = new Date().toISOString().split('T')[0];
@@ -277,7 +277,7 @@ async function saveDischarge() {
   if (!date)   { toast('กรุณาระบุวันที่จำหน่าย', 'warning'); return; }
   if (!reason) { toast('กรุณาเลือกเหตุผลในการจำหน่าย', 'warning'); return; }
   const p = db.patients.find(x => x.id == patId);
-  if (!p) return;
+  if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   const { error } = await supa.from('patients').update({
     status: 'inactive', end_date: date, discharge_reason: reason,
     discharge_summary: summary,
