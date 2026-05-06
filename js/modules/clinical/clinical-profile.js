@@ -591,7 +591,9 @@ function switchPatTab(tab) {
     const _dietEl=document.getElementById('patprofile-tab-dietary');
     const _dp=_dietEl?.dataset?.patid;
     const _de=_dp?document.getElementById('pat-dietary-list-'+_dp):null;
-    if(_dp&&_de){_renderPatDietaryTab(_dp,_de);}
+    // ใช้ window._renderPatDietaryTab เพื่อเรียก patched version จาก fix-features.js
+    // (ที่มี tube feed section + date filter)
+    if(_dp&&_de){window._renderPatDietaryTab(_dp,_de);}
   }
 }
 
