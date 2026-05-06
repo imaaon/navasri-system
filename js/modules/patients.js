@@ -1,9 +1,9 @@
 
 function openEditAllergyModal(patId, allergyId) {
   const patient = db.patients.find(p => p.id == patId);
-  if (!patient) return;
+  if (!patient) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   const a = (patient.allergies||[]).find(x => x.id == allergyId);
-  if (!a) return;
+  if (!a) { toast('ไม่พบรายการแพ้ที่ต้องการแก้ไข — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   document.getElementById('allergy-pat-id').value = patId;
   document.getElementById('allergy-pat-id').dataset.editId = allergyId;
   document.getElementById('allergy-allergen').value = a.allergen || '';
@@ -115,7 +115,7 @@ function viewPatientHistory(patId) {
 
 function editPatient(id) {
   const p = db.patients.find(x => x.id == id);
-  if (!p) return;
+  if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   document.getElementById('pat-edit-id').value  = id;
   document.getElementById('pat-name').value     = p.name || '';
   document.getElementById('pat-id-type').value  = p.idType || 'thai';
@@ -395,9 +395,9 @@ async function deleteAllergy(patId, allergyId) {
 
 async function openEditContactModal(patId, contactId) {
   const patient = db.patients.find(p => p.id == patId);
-  if (!patient) return;
+  if (!patient) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   const c = (patient.contacts||[]).find(c => c.id == contactId);
-  if (!c) return;
+  if (!c) { toast('ไม่พบผู้ติดต่อที่ต้องการแก้ไข — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   document.getElementById('contact-pat-id').value = patId;
   document.getElementById('contact-pat-id').dataset.editId = contactId;
   document.getElementById('contact-name').value = c.name || '';
