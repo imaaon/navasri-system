@@ -2,6 +2,40 @@
 
 // ===== STOCK =====
 
+// ── Expiry Warning Days Setting (Bug C fix — moved from billing-report.js) ──
+// ค่าเก็บใน db.billingSettings.expiryWarnDays ตามเดิม (compatible กับ getExpiryWarnDays ใน db.js)
+function loadExpiryWarnDaysUI() {
+  const el = document.getElementById('stk-expiry-warn');
+  if (!el) return;
+  const val = (db.billingSettings && db.billingSettings.expiryWarnDays) || 30;
+  el.value = val;
+}
+
+async function saveExpiryWarnDays() {
+  const el = document.getElementById('stk-expiry-warn');
+  if (!el) return;
+  const val = parseInt(el.value);
+  if (!val || val < 1 || val > 365) {
+    toast('กรุณาระบุจำนวนวันระหว่าง 1-365', 'warning');
+    el.value = (db.billingSettings && db.billingSettings.expiryWarnDays) || 30;
+    return;
+  }
+  const oldVal = db.billingSettings && db.billingSettings.expiryWarnDays;
+  if (oldVal === val) return; // no change
+  db.billingSettings = db.billingSettings || {};
+  db.billingSettings.expiryWarnDays = val;
+  // Use saveBillingDB (already has onConflict fix)
+  if (typeof saveBillingDB === 'function') {
+    await saveBillingDB();
+    toast('บันทึกแล้ว: เตือนล่วงหน้า ' + val + ' วัน', 'success');
+    // Re-render stock list so status icons update with new threshold
+    if (typeof renderStock === 'function') renderStock();
+  } else {
+    console.error('[saveExpiryWarnDays] saveBillingDB not available');
+    toast('บันทึกไม่สำเร็จ', 'error');
+  }
+}
+
 // ===== BARCODE FUNCTIONS =====
 function generateBarcode(category) {
   // หมายเหตุ: รหัสสร้างจาก local cache (db.items)
@@ -76,6 +110,9 @@ function _doPrintBarcode(code, name) {
 }
 
 function renderStock() {
+  // Bug C fix: load expiry warn days setting (idempotent, fast)
+  loadExpiryWarnDaysUI();
+  
   const search = (document.getElementById('stockSearch')?.value || '').toLowerCase();
   const catFilter = document.getElementById('stockCatFilter')?.value || '';
   const statusFilter = document.getElementById('stockStatusFilter')?.value || '';

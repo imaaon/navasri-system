@@ -428,6 +428,19 @@
           <button class="btn btn-ghost" onclick="showPage('requisition')">+ เบิกสินค้า</button>
         </div>
 
+        <!-- Expiry warn setting (Bug C fix — moved from billing settings) -->
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:16px;background:rgba(46,196,182,0.08);border:0.5px solid rgba(46,196,182,0.4);border-radius:8px;width:fit-content;">
+          <span style="font-size:14px;color:var(--accent);">⏰</span>
+          <span style="font-size:13px;color:var(--accent);font-weight:600;">แจ้งเตือนยาใกล้หมดอายุล่วงหน้า:</span>
+          <input id="stk-expiry-warn" type="number" min="1" max="365" value="30" class="form-control" 
+                 style="width:70px;height:28px;padding:4px 8px;font-size:13px;"
+                 onblur="saveExpiryWarnDays()" 
+                 onkeydown="if(event.key==='Enter') this.blur();"
+                 title="แจ้งเตือนยาใกล้หมดอายุล่วงหน้า (วัน)">
+          <span style="font-size:13px;color:var(--accent);">วัน</span>
+          <span style="font-size:11px;color:var(--text3);margin-left:8px;">(แก้ค่าแล้วคลิกออก = บันทึกอัตโนมัติ)</span>
+        </div>
+
         <div class="card">
           <div class="card-header">
             <div class="card-title">คลังสต็อกสินค้า</div>
@@ -1101,13 +1114,7 @@
               <input id="bs-doc-prefix" type="text" class="form-control" placeholder="INV" value="INV" style="width:100px;display:inline-block;margin-right:8px;">
               <span style="font-size:13px;color:var(--text2);">BL=วางบิล, RE=เสร็จ, QT=เสนอราคา, TX=ภาษี, EXP=ค่าใช้จ่าย (reset ทุกเดือน)</span>
             </div>
-            <div>
-              <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">⏰ แจ้งเตือนยาใกล้หมดอายุล่วงหน้า (วัน)</label>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <input id="bs-expiry-warn" type="number" min="1" max="365" value="30" class="form-control" style="width:90px;">
-                <span style="font-size:13px;color:var(--text2);">วัน (ค่าเริ่มต้น: 30 วัน)</span>
-              </div>
-            </div>
+            <!-- bs-expiry-warn moved to คลังสต็อก (Bug C fix) -->
 
             <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">

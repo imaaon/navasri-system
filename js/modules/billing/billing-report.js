@@ -312,7 +312,7 @@ function loadBillingSettingsUI() {
   document.getElementById('bs-phone').value      = bs.phone||'';
   document.getElementById('bs-email').value      = bs.email||'';
   document.getElementById('bs-doc-prefix').value = bs.docPrefix||'INV';
-  document.getElementById('bs-expiry-warn').value= bs.expiryWarnDays||30;
+  // Bug C fix: bs-expiry-warn moved to คลังสต็อก — handled by loadExpiryWarnDaysUI() in inventory.js
   // Bug 2.2 fix: load banks list
   _bsBanks = Array.isArray(bs.banks) ? JSON.parse(JSON.stringify(bs.banks)) : [];
   bsRenderBanks();
@@ -326,7 +326,7 @@ async function saveBillingSettings() {
     phone:     document.getElementById('bs-phone').value.trim(),
     email:     document.getElementById('bs-email').value.trim(),
     docPrefix: document.getElementById('bs-doc-prefix').value.trim()||'INV',
-    expiryWarnDays: parseInt(document.getElementById('bs-expiry-warn').value) || 30,
+    expiryWarnDays: (db.billingSettings && db.billingSettings.expiryWarnDays) || 30, // Bug C fix: managed in คลังสต็อก, preserve existing value
     vatRate:   0,
     // Bug 2.2 fix: persist banks
     banks: Array.isArray(_bsBanks) ? _bsBanks : [],
