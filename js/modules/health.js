@@ -52,6 +52,7 @@ function openAddMedLog(patId, type) {
   document.getElementById('medlog-type').value   = type;
   document.getElementById('medlog-patid').value  = patId;
   document.getElementById('medlog-editidx').value = '';
+  document.getElementById('medlog-editidx').dataset.supaId = '';
   document.getElementById('medlog-by').value = currentUser?.displayName || currentUser?.username || '';
   document.getElementById('medlog-date').value   = new Date().toISOString().slice(0,10);
   document.getElementById('medlog-detail').value = '';
