@@ -414,7 +414,7 @@ function bsCancelBank() {
   bsRenderBanks();
 }
 
-function bsSaveBank() {
+async function bsSaveBank() {
   const bankName = document.getElementById('bs-bank-name')?.value.trim() || '';
   const accountNo = document.getElementById('bs-bank-no')?.value.trim() || '';
   const accountName = document.getElementById('bs-bank-account-name')?.value.trim() || '';
@@ -433,15 +433,17 @@ function bsSaveBank() {
   _bsBanks.push({ bankName, accountNo, accountName, accountType, primary });
   _bsBankFormOpen = false;
   bsRenderBanks();
-  toast('เพิ่มบัญชีธนาคารแล้ว — กด "บันทึก" เพื่อจัดเก็บ','info');
+  // Auto-persist (saveBillingSettings จะ toast 'บันทึกการตั้งค่าแล้ว' เอง)
+  await saveBillingSettings();
 }
 
-function bsRemoveBank(idx) {
+async function bsRemoveBank(idx) {
   if (!Array.isArray(_bsBanks) || idx < 0 || idx >= _bsBanks.length) return;
   if (!confirm('ลบบัญชีธนาคารนี้?')) return;
   _bsBanks.splice(idx, 1);
   bsRenderBanks();
-  toast('ลบแล้ว — กด "บันทึก" เพื่อจัดเก็บ','info');
+  // Auto-persist
+  await saveBillingSettings();
 }
 
 // ─────────────────────────────────────────────────────
