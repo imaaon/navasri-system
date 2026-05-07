@@ -297,7 +297,9 @@ function loadBillingSettingsUI() {
   document.getElementById('bs-email').value      = bs.email||'';
   document.getElementById('bs-doc-prefix').value = bs.docPrefix||'INV';
   document.getElementById('bs-expiry-warn').value= bs.expiryWarnDays||30;
-
+  // Bug 2.2 fix: load banks list
+  _bsBanks = Array.isArray(bs.banks) ? JSON.parse(JSON.stringify(bs.banks)) : [];
+  bsRenderBanks();
 }
 
 async function saveBillingSettings() {
@@ -310,10 +312,126 @@ async function saveBillingSettings() {
     docPrefix: document.getElementById('bs-doc-prefix').value.trim()||'INV',
     expiryWarnDays: parseInt(document.getElementById('bs-expiry-warn').value) || 30,
     vatRate:   0,
+    // Bug 2.2 fix: persist banks
+    banks: Array.isArray(_bsBanks) ? _bsBanks : [],
   };
   db.billingSettings=bs;
   await saveBillingDB();
   toast('บันทึกการตั้งค่าแล้ว','success');
+}
+
+// ── BANK ACCOUNTS (Bug 2.2 fix) ──────────────────────
+let _bsBanks = [];
+let _bsBankFormOpen = false;
+
+function bsRenderBanks() {
+  const container = document.getElementById('bs-banks-list');
+  if (!container) return;
+  // Inline escape helper — กัน XSS เผื่อ ในกรณีนี้ความเสี่ยงต่ำ (admin-only)
+  const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  if (!Array.isArray(_bsBanks) || _bsBanks.length === 0) {
+    container.innerHTML = _bsBankFormOpen ? '' : '<div style="color:var(--muted);font-size:13px;padding:8px 0;">ยังไม่มีบัญชีธนาคาร — กด "+ เพิ่มธนาคาร" เพื่อเริ่ม</div>';
+    if (_bsBankFormOpen) container.innerHTML += bsBankFormHtml();
+    return;
+  }
+  const rows = _bsBanks.map((b, i) => `
+    <div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--bg-card,#fff);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:14px;">
+            ${b.primary ? '<span style="color:var(--green,#27ae60);font-size:12px;">★ บัญชีหลัก</span> ' : ''}
+            ${_esc(b.bankName||'-')} • ${_esc(b.accountNo||'-')}
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">
+            ชื่อบัญชี: ${_esc(b.accountName||'-')}
+            ${b.accountType ? ' • ' + _esc(b.accountType) : ''}
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="bsRemoveBank(${i})" title="ลบ" style="color:var(--red,#e74c3c);">✕</button>
+      </div>
+    </div>
+  `).join('');
+  container.innerHTML = rows + (_bsBankFormOpen ? bsBankFormHtml() : '');
+}
+
+function bsBankFormHtml() {
+  return `
+    <div id="bs-bank-form" style="border:1px dashed var(--primary,#1abc9c);border-radius:8px;padding:12px;margin-top:8px;background:var(--bg-soft,#f7fafa);">
+      <div style="font-weight:600;font-size:13px;margin-bottom:10px;">เพิ่มบัญชีธนาคารใหม่</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="font-size:12px;">ธนาคาร *</label>
+          <input class="form-control" id="bs-bank-name" placeholder="เช่น ธ.กสิกรไทย">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="font-size:12px;">เลขที่บัญชี *</label>
+          <input class="form-control" id="bs-bank-no" placeholder="เช่น 123-4-56789-0">
+        </div>
+        <div class="form-group" style="margin:0;grid-column:span 2;">
+          <label class="form-label" style="font-size:12px;">ชื่อบัญชี *</label>
+          <input class="form-control" id="bs-bank-account-name" placeholder="เช่น บริษัท นวศรี เนอร์สซิ่งโฮม จำกัด">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="font-size:12px;">ประเภทบัญชี</label>
+          <select class="form-control" id="bs-bank-type">
+            <option value="ออมทรัพย์">ออมทรัพย์</option>
+            <option value="กระแสรายวัน">กระแสรายวัน</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;display:flex;align-items:flex-end;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" id="bs-bank-primary"> เป็นบัญชีหลัก
+          </label>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="bsSaveBank()">บันทึก</button>
+        <button class="btn btn-ghost btn-sm" onclick="bsCancelBank()">ยกเลิก</button>
+      </div>
+    </div>
+  `;
+}
+
+function bsAddBank() {
+  if (_bsBankFormOpen) return; // already open
+  _bsBankFormOpen = true;
+  bsRenderBanks();
+  setTimeout(()=>{ document.getElementById('bs-bank-name')?.focus(); }, 50);
+}
+
+function bsCancelBank() {
+  _bsBankFormOpen = false;
+  bsRenderBanks();
+}
+
+function bsSaveBank() {
+  const bankName = document.getElementById('bs-bank-name')?.value.trim() || '';
+  const accountNo = document.getElementById('bs-bank-no')?.value.trim() || '';
+  const accountName = document.getElementById('bs-bank-account-name')?.value.trim() || '';
+  const accountType = document.getElementById('bs-bank-type')?.value || 'ออมทรัพย์';
+  const primary = !!document.getElementById('bs-bank-primary')?.checked;
+
+  if (!bankName) { toast('กรุณาระบุชื่อธนาคาร','warning'); return; }
+  if (!accountNo) { toast('กรุณาระบุเลขที่บัญชี','warning'); return; }
+  if (!accountName) { toast('กรุณาระบุชื่อบัญชี','warning'); return; }
+
+  // ถ้า primary=true ให้ uncheck primary ของบัญชีเก่า (มีได้แค่ 1 บัญชีหลัก)
+  if (primary) {
+    _bsBanks.forEach(b => { b.primary = false; });
+  }
+
+  _bsBanks.push({ bankName, accountNo, accountName, accountType, primary });
+  _bsBankFormOpen = false;
+  bsRenderBanks();
+  toast('เพิ่มบัญชีธนาคารแล้ว — กด "บันทึก" เพื่อจัดเก็บ','info');
+}
+
+function bsRemoveBank(idx) {
+  if (!Array.isArray(_bsBanks) || idx < 0 || idx >= _bsBanks.length) return;
+  if (!confirm('ลบบัญชีธนาคารนี้?')) return;
+  _bsBanks.splice(idx, 1);
+  bsRenderBanks();
+  toast('ลบแล้ว — กด "บันทึก" เพื่อจัดเก็บ','info');
 }
 
 // ─────────────────────────────────────────────────────
