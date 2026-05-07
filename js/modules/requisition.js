@@ -759,7 +759,10 @@ async function saveReturnItem() {
   if (item) {
     const { data: rpcResult, error: rpcErr } = await supa.rpc('return_stock', {
       p_item_id: item.id,
-      p_qty: qty
+      p_qty: qty,
+      p_cost: item.cost || 0,
+      p_by: currentUser?.username || 'system',
+      p_note: 'return from req-' + reqId
     });
     if (rpcErr) {
       toast('❌ ระบบขัดข้อง: ' + rpcErr.message + ' — กรุณาบันทึกใหม่อีกครั้ง', 'error');
