@@ -280,7 +280,17 @@ async function saveBillingDB() {
 }
 
 function loadBillingFromSettings(settingsData) {
-  const find = key => (settingsData||[]).find(s=>s.key===key)?.value;
+  // Bug A+B fix: settings.value เก็บเป็น TEXT (JSON string) ใน DB
+  // ต้อง parse string → object ก่อนใช้ (pattern เดียวกับ lineSettings ใน db.js)
+  const find = key => {
+    const raw = (settingsData||[]).find(s=>s.key===key)?.value;
+    if (raw == null) return null;
+    if (typeof raw === 'object') return raw;  // already parsed
+    try { return JSON.parse(raw); } catch(e) {
+      console.warn('[loadBillingFromSettings] failed to parse '+key+':', e);
+      return null;
+    }
+  };
   // invoices & expenses now loaded from their own tables in loadDB()
   db.billingSettings = find('billingSettings') || { ...DEFAULT_BILLING_SETTINGS };
 }
