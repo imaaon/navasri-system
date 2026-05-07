@@ -211,6 +211,7 @@ function vitalsSparkline(values, color, min, max) {
 
 function openAddVitalModal(patientId) {
   document.getElementById('vital-pat-id').value = patientId;
+  document.getElementById('vital-pat-id').dataset.editId = '';
     const _user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
   document.getElementById('vital-by').value = _user;
   ['vital-bp-sys','vital-bp-dia','vital-hr','vital-temp','vital-spo2','vital-dtx','vital-rr','vital-other','vital-note']
