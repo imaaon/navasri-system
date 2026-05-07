@@ -78,7 +78,7 @@ async function saveAppt() {
   const row = {
     patient_id: _apptPatId, patient_name: _apptPatName,
     appt_date: apptDate,
-    appt_time: document.getElementById('appt-time').value,
+    appt_time: document.getElementById('appt-time').value || null,
     hospital, department: document.getElementById('appt-department').value.trim(),
     doctor: document.getElementById('appt-doctor').value.trim(),
     purpose: document.getElementById('appt-purpose').value.trim(),
