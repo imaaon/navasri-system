@@ -626,7 +626,11 @@ function getLotStatus(expiryDate) {
 
 // ── saveDB — บันทึก lineSettings เท่านั้น (ทุกอย่างอื่น save ตรง) ──
 async function saveDB() {
-  await supa.from('settings').upsert({ key: 'lineSettings', value: db.lineSettings });
+  // onConflict: 'key' (UNIQUE constraint, not PK) — กัน 23505 silent fail
+  await supa.from('settings').upsert(
+    { key: 'lineSettings', value: db.lineSettings },
+    { onConflict: 'key' }
+  );
 }
 
 // ── Loading overlay ─────────────────────────────────────────

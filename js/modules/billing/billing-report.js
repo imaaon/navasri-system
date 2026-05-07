@@ -274,8 +274,14 @@ function checkDocNoDuplicate(val, pool) {
 // ─────────────────────────────────────────────────────
 async function saveBillingDB() {
   // invoices & expenses now saved row-by-row — only persist billingSettings here
+  // Bug 2.2 fix: settings.key is UNIQUE constraint (not PK) — must specify onConflict
+  // otherwise upsert tries to INSERT and fails with 23505 silent error
   try {
-    await supa.from('settings').upsert({ key:'billingSettings', value: db.billingSettings||{} });
+    const { error } = await supa.from('settings').upsert(
+      { key:'billingSettings', value: db.billingSettings||{} },
+      { onConflict: 'key' }
+    );
+    if (error) throw error;
   } catch(e) { console.error('saveBillingDB',e); toast('บันทึกการตั้งค่าไม่สำเร็จ','error'); }
 }
 

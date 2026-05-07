@@ -479,8 +479,11 @@ function extendLineSettingsUI() {
 async function updateLineSetting(key, value) {
   db.lineSettings = db.lineSettings || {};
   db.lineSettings[key] = value;
-  // บันทึกลง Supabase settings
-  await supa.from('settings').upsert({ key: 'lineSettings', value: db.lineSettings });
+  // บันทึกลง Supabase settings — onConflict: 'key' (UNIQUE constraint, not PK)
+  await supa.from('settings').upsert(
+    { key: 'lineSettings', value: db.lineSettings },
+    { onConflict: 'key' }
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
