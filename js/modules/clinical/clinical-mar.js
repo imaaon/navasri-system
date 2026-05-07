@@ -237,6 +237,7 @@ async function deleteMAREntry(pid, patientId, id) {
 
 function openAddMedModal(patientId) {
   document.getElementById('med-pat-id').value = patientId;
+  document.getElementById('med-pat-id').dataset.editId = '';
   document.getElementById('med-name').value = '';
   document.getElementById('med-dose').value = '';
   document.getElementById('med-unit').value = 'mg';
