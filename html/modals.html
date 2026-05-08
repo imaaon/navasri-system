@@ -3011,6 +3011,59 @@
           <input type="date" id="exp-due-date" class="form-control">
         </div>
       </div>
+
+      <!-- ▼ Collapsible: ข้อมูลผู้ขาย/ภาษี (สำหรับใบสำคัญจ่าย) -->
+      <details style="margin-top:14px;border:1px solid var(--border);border-radius:6px;padding:8px 12px;background:var(--surface2);">
+        <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);user-select:none;">📇 ข้อมูลผู้ขาย/ภาษี (เพิ่มเติม สำหรับใบสำคัญจ่าย)</summary>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:10px;">
+          <div>
+            <label class="form-label">ที่อยู่ผู้รับเงิน</label>
+            <input type="text" id="exp2-vendor-addr" class="form-control" placeholder="ที่อยู่ผู้รับเงิน">
+          </div>
+          <div>
+            <label class="form-label">เลขประจำตัวผู้เสียภาษี</label>
+            <input type="text" id="exp2-vendor-taxid" class="form-control" placeholder="เลขประจำตัวผู้เสียภาษี">
+          </div>
+        </div>
+      </details>
+
+      <!-- ▼ Collapsible: รายการย่อย (สำหรับใบสำคัญจ่ายหลายรายการ) -->
+      <details style="margin-top:10px;border:1px solid var(--border);border-radius:6px;padding:8px 12px;background:var(--surface2);">
+        <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);user-select:none;">📋 รายการย่อย (เผื่อใบสำคัญจ่ายมีหลายรายการ)</summary>
+        <div style="margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:12px;color:var(--text3);">เผื่ออ้างอิงในใบสำคัญจ่าย — ถ้าไม่ใส่จะใช้ "รายการ/ชื่องาน" ด้านบนแทน</span>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="addExpenseLineItem()">+ เพิ่มรายการ</button>
+          </div>
+          <input type="hidden" id="exp2-items-data" value="[]">
+          <div id="exp2-items-container">
+            <div style="text-align:center;color:var(--text3);padding:8px;font-size:12px;">ยังไม่มีรายการย่อย</div>
+          </div>
+          <div style="text-align:right;margin-top:6px;font-size:12px;color:var(--text2);">
+            รวมรายการย่อย: <span id="exp2-items-total" style="font-weight:700;">0.00 ฿</span>
+          </div>
+        </div>
+      </details>
+
+      <!-- ▼ Collapsible: ข้อมูลการชำระเงินขั้นสูง (เช็ค / ธนาคาร) -->
+      <details style="margin-top:10px;border:1px solid var(--border);border-radius:6px;padding:8px 12px;background:var(--surface2);">
+        <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);user-select:none;">🏦 ข้อมูลการชำระเงินขั้นสูง (ธนาคาร / เช็ค)</summary>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:10px;">
+          <div>
+            <label class="form-label">ธนาคาร</label>
+            <input type="text" id="exp2-bank" class="form-control" placeholder="ธนาคาร">
+          </div>
+          <div>
+            <label class="form-label">เลขที่เช็ค/บัญชี</label>
+            <input type="text" id="exp2-bank-no" class="form-control" placeholder="เลขที่เช็ค หรือบัญชี">
+          </div>
+          <div>
+            <label class="form-label">วันที่ชำระจริง</label>
+            <input type="date" id="exp2-pay-date" class="form-control">
+          </div>
+        </div>
+      </details>
+
       <!-- ยอดเงิน -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:12px;">
         <div>
@@ -3086,6 +3139,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-addExpense')">ยกเลิก</button>
+      <button class="btn btn-ghost" onclick="saveExpense({print:true})" style="color:#5a9e7a;border-color:#5a9e7a;">🖨️ บันทึก + พิมพ์ใบสำคัญจ่าย</button>
       <button class="btn btn-primary" onclick="saveExpense()">💾 บันทึก</button>
     </div>
   </div>
