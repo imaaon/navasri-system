@@ -1,4 +1,46 @@
 <!-- Modals -->
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- Modal: Custom Confirm (แทน native confirm())   -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-customConfirm" style="display:none;" onclick="if(event.target===this)_customConfirmResolve(false)">
+  <div class="modal-box" style="max-width:420px;width:95%;">
+    <div class="modal-header" style="border-bottom:none;padding-bottom:0;">
+      <h3 id="customConfirmTitle" style="margin:0;font-size:16px;display:flex;align-items:center;gap:8px;">
+        <span id="customConfirmIcon" style="font-size:22px;">❓</span>
+        <span id="customConfirmTitleText">ยืนยัน</span>
+      </h3>
+    </div>
+    <div class="modal-body" style="padding:8px 24px 20px;">
+      <p id="customConfirmMessage" style="margin:0;font-size:14px;color:var(--text2);line-height:1.6;white-space:pre-wrap;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="customConfirmCancel" onclick="_customConfirmResolve(false)">ยกเลิก</button>
+      <button class="btn btn-primary" id="customConfirmOk" onclick="_customConfirmResolve(true)">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- Modal: Custom Alert (แทน native alert())       -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-customAlert" style="display:none;" onclick="if(event.target===this)_customAlertResolve()">
+  <div class="modal-box" style="max-width:420px;width:95%;">
+    <div class="modal-header" style="border-bottom:none;padding-bottom:0;">
+      <h3 id="customAlertTitle" style="margin:0;font-size:16px;display:flex;align-items:center;gap:8px;">
+        <span id="customAlertIcon" style="font-size:22px;">ℹ️</span>
+        <span id="customAlertTitleText">แจ้งเตือน</span>
+      </h3>
+    </div>
+    <div class="modal-body" style="padding:8px 24px 20px;">
+      <p id="customAlertMessage" style="margin:0;font-size:14px;color:var(--text2);line-height:1.6;white-space:pre-wrap;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="customAlertOk" onclick="_customAlertResolve()">ตกลง</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-addItem">
   <div class="modal">
     <div class="modal-header">
