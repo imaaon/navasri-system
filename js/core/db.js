@@ -365,20 +365,8 @@ function mapInvoice(r) {
     createdAt: r.created_at||'', updatedAt: r.updated_at||'',
   };
 }
-function mapExpense(r) {
-  return {
-    id: r.id, docNo: r.doc_no||'', date: r.date||'',
-    preparer: r.preparer||'', job: r.job||'',
-    vendorName: r.vendor_name||'', vendorAddr: r.vendor_addr||'',
-    vendorTaxId: r.vendor_tax_id||'',
-    items: r.items||[],
-    subtotal: r.subtotal||0, vatAmt: r.vat_amt||0, totalVat: r.total_vat||0,
-    whtRate: r.wht_rate||0, whtAmt: r.wht_amt||0, net: r.net||0,
-    payMethod: r.pay_method||'cash', bank: r.bank||'', bankNo: r.bank_no||'',
-    payDate: r.pay_date||'', note: r.note||'',
-    createdAt: r.created_at||'', updatedAt: r.updated_at||'',
-  };
-}
+// mapExpense moved to js/modules/expenses.js (Phase 4 Step E commit 3) — รวม field ของ flow เก่า + ใหม่
+// (ไม่ต้องมีในที่นี้ เพราะ JS hoisting จะ override จาก expenses.js อยู่แล้ว แต่ลบเพื่อความชัดเจน)
 function mapApprovalLog(r) {
   return {
     id: r.id, reqId: r.req_id, action: r.action,

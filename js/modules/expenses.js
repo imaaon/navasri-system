@@ -99,6 +99,15 @@ function openAddExpenseModal() {
   document.getElementById('exp-is-recurring').checked = false;
   document.getElementById('exp-recurring-block').style.display = 'none';
   document.getElementById('exp-note').value = '';
+  // Phase 4 Step E: reset fields ใหม่ + ปิด details ทั้งหมด (เริ่มจาก collapsed state)
+  const reset2 = (id) => { const el = document.getElementById(id); if (el) el.value = ''; };
+  reset2('exp2-vendor-addr'); reset2('exp2-vendor-taxid');
+  reset2('exp2-bank'); reset2('exp2-bank-no'); reset2('exp2-pay-date');
+  const itemsEl = document.getElementById('exp2-items-data'); if (itemsEl) itemsEl.value = '[]';
+  if (typeof renderExpenseLineItems === 'function') renderExpenseLineItems();
+  // ปิด collapsible sections ทั้งหมด
+  document.querySelectorAll('#modal-addExpense details').forEach(d => d.open = false);
+  
   openModal('modal-addExpense');
 }
 
@@ -230,6 +239,32 @@ function editExpense(id) {
   q('exp-is-recurring').checked = r.isRecurring||false;
   q('exp-recurring-block').style.display = r.isRecurring?'':'none';
   q('exp-note').value         = r.note||'';
+  
+  // Phase 4 Step E: load fields ใหม่ (collapsible sections)
+  // Vendor info
+  if (q('exp2-vendor-addr'))  q('exp2-vendor-addr').value  = r.vendorAddr||'';
+  if (q('exp2-vendor-taxid')) q('exp2-vendor-taxid').value = r.vendorTaxId||'';
+  // Bank info
+  if (q('exp2-bank'))    q('exp2-bank').value    = r.bank||'';
+  if (q('exp2-bank-no')) q('exp2-bank-no').value = r.bankNo||'';
+  if (q('exp2-pay-date')) q('exp2-pay-date').value = r.payDate||'';
+  // Items (line items)
+  if (q('exp2-items-data')) {
+    const items = Array.isArray(r.items) ? r.items : [];
+    q('exp2-items-data').value = JSON.stringify(items);
+    if (typeof renderExpenseLineItems === 'function') renderExpenseLineItems();
+  }
+  // Auto-expand details ถ้ามีข้อมูล (UX: user เห็นเลยว่ามี vendor/items/bank)
+  setTimeout(() => {
+    const details = modal?.querySelectorAll('details') || [];
+    details.forEach((d, idx) => {
+      // idx 0 = vendor, 1 = items, 2 = bank
+      if (idx === 0 && (r.vendorAddr || r.vendorTaxId)) d.open = true;
+      else if (idx === 1 && Array.isArray(r.items) && r.items.length > 0) d.open = true;
+      else if (idx === 2 && (r.bank || r.bankNo || r.payDate)) d.open = true;
+    });
+  }, 50);
+  
   openModal('modal-addExpense');
 }
 
@@ -248,15 +283,27 @@ async function deleteExpense(id) {
 
 function mapExpense(r) {
   return {
-    id: r.id, docNo: r.doc_no, date: r.date,
-    expenseType: r.expense_type, job: r.job,
-    vendorName: r.vendor_name, referenceNo: r.reference_no,
+    id: r.id, docNo: r.doc_no||'', date: r.date||'',
+    expenseType: r.expense_type||'operational', job: r.job||'',
+    // Vendor info (จาก flow เก่า)
+    vendorName: r.vendor_name||'', vendorAddr: r.vendor_addr||'', vendorTaxId: r.vendor_tax_id||'',
+    // Reference + period (จาก flow ใหม่)
+    referenceNo: r.reference_no||'',
     periodMonth: r.period_month, periodYear: r.period_year,
-    dueDate: r.due_date, paidDate: r.paid_date, paidBy: r.paid_by,
-    subtotal: r.subtotal, vatAmt: r.vat_amt, whtAmt: r.wht_amt, net: r.net,
-    payMethod: r.pay_method, status: r.status,
-    isRecurring: r.is_recurring, recurInterval: r.recur_interval,
-    assetId: r.asset_id, note: r.note, preparer: r.preparer,
-    createdAt: r.created_at,
+    dueDate: r.due_date||'', paidDate: r.paid_date||'', paidBy: r.paid_by||'',
+    // Items (line items สำหรับใบสำคัญจ่าย)
+    items: r.items||[],
+    // Amounts
+    subtotal: r.subtotal||0, vatAmt: r.vat_amt||0, totalVat: r.total_vat||0,
+    whtRate: r.wht_rate||0, whtAmt: r.wht_amt||0, net: r.net||0,
+    // Payment
+    payMethod: r.pay_method||'cash', bank: r.bank||'', bankNo: r.bank_no||'',
+    payDate: r.pay_date||'',
+    status: r.status||'paid',
+    // Recurring
+    isRecurring: r.is_recurring||false, recurInterval: r.recur_interval,
+    // Misc
+    assetId: r.asset_id, note: r.note||'', preparer: r.preparer||'',
+    createdAt: r.created_at||'', updatedAt: r.updated_at||'',
   };
 }
