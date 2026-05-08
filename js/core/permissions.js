@@ -49,7 +49,7 @@ const ROLE_PAGES = {
 // ── Tab access per role (patient profile tabs) ─────────────────
 // กำหนด tab ในโปรไฟล์คนไข้ที่แต่ละ role เห็นได้
 const PATIENT_TAB_ACCESS = {
-  // key ตรงกับ HTML switchPatTab() keys ใน clinical-profile.js
+  // key ตรงกับ HTML switchPatTab() keys ใน clinical/clinical-profile.js
   history:     ['admin','manager','officer','nurse','parttime_nurse','physical_therapist','dietitian','caregiver','warehouse'],
   medical:     ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist','dietitian','caregiver'],
   meds:        ['admin','manager','officer','nurse','parttime_nurse','doctor','dietitian','caregiver'],
