@@ -111,7 +111,7 @@ function openAddContractModal(editId=null, prefillCtx=null) {
   openModal('modal-add-contract');
 }
 
-// renderContractItems และ addContractItem อยู่ใน section ด้านล่าง
+// renderContractItems (line 374) + addChargeItem/addPhysioIncluded/openAddIncludedProductModal (line 443+) อยู่ section ด้านล่าง
 
 function updateContractTotal() {
   const total = getChargeItems(_contractItems).reduce((s,x)=>s+(x.amount||0),0);
