@@ -119,7 +119,17 @@ function toggleRecurring() {
 
 function onExpTypeChange() { /* placeholder สำหรับ logic เพิ่มเติมตามประเภท */ }
 
-async function saveExpense() {
+// Helper: อ่านรายการย่อย (line items) จาก hidden field
+function _readExpenseLineItems() {
+  const el = document.getElementById('exp2-items-data');
+  if (!el) return [];
+  try { return JSON.parse(el.value || '[]'); } catch(_) { return []; }
+}
+
+async function saveExpense(opts) {
+  opts = opts || {};
+  const printAfterSave = opts.print === true;
+  
   await ensureSecondaryDB();
   const id     = document.getElementById('editExpenseId').value;
   const date   = document.getElementById('exp-date').value;
@@ -136,16 +146,25 @@ async function saveExpense() {
   const whtAmt  = sub * whtRate / 100;
   const net     = sub + vatAmt - whtAmt;
 
+  // Phase 4 Step E: รวม fields ของ flow เก่า — vendor info, items, bank
+  const items = _readExpenseLineItems();
+
   const payload = {
     date, expense_type: expType,
     job,
     vendor_name:  document.getElementById('exp-vendor').value.trim()||null,
+    vendor_addr:  document.getElementById('exp2-vendor-addr')?.value?.trim()||null,
+    vendor_tax_id: document.getElementById('exp2-vendor-taxid')?.value?.trim()||null,
     reference_no: document.getElementById('exp-ref-no').value.trim()||null,
     period_month: parseInt(document.getElementById('exp-period-month').value)||null,
     period_year:  parseInt(document.getElementById('exp-period-year').value)||null,
     due_date:     document.getElementById('exp-due-date').value||null,
-    subtotal: sub, vat_amt: vatAmt, wht_amt: whtAmt, net,
+    subtotal: sub, vat_amt: vatAmt, wht_rate: whtRate, wht_amt: whtAmt, net,
+    items: items.length > 0 ? items : null,
     pay_method:   document.getElementById('exp-pay-method').value,
+    bank:         document.getElementById('exp2-bank')?.value?.trim()||null,
+    bank_no:      document.getElementById('exp2-bank-no')?.value?.trim()||null,
+    pay_date:     document.getElementById('exp2-pay-date')?.value||null,
     status:       document.getElementById('exp-status').value,
     paid_by:      document.getElementById('exp-paid-by').value.trim()||null,
     is_recurring: document.getElementById('exp-is-recurring').checked,
@@ -154,11 +173,14 @@ async function saveExpense() {
     preparer:     currentUser?.displayName||'',
   };
 
+  let savedId = id;
+  let savedRecord = null;
   if (id) {
     const { data, error } = await supa.from('expenses').update(payload).eq('id',id).select().single();
     if (error) { toast('แก้ไขไม่สำเร็จ: '+error.message,'error'); return; }
     const idx = (db.expenses||[]).findIndex(r=>r.id===id);
     if (idx>=0) db.expenses[idx] = mapExpense(data);
+    savedRecord = data;
   } else {
     // auto doc_no
   let docNo = null; try { const { data: seq } = await supa.rpc('get_next_doc_no',{p_module:'expense', p_category:null, p_year:null}); if(seq) docNo = seq; } catch(_){}
@@ -167,6 +189,8 @@ async function saveExpense() {
     if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
     if (!db.expenses) db.expenses = [];
     db.expenses.unshift(mapExpense(data));
+    savedId = data.id;
+    savedRecord = data;
   }
   toast(id?'แก้ไขค่าใช้จ่ายแล้ว':'บันทึกค่าใช้จ่ายแล้ว','success');
   logAudit('expenses', id?'edit':'add', id||'new', {job,type:expType,net});
@@ -174,6 +198,11 @@ async function saveExpense() {
   // Defensive refresh: เรียก render ของหน้าที่ mounted อยู่เท่านั้น
   if (document.getElementById('expTable') && typeof renderExpenses === 'function') renderExpenses();
   if (document.getElementById('billing-table-body') && typeof renderBilling === 'function') renderBilling();
+  
+  // Phase 4 Step E: print after save (สำหรับปุ่ม "🖨️ บันทึก + พิมพ์ใบสำคัญจ่าย")
+  if (printAfterSave && savedId && typeof printExpense === 'function') {
+    setTimeout(() => { printExpense(savedId); }, 300);
+  }
 }
 
 function editExpense(id) {
