@@ -2944,22 +2944,22 @@
         </div>
       </details>
 
-      <!-- ยอดเงิน — ทั้ง 4 ช่องใช้ width:100%; box-sizing:border-box ให้ขนาดเท่ากันด้วยตา -->
+      <!-- ยอดเงิน — ตัวเลือก C: custom arrow + height + identical look -->
       <div style="display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:8px;margin-top:12px;">
         <div style="min-width:0;">
           <label class="form-label">ยอดก่อน VAT <span class="required">*</span></label>
-          <input type="number" id="exp-subtotal" class="form-control number" min="0" step="0.01" oninput="calcExpTotal()" style="width:100%;box-sizing:border-box;">
+          <input type="number" id="exp-subtotal" class="form-control number" min="0" step="0.01" oninput="calcExpTotal()" style="width:100%;box-sizing:border-box;height:38px;padding:8px 12px;text-align:right;">
         </div>
         <div style="min-width:0;">
           <label class="form-label">VAT (%)</label>
-          <select id="exp-vat-rate" class="form-control" onchange="calcExpTotal()" style="width:100%;box-sizing:border-box;">
+          <select id="exp-vat-rate" class="form-control" onchange="calcExpTotal()" style="width:100%;box-sizing:border-box;height:38px;padding:8px 28px 8px 12px;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml;utf8,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22&gt;&lt;path fill=%22%23888%22 d=%22M0 0l5 6 5-6z%22/&gt;&lt;/svg&gt;');background-repeat:no-repeat;background-position:right 10px center;">
             <option value="0">0%</option>
             <option value="7">7%</option>
           </select>
         </div>
         <div style="min-width:0;">
           <label class="form-label">หัก ณ ที่จ่าย (%)</label>
-          <select id="exp-wht-rate" class="form-control" onchange="calcExpTotal()" style="width:100%;box-sizing:border-box;">
+          <select id="exp-wht-rate" class="form-control" onchange="calcExpTotal()" style="width:100%;box-sizing:border-box;height:38px;padding:8px 28px 8px 12px;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml;utf8,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22&gt;&lt;path fill=%22%23888%22 d=%22M0 0l5 6 5-6z%22/&gt;&lt;/svg&gt;');background-repeat:no-repeat;background-position:right 10px center;">
             <option value="0">0%</option>
             <option value="1">1%</option>
             <option value="1.5">1.5%</option>
@@ -2969,7 +2969,7 @@
         </div>
         <div style="min-width:0;">
           <label class="form-label">ยอดสุทธิ</label>
-          <input type="number" id="exp-net" class="form-control number" readonly style="width:100%;box-sizing:border-box;font-weight:700;background:var(--surface2);">
+          <input type="number" id="exp-net" class="form-control number" readonly style="width:100%;box-sizing:border-box;height:38px;padding:8px 12px;text-align:right;font-weight:700;background:var(--surface2);">
         </div>
       </div>
       <!-- การจ่ายเงิน -->
