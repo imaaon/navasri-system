@@ -118,7 +118,7 @@ function mapIncident(r) {
 
 async function deleteIncident(id) {
   await ensureSecondaryDB();
-  if (!confirm('ลบรายงานอุบัติเหตุนี้?')) return;
+  if (!(await customConfirm('ลบรายงานอุบัติเหตุนี้?'))) return;
   const { error } = await supa.from('incident_reports').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.incidents = (db.incidents||[]).filter(x=>x.id!=id);
@@ -289,7 +289,7 @@ function showPhotoModal(url) {
 
 async function deleteWound(id) {
   await ensureSecondaryDB();
-  if (!confirm('ลบบันทึกแผลนี้?')) return;
+  if (!(await customConfirm('ลบบันทึกแผลนี้?'))) return;
   const { error } = await supa.from('patient_wounds').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.wounds = (db.wounds||[]).filter(x=>x.id!=id);
@@ -446,7 +446,7 @@ function mapDiet(r) {
 
 async function deleteDiet(id) {
   await ensureSecondaryDB();
-  if (!confirm('ลบแผนอาหารนี้?')) return;
+  if (!(await customConfirm('ลบแผนอาหารนี้?'))) return;
   const { error } = await supa.from('patient_diets').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.diets = (db.diets||[]).filter(x=>x.id!=id);
@@ -521,7 +521,7 @@ function mapTubeFeed(r) {
 
 async function deleteTubeFeed(id) {
   await ensureSecondaryDB();
-  if (!confirm('ลบบันทึกนี้?')) return;
+  if (!(await customConfirm('ลบบันทึกนี้?'))) return;
   const { error } = await supa.from('tube_feedings').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.tubeFeeds = (db.tubeFeeds||[]).filter(x=>x.id!=id);
@@ -684,7 +684,7 @@ function mapDeposit(r) {
 
 async function deleteDeposit(id) {
   await ensureSecondaryDB();
-  if (!confirm('ลบรายการมัดจำนี้?')) return;
+  if (!(await customConfirm('ลบรายการมัดจำนี้?'))) return;
   const { error } = await supa.from('patient_deposits').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.deposits = (db.deposits||[]).filter(x=>x.id!=id);
@@ -810,7 +810,7 @@ function openDepositModalFromProfile(depId, patId) {
 
 async function deleteDepositFromProfile(depId, patId) {
   await ensureSecondaryDB();
-  if (!confirm('ลบรายการมัดจำนี้?')) return;
+  if (!(await customConfirm('ลบรายการมัดจำนี้?'))) return;
   const { error } = await supa.from('patient_deposits').delete().eq('id', depId);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   if (db.deposits) db.deposits = (db.deposits || []).filter(x => x.id != depId);

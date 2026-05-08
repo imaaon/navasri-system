@@ -581,7 +581,7 @@ async function saveInvoice(status) {
   if (docNo_) {
     const dup = (db.invoices||[]).find(i => i.docNo === docNo_ && i.id !== editId_);
     if (dup) {
-      const proceed = confirm(`⚠️ เลขที่เอกสาร "${docNo_}" ซ้ำกับเอกสารที่มีอยู่แล้ว!\n\nเอกสารเดิม: ${dup.patientName || '-'} (${dup.date || '-'})\n\nต้องการบันทึกทับหรือไม่?`);
+      const proceed = (await customConfirm(`⚠️ เลขที่เอกสาร "${docNo_}" ซ้ำกับเอกสารที่มีอยู่แล้ว!\n\nเอกสารเดิม: ${dup.patientName || '-'} (${dup.date || '-'})\n\nต้องการบันทึกทับหรือไม่?`));
       if (!proceed) return;
     }
   }
@@ -793,7 +793,7 @@ async function saveInvoice(status) {
 }
 
 // ── Edit invoice ─────────────────────────────────────
-function editInvoice(id) {
+async function editInvoice(id) {
   const inv=(db.invoices||[]).find(i=>i.id===id);
   if(!inv) return;
   if (inv.status === 'paid') {
@@ -801,7 +801,7 @@ function editInvoice(id) {
     return;
   }
   if (inv.status === 'partial') {
-    if (!confirm('⚠️ บิลนี้มีการรับเงินบางส่วนแล้ว การแก้ไขอาจทำให้ยอดไม่ตรงกับใบเสร็จ\nต้องการแก้ไขต่อหรือไม่?')) return;
+    if (!(await customConfirm('⚠️ บิลนี้มีการรับเงินบางส่วนแล้ว การแก้ไขอาจทำให้ยอดไม่ตรงกับใบเสร็จ\nต้องการแก้ไขต่อหรือไม่?'))) return;
   }
   document.getElementById('inv-edit-id').value   = inv.id;
   document.getElementById('inv-type').value       = inv.type;
@@ -859,7 +859,7 @@ function editInvoice(id) {
 
 async function deleteInvoice(id) {
   await ensureSecondaryDB();
-  if(!confirm('ลบเอกสารนี้หรือไม่?')) return;
+  if(!(await customConfirm('ลบเอกสารนี้หรือไม่?'))) return;
   // ===== Layer C: Unmark physio sessions ก่อน delete invoice (Step 3) =====
   try {
     var unmarkResp = await supa.from('physio_sessions')
@@ -1027,7 +1027,7 @@ async function savePayment() {
   renderBilling();
 
   // Ask to print receipt
-  if (confirm(`บันทึกสำเร็จ! ต้องการพิมพ์ใบเสร็จรับเงิน ${receiptNo} หรือไม่?`)) {
+  if ((await customConfirm(`บันทึกสำเร็จ! ต้องการพิมพ์ใบเสร็จรับเงิน ${receiptNo} หรือไม่?`))) {
     printReceipt(ins.id || payData.receipt_no);
   }
 }

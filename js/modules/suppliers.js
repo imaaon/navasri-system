@@ -129,7 +129,7 @@ async function saveSupplier() {
 
 async function deleteSupplier(id) {
   await ensureSecondaryDB();
-  if (!confirm('ลบผู้จำหน่ายนี้?')) return;
+  if (!(await customConfirm('ลบผู้จำหน่ายนี้?'))) return;
   const { error } = await supa.from('suppliers').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.suppliers = db.suppliers.filter(s => s.id != id);
@@ -391,7 +391,7 @@ async function deletePR(id) {
   if (pr.status === 'approved' && !canApproveReq()) {
     toast('เฉพาะผู้มีสิทธิ์อนุมัติเท่านั้นที่ลบคำขอที่อนุมัติแล้วได้', 'error'); return;
   }
-  if (!confirm('ลบคำขอซื้อ ' + (pr.refNo || id) + '?')) return;
+  if (!(await customConfirm('ลบคำขอซื้อ ' + (pr.refNo || id) + '?'))) return;
   const { error: delLinesErr } = await supa.from('purchase_request_lines').delete().eq('request_id', id);
   if (delLinesErr) { toast('ลบ line items ไม่สำเร็จ: ' + delLinesErr.message, 'error'); return; }
   const { error } = await supa.from('purchase_requests').delete().eq('id', id);
@@ -1376,7 +1376,7 @@ function autoFillSupInvFromPO() {
 
 async function confirmInvoiceStock(id) {
   await ensureSecondaryDB();
-  if (!confirm('ยืนยันรับสินค้าและเพิ่มสต็อก? ไม่สามารถยกเลิกได้')) return;
+  if (!(await customConfirm('ยืนยันรับสินค้าและเพิ่มสต็อก? ไม่สามารถยกเลิกได้'))) return;
   const inv = db.supplierInvoices.find(x => x.id == id);
   if (!inv) return;
 
@@ -1412,7 +1412,7 @@ async function confirmInvoiceStock(id) {
 
     if (skipped > 0) {
       const names = skippedNames.map(n => '  \u2022 ' + n).join('\n');
-      alert('\u2705 เพิ่มสต็อกแล้ว: ' + added + ' รายการ\n\u26a0\ufe0f ไม่ได้เพิ่มสต็อก (พิมพ์ชื่อเอง): ' + skipped + ' รายการ\n' + names + '\n\n\u2192 กรุณาไปเพิ่มสต็อคด้วยตนเองที่ \ud83d\udce6 คลังสต็อค');
+      customAlert('\u2705 เพิ่มสต็อกแล้ว: ' + added + ' รายการ\n\u26a0\ufe0f ไม่ได้เพิ่มสต็อก (พิมพ์ชื่อเอง): ' + skipped + ' รายการ\n' + names + '\n\n\u2192 กรุณาไปเพิ่มสต็อคด้วยตนเองที่ \ud83d\udce6 คลังสต็อค');
     }
 
     toast('เพิ่มสต็อกเรียบร้อย' + (skipped > 0 ? ' (' + skipped + ' รายการข้ามไป)' : ''), skipped > 0 ? 'warning' : 'success');
@@ -1429,7 +1429,7 @@ async function deleteSupplierInvoice(id, invoiceNo) {
   const inv = db.supplierInvoices.find(x => x.id == id);
   if (!inv) return;
   if (inv.status !== 'draft') { toast('ลบได้เฉพาะใบที่ยังไม่ยืนยัน (ร่าง) เท่านั้น', 'error'); return; }
-  if (!confirm('ยืนยันลบใบแจ้งหนี้ ' + invoiceNo + ' ?\nลบแล้วไม่สามารถกู้คืนได้')) return;
+  if (!(await customConfirm('ยืนยันลบใบแจ้งหนี้ ' + invoiceNo + ' ?\nลบแล้วไม่สามารถกู้คืนได้'))) return;
   // audit log ก่อนลบ
   if (typeof logAudit === 'function') logAudit('supplier_invoice', 'delete', String(id), {
     invoice_no: inv.invoiceNo, supplier_name: inv.supplierName,

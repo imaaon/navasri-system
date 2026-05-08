@@ -54,7 +54,7 @@ function renderPaymentsTab() {
 
 async function deletePayment(id) {
   await ensureSecondaryDB();
-  if(!confirm('ลบรายการชำระนี้? ยอดค้างชำระในบิลจะเพิ่มขึ้น')) return;
+  if(!(await customConfirm('ลบรายการชำระนี้? ยอดค้างชำระในบิลจะเพิ่มขึ้น'))) return;
   const { error } = await supa.from('payments').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ','error'); return; }
   db.payments = (db.payments||[]).filter(p=>p.id!=id);
@@ -166,7 +166,7 @@ async function saveContract() {
 
 async function deleteContract(id) {
   await ensureSecondaryDB();
-  if(!confirm('ลบแพ็กเกจนี้?')) return;
+  if(!(await customConfirm('ลบแพ็กเกจนี้?'))) return;
   const { error } = await supa.from('patient_contracts').delete().eq('id', id);
   if(error) { toast('ลบไม่สำเร็จ','error'); return; }
   db.contracts = (db.contracts||[]).filter(c=>c.id!=id);
@@ -265,7 +265,7 @@ async function runAutoBilling() {
     return;
   }
 
-  const confirm_ = confirm(`จะสร้างร่างบิลอัตโนมัติสำหรับ ${toCreate.length} สัญญา ใช่ไหม?\n\n${toCreate.map(c=>`• ${c.patientName} — ${formatThb(c.totalMonthly)}`).join('\n')}`);
+  const confirm_ = (await customConfirm(`จะสร้างร่างบิลอัตโนมัติสำหรับ ${toCreate.length} สัญญา ใช่ไหม?\n\n${toCreate.map(c=>`• ${c.patientName} — ${formatThb(c.totalMonthly)}`).join('\n')}`));
   if (!confirm_) return;
 
   let created = 0;
@@ -572,7 +572,7 @@ async function savePhysioPackage() {
 }
 
 async function deletePhysioPackage(id) {
-  if (!confirm('ลบ Physio Package นี้?')) return;
+  if (!(await customConfirm('ลบ Physio Package นี้?'))) return;
   var result = await supa.from('physio_packages').delete().eq('id',id);
   if (result.error) { toast('ลบไม่สำเร็จ: '+result.error.message,'error'); return; }
   toast('ลบแล้วค่ะ','success'); renderPhysioPackagesTab();
