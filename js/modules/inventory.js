@@ -398,6 +398,9 @@ function openReceiveForItem(itemId) {
 }
 
 function openReceiveModal() {
+  // Bug fix: reset typeahead value/id ก่อน setup ใหม่ (กัน state ค้างจากครั้งก่อน)
+  document.getElementById('ta-ri-inp').value = '';
+  document.getElementById('ta-ri-id').value = '';
   makeTypeahead({inputId:'ta-ri-inp',listId:'ta-ri-list',hiddenId:'ta-ri-id',dataFn:()=>(db.items||[]).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(x=>({id:x.id,label:x.name||String(x.id),sub:x.qty>0?'คงเหลือ '+x.qty+' '+(x.dispenseUnit||''):'ยังไม่มีสต็อก'})),onSelect:()=>{if(typeof onRecvItemChange==='function')onRecvItemChange();}});
   document.getElementById('recv-qty').value = '';
   document.getElementById('recv-cost').value = '';
@@ -458,13 +461,13 @@ async function saveNewItemInline() {
   const newItem = mapItem({ ...data, id: inserted.id });
   db.items.push(newItem);
   if (typeof buildBarcodeMap === 'function') buildBarcodeMap();
-  // refresh dropdown และเลือกสินค้าใหม่
-  const sel = document.getElementById('recv-item');
-  const opt = document.createElement('option');
-  opt.value = inserted.id;
-  opt.textContent = name + ' (คงเหลือ: 0 ' + unit + ')';
-  sel.appendChild(opt);
-  sel.value = inserted.id;
+  // Bug fix: refresh typeahead value แทน dropdown เก่า (recv-item ถูกแทนด้วย ta-ri-inp/ta-ri-id)
+  const idEl = document.getElementById('ta-ri-id');
+  const inpEl = document.getElementById('ta-ri-inp');
+  if (idEl && inpEl) {
+    idEl.value = inserted.id;
+    inpEl.value = name;
+  }
   onRecvItemChange();
   toggleNewItemForm();
   logAudit(AUDIT_MODULES.INVENTORY, AUDIT_ACTIONS.CREATE, inserted.id, { name });
@@ -610,7 +613,11 @@ async function _receiveItemFallback(item, qty, qtyDispense, cost, lotNum, mfgDat
 
 // ===== PURCHASE / RECEIVE HELPERS =====
 function onRecvItemChange() {
-const recvItemEl = document.getElementById('recv-item'); if (!recvItemEl) return; const id = recvItemEl.value;
+  // Bug fix: ใช้ ta-ri-id (typeahead hidden) แทน recv-item (select เก่า — ไม่มีอยู่แล้ว)
+  const idEl = document.getElementById('ta-ri-id');
+  if (!idEl) return;
+  const id = idEl.value;
+  if (!id) return;
   const item = db.items.find(i => i.id == id);
   if (!item) return;
   if (item.cost) document.getElementById('recv-cost').value = item.cost;
@@ -737,9 +744,12 @@ function onRecvBarcodeScan() {
   el._scanTimer = setTimeout(() => {
     const item = lookupItemByBarcode(code);
     if (item) {
-      const sel = document.getElementById('recv-item');
-      if (sel) {
-        sel.value = item.id;
+      // Bug fix: set typeahead values (ta-ri-id hidden + ta-ri-inp display) แทน recv-item เก่า
+      const idEl = document.getElementById('ta-ri-id');
+      const inpEl = document.getElementById('ta-ri-inp');
+      if (idEl && inpEl) {
+        idEl.value = item.id;
+        inpEl.value = item.name || '';
         onRecvItemChange();
         toast(`พบสินค้า: ${item.name}`, 'success');
       }
