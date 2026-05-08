@@ -70,8 +70,10 @@ function renderExpenses() {
     <td>${EXP_STATUS_BADGE[r.status]||r.status}</td>
     <td style="font-size:12px;">${r.paidBy||'-'}</td>
     <td>
-      <button class="btn btn-ghost btn-sm" onclick="editExpense('${r.id}')">✏️</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteExpense('${r.id}')">🗑️</button>
+      <button class="btn btn-ghost btn-sm" onclick="printExpense('${r.id}')" title="พิมพ์ใบสำคัญจ่าย">🖨️</button>
+      <button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="exportExpensePDF('${r.id}')" title="Export PDF">📄</button>
+      <button class="btn btn-ghost btn-sm" onclick="editExpense('${r.id}')" title="แก้ไข">✏️</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteExpense('${r.id}')" title="ลบ">🗑️</button>
     </td>
   </tr>`).join('');
 }
