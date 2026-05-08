@@ -198,25 +198,25 @@ function renderExpenseLineItems() {
   
   const escapeAttr = (s) => String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   
-  container.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+  container.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:14px;">' +
     '<thead><tr style="color:var(--text2);border-bottom:1px solid var(--border);">' +
-    '<th style="text-align:left;padding:4px 6px;">รายละเอียด</th>' +
-    '<th style="text-align:left;padding:4px 6px;width:140px;">หมวดหมู่</th>' +
-    '<th style="text-align:right;padding:4px 6px;width:55px;">จำนวน</th>' +
-    '<th style="text-align:right;padding:4px 6px;width:80px;">ราคา/หน่วย</th>' +
-    '<th style="text-align:right;padding:4px 6px;width:80px;">ยอดรวม</th>' +
-    '<th style="width:24px;"></th>' +
+    '<th style="text-align:left;padding:6px 8px;">รายละเอียด</th>' +
+    '<th style="text-align:left;padding:6px 8px;width:160px;">หมวดหมู่</th>' +
+    '<th style="text-align:right;padding:6px 8px;width:70px;">จำนวน</th>' +
+    '<th style="text-align:right;padding:6px 8px;width:100px;">ราคา/หน่วย</th>' +
+    '<th style="text-align:right;padding:6px 8px;width:100px;">ยอดรวม</th>' +
+    '<th style="width:30px;"></th>' +
     '</tr></thead><tbody>' +
     items.map((it, idx) =>
       '<tr style="border-bottom:1px solid var(--border);">' +
-        '<td style="padding:4px 6px;"><input type="text" value="' + escapeAttr(it.desc||'') + '" oninput="_updateExpenseLineItem(' + idx + ', \'desc\', this.value)" style="width:100%;border:none;background:transparent;color:var(--text1);font-size:12px;"></td>' +
-        '<td style="padding:4px 6px;"><select onchange="_updateExpenseLineItem(' + idx + ', \'cat\', this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);font-size:12px;padding:2px 4px;">' +
+        '<td style="padding:6px 8px;"><input type="text" value="' + escapeAttr(it.desc||'') + '" oninput="_updateExpenseLineItem(' + idx + ', \'desc\', this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);font-size:14px;padding:4px 6px;"></td>' +
+        '<td style="padding:6px 8px;"><select onchange="_updateExpenseLineItem(' + idx + ', \'cat\', this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);font-size:14px;padding:4px 6px;">' +
           cats.map(c => '<option value="' + escapeAttr(c) + '" ' + (it.cat === c ? 'selected' : '') + '>' + c + '</option>').join('') +
         '</select></td>' +
-        '<td style="padding:4px 6px;"><input type="number" value="' + (it.qty || 1) + '" min="0" oninput="_updateExpenseLineItem(' + idx + ', \'qty\', this.value)" style="width:50px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:12px;"></td>' +
-        '<td style="padding:4px 6px;"><input type="number" value="' + (it.price || 0) + '" min="0" step="0.01" oninput="_updateExpenseLineItem(' + idx + ', \'price\', this.value)" style="width:75px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:12px;"></td>' +
-        '<td style="padding:4px 6px;text-align:right;font-weight:600;" id="exp2-row-' + idx + '">' + ((it.qty||1) * (it.price||0)).toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2}) + '</td>' +
-        '<td><button type="button" onclick="_removeExpenseLineItem(' + idx + ')" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>' +
+        '<td style="padding:6px 8px;"><input type="number" value="' + (it.qty || 1) + '" min="0" oninput="_updateExpenseLineItem(' + idx + ', \'qty\', this.value)" style="width:65px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:4px 6px;font-size:14px;"></td>' +
+        '<td style="padding:6px 8px;"><input type="number" value="' + (it.price || 0) + '" min="0" step="0.01" oninput="_updateExpenseLineItem(' + idx + ', \'price\', this.value)" style="width:95px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:4px 6px;font-size:14px;"></td>' +
+        '<td style="padding:6px 8px;text-align:right;font-weight:600;font-size:14px;" id="exp2-row-' + idx + '">' + ((it.qty||1) * (it.price||0)).toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2}) + '</td>' +
+        '<td style="text-align:center;"><button type="button" onclick="_removeExpenseLineItem(' + idx + ')" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:16px;padding:2px 4px;" title="ลบรายการ">✕</button></td>' +
       '</tr>'
     ).join('') +
     '</tbody></table>';

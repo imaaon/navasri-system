@@ -409,6 +409,7 @@ function buildExpenseHTML(id) {
       <div>
         <div style="font-size:16px;font-weight:700;color:#2d4a38;">${bs.company||'นวศรี เนอร์สซิ่งโฮม'}</div>
         <div style="font-size:11px;color:#555;line-height:1.7;margin-top:4px;">
+          ${bs.address?bs.address.split('\n').join('<br>')+'<br>':''}
           ${bs.taxId?`เลขประจำตัวผู้เสียภาษี ${bs.taxId}<br>`:''}
           ${bs.phone?`โทร. ${bs.phone}<br>`:''}${bs.email?`อีเมล ${bs.email}`:''}
         </div>
