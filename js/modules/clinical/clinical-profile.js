@@ -387,8 +387,8 @@ function _renderPatIncidentTab(pid, listEl) {
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
       eb.addEventListener('click',function(){openIncidentModal(x.id);});
       var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='#c0392b'; db2.textContent='🗑️';
-      db2.addEventListener('click',function(){
-        if(!confirm('ลบรายการนี้?')) return;
+      db2.addEventListener('click',async function(){
+        if(!(await customConfirm('ลบรายการนี้?'))) return;
         supa.from('incident_reports').delete().eq('id',x.id).then(function(){
           switchPatTab('incident'); toast('ลบแล้ว','success');
         });
@@ -443,8 +443,8 @@ function _renderPatIncidentTab(pid, listEl) {
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
       eb.addEventListener('click',function(){openWoundModal(x.id);});
       var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='#c0392b'; db2.textContent='🗑️';
-      db2.addEventListener('click',function(){
-        if(!confirm('ลบรายการนี้?')) return;
+      db2.addEventListener('click',async function(){
+        if(!(await customConfirm('ลบรายการนี้?'))) return;
         supa.from('patient_wounds').delete().eq('id',x.id).then(function(){
           switchPatTab('incident'); toast('ลบแล้ว','success');
         });
@@ -500,8 +500,8 @@ function _renderPatDietaryTab(pid, listEl) {
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
       eb.addEventListener('click',function(){openDietModal(x.id);});
       var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='#c0392b'; db2.textContent='🗑️';
-      db2.addEventListener('click',function(){
-        if(!confirm('ลบรายการนี้?')) return;
+      db2.addEventListener('click',async function(){
+        if(!(await customConfirm('ลบรายการนี้?'))) return;
         supa.from('patient_diets').delete().eq('id',x.id).then(function(){
           switchPatTab('dietary'); toast('ลบแล้ว','success');
         });
@@ -526,8 +526,8 @@ function _renderPatDietaryTab(pid, listEl) {
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
       eb.addEventListener('click',function(){openTubeFeedModal(x.id);});
       var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='#c0392b'; db2.textContent='🗑️';
-      db2.addEventListener('click',function(){
-        if(!confirm('ลบรายการนี้?')) return;
+      db2.addEventListener('click',async function(){
+        if(!(await customConfirm('ลบรายการนี้?'))) return;
         supa.from('tube_feedings').delete().eq('id',x.id).then(function(){
           switchPatTab('dietary'); toast('ลบแล้ว','success');
         });
@@ -970,7 +970,7 @@ async function saveLabResult() {
 }
 
 async function deleteLabResult(labId, patientId) {
-  if (!confirm('ลบผลแล็บ?')) return;
+  if (!(await customConfirm('ลบผลแล็บ?'))) return;
   var res = await supa.from('patient_lab_results').delete().eq('id', labId);
   if (res.error) { toast('ลบไม่สำเร็จ: ' + res.error.message, 'error'); return; }
   toast('ลบเรียบร้อย', 'success');
@@ -1453,9 +1453,9 @@ function _openExcretionModal(rec, patId, today) {
   btnSave.addEventListener('click', function() {
     var dateValSel = inpDate.value || dateVal;
     var timeVal = inpTime.value || '00:00';
-    if (!dateValSel) { alert('กรุณาเลือกวันที่'); return; }
+    if (!dateValSel) { customAlert('กรุณาเลือกวันที่'); return; }
     var _dObj1 = new Date(dateValSel + 'T' + timeVal + ':00');
-    if (isNaN(_dObj1.getTime())) { alert('วันที่/เวลาไม่ถูกต้อง'); return; }
+    if (isNaN(_dObj1.getTime())) { customAlert('วันที่/เวลาไม่ถูกต้อง'); return; }
     var dateTime = new Date(_dObj1.getTime() - _dObj1.getTimezoneOffset() * 60000).toISOString().slice(0, 19) + 'Z';
     var user = (window._currentUser && window._currentUser.username) ? window._currentUser.username : 'user';
     var payload = {
@@ -1473,17 +1473,17 @@ function _openExcretionModal(rec, patId, today) {
       ? supa.from('patient_excretions').update(payload).eq('id', rec.id)
       : supa.from('patient_excretions').insert(payload);
     prom.then(function(res) {
-      if (res.error) { alert('บันทึกไม่สำเร็จ: ' + res.error.message); return; }
+      if (res.error) { customAlert('บันทึกไม่สำเร็จ: ' + res.error.message); return; }
       document.body.removeChild(overlay);
       switchPatTab('excretion');
     });
   });
 }
 
-function _deleteExcretion(id, patId) {
-  if (!confirm('ยืนยันลบรายการนี้?')) return;
+async function _deleteExcretion(id, patId) {
+  if (!(await customConfirm('ยืนยันลบรายการนี้?'))) return;
   supa.from('patient_excretions').delete().eq('id', id).then(function(res) {
-    if (res.error) { alert('ลบไม่สำเร็จ: ' + res.error.message); return; }
+    if (res.error) { customAlert('ลบไม่สำเร็จ: ' + res.error.message); return; }
     switchPatTab('excretion');
   });
 }
@@ -1595,9 +1595,9 @@ function _openFluidModal(rec, patId, direction, today) {
   btnSave.addEventListener('click', function() {
     var dateValSel = inpDate.value || dateVal;
     var timeVal = inpTime.value || '00:00';
-    if (!dateValSel) { alert('กรุณาเลือกวันที่'); return; }
+    if (!dateValSel) { customAlert('กรุณาเลือกวันที่'); return; }
     var _dObj2 = new Date(dateValSel + 'T' + timeVal + ':00');
-    if (isNaN(_dObj2.getTime())) { alert('วันที่/เวลาไม่ถูกต้อง'); return; }
+    if (isNaN(_dObj2.getTime())) { customAlert('วันที่/เวลาไม่ถูกต้อง'); return; }
     var dateTime = new Date(_dObj2.getTime() - _dObj2.getTimezoneOffset() * 60000).toISOString().slice(0, 19) + 'Z';
     var user = (window._currentUser && window._currentUser.username) ? window._currentUser.username : 'user';
     var payload = {
@@ -1614,17 +1614,17 @@ function _openFluidModal(rec, patId, direction, today) {
       ? supa.from('patient_fluid_records').update(payload).eq('id', rec.id)
       : supa.from('patient_fluid_records').insert(payload);
     prom.then(function(res) {
-      if (res.error) { alert('บันทึกไม่สำเร็จ: ' + res.error.message); return; }
+      if (res.error) { customAlert('บันทึกไม่สำเร็จ: ' + res.error.message); return; }
       document.body.removeChild(overlay);
       switchPatTab('excretion');
     });
   });
 }
 
-function _deleteFluidRecord(id, patId) {
-  if (!confirm('ยืนยันลบรายการนี้?')) return;
+async function _deleteFluidRecord(id, patId) {
+  if (!(await customConfirm('ยืนยันลบรายการนี้?'))) return;
   supa.from('patient_fluid_records').delete().eq('id', id).then(function(res) {
-    if (res.error) { alert('ลบไม่สำเร็จ: ' + res.error.message); return; }
+    if (res.error) { customAlert('ลบไม่สำเร็จ: ' + res.error.message); return; }
     switchPatTab('excretion');
   });
 }
@@ -1697,7 +1697,7 @@ async function openContractFilesModal(patientId, patientName) {
       listArea.innerHTML = '<div style="color:#9ca3af;font-size:13px;padding:16px 0;text-align:center;">ยังไม่มีไฟล์สัญญา — กดอัปโหลดเพื่อเพิ่ม</div>'; return;
     }
     listArea.innerHTML = '';
-    data.forEach(f => {
+    data.forEach(async f => {
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#f9fafb;border-radius:8px;margin-bottom:6px;gap:10px;';
       const isPdf = (f.file_type||'').includes('pdf') || f.file_name.endsWith('.pdf');
@@ -1718,13 +1718,13 @@ async function openContractFilesModal(patientId, patientName) {
       viewBtn.onclick = async () => {
         const { data: urlData } = await supa.storage.from('documents').createSignedUrl(f.file_url, 60);
         if (urlData?.signedUrl) window.open(urlData.signedUrl, '_blank');
-        else alert('ไม่สามารถเปิดได้');
+        else customAlert('ไม่สามารถเปิดได้');
       };
       const delBtn = document.createElement('button');
       delBtn.textContent = 'ลบ';
       delBtn.style.cssText = 'padding:4px 10px;font-size:11px;border:1px solid #fca5a5;border-radius:5px;background:#fee2e2;color:#b91c1c;cursor:pointer;';
       delBtn.onclick = async () => {
-        if (!confirm('ลบไฟล์ "' + f.file_name + '" ?')) return;
+        if (!(await customConfirm('ลบไฟล์ "' + f.file_name + '" ?'))) return;
         await supa.storage.from('documents').remove([f.file_url]);
         await supa.from('patient_contract_files').delete().eq('id', f.id);
         loadFiles();
@@ -1737,15 +1737,15 @@ async function openContractFilesModal(patientId, patientName) {
   
   // Upload handler
   uploadBtn.onclick = async () => {
-    if (!fileInput.files || fileInput.files.length === 0) { alert('กรุณาเลือกไฟล์ก่อน'); return; }
+    if (!fileInput.files || fileInput.files.length === 0) { customAlert('กรุณาเลือกไฟล์ก่อน'); return; }
     uploadBtn.disabled = true; uploadBtn.textContent = 'กำลังอัปโหลด...';
     const note = noteInput.value.trim();
     for (const file of fileInput.files) {
-      if (file.size > 20971520) { alert(file.name + ' ใหญ่เกิน 20MB'); continue; }
+      if (file.size > 20971520) { customAlert(file.name + ' ใหญ่เกิน 20MB'); continue; }
       const ext = file.name.split('.').pop();
       const path = 'contracts/' + patientId + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
       const { error: upErr } = await supa.storage.from('documents').upload(path, file, { upsert: false });
-      if (upErr) { alert('อัปโหลดไม่ได้: ' + upErr.message); continue; }
+      if (upErr) { customAlert('อัปโหลดไม่ได้: ' + upErr.message); continue; }
       await supa.from('patient_contract_files').insert({
         patient_id: patientId, file_name: file.name, file_url: path,
         file_size: file.size, file_type: file.type, note: note||null,
@@ -1800,7 +1800,7 @@ async function _renderMedicalFilesSection(patientId) {
       const url = this.getAttribute('data-url');
       const { data: ud } = await supa.storage.from('documents').createSignedUrl(url, 60);
       if (ud && ud.signedUrl) window.open(ud.signedUrl, '_blank');
-      else alert('ไม่สามารถเปิดได้');
+      else customAlert('ไม่สามารถเปิดได้');
     });
   });
 }
@@ -1850,22 +1850,22 @@ async function openMedicalFilesModal(patientId, patientName) {
       info.appendChild(nameEl); info.appendChild(metaEl);
       const btns=document.createElement('div'); btns.style.cssText='display:flex;gap:6px;flex-shrink:0;';
       const viewBtn=document.createElement('button'); viewBtn.textContent='เปิดดู'; viewBtn.style.cssText='padding:4px 10px;font-size:11px;border:1px solid #d1d5db;border-radius:5px;background:#fff;cursor:pointer;';
-      viewBtn.onclick=async function(){ const {data:u}=await supa.storage.from('documents').createSignedUrl(f.file_url,60); if(u&&u.signedUrl)window.open(u.signedUrl,'_blank'); else alert('ไม่สามารถเปิด'); };
+      viewBtn.onclick=async function(){ const {data:u}=await supa.storage.from('documents').createSignedUrl(f.file_url,60); if(u&&u.signedUrl)window.open(u.signedUrl,'_blank'); else customAlert('ไม่สามารถเปิด'); };
       const delBtn=document.createElement('button'); delBtn.textContent='ลบ'; delBtn.style.cssText='padding:4px 10px;font-size:11px;border:1px solid #fca5a5;border-radius:5px;background:#fee2e2;color:#b91c1c;cursor:pointer;';
-      delBtn.onclick=async function(){ if(!confirm('ลบไฟล์ "'+f.file_name+'" ?'))return; await supa.storage.from('documents').remove([f.file_url]); await supa.from('patient_medical_files').delete().eq('id',f.id); loadFiles(); };
+      delBtn.onclick=async function(){ if(!(await customConfirm('ลบไฟล์ "'+f.file_name+'" ?')))return; await supa.storage.from('documents').remove([f.file_url]); await supa.from('patient_medical_files').delete().eq('id',f.id); loadFiles(); };
       btns.appendChild(viewBtn); btns.appendChild(delBtn);
       row.appendChild(badge); row.appendChild(info); row.appendChild(btns); listArea.appendChild(row);
     });
   }
   uploadBtn.onclick=async function(){
-    if(!fileInput.files||fileInput.files.length===0){alert('กรุณาเลือกไฟล์ก่อน');return;}
+    if(!fileInput.files||fileInput.files.length===0){customAlert('กรุณาเลือกไฟล์ก่อน');return;}
     uploadBtn.disabled=true; uploadBtn.textContent='กำลังอัปโหลด...';
     const note=noteInput.value.trim();
     for(const file of fileInput.files){
-      if(file.size>20971520){alert(file.name+' ใหญ่เกิน 20MB');continue;}
+      if(file.size>20971520){customAlert(file.name+' ใหญ่เกิน 20MB');continue;}
       const path='medical/'+patientId+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
       const {error:upErr}=await supa.storage.from('documents').upload(path,file,{upsert:false});
-      if(upErr){alert('อัปโหลดไม่ได้: '+upErr.message);continue;}
+      if(upErr){customAlert('อัปโหลดไม่ได้: '+upErr.message);continue;}
       await supa.from('patient_medical_files').insert({patient_id:patientId,file_name:file.name,file_url:path,file_size:file.size,file_type:file.type,note:note||null,uploaded_by:window._currentUser||'user'});
     }
     fileInput.value=''; noteInput.value=''; uploadBtn.disabled=false; uploadBtn.textContent='↑ อัปโหลด'; loadFiles();
