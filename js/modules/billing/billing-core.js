@@ -53,25 +53,19 @@ function renderBilling() {
   if (monthFilter)  invList = invList.filter(i => i.date?.startsWith(monthFilter));
   if (search)       invList = invList.filter(i => (i.patientName||'').toLowerCase().includes(search));
 
-  // Expenses
-  let expList = (!typeFilter || typeFilter === 'expense') ? (db.expenses||[]) : [];
-  if (statusFilter) expList = [];
-  if (monthFilter)  expList = expList.filter(e => e.date?.startsWith(monthFilter));
-  if (search)       expList = expList.filter(e => (e.job||e.vendorName||'').toLowerCase().includes(search));
+  // Phase 4 Step E: Expense rows ย้ายไปหน้า "ค่าใช้จ่าย" (sidebar) แล้ว
+  // ระบบบัญชีโชว์เฉพาะ invoices — เก็บความชัดเจน separation of concerns
 
   const allInvoiceTotal = (db.invoices||[]).reduce((s,i)=>s+(i.grandTotal||0),0);
-  const allExpTotal     = (db.expenses||[]).reduce((s,e)=>s+(e.net||0),0);
   const pendingTotal    = invList.filter(i=>i.status==='sent'||i.status==='draft').reduce((s,i)=>s+(i.grandTotal||0),0);
   const paidTotal       = invList.filter(i=>i.status==='paid').reduce((s,i)=>s+(i.grandTotal||0),0);
 
   document.getElementById('billing-total-amount').textContent   = formatThb(allInvoiceTotal);
   document.getElementById('billing-pending-amount').textContent  = formatThb(pendingTotal);
   document.getElementById('billing-paid-amount').textContent     = formatThb(paidTotal);
-  document.getElementById('billing-doc-count').textContent       = invList.length + expList.length;
-  const expCard = document.getElementById('billing-exp-amount');
-  if(expCard) expCard.textContent = formatThb(allExpTotal);
+  document.getElementById('billing-doc-count').textContent       = invList.length;
 
-  const TYPE_LABELS   = { invoice:'ใบแจ้งหนี้', receipt:'ใบเสร็จ', quotation:'ใบเสนอราคา', tax_invoice:'ใบกำกับภาษี', expense:'ค่าใช้จ่าย' };
+  const TYPE_LABELS   = { invoice:'ใบแจ้งหนี้', receipt:'ใบเสร็จ', quotation:'ใบเสนอราคา', tax_invoice:'ใบกำกับภาษี' };
   const STATUS_COLORS = { draft:'#888', sent:'#e67e22', partial:'#3498db', paid:'#27ae60', cancelled:'#e74c3c' };
   const STATUS_LABELS = { draft:'ร่าง', sent:'รอชำระ', partial:'ชำระบางส่วน', paid:'ชำระครบ', cancelled:'ยกเลิก' };
 
@@ -108,28 +102,10 @@ function renderBilling() {
     </tr>`;
   }).join('');
 
-  const expRows = [...expList].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(exp => `
-    <tr>
-      <td style="font-family:monospace;font-size:12px;">${exp.docNo||'-'}</td>
-      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#e67e2222;color:#e67e22;">ค่าใช้จ่าย</span></td>
-      <td style="font-size:13px;">${exp.vendorName||exp.job||'-'}</td>
-      <td style="font-size:12px;">${exp.date||'-'}</td>
-      <td style="font-size:12px;color:var(--text2);">${exp.payDate||'-'}</td>
-      <td style="text-align:right;font-weight:600;">${formatThb(exp.net||0)}</td>
-      <td>-</td><td>-</td>
-      <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:#27ae6022;color:#27ae60;">บันทึกแล้ว</span></td>
-      <td style="white-space:nowrap;">
-        <button class="btn btn-ghost btn-sm" onclick="previewDoc('${exp.id}','expense')" title="ดู Preview">👁️</button>
-        <button class="btn btn-ghost btn-sm" onclick="printExpense('${exp.id}')" title="พิมพ์">🖨️</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportExpensePDF('${exp.id}')" title="Export PDF" style="color:#e74c3c;">📄</button>
-        <button class="btn btn-ghost btn-sm" onclick="editExpense('${exp.id}')" title="แก้ไข">✏️</button>
-        <button class="btn btn-ghost btn-sm" onclick="deleteExpense('${exp.id}')" style="color:#e74c3c;">🗑️</button>
-      </td>
-    </tr>`).join('');
+  // Phase 4 Step E: expRows ลบออก — expense ย้ายไปหน้า "ค่าใช้จ่าย" (sidebar)
 
   const tb = document.getElementById('billing-table-body');
-  const allRows = invRows + expRows;
-  tb.innerHTML = allRows || '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:40px;">ไม่มีเอกสาร</td></tr>';
+  tb.innerHTML = invRows || '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:40px;">ไม่มีเอกสาร</td></tr>';
 }
 
 // ── Format ───────────────────────────────────────────
@@ -145,7 +121,7 @@ function generateDocNo(type) {
     receipt:     'RE',
     quotation:   'QT',
     tax_invoice: 'TX',
-    expense:     'EXP',
+    // expense ใช้ doc_no จาก get_next_doc_no RPC โดยตรง — ไม่ผ่าน TYPE_PREFIX อีกแล้ว
   };
   const prefix = TYPE_PREFIX[type] || 'DOC';
   const now  = new Date();
