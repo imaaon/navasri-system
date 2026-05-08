@@ -907,7 +907,8 @@ window._renderLabRows = _renderLabRows;
 function openAddLabModalBase(patientId) {
   document.getElementById('lab-edit-id').value = '';
   document.getElementById('lab-patient-id').value = patientId;
-  document.getElementById('lab-test-date').value = '';
+  // Phase 4 Step D: default วันที่ตรวจ = วันนี้ (กดบันทึกง่าย ไม่ต้องเลือกเอง)
+  document.getElementById('lab-test-date').value = new Date().toISOString().slice(0, 10);
   document.getElementById('lab-hospital').value = '';
   document.getElementById('lab-doctor').value = '';
   document.getElementById('lab-summary').value = '';
