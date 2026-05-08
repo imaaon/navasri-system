@@ -135,6 +135,93 @@ function _readExpenseLineItems() {
   try { return JSON.parse(el.value || '[]'); } catch(_) { return []; }
 }
 
+// Helper: เขียนรายการย่อยลง hidden field + re-render
+function _writeExpenseLineItems(items) {
+  const el = document.getElementById('exp2-items-data');
+  if (!el) return;
+  el.value = JSON.stringify(items || []);
+  renderExpenseLineItems();
+}
+
+// เพิ่มรายการย่อยใหม่
+function addExpenseLineItem() {
+  const items = _readExpenseLineItems();
+  items.push({ desc: '', cat: 'อื่นๆ', qty: 1, price: 0 });
+  _writeExpenseLineItems(items);
+}
+
+// อัปเดต field ของรายการ
+function _updateExpenseLineItem(idx, field, value) {
+  const items = _readExpenseLineItems();
+  if (!items[idx]) return;
+  if (field === 'qty' || field === 'price') value = parseFloat(value) || 0;
+  items[idx][field] = value;
+  // เขียนกลับโดยไม่ re-render ทั้ง table (กัน cursor หลุด)
+  const el = document.getElementById('exp2-items-data');
+  if (el) el.value = JSON.stringify(items);
+  // อัปเดตเฉพาะ row total + grand total
+  const rowEl = document.getElementById('exp2-row-' + idx);
+  if (rowEl) rowEl.textContent = ((items[idx].qty||1) * (items[idx].price||0)).toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2});
+  _recalcExpenseLineItemsTotal();
+}
+
+// ลบรายการ
+function _removeExpenseLineItem(idx) {
+  const items = _readExpenseLineItems();
+  items.splice(idx, 1);
+  _writeExpenseLineItems(items);
+}
+
+// คำนวณ total ของ line items
+function _recalcExpenseLineItemsTotal() {
+  const items = _readExpenseLineItems();
+  const total = items.reduce((s, it) => s + (it.qty||1) * (it.price||0), 0);
+  const el = document.getElementById('exp2-items-total');
+  if (el) el.textContent = total.toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' ฿';
+}
+
+// Render line items table
+function renderExpenseLineItems() {
+  const container = document.getElementById('exp2-items-container');
+  if (!container) return;
+  const items = _readExpenseLineItems();
+  
+  if (items.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text3);padding:8px;font-size:12px;">ยังไม่มีรายการย่อย</div>';
+    _recalcExpenseLineItemsTotal();
+    return;
+  }
+  
+  const cats = ['ค่าน้ำมัน/แก๊ส/รถยนต์','ค่าอาหาร','ค่าสาธารณูปโภค','ค่าโทรศัพท์','ค่าอุปกรณ์สำนักงาน','ค่าซ่อมบำรุง','ค่าเดินทาง','อื่นๆ'];
+  
+  const escapeAttr = (s) => String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  
+  container.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+    '<thead><tr style="color:var(--text2);border-bottom:1px solid var(--border);">' +
+    '<th style="text-align:left;padding:4px 6px;">รายละเอียด</th>' +
+    '<th style="text-align:left;padding:4px 6px;width:140px;">หมวดหมู่</th>' +
+    '<th style="text-align:right;padding:4px 6px;width:55px;">จำนวน</th>' +
+    '<th style="text-align:right;padding:4px 6px;width:80px;">ราคา/หน่วย</th>' +
+    '<th style="text-align:right;padding:4px 6px;width:80px;">ยอดรวม</th>' +
+    '<th style="width:24px;"></th>' +
+    '</tr></thead><tbody>' +
+    items.map((it, idx) =>
+      '<tr style="border-bottom:1px solid var(--border);">' +
+        '<td style="padding:4px 6px;"><input type="text" value="' + escapeAttr(it.desc||'') + '" oninput="_updateExpenseLineItem(' + idx + ', \'desc\', this.value)" style="width:100%;border:none;background:transparent;color:var(--text1);font-size:12px;"></td>' +
+        '<td style="padding:4px 6px;"><select onchange="_updateExpenseLineItem(' + idx + ', \'cat\', this.value)" style="width:100%;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);font-size:12px;padding:2px 4px;">' +
+          cats.map(c => '<option value="' + escapeAttr(c) + '" ' + (it.cat === c ? 'selected' : '') + '>' + c + '</option>').join('') +
+        '</select></td>' +
+        '<td style="padding:4px 6px;"><input type="number" value="' + (it.qty || 1) + '" min="0" oninput="_updateExpenseLineItem(' + idx + ', \'qty\', this.value)" style="width:50px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:12px;"></td>' +
+        '<td style="padding:4px 6px;"><input type="number" value="' + (it.price || 0) + '" min="0" step="0.01" oninput="_updateExpenseLineItem(' + idx + ', \'price\', this.value)" style="width:75px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:12px;"></td>' +
+        '<td style="padding:4px 6px;text-align:right;font-weight:600;" id="exp2-row-' + idx + '">' + ((it.qty||1) * (it.price||0)).toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2}) + '</td>' +
+        '<td><button type="button" onclick="_removeExpenseLineItem(' + idx + ')" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>' +
+      '</tr>'
+    ).join('') +
+    '</tbody></table>';
+  
+  _recalcExpenseLineItemsTotal();
+}
+
 async function saveExpense(opts) {
   opts = opts || {};
   const printAfterSave = opts.print === true;
