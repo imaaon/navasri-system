@@ -528,6 +528,7 @@ function exportInvoiceExcel(id) {
 
   const rows = [
     [bs.company||'นวศรี เนอร์สซิ่งโฮม'],
+    bs.address ? [bs.address] : null,
     [LABELS[inv.type]||inv.type],
     ['เลขที่', inv.docNo||'', 'วันที่', inv.date||'', 'กำหนดชำระ', inv.dueDate||''],
     ['ลูกค้า', inv.patientName||''],
@@ -566,6 +567,7 @@ function exportExpenseExcel(id) {
 
   const rows = [
     [bs.company||'นวศรี เนอร์สซิ่งโฮม'],
+    bs.address ? [bs.address] : null,
     ['บันทึกค่าใช้จ่าย (Expense Note)'],
     ['เลขที่', exp.docNo||'', 'วันที่', exp.date||''],
     exp.preparer ? ['ผู้จัดทำ', exp.preparer] : null,
