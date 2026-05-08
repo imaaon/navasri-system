@@ -204,7 +204,7 @@ async function savePhysioPackage() {
 }
 
 async function deactivatePhysioPackage(id) {
-  if (!confirm('ปิดใช้งาน Package นี้?')) return;
+  if (!(await customConfirm('ปิดใช้งาน Package นี้?'))) return;
   var { error } = await supa.from('physio_packages').update({ is_active: false }).eq('id', id);
   if (error) { toast('ไม่สำเร็จ: '+error.message, 'error'); return; }
   toast('ปิดใช้งานแล้วค่ะ', 'success');

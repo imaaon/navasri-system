@@ -201,7 +201,7 @@ async function renderPhysioTab(patientId) {
 
 async function deletePhysioSession(sessionId, patientId) {
   if (!canManagePhysio()) { toast("ไม่มีสิทธิ์ลบ", "error"); return; }
-  if (!confirm("ลบ Session นี้?")) return;
+  if (!(await customConfirm("ลบ Session นี้?"))) return;
   var res = await supa.from("physio_sessions").delete().eq("id", sessionId);
   if (res.error) { toast("ลบไม่สำเร็จ: " + res.error.message, "error"); return; }
   toast("ลบเรียบร้อย", "success");

@@ -137,7 +137,7 @@ async function savePhysioPackage() {
 }
 
 async function deactivatePhysioPackage(id) {
-  if (!confirm('\u0e1b\u0e34\u0e14\u0e41\u0e1e\u0e47\u0e01\u0e40\u0e01\u0e08\u0e19\u0e35\u0e49?')) return;
+  if (!(await customConfirm('\u0e1b\u0e34\u0e14\u0e41\u0e1e\u0e47\u0e01\u0e40\u0e01\u0e08\u0e19\u0e35\u0e49?'))) return;
   var res = await supa.from('physio_packages').update({ is_active: false }).eq('id', id);
   if (res.error) { toast('\u0e1c\u0e34\u0e14\u0e1e\u0e25\u0e32\u0e14', 'error'); return; }
   toast('\u0e1b\u0e34\u0e14\u0e41\u0e1e\u0e47\u0e01\u0e40\u0e01\u0e08\u0e41\u0e25\u0e49\u0e27');

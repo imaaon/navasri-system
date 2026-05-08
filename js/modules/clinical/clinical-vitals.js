@@ -262,7 +262,7 @@ async function saveVitalSign() {
 }
 
 async function deleteVitalSign(patientId, pid, id) {
-  if(!confirm('ลบรายการนี้?')) return;
+  if(!(await customConfirm('ลบรายการนี้?'))) return;
   const { error } = await supa.from('vital_signs').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.vitalSigns[pid] = (db.vitalSigns[pid]||[]).filter(v=>v.id!=id);

@@ -135,7 +135,7 @@ async function returnBelonging(id, patientId) {
 
 async function deleteBelonging(id, patientId) {
   await ensureSecondaryDB();
-  if(!confirm('ลบรายการนี้?')) return;
+  if(!(await customConfirm('ลบรายการนี้?'))) return;
   const { error } = await supa.from('patient_belongings').delete().eq('id',id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.belongings = db.belongings.filter(b=>b.id!=id);
@@ -149,7 +149,7 @@ async function deleteBelonging(id, patientId) {
 
 async function clearDnr(patientId, patientName) {
   await ensureSecondaryDB();
-  if (!confirm(`ล้างข้อมูล DNR & Consent ของ ${patientName}?\nข้อมูลทั้งหมดจะถูกลบถาวร`)) return;
+  if (!(await customConfirm(`ล้างข้อมูล DNR & Consent ของ ${patientName}?\nข้อมูลทั้งหมดจะถูกลบถาวร`))) return;
   const c = (db.patientConsents||[]).find(x=>String(x.patientId)===String(patientId));
   if (c) {
     const { error } = await supa.from('patient_consents').delete().eq('id', c.id);

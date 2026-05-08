@@ -382,7 +382,7 @@ async function saveAllergy() {
   openPatientProfile(patId, 'allergy');
 }
 async function deleteAllergy(patId, allergyId) {
-  if (!confirm('ลบประวัติการแพ้นี้?')) return;
+  if (!(await customConfirm('ลบประวัติการแพ้นี้?'))) return;
   const { error } = await supa.from('patient_allergies').delete().eq('id', allergyId);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   const patient = db.patients.find(p => p.id == patId);
@@ -465,7 +465,7 @@ async function saveContact() {
   openPatientProfile(patId, 'contacts');
 }
 async function deleteContact(patId, contactId) {
-  if (!confirm('ลบผู้ติดต่อนี้?')) return;
+  if (!(await customConfirm('ลบผู้ติดต่อนี้?'))) return;
   const { error } = await supa.from('patient_contacts').delete().eq('id', contactId);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   const patient = db.patients.find(p => p.id == patId);

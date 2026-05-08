@@ -227,7 +227,7 @@ async function saveMAREntry() {
 }
 
 async function deleteMAREntry(pid, patientId, id) {
-  if(!confirm('ลบรายการนี้?')) return;
+  if(!(await customConfirm('ลบรายการนี้?'))) return;
   const { error } = await supa.from('mar_records').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.marRecords[pid] = (db.marRecords[pid]||[]).filter(r=>r.id!=id);
@@ -293,7 +293,7 @@ async function saveMedication() {
 }
 
 async function deleteMedication(patientId, medId) {
-  if(!confirm('หยุดใช้ยานี้?')) return;
+  if(!(await customConfirm('หยุดใช้ยานี้?'))) return;
   await supa.from('patient_medications').update({is_active:false}).eq('id',medId);
   const pid=String(patientId);
   const m = (db.medications[pid]||[]).find(x=>x.id==medId);

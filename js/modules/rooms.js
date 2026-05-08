@@ -141,8 +141,8 @@ async function saveRoom() {
 
 async function deleteRoom(id) {
   const hasBeds = db.beds.some(b => b.roomId == id);
-  if (hasBeds && !confirm('ห้องนี้มีเตียงอยู่ ต้องการลบทั้งหมด?')) return;
-  if (!hasBeds && !confirm('ต้องการลบห้องนี้?')) return;
+  if (hasBeds && !(await customConfirm('ห้องนี้มีเตียงอยู่ ต้องการลบทั้งหมด?'))) return;
+  if (!hasBeds && !(await customConfirm('ต้องการลบห้องนี้?'))) return;
   const { error } = await supa.from('rooms').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
   db.rooms = db.rooms.filter(r => r.id != id);
@@ -211,7 +211,7 @@ async function saveBed() {
 async function deleteBed(id) {
   const occupant = db.patients.find(p => p.currentBedId == id);
   if (occupant) { toast(`เตียงนี้มีผู้พักอยู่ (${occupant.name}) ไม่สามารถลบได้`,'warning'); return; }
-  if (!confirm('ต้องการลบเตียงนี้?')) return;
+  if (!(await customConfirm('ต้องการลบเตียงนี้?'))) return;
   const { error } = await supa.from('beds').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
   db.beds = db.beds.filter(b => b.id != id);

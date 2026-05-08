@@ -241,7 +241,7 @@ async function saveNursingNote() {
 }
 
 async function deleteNursingNote(patientId, pid, id) {
-  if(!confirm('ลบบันทึกนี้?')) return;
+  if(!(await customConfirm('ลบบันทึกนี้?'))) return;
   const { error } = await supa.from('nursing_notes').delete().eq('id', id);
   if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
   db.nursingNotes[pid] = (db.nursingNotes[pid]||[]).filter(n=>n.id!=id);

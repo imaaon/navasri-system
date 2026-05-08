@@ -368,7 +368,7 @@ function editExpense(id) {
 async function deleteExpense(id) {
   await ensureSecondaryDB();
   const r = (db.expenses||[]).find(x=>x.id===id); if(!r) return;
-  if (!confirm('ลบค่าใช้จ่าย "'+r.job+'" ?')) return;
+  if (!(await customConfirm('ลบค่าใช้จ่าย "'+r.job+'" ?'))) return;
   const { error } = await supa.from('expenses').delete().eq('id',id);
   if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
   db.expenses = (db.expenses||[]).filter(x=>x.id!==id);

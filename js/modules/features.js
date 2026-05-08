@@ -424,7 +424,7 @@ function _exjsApplySheet(wb, sheetName, headers, dataRows, theme) {
 }
 
 async function backupAllData() {
-  if (!confirm('ต้องการสำรองข้อมูลทั้งหมดออกเป็นไฟล์ Excel หรือไม่?\n\nอาจใช้เวลาสักครู่...')) return;
+  if (!(await customConfirm('ต้องการสำรองข้อมูลทั้งหมดออกเป็นไฟล์ Excel หรือไม่?\n\nอาจใช้เวลาสักครู่...'))) return;
   
   toast('⏳ กำลังสร้างไฟล์ Backup... (อาจใช้เวลาหลายวินาที)', 'info');
   

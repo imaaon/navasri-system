@@ -101,7 +101,7 @@ async function doLogin() {
 }
 
 async function doLogout() {
-  if (!confirm('ต้องการออกจากระบบหรือไม่?')) return;
+  if (!(await customConfirm('ต้องการออกจากระบบหรือไม่?'))) return;
   await supa.auth.signOut();
   currentUser = null;
   if (typeof db !== 'undefined') {

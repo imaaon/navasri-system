@@ -214,7 +214,7 @@ function editAsset(id) {
 async function deleteAsset(id) {
   await ensureSecondaryDB();
   const a=(db.assets||[]).find(x=>String(x.id)===String(id)); if(!a) return;
-  if(!confirm('ลบครุภัณฑ์ "'+a.name+'" และประวัติซ่อมทั้งหมด?')) return;
+  if(!(await customConfirm('ลบครุภัณฑ์ "'+a.name+'" และประวัติซ่อมทั้งหมด?'))) return;
   const {error}=await supa.from('assets').delete().eq('id',id);
   if(error){toast('ลบไม่สำเร็จ: '+error.message,'error');return;}
   db.assets=(db.assets||[]).filter(x=>String(x.id)!==String(id));
@@ -345,7 +345,7 @@ function openMaintenanceHistoryModal(assetId) {
 async function deleteMaintenanceLog(logId, assetId) {
   await ensureSecondaryDB();
   if (!hasRole('admin','manager','officer')) { toast('ไม่มีสิทธิ์ลบ','error'); return; }
-  if (!confirm('ลบประวัติการซ่อมรายการนี้?')) return;
+  if (!(await customConfirm('ลบประวัติการซ่อมรายการนี้?'))) return;
   const { error } = await supa.from('asset_maintenance_logs').delete().eq('id', logId);
   if (error) { toast('ลบไม่สำเร็จ: '+error.message,'error'); return; }
   db.assetMaintenanceLogs = (db.assetMaintenanceLogs||[]).filter(x => x.id !== logId);

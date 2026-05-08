@@ -137,7 +137,7 @@ async function saveMedLog() {
 }
 
 async function deleteMedLog(patId, type, supaId) {
-  if (!confirm('ลบรายการนี้?')) return;
+  if (!(await customConfirm('ลบรายการนี้?'))) return;
   const p = db.patients.find(x => x.id == patId);
   if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   const key  = type === 'medical' ? 'medicalLog' : 'medsLog';

@@ -142,7 +142,7 @@ async function saveAccount() {
 }
 
 async function deleteAccount(id, username) {
-  if (!confirm('ลบ Account "' + username + '" หรือไม่?')) return;
+  if (!(await customConfirm('ลบ Account "' + username + '" หรือไม่?'))) return;
   try {
     var tok = await _getToken();
     var res = await fetch(MANAGE_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok}, body:JSON.stringify({ action:'deleteUser', userId:id }) });

@@ -622,7 +622,7 @@ async function approveReq(reqId) {
 async function approveAllReq() {
   const pending = (db.requisitions||[]).filter(r=>r.status==='pending');
   if (!pending.length) return;
-  if (!confirm(`อนุมัติ + ตัดสต็อกทั้งหมด ${pending.length} รายการ?`)) return;
+  if (!(await customConfirm(`อนุมัติ + ตัดสต็อกทั้งหมด ${pending.length} รายการ?`))) return;
   for (const r of pending) await approveReq(r.id);
 }
 
@@ -958,7 +958,7 @@ async function deleteReq(reqId) {
   const req = (db.requisitions||[]).find(r => r.id == reqId);
   if (!req) return;
   if (req.status !== 'pending') { toast('ลบได้เฉพาะใบเบิกที่ยังไม่อนุมัติเท่านั้น', 'warning'); return; }
-  if (!confirm(`ยืนยันยกเลิกใบเบิก ${req.refNo||reqId}?`)) return;
+  if (!(await customConfirm(`ยืนยันยกเลิกใบเบิก ${req.refNo||reqId}?`))) return;
 
   showLoadingOverlay(true);
   try {

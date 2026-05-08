@@ -374,7 +374,7 @@ async function saveItem() {
 }
 
 async function deleteItem(id) {
-  if (!confirm('ต้องการลบรายการนี้?')) return;
+  if (!(await customConfirm('ต้องการลบรายการนี้?'))) return;
   const deleted = db.items.find(i => i.id === id);
   const { error } = await supa.from('items').delete().eq('id', id);
   if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }

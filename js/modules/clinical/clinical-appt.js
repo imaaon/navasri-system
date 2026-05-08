@@ -132,7 +132,7 @@ async function markApptDone(id) {
 
 async function deleteAppt(id, patientId) {
   await ensureSecondaryDB();
-  if(!confirm('ลบนัดหมายนี้?')) return;
+  if(!(await customConfirm('ลบนัดหมายนี้?'))) return;
   const { error } = await supa.from('patient_appointments').delete().eq('id',id);
   if (error) { toast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
   db.appointments = db.appointments.filter(a=>a.id!=id);

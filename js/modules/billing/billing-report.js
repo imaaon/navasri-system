@@ -445,7 +445,7 @@ async function bsSaveBank() {
 
 async function bsRemoveBank(idx) {
   if (!Array.isArray(_bsBanks) || idx < 0 || idx >= _bsBanks.length) return;
-  if (!confirm('ลบบัญชีธนาคารนี้?')) return;
+  if (!(await customConfirm('ลบบัญชีธนาคารนี้?'))) return;
   _bsBanks.splice(idx, 1);
   bsRenderBanks();
   // Auto-persist
