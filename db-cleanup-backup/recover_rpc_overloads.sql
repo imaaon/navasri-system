@@ -1,0 +1,17 @@
+-- Recovery placeholder for Phase 3 Step 3 Sub-step A
+-- ลบ RPC overloads 15 ตัวที่ไม่มี caller (verified ทั้ง JS + DB internal)
+-- 
+-- ไม่ต้อง recover เพราะ:
+-- 1. cancel_requisition (2 versions) — both unused
+-- 2. create_and_approve_quick_dispense (2 versions) — Quick Dispense ลบไปแล้ว Step 2
+-- 3. deduct_stock (2 versions) — both unused (4-arg เป็น standalone, 2-arg เป็น stub)
+-- 4. generate_item_barcode (uuid) + (text, bigint) — 2 อันที่ไม่มี caller (เก็บ no-arg ที่ trigger ใช้)
+-- 5. insert_patient (2 versions) — both unused (จาก code ใช้ supa.from('patients').insert ตรง)
+-- 6. receive_stock_atomic (2 versions) — code ใช้ receive_stock_v2 แทน
+-- 7. update_patient_info (2 versions) — code ใช้ supa.from('patients').update ตรง
+-- 8. update_patient_status_log (7-arg) — เก็บ trigger version ()
+-- 9. update_requisition (2 versions) — both unused
+--
+-- Total: 15 functions dropped
+-- Date: 2026-05-08
+-- Verified: 0 callers ใน JS production code + 0 callers ใน DB internal functions
