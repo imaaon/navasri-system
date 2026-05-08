@@ -425,8 +425,58 @@ function _exjsApplySheet(wb, sheetName, headers, dataRows, theme) {
 
 async function backupAllData() {
   if (!confirm('ต้องการสำรองข้อมูลทั้งหมดออกเป็นไฟล์ Excel หรือไม่?\n\nอาจใช้เวลาสักครู่...')) return;
-  toast('⏳ กำลังสร้างไฟล์ Backup...', 'info');
-  window.location.href = 'https://umueucsxowjaurlaubwa.supabase.co/functions/v1/backup';
+  
+  toast('⏳ กำลังสร้างไฟล์ Backup... (อาจใช้เวลาหลายวินาที)', 'info');
+  
+  try {
+    // Bug 2.3 fix: ใช้ fetch + auth headers แทน window.location.href
+    // เหตุผล: window.location ไม่ส่ง Authorization/apikey headers → Edge Function อาจ reject หรือเสี่ยง security
+    const session = (await supa.auth.getSession()).data.session;
+    if (!session) {
+      toast('กรุณา login ใหม่ก่อนทำ Backup', 'error');
+      return;
+    }
+    
+    const r = await fetch(SUPABASE_URL + '/functions/v1/backup', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + session.access_token,
+        'apikey': SUPABASE_KEY
+      }
+    });
+    
+    if (!r.ok) {
+      const errText = await r.text().catch(()=>'');
+      throw new Error('Server error ' + r.status + (errText ? ': ' + errText.slice(0, 100) : ''));
+    }
+    
+    const blob = await r.blob();
+    if (blob.size === 0) throw new Error('ได้รับไฟล์ว่างเปล่าจาก server');
+    
+    // สร้าง filename มี timestamp (predictable)
+    const now = new Date();
+    const ts = now.getFullYear() + '-' +
+               String(now.getMonth()+1).padStart(2,'0') + '-' +
+               String(now.getDate()).padStart(2,'0') + '_' +
+               String(now.getHours()).padStart(2,'0') +
+               String(now.getMinutes()).padStart(2,'0');
+    const filename = 'navasri_backup_' + ts + '.xlsx';
+    
+    // Trigger download ผ่าน Blob URL — ไม่ navigate, session ไม่หลุด
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    
+    toast('✅ สำรองข้อมูลสำเร็จ — ' + filename + ' (' + Math.round(blob.size/1024) + ' KB)', 'success');
+  } catch(e) {
+    console.error('[backupAllData]', e);
+    toast('❌ Backup ไม่สำเร็จ: ' + (e.message || 'unknown error'), 'error');
+  }
 }
 
 function _calcDuration(startDate, endDate) {
