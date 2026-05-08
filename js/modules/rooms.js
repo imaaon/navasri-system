@@ -81,7 +81,7 @@ function renderRooms() {
           <button class="btn btn-primary btn-sm" onclick="openAddBedModal('${room.id}')">+ เตียง</button>
         </div>
       </div>
-      <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;">
+      <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;">
         ${bedHtml}
       </div>
     </div>`;
