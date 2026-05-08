@@ -2827,7 +2827,7 @@
 
 <!-- ===== MODAL: ADD EXPENSE ===== -->
 <div id="modal-addExpense" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal('modal-addExpense')">
-  <div class="modal-box" style="max-width:680px;width:95%;">
+  <div class="modal-box" style="max-width:760px;width:95%;">
     <div class="modal-header">
       <h3 id="addExpenseModalTitle">💸 บันทึกค่าใช้จ่าย</h3>
       <button class="modal-close" onclick="closeModal('modal-addExpense')">✕</button>
@@ -2944,22 +2944,22 @@
         </div>
       </details>
 
-      <!-- ยอดเงิน -->
+      <!-- ยอดเงิน — ทั้ง 4 ช่องใช้ width:100%; box-sizing:border-box ให้ขนาดเท่ากันด้วยตา -->
       <div style="display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:8px;margin-top:12px;">
-        <div>
+        <div style="min-width:0;">
           <label class="form-label">ยอดก่อน VAT <span class="required">*</span></label>
-          <input type="number" id="exp-subtotal" class="form-control number" min="0" step="0.01" oninput="calcExpTotal()">
+          <input type="number" id="exp-subtotal" class="form-control number" min="0" step="0.01" oninput="calcExpTotal()" style="width:100%;box-sizing:border-box;">
         </div>
-        <div>
+        <div style="min-width:0;">
           <label class="form-label">VAT (%)</label>
-          <select id="exp-vat-rate" class="form-control" onchange="calcExpTotal()">
+          <select id="exp-vat-rate" class="form-control" onchange="calcExpTotal()" style="width:100%;box-sizing:border-box;">
             <option value="0">0%</option>
             <option value="7">7%</option>
           </select>
         </div>
-        <div>
+        <div style="min-width:0;">
           <label class="form-label">หัก ณ ที่จ่าย (%)</label>
-          <select id="exp-wht-rate" class="form-control" onchange="calcExpTotal()">
+          <select id="exp-wht-rate" class="form-control" onchange="calcExpTotal()" style="width:100%;box-sizing:border-box;">
             <option value="0">0%</option>
             <option value="1">1%</option>
             <option value="1.5">1.5%</option>
@@ -2967,9 +2967,9 @@
             <option value="5">5%</option>
           </select>
         </div>
-        <div>
+        <div style="min-width:0;">
           <label class="form-label">ยอดสุทธิ</label>
-          <input type="number" id="exp-net" class="form-control number" readonly style="font-weight:700;background:var(--surface2);">
+          <input type="number" id="exp-net" class="form-control number" readonly style="width:100%;box-sizing:border-box;font-weight:700;background:var(--surface2);">
         </div>
       </div>
       <!-- การจ่ายเงิน -->

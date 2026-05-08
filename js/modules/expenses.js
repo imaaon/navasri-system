@@ -201,11 +201,11 @@ function renderExpenseLineItems() {
   container.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;">' +
     '<colgroup>' +
     '<col>' +
-    '<col style="width:130px;">' +
-    '<col style="width:60px;">' +
-    '<col style="width:90px;">' +
-    '<col style="width:90px;">' +
-    '<col style="width:32px;">' +
+    '<col style="width:120px;">' +
+    '<col style="width:55px;">' +
+    '<col style="width:80px;">' +
+    '<col style="width:80px;">' +
+    '<col style="width:30px;">' +
     '</colgroup>' +
     '<thead><tr style="color:var(--text2);border-bottom:1px solid var(--border);">' +
     '<th style="text-align:left;padding:6px 8px;">รายละเอียด</th>' +

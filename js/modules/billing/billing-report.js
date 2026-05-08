@@ -660,9 +660,10 @@ function printExpense(id) {
     <div>
       <div class="co-name">${bs.company||'นวศรี เนอร์สซิ่งโฮม'}</div>
       <div class="co-sub">
-        ${bs.taxId?`เลขประจำตัวผู้เสียภาษี ${bs.taxId}<br>`:''}
-        ${bs.phone?`โทร. ${bs.phone}<br>`:''}
-        ${bs.email?`อีเมล ${bs.email}`:''}
+        ${bs.address?bs.address.split('\n').join('<br>'):''}
+        ${bs.taxId?`<br>เลขประจำตัวผู้เสียภาษี ${bs.taxId}`:''}
+        ${bs.phone?`<br>โทร. ${bs.phone}`:''}
+        ${bs.email?`<br>อีเมล ${bs.email}`:''}
       </div>
     </div>
     <div class="doc-box">
