@@ -840,15 +840,15 @@ let _zxingReader = null;
 let _cameraStream = null;
 
 async function loadZXing() {
-  if (window.ZXing) return true;
+  // @zxing/browser@0.1.4 expose namespace ที่ window.ZXingBrowser (ไม่ใช่ ZXing)
+  if (window.ZXingBrowser) return true;
   return new Promise((resolve) => {
     const s = document.createElement('script');
-    // โหลด local ก่อน (วางไฟล์ที่ js/lib/zxing-browser.min.js)
-    // ดาวน์โหลดได้จาก: https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.4/umd/index.min.js
+    // โหลด local — ไฟล์อยู่ใน repo ที่ js/lib/zxing-browser.min.js แล้ว
     s.src = 'js/lib/zxing-browser.min.js';
     s.onload = () => resolve(true);
     s.onerror = () => {
-      // local ไม่มี → fallback CDN พร้อม warning
+      // local ไม่มี → fallback CDN
       console.warn('[ZXing] local file not found, falling back to CDN');
       const f = document.createElement('script');
       f.src = 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.4/umd/index.min.js';
@@ -879,7 +879,8 @@ async function openCameraScanner(targetInputId, onFound) {
   overlay.style.display = 'flex';
 
   try {
-    const ZXingBrowser = window.ZXing;
+    // Bug fix: ใช้ window.ZXingBrowser (ของจริง) ไม่ใช่ window.ZXing (undefined)
+    const ZXingBrowser = window.ZXingBrowser;
     const codeReader = new ZXingBrowser.BrowserMultiFormatReader();
     _zxingReader = codeReader;
     const videoEl = document.getElementById('camera-scan-video');
