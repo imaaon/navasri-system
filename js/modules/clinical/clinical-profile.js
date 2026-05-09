@@ -960,6 +960,13 @@ async function saveLabResult() {
     note:       document.getElementById('lab-note').value.trim() || null,
     created_by: (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : null,
   };
+  // R4-004 fix: ต้องมีผลแล็บอย่างน้อย 1 รายการ หรือ summary/note
+  var labRows = (window._labRows || []).filter(r => r && (r.test_name || r.value));
+  var hasContent = labRows.length > 0 || payload.summary || payload.note || payload.hospital || payload.doctor;
+  if (!hasContent) {
+    toast('กรุณาระบุผลแล็บอย่างน้อย 1 รายการ หรือกรอก summary/note/โรงพยาบาล/แพทย์','warning');
+    return;
+  }
   var res = editId
     ? await supa.from('patient_lab_results').update(payload).eq('id', editId)
     : await supa.from('patient_lab_results').insert(payload);
@@ -1469,6 +1476,11 @@ function _openExcretionModal(rec, patId, today) {
       note: inpNote.value || null,
       recorded_by: user
     };
+    // R4-005 fix: ต้องมีค่าจริงอย่างน้อย 1 (count, volume, characteristics, หรือ note)
+    if (!payload.count && !payload.volume_ml && !payload.characteristics && !payload.note) {
+      customAlert('กรุณาระบุข้อมูลอย่างน้อย 1 อย่าง (จำนวนครั้ง, ปริมาณ, ลักษณะ หรือ note)');
+      return;
+    }
     var prom = isEdit
       ? supa.from('patient_excretions').update(payload).eq('id', rec.id)
       : supa.from('patient_excretions').insert(payload);
@@ -1610,6 +1622,11 @@ function _openFluidModal(rec, patId, direction, today) {
       note: inpNote.value || null,
       recorded_by: user
     };
+    // R4-006 fix: ต้องมี volume หรือ type หรือ note อย่างน้อย 1 อย่าง
+    if (!payload.volume_ml && !payload.fluid_type && !payload.note) {
+      customAlert('กรุณาระบุข้อมูลอย่างน้อย 1 อย่าง (ปริมาณ, ประเภท หรือ note)');
+      return;
+    }
     var prom = isEdit
       ? supa.from('patient_fluid_records').update(payload).eq('id', rec.id)
       : supa.from('patient_fluid_records').insert(payload);

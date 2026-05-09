@@ -244,6 +244,15 @@ async function saveDnr() {
     note: document.getElementById('dnr-note').value.trim(),
     updated_at: new Date().toISOString(),
   };
+  // R4-003 fix: DNR เป็น legal record ต้องมีหลักฐานอย่างน้อย 1 อย่าง
+  // (ผู้ลงนาม / วันที่ลงนาม / advance directive / note / โรงพยาบาลที่เลือก / ผู้ติดต่อฉุกเฉิน)
+  const evidenceFields = ['preferred_hospital','emergency_contact','emergency_phone','advance_directive','dnr_signed_date','dnr_signed_by','note'];
+  const hasEvidence = evidenceFields.some(f => row[f]);
+  const hasConsent  = row.cpr_consent !== null || row.ventilator_consent !== null;
+  if (!hasEvidence && !hasConsent) {
+    toast('กรุณาระบุข้อมูลอย่างน้อย 1 อย่าง (ผู้ลงนาม, วันที่, ความประสงค์ CPR/Ventilator หรือ note)','warning');
+    return;
+  }
   const existing = (db.patientConsents||[]).find(c=>String(c.patientId)===String(_dnrPatId));
   if(existing) {
     await supa.from('patient_consents').update(row).eq('id',existing.id);
