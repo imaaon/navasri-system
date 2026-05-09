@@ -93,7 +93,16 @@ function renderAdminDashboard() {
   const _st=document.getElementById('stat-total'); if(_st) _st.textContent = db.items.length;
   const _sl=document.getElementById('stat-low'); if(_sl) _sl.textContent = lowItems.length;
   const _sd=document.getElementById('stat-today'); if(_sd) _sd.textContent = todayReqs.length;
-  const _sp=document.getElementById('stat-patients'); if(_sp) _sp.textContent = db.patients.filter(p => p.status === 'active').length;
+  const _sp=document.getElementById('stat-patients');
+  // R9-003 fix: ใช้ active + hospital (= ลูกค้าทางธุรกิจ ที่ยังจ่ายค่าบริการ) ตรงกับ BI
+  // hospital = ผู้รับบริการที่ไปโรงพยาบาลชั่วคราว แต่ยังเก็บเตียงไว้ + คิดค่าบริการ
+  const _activeNow  = db.patients.filter(p => p.status === 'active').length;
+  const _atHospital = db.patients.filter(p => p.status === 'hospital').length;
+  if (_sp) _sp.textContent = _activeNow + _atHospital;
+  const _spSub = document.getElementById('stat-patients-sub');
+  if (_spSub) _spSub.textContent = _atHospital > 0
+    ? `${_activeNow} อยู่ในศูนย์ · ${_atHospital} ไปรพ.`
+    : 'คนทั้งหมด';
 
   // Low stock table
   const lowTb = document.getElementById('lowStockTable'); if(!lowTb) return;

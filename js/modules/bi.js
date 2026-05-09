@@ -63,6 +63,9 @@ function renderBI() {
 // ── 1. KPI Cards ──────────────────────────────────────────────
 function renderBIKPICards(month) {
   const activePats  = (db.patients||[]).filter(p => p.status === 'active' || p.status === 'hospital');
+  // R9-003: แยกนับเพื่อแสดง breakdown ใน subscript ให้ user เข้าใจชัด
+  const activeOnly  = (db.patients||[]).filter(p => p.status === 'active').length;
+  const atHospital  = (db.patients||[]).filter(p => p.status === 'hospital').length;
   const totalBeds   = (db.beds||[]).length;
   const occupiedBeds= (db.beds||[]).filter(b => b.status === 'occupied').length;
   const invs        = _invoicesMonth(month);
@@ -87,7 +90,7 @@ function renderBIKPICards(month) {
   if (!el) return;
 
   const cards = [
-    { label: 'ผู้รับบริการ (Active)', value: activePats.length + ' คน', icon: '👥', color: 'blue', sub: `อัตราใช้เตียง ${_pct(occupiedBeds, totalBeds)} (${occupiedBeds}/${totalBeds})` },
+    { label: 'ผู้รับบริการ (Active)', value: activePats.length + ' คน', icon: '👥', color: 'blue', sub: atHospital > 0 ? `${activeOnly} อยู่บนเตียง · ${atHospital} ไปรพ.` : `${activeOnly} อยู่บนเตียง` },
     { label: 'รายรับรวมเดือนนี้', value: _thb(revenue), icon: '💰', color: 'green', sub: `เก็บแล้ว ${_thb(collected)}` },
     { label: 'ต้นทุนสินค้าเดือนนี้', value: _thb(costItems), icon: '📦', color: 'orange', sub: `${reqs.length} รายการเบิก` },
     { label: 'กำไรขั้นต้น', value: _thb(grossProfit), icon: grossProfit >= 0 ? '📈' : '📉', color: grossProfit >= 0 ? 'green' : 'red', sub: `Margin ${_pct(grossProfit, revenue)}` },
@@ -1216,6 +1219,9 @@ function renderInvestorDashboard() {
   const costPerPat  = activePats.length > 0 ? cogs/activePats.length : 0;
   const revPerPat   = activePats.length > 0 ? revenue/activePats.length : 0;
   const occRate     = totalBeds > 0 ? occBeds/totalBeds*100 : 0;
+  // R9-003: breakdown active vs hospital สำหรับ Investor View
+  const activeOnly  = (db.patients||[]).filter(p=>p.status==='active').length;
+  const atHospital  = (db.patients||[]).filter(p=>p.status==='hospital').length;
 
   // 6-month trend
   const trend = [-5,-4,-3,-2,-1,0].map(i => {
@@ -1248,7 +1254,7 @@ function renderInvestorDashboard() {
       <!-- KPI Row -->
       <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;">
         ${[
-          {label:'ผู้รับบริการ',value:activePats.length+' คน',sub:`Occupancy ${Math.round(occRate)}%`,color:'#2980b9'},
+          {label:'ผู้รับบริการ',value:activePats.length+' คน',sub: atHospital > 0 ? `${activeOnly} อยู่บนเตียง · ${atHospital} ไปรพ.` : `Occupancy ${Math.round(occRate)}%`,color:'#2980b9'},
           {label:'รายรับรวม',value:_thb(revenue),sub:`เก็บแล้ว ${_thb(collected)}`,color:'#27ae60'},
           {label:'ต้นทุนสินค้า',value:_thb(cogs),sub:`${reqs.length} รายการ`,color:'#e67e22'},
           {label:'กำไรขั้นต้น',value:_thb(grossProfit),sub:`Margin ${Math.round(margin)}%`,color:grossProfit>=0?'#27ae60':'#e74c3c'},
