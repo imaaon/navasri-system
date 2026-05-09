@@ -194,7 +194,7 @@ function _thb(n) {
 
 async function checkAndNotifyOverdueBills() {
   const ls = db.lineSettings || {};
-  if (!ls.enabled || !ls.webhookUrl || !ls.notifyOverdueBills) return;
+  if (!ls.enabled || !ls.webhookUrl || !ls.notifyOverdueBills) return 0;
 
   const today = new Date().toISOString().split('T')[0];
   const overdueList = (db.invoices || []).filter(inv => {
@@ -204,7 +204,7 @@ async function checkAndNotifyOverdueBills() {
     return status !== 'paid' && status !== 'cancelled';
   });
 
-  if (overdueList.length === 0) return;
+  if (overdueList.length === 0) return 0;
 
   const lines = overdueList.slice(0, 10).map(inv => {
     const balance = typeof getInvoicePaidAmount === 'function'
@@ -216,6 +216,7 @@ async function checkAndNotifyOverdueBills() {
   const msg = `⏰ แจ้งเตือนบิลค้างชำระ ${overdueList.length} รายการ\n━━━━━━━━━━━━━━\n${lines.join('\n')}${overdueList.length > 10 ? `\n...และอีก ${overdueList.length-10} รายการ` : ''}\n\n🔗 กรุณาตรวจสอบในระบบบัญชี`;
 
   await sendLineNotify('overdue_bills', msg, { count: overdueList.length });
+  return overdueList.length;
 }
 
 async function checkAndNotifyLowStockDaily() {
@@ -280,8 +281,14 @@ async function manualNotifyOverdueBills() {
   }
   const saved = ls.notifyOverdueBills;
   db.lineSettings.notifyOverdueBills = true; // force send
-  await checkAndNotifyOverdueBills();
+  const sentCount = await checkAndNotifyOverdueBills();
   db.lineSettings.notifyOverdueBills = saved;
+  // R10-001 fix: toast feedback consistent กับ manualNotifyLowStock
+  if (sentCount === 0) {
+    toast('ไม่มีบิลค้างชำระในขณะนี้', 'info');
+  } else {
+    toast(`ส่งแจ้งเตือนบิลค้างชำระ ${sentCount} รายการแล้ว`, 'success');
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
