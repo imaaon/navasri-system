@@ -52,7 +52,7 @@ function renderPage(page) {
   // ป้องกัน race: user สร้าง record → secondary fetch overwrite → record ใหม่หาย
   // หรือ open menu ก่อน secondary โหลดเสร็จ → ตารางว่าง
   const SECONDARY_PAGES = new Set([
-    'dashboard','billing','expenses','suppliers','supplierinvoices','purchaserequests',
+    'billing','expenses','suppliers','supplierinvoices','purchaserequests',
     'assets','healthreport','bi','deposits','incident','audit','report','history','stockreport'
   ]);
   if (SECONDARY_PAGES.has(page) && typeof ensureSecondaryDB === 'function') {
@@ -60,6 +60,11 @@ function renderPage(page) {
     return;
   }
   _renderPageInner(page);
+  // R9-001 fix: Dashboard ใช้ทั้ง primary (patients,items,staff) + secondary (stockMovements,assets)
+  // → render ทันทีด้วย primary, แล้ว re-render หลัง secondary load เสร็จเพื่อ refresh stat ที่ใช้ secondary
+  if (page === 'dashboard' && typeof ensureSecondaryDB === 'function') {
+    ensureSecondaryDB().then(() => { if (currentPage === 'dashboard') renderDashboard(); });
+  }
 }
 
 function _renderPageInner(page) {
