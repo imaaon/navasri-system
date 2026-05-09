@@ -52,7 +52,7 @@ function renderPage(page) {
   // ป้องกัน race: user สร้าง record → secondary fetch overwrite → record ใหม่หาย
   // หรือ open menu ก่อน secondary โหลดเสร็จ → ตารางว่าง
   const SECONDARY_PAGES = new Set([
-    'billing','expenses','suppliers','supplierinvoices','purchaserequests',
+    'dashboard','billing','expenses','suppliers','supplierinvoices','purchaserequests',
     'assets','healthreport','bi','deposits','incident','audit','report','history','stockreport'
   ]);
   if (SECONDARY_PAGES.has(page) && typeof ensureSecondaryDB === 'function') {
