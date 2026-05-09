@@ -934,7 +934,6 @@ function switchBillingTab(tab) {
   if (tab === 'contracts') renderContracts();
   if (tab === 'payments')  renderPaymentsTab();
   if (tab === 'physio')    renderPhysioPackagesTab();
-  if (tab === 'physio') renderPhysioPackagesTab();
 }
 
 // ─────────────────────────────────────────────────────
