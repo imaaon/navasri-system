@@ -1048,10 +1048,20 @@ function switchReportTab(tab) {
 
 async function renderReport() {
   populateReportFilters();
-  // Show loading
-  ['summary','bypatient','byitem','bystaff'].forEach(t => {
-    const el = document.getElementById('report-'+t);
-    if(el && el.style.display!=='none') el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3);">⏳ กำลังโหลด...</div>';
+  // R8-002 fix: แสดง loading state ใน tbody แทนการ overwrite section innerHTML
+  // เพราะการ overwrite ทำลาย table structure (tbody) ทำให้ render ภายหลังหา element ไม่เจอ
+  const TBODY_MAP = {
+    summary: { id: 'reportTable', cols: 6 },
+    bypatient: { id: 'reportByPatient', cols: 4 },
+    byitem: { id: 'reportByItem', cols: 4 },
+    bystaff: { id: 'reportByStaff', cols: 4 }
+  };
+  Object.entries(TBODY_MAP).forEach(([t, info]) => {
+    const sectionEl = document.getElementById('report-' + t);
+    if (sectionEl && sectionEl.style.display !== 'none') {
+      const tb = document.getElementById(info.id);
+      if (tb) tb.innerHTML = `<tr><td colspan="${info.cols}" style="text-align:center;padding:24px;color:var(--text3);">⏳ กำลังโหลด...</td></tr>`;
+    }
   });
   const reqs = await getFilteredReqs();
   const monthFilter = document.getElementById('reportMonth')?.value  || '';

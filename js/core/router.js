@@ -39,8 +39,8 @@ function showPage(page) {
     if (nb) nb.classList.add('active');
   }
   currentPage = page;
-  // R6-006 fix: เพิ่ม title "expenses" → "💸 ค่าใช้จ่าย" (ก่อนหน้า fall back ใช้ page id)
-  const titles = { dashboard:'Dashboard', stock:'คลังสต็อก', requisition:'เบิกสินค้า', history:'ประวัติการเบิก', report:'รายงาน', patients:'ผู้รับบริการ', rooms:'🛏️ ห้องพักและเตียง', staff:'พนักงาน', items:'รายการสินค้า', settings:'💬 Line & ตั้งค่า', reqform:'ใบเบิกสินค้า', patprofile:'ข้อมูลผู้รับบริการ', staffprofile:'ข้อมูลพนักงาน', accounts:'🔑 จัดการ Account', healthreport:'📋 รายงานสุขภาพ', purchasehistory:'📋 ประวัติการสั่งซื้อ', billing:'💰 ระบบบัญชี', 'billing-settings':'⚙️ ตั้งค่าบัญชี', expenses:'💸 ค่าใช้จ่าย', incident:'⚠️ อุบัติเหตุ & แผลกดทับ', dietary:'🍽️ โภชนาการ & สายให้อาหาร', deposits:'🏦 มัดจำ & เงินประกัน', bi:'🔍 BI & วิเคราะห์กำไร', suppliers:'🏭 ผู้จำหน่าย', supplierinvoices:'🧾 ใบแจ้งหนี้ผู้จำหน่าย', purchaserequests:'📋 คำขอซื้อ', stockreport:'📊 รายงานสต็อก', audit:'Audit Trail' };
+  // R6-006 + R8-001/003/005 fix: เพิ่ม title ที่ขาด/ไม่ตรง sidebar
+  const titles = { dashboard:'Dashboard', stock:'คลังสต็อก', requisition:'เบิกสินค้า', history:'ประวัติการเบิก', report:'📈 สรุปวิเคราะห์การเบิก', patients:'ผู้รับบริการ', rooms:'🛏️ ห้องพักและเตียง', staff:'พนักงาน', items:'รายการสินค้า', settings:'💬 Line & ตั้งค่า', reqform:'ใบเบิกสินค้า', patprofile:'ข้อมูลผู้รับบริการ', staffprofile:'ข้อมูลพนักงาน', accounts:'🔑 จัดการ Account', healthreport:'📋 รายงานสุขภาพ', purchasehistory:'📋 ประวัติการสั่งซื้อ', billing:'💰 ระบบบัญชี', 'billing-settings':'⚙️ ตั้งค่าบัญชี', expenses:'💸 ค่าใช้จ่าย', assets:'🔧 ครุภัณฑ์ & ซ่อมบำรุง', incident:'⚠️ อุบัติเหตุ & แผลกดทับ', dietary:'🍽️ โภชนาการ & สายให้อาหาร', deposits:'🏦 มัดจำ & เงินประกัน', bi:'🔍 BI & วิเคราะห์กำไร', suppliers:'🏭 ผู้จำหน่าย', supplierinvoices:'🧾 ใบแจ้งหนี้ผู้จำหน่าย', purchaserequests:'📋 คำขอซื้อ', stockreport:'📊 รายงานสต็อก', audit:'🔍 Audit Trail' };
   document.getElementById('pageTitle').textContent = titles[page] || page;
   closeSidebar();
   renderPage(page);
