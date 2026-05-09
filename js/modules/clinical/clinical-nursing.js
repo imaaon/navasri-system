@@ -219,6 +219,12 @@ async function saveNursingNote() {
     o2: document.getElementById('nursing-o2').value.trim(),
     handover_note: document.getElementById('nursing-handover').value.trim(),
   };
+  // R4-002 fix: ป้องกันบันทึก row ว่าง — ต้องมีอย่างน้อย 1 text field
+  const textFields = ['general_condition','consciousness','pain','eating','sleep','activity','wound','iv','o2','handover_note'];
+  if (!textFields.some(f => data[f])) {
+    toast('กรุณาบันทึกอย่างน้อย 1 ช่อง (อาการ, ความรู้สึกตัว, การทาน, การขับถ่าย ฯลฯ)','warning');
+    return;
+  }
   const pid = String(patientId);
   if (_nursingEditId) {
     const { error } = await supa.from('nursing_notes').update(data).eq('id', _nursingEditId);

@@ -240,6 +240,14 @@ async function saveVitalSign() {
     other_fields: document.getElementById('vital-other').value.trim(),
     note: document.getElementById('vital-note').value.trim(),
   };
+  // R4-001 fix: ป้องกันบันทึก row ว่าง — ต้องมีอย่างน้อย 1 ค่า vital หรือ note/other_fields
+  const vitalFields = ['bp_sys','bp_dia','hr','temp','spo2','dtx','rr','weight','height'];
+  const hasVital = vitalFields.some(f => data[f] !== null);
+  const hasText  = data.other_fields || data.note;
+  if (!hasVital && !hasText) {
+    toast('กรุณาระบุค่าสัญญาณชีพอย่างน้อย 1 ค่า หรือบันทึกหมายเหตุ','warning');
+    return;
+  }
   const pid = String(patientId);
   let ins, error;
   if (editId) {
