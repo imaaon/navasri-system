@@ -540,7 +540,7 @@ async function renderDietaryPage() {
   const sel = document.getElementById('tubefeed-filter-patient');
   if (sel) {
     const patients = (db.patients||[]).filter(p=>p.status==='active');
-    sel.innerHTML = '<option value="">— เลือกผู้ป่วย —</option>' + patients.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+    sel.innerHTML = '<option value="">— เลือกผู้ป่วย —</option>' + patients.map(p=>`<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`).join('');
   }
   const DIET_LABELS = {'ธรรมดา':'🍚','สับละเอียด':'🔪','ปั่นละเอียด':'🥣','อาหารเหลวใส':'🫗','สายยาง (Tube Feed)':'🧪'};
   const tb = document.getElementById('diet-table-body');

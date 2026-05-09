@@ -533,7 +533,7 @@ function openHealthReportModal(patientId) {
   const badge = document.getElementById("hrPatientBadge");
   if (badge) {
     if (p) {
-      badge.innerHTML = "<strong>"+p.name+"</strong> &nbsp;|&nbsp; HN: "+(p.hn||"-")+" &nbsp;|&nbsp; สถานะ: "+(p.status==="active"?"พักอยู่":p.status);
+      badge.innerHTML = "<strong>"+escapeHtml(p.name)+"</strong> &nbsp;|&nbsp; HN: "+escapeHtml(p.hn||"-")+" &nbsp;|&nbsp; สถานะ: "+(p.status==="active"?"พักอยู่":escapeHtml(p.status));
     } else {
       badge.innerHTML = '<div style="position:relative;">' +
         '<input id="hrPatSearch" type="text" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off" oninput="hrPatFilter(this.value)" onfocus="hrPatFilter(this.value)">' +

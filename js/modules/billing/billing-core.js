@@ -271,7 +271,7 @@ function onInvoicePatientChange() {
   const payerEl = document.getElementById('inv-payer-info');
   if (payerEl) {
     if (payer) {
-      payerEl.innerHTML = `💰 ส่งบิลถึง: <strong>${payer.name}</strong> (${payer.relation}) · 📞 ${payer.phone}`;
+      payerEl.innerHTML = `💰 ส่งบิลถึง: <strong>${escapeHtml(payer.name)}</strong> (${escapeHtml(payer.relation)}) · 📞 ${escapeHtml(payer.phone)}`;
       payerEl.style.display = 'block';
     } else {
       payerEl.style.display = 'none';

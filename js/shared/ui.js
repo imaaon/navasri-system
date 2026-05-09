@@ -1,5 +1,18 @@
 // ===== UI & LINE INTEGRATION =====
 
+// ===== XSS PROTECTION =====
+// ใช้ก่อนใส่ user-controlled string เข้า innerHTML / template literal
+// ป้องกัน XSS เช่น ชื่อผู้ป่วยที่มี <script> หรือ <img onerror=...>
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ===== LINE INTEGRATION =====
 let lineLog = [];
 

@@ -868,7 +868,7 @@ function updatePRRequesterList() {
   const dl = document.getElementById('pr-requester-list');
   if (!dl) return;
   const staff = (db.staff || []).filter(s => s.status === 'active' || !s.status);
-  dl.innerHTML = staff.map(s => `<option value="${s.name}">`).join('');
+  dl.innerHTML = staff.map(s => `<option value="${escapeHtml(s.name)}">`).join('');
 }
 
 
