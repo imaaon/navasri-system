@@ -294,7 +294,8 @@ async function saveMedication() {
 
 async function deleteMedication(patientId, medId) {
   if(!(await customConfirm('หยุดใช้ยานี้?'))) return;
-  await supa.from('patient_medications').update({is_active:false}).eq('id',medId);
+  const { error } = await supa.from('patient_medications').update({is_active:false}).eq('id',medId);
+  if (error) { toast('หยุดยาไม่สำเร็จ: '+error.message,'error'); return; }
   const pid=String(patientId);
   const m = (db.medications[pid]||[]).find(x=>x.id==medId);
   if(m) m.isActive=false;

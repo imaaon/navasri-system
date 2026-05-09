@@ -60,12 +60,14 @@ async function saveInvoiceReset() {
 
   // ถ้า reset เป็น draft หรือ sent → ลบประวัติการชำระทั้งหมดของบิลนี้ออก
   if (newStatus === 'draft' || newStatus === 'sent') {
-    await supa.from('payments').delete().eq('invoice_id', id);
+    const { error: payErr } = await supa.from('payments').delete().eq('invoice_id', id);
+    if (payErr) { toast('ลบประวัติการชำระไม่สำเร็จ: '+payErr.message,'error'); return; }
     db.payments = (db.payments||[]).filter(p => p.invoiceId != id);
   }
 
   // อัปเดตสถานะบิล
-  await supa.from('invoices').update({ status: newStatus }).eq('id', id);
+  const { error: updErr } = await supa.from('invoices').update({ status: newStatus }).eq('id', id);
+  if (updErr) { toast('อัปเดตสถานะบิลไม่สำเร็จ: '+updErr.message,'error'); return; }
   inv.status = newStatus;
 
   // บันทึก log ใน local

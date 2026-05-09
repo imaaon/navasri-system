@@ -1763,11 +1763,17 @@ async function openContractFilesModal(patientId, patientName) {
       const path = 'contracts/' + patientId + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
       const { error: upErr } = await supa.storage.from('documents').upload(path, file, { upsert: false });
       if (upErr) { customAlert('อัปโหลดไม่ได้: ' + upErr.message); continue; }
-      await supa.from('patient_contract_files').insert({
+      const { error: insErr } = await supa.from('patient_contract_files').insert({
         patient_id: patientId, file_name: file.name, file_url: path,
         file_size: file.size, file_type: file.type, note: note||null,
         uploaded_by: window._currentUser || 'user'
       });
+      if (insErr) {
+        // rollback: ลบไฟล์ที่อัปโหลดแล้ว เพื่อไม่ให้ลอย
+        await supa.storage.from('documents').remove([path]).catch(()=>{});
+        customAlert('บันทึกข้อมูลไฟล์ไม่สำเร็จ: ' + insErr.message);
+        continue;
+      }
     }
     fileInput.value = ''; noteInput.value = '';
     uploadBtn.disabled = false; uploadBtn.textContent = '↑ อัปโหลด';
@@ -1883,7 +1889,12 @@ async function openMedicalFilesModal(patientId, patientName) {
       const path='medical/'+patientId+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
       const {error:upErr}=await supa.storage.from('documents').upload(path,file,{upsert:false});
       if(upErr){customAlert('อัปโหลดไม่ได้: '+upErr.message);continue;}
-      await supa.from('patient_medical_files').insert({patient_id:patientId,file_name:file.name,file_url:path,file_size:file.size,file_type:file.type,note:note||null,uploaded_by:window._currentUser||'user'});
+      const {error:insErr} = await supa.from('patient_medical_files').insert({patient_id:patientId,file_name:file.name,file_url:path,file_size:file.size,file_type:file.type,note:note||null,uploaded_by:window._currentUser||'user'});
+      if(insErr){
+        await supa.storage.from('documents').remove([path]).catch(()=>{});
+        customAlert('บันทึกข้อมูลไฟล์ไม่สำเร็จ: '+insErr.message);
+        continue;
+      }
     }
     fileInput.value=''; noteInput.value=''; uploadBtn.disabled=false; uploadBtn.textContent='↑ อัปโหลด'; loadFiles();
   };

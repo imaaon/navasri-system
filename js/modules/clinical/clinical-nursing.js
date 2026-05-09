@@ -291,7 +291,8 @@ async function saveDischarge() {
   }).eq('id', patId);
   if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
   if (p.currentBedId) {
-    await supa.from('beds').update({ status: 'available' }).eq('id', p.currentBedId);
+    const { error: bedErr } = await supa.from('beds').update({ status: 'available' }).eq('id', p.currentBedId);
+    if (bedErr) { toast('คืนสถานะเตียงไม่สำเร็จ: '+bedErr.message+' (ผู้ป่วยถูกย้ายออกแล้ว แต่เตียงอาจค้างสถานะ)','warning'); }
     const bed = db.beds.find(b => b.id == p.currentBedId);
     if (bed) bed.status = 'available';
   }

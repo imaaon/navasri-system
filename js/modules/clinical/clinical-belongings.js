@@ -255,7 +255,8 @@ async function saveDnr() {
   }
   const existing = (db.patientConsents||[]).find(c=>String(c.patientId)===String(_dnrPatId));
   if(existing) {
-    await supa.from('patient_consents').update(row).eq('id',existing.id);
+    const {error:updErr} = await supa.from('patient_consents').update(row).eq('id',existing.id);
+    if(updErr){toast('บันทึกไม่สำเร็จ: '+updErr.message,'error');return;}
     Object.assign(existing, mapConsent({id:existing.id,...Object.fromEntries(Object.entries(row).map(([k,v])=>[k,v]))}));
   } else {
     const {data:ins,error}=await supa.from('patient_consents').insert(row).select().single();
