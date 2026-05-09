@@ -265,6 +265,19 @@ async function savePatient() {
     photo:  photoVal || undefined,
     currentBedId: bedId || null,
   };
+  // ===== VALIDATION (Phase 6) =====
+  // เฉพาะถ้า id_type = thai เท่านั้น ที่ต้อง 13 หลัก
+  if (data.idType === 'thai') {
+    const idErr = validateThaiIdCard(data.idcard);
+    if (idErr) { toast(idErr, 'warning'); return; }
+  }
+  const phoneErr = validatePhone(data.phone);
+  if (phoneErr) { toast('เบอร์โทร: '+phoneErr, 'warning'); return; }
+  const emergencyErr = validatePhone(data.emergency);
+  if (emergencyErr) { toast('เบอร์ติดต่อฉุกเฉิน: '+emergencyErr, 'warning'); return; }
+  const dateErr = validateDateOrder(data.admitDate, data.endDate, 'วันรับเข้า', 'วันสิ้นสุดสัญญา');
+  if (dateErr) { toast(dateErr, 'warning'); return; }
+  // ===== END VALIDATION =====
   const row = {
     name: data.name, idcard: data.idcard||null, id_type: data.idType||'thai',
     dob: data.dob||null, birth_year: data.birthYear||null,

@@ -161,3 +161,40 @@ function customAlert(message, opts) {
     document.addEventListener('keydown', _customAlertKeyHandler);
   });
 }
+
+// ===== INPUT VALIDATORS =====
+// คืน null = OK, คืน string = error message ภาษาไทย
+
+function validateThaiIdCard(idcard) {
+  if (!idcard) return null; // ว่างได้ (optional field)
+  const cleaned = String(idcard).replace(/[-\s]/g, '');
+  if (!/^\d{13}$/.test(cleaned)) {
+    return 'เลขบัตรประชาชนต้องเป็นตัวเลข 13 หลัก';
+  }
+  return null;
+}
+
+function validatePhone(phone) {
+  if (!phone) return null; // ว่างได้
+  const cleaned = String(phone).replace(/[-\s()]/g, '');
+  if (!/^\d{9,10}$/.test(cleaned)) {
+    return 'เบอร์โทรต้องเป็นตัวเลข 9-10 หลัก';
+  }
+  return null;
+}
+
+function validateDateOrder(startDate, endDate, startLabel, endLabel) {
+  // ถ้าตัวใดตัวหนึ่งว่าง ผ่านได้
+  if (!startDate || !endDate) return null;
+  if (new Date(endDate) < new Date(startDate)) {
+    return `${endLabel||'วันสิ้นสุด'} ต้องอยู่หลังหรือเท่ากับ ${startLabel||'วันเริ่มต้น'}`;
+  }
+  return null;
+}
+
+function validatePositiveAmount(amount, label) {
+  const n = parseFloat(amount);
+  if (isNaN(n)) return `${label||'จำนวนเงิน'} ต้องเป็นตัวเลข`;
+  if (n < 0) return `${label||'จำนวนเงิน'} ต้องไม่ติดลบ`;
+  return null;
+}

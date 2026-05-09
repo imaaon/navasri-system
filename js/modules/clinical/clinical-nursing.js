@@ -284,6 +284,10 @@ async function saveDischarge() {
   if (!reason) { toast('กรุณาเลือกเหตุผลในการจำหน่าย', 'warning'); return; }
   const p = db.patients.find(x => x.id == patId);
   if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
+  // ===== VALIDATION (Phase 6) =====
+  const dateErr = validateDateOrder(p.admitDate, date, 'วันรับเข้า', 'วันที่จำหน่าย');
+  if (dateErr) { toast(dateErr, 'warning'); return; }
+  // ===== END VALIDATION =====
   const { error } = await supa.from('patients').update({
     status: 'inactive', end_date: date, discharge_reason: reason,
     discharge_summary: summary,

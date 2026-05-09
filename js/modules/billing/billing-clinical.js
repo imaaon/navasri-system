@@ -649,6 +649,10 @@ async function saveDeposit() {
   const amount = parseFloat(document.getElementById('deposit-amount').value)||0;
   if (!patientId)   { toast('กรุณาเลือกผู้รับบริการ', 'warning'); return; }
   if (!amount)      { toast('กรุณาระบุจำนวนเงินมัดจำ', 'warning'); return; }
+  // ===== VALIDATION (Phase 6) — กันค่าติดลบ =====
+  const amtErr = validatePositiveAmount(amount, 'จำนวนเงินมัดจำ');
+  if (amtErr) { toast(amtErr, 'warning'); return; }
+  // ===== END VALIDATION =====
   const dateInVal = document.getElementById('deposit-date-in').value;
   if (!dateInVal)   { toast('กรุณาระบุวันที่รับมัดจำ', 'warning'); return; }
   const patient = (db.patients||[]).find(p=>String(p.id)===String(patientId));

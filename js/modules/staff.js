@@ -270,6 +270,16 @@ function saveStaff() {
     contractData: document.getElementById('staff-contract-data').value || undefined,
     contractName: document.getElementById('staff-contract-name').textContent !== 'ยังไม่มีไฟล์' ? document.getElementById('staff-contract-name').textContent : undefined,
   };
+  // ===== VALIDATION (Phase 6) =====
+  if (data.idType === 'thai') {
+    const idErr = validateThaiIdCard(data.idcard);
+    if (idErr) { toast(idErr, 'warning'); return; }
+  }
+  const phoneErr = validatePhone(data.phone);
+  if (phoneErr) { toast('เบอร์โทร: '+phoneErr, 'warning'); return; }
+  const dateErr = validateDateOrder(data.startDate, data.endDate, 'วันเริ่มงาน', 'วันสิ้นสุดงาน');
+  if (dateErr) { toast(dateErr, 'warning'); return; }
+  // ===== END VALIDATION =====
   const row = { name: data.name, nickname: data.nickname||null, position: data.position||null,
       id_type: data.idType||'thai', idcard: data.idcard||null,
       dob: data.dob||null, start_date: data.startDate||null, end_date: data.endDate||null,
