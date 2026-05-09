@@ -34,12 +34,33 @@ function renderStaff() {
   const positions = {};
   db.staff.forEach(s => { positions[s.position||'อื่นๆ'] = (positions[s.position||'อื่นๆ']||0)+1; });
   const sumEl = document.getElementById('staffSummary');
-  if (sumEl) sumEl.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
-    <div style="background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">👥 ทั้งหมด <strong>${db.staff.length}</strong> คน</div>
-    ${Object.entries(positions).slice(0,5).map(([pos,cnt]) =>
-      `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;"><strong>${cnt}</strong> ${pos}</div>`
-    ).join('')}
-  </div>`;
+  if (sumEl) {
+    // R5-004 fix: chips are now clickable to filter by position (uses same dropdown filter under the hood)
+    const allActive = posF === '';
+    const chipBaseStyle = 'border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;transition:all 0.15s;user-select:none;';
+    const activeStyle = 'background:var(--sage);color:#fff;border-color:var(--sage);';
+    const inactiveAllStyle = 'background:var(--sage-light);font-size:13px;';
+    const inactiveStyle = 'background:var(--surface2);';
+    sumEl.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <div data-staff-chip="" style="${chipBaseStyle}${allActive ? activeStyle : inactiveAllStyle}">👥 ทั้งหมด <strong>${db.staff.length}</strong> คน</div>
+      ${Object.entries(positions).slice(0,5).map(([pos,cnt]) => {
+        const isActive = posF === pos;
+        return `<div data-staff-chip="${pos.replace(/"/g,'&quot;')}" style="${chipBaseStyle}${isActive ? activeStyle : inactiveStyle}"><strong>${cnt}</strong> ${pos}</div>`;
+      }).join('')}
+    </div>`;
+    // Bind click once via event delegation (idempotent)
+    if (!sumEl._chipHandlerBound) {
+      sumEl.addEventListener('click', function(e) {
+        const chip = e.target.closest('[data-staff-chip]');
+        if (!chip) return;
+        const pos = chip.getAttribute('data-staff-chip');
+        const sel = document.getElementById('staffPosFilter');
+        if (sel) sel.value = pos;
+        renderStaff();
+      });
+      sumEl._chipHandlerBound = true;
+    }
+  }
 
   const tb = document.getElementById('staffTable');
   if (staffList.length === 0) {
@@ -205,6 +226,16 @@ function openAddStaffModal() {
   document.getElementById('staff-start').value = '';
   document.getElementById('staff-enddate').value = '';
   document.getElementById('staff-note').value = '';
+  // R5-002 fix: reset additional fields that previously leaked from other staff
+  document.getElementById('staff-phone').value = '';
+  document.getElementById('staff-address').value = '';
+  document.getElementById('staff-id-type').value = 'thai';
+  document.getElementById('staff-age-display').value = '';
+  const photoData = document.getElementById('staff-photo-data');
+  photoData.value = '';
+  if (photoData._pendingFile) photoData._pendingFile = null;
+  const photoPreview = document.getElementById('staff-photo-preview');
+  if (photoPreview) photoPreview.innerHTML = '👤';
   document.getElementById('modal-addStaff-title').textContent = 'เพิ่มพนักงาน';
   document.getElementById('staff-contract-data').value = '';
   document.getElementById('staff-contract-name').textContent = 'ยังไม่มีไฟล์';
