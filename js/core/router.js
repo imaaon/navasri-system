@@ -14,6 +14,18 @@ function closeSidebar() {
 }
 
 function showPage(page) {
+  // R6-005 fix: close read-only modals (log/history/view/preview/detail) before navigating
+  // เพื่อกัน modal ค้างบน page ใหม่. ไม่ปิด modal ที่อาจมีข้อมูลที่ user กำลังกรอก (form modals)
+  const READONLY_MODAL_IDS = [
+    'modal-invoice-reset-log', 'modal-doc-preview', 'modal-lot-detail',
+    'modal-maintenance-history', 'modal-room-history',
+    'modal-view-pr', 'modal-view-supinv', 'modal-view-supplier'
+  ];
+  READONLY_MODAL_IDS.forEach(id => {
+    const m = document.getElementById(id);
+    if (m && m.classList.contains('open') && typeof closeModal === 'function') closeModal(id);
+  });
+
   document.querySelectorAll('[id^="page-"]').forEach(p => p.style.display = 'none');
   const pageEl = document.getElementById('page-' + page);
   if (pageEl) pageEl.style.display = '';
@@ -27,7 +39,8 @@ function showPage(page) {
     if (nb) nb.classList.add('active');
   }
   currentPage = page;
-  const titles = { dashboard:'Dashboard', stock:'คลังสต็อก', requisition:'เบิกสินค้า', history:'ประวัติการเบิก', report:'รายงาน', patients:'ผู้รับบริการ', rooms:'🛏️ ห้องพักและเตียง', staff:'พนักงาน', items:'รายการสินค้า', settings:'💬 Line & ตั้งค่า', reqform:'ใบเบิกสินค้า', patprofile:'ข้อมูลผู้รับบริการ', staffprofile:'ข้อมูลพนักงาน', accounts:'🔑 จัดการ Account', healthreport:'📋 รายงานสุขภาพ', purchasehistory:'📋 ประวัติการสั่งซื้อ', billing:'💰 ระบบบัญชี', 'billing-settings':'⚙️ ตั้งค่าบัญชี', incident:'⚠️ อุบัติเหตุ & แผลกดทับ', dietary:'🍽️ โภชนาการ & สายให้อาหาร', deposits:'🏦 มัดจำ & เงินประกัน', bi:'🔍 BI & วิเคราะห์กำไร', suppliers:'🏭 ผู้จำหน่าย', supplierinvoices:'🧾 ใบแจ้งหนี้ผู้จำหน่าย', purchaserequests:'📋 คำขอซื้อ', stockreport:'📊 รายงานสต็อก', audit:'Audit Trail' };
+  // R6-006 fix: เพิ่ม title "expenses" → "💸 ค่าใช้จ่าย" (ก่อนหน้า fall back ใช้ page id)
+  const titles = { dashboard:'Dashboard', stock:'คลังสต็อก', requisition:'เบิกสินค้า', history:'ประวัติการเบิก', report:'รายงาน', patients:'ผู้รับบริการ', rooms:'🛏️ ห้องพักและเตียง', staff:'พนักงาน', items:'รายการสินค้า', settings:'💬 Line & ตั้งค่า', reqform:'ใบเบิกสินค้า', patprofile:'ข้อมูลผู้รับบริการ', staffprofile:'ข้อมูลพนักงาน', accounts:'🔑 จัดการ Account', healthreport:'📋 รายงานสุขภาพ', purchasehistory:'📋 ประวัติการสั่งซื้อ', billing:'💰 ระบบบัญชี', 'billing-settings':'⚙️ ตั้งค่าบัญชี', expenses:'💸 ค่าใช้จ่าย', incident:'⚠️ อุบัติเหตุ & แผลกดทับ', dietary:'🍽️ โภชนาการ & สายให้อาหาร', deposits:'🏦 มัดจำ & เงินประกัน', bi:'🔍 BI & วิเคราะห์กำไร', suppliers:'🏭 ผู้จำหน่าย', supplierinvoices:'🧾 ใบแจ้งหนี้ผู้จำหน่าย', purchaserequests:'📋 คำขอซื้อ', stockreport:'📊 รายงานสต็อก', audit:'Audit Trail' };
   document.getElementById('pageTitle').textContent = titles[page] || page;
   closeSidebar();
   renderPage(page);
