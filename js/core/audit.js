@@ -1,6 +1,6 @@
 // ===== AUDIT TRAIL =====
 
-const AUDIT_MODULES = { AUTH:'auth', PATIENT:'patient', CLINICAL:'clinical', INVENTORY:'inventory', REQUISITION:'requisition', ROOM:'room', BILLING:'billing', STAFF:'staff', ACCOUNT:'account', SUPPLIER:'supplier', PROCUREMENT:'procurement', STOCK:'stock' };
+const AUDIT_MODULES = { AUTH:'auth', PATIENT:'patient', CLINICAL:'clinical', INVENTORY:'inventory', REQUISITION:'requisition', ROOM:'room', BILLING:'billing', STAFF:'staff', ACCOUNT:'account', SUPPLIER:'supplier', SUPPLIER_INVOICE:'supplier_invoice', PROCUREMENT:'procurement', STOCK:'stock', ASSETS:'assets', EXPENSES:'expenses', APPOINTMENT:'appointment' };
 const AUDIT_ACTIONS = { LOGIN:'login', LOGOUT:'logout', CREATE:'create', UPDATE:'update', DELETE:'delete', APPROVE:'approve', REJECT:'reject', TRANSFER:'transfer', DISCHARGE:'discharge', RESET:'reset', EXPORT:'export', RECEIVE:'receive', DISPENSE:'dispense', ADJUST:'adjust' };
 
 async function logAudit(module, action, recordId, detail = {}) {

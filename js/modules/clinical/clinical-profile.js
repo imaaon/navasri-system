@@ -291,7 +291,7 @@ async function openPatientProfile(id, activeTab) {
         var pat=(db.patients||[]).find(function(x){return x.id===pid;});
         if(pat) pat.diagnosis=val;
         toast('บันทึกโรคประจำตัวแล้ว','success');
-        logAudit('patients','update',pid,{field:'diagnosis',value:val});
+        logAudit(AUDIT_MODULES.PATIENT,'update',pid,{field:'diagnosis',value:val});
       });
     });
   })();
