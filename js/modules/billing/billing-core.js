@@ -193,6 +193,13 @@ function openCreateInvoiceModal() {
   if (_taId) _taId.value = '';
   if (_taInp) _taInp.value = '';
 
+  // R6-004 fix (PDPA): reset payer info to prevent leak from previously-selected patient
+  const _payerEl = document.getElementById('inv-payer-info');
+  if (_payerEl) {
+    _payerEl.innerHTML = '';
+    _payerEl.style.display = 'none';
+  }
+
   renderInvoiceItems();
   renderOtherItems();
   recalcInvoice();
@@ -366,7 +373,7 @@ async function loadRequisitionsForInvoice() {
   renderInvoiceItems();
   recalcInvoice();
   const msg = 'พบรายการเบิก '+billableItems.length+' รายการคิดเงิน'+(includedItems.length>0?' + '+includedItems.length+' รายการรวมใน package':'');
-  toast(billableItems.length===0&&includedItems.length===0?'ไม่พบรายการเปิดที่อนุมัติแล้ว':msg,
+  toast(billableItems.length===0&&includedItems.length===0?'ไม่พบรายการเบิกที่อนุมัติแล้ว':msg,
     billableItems.length===0&&includedItems.length===0?'warning':'success');
 }
 
@@ -560,7 +567,8 @@ function recalcInvoice() {
   const vatAmt     = subtotal * vatRate;
   const beforeWht  = subtotal + vatAmt;
   const whtRate    = parseFloat(document.getElementById('inv-wht-rate')?.value||0)/100;
-  const whtAmt     = beforeWht * whtRate;
+  // R6-002 fix: หัก ณ ที่จ่าย คำนวณจากฐานก่อน VAT ตามกฎหมายไทย ภ.ง.ด.53
+  const whtAmt     = subtotal * whtRate;
   const grandTotal = beforeWht - whtAmt;
 
   if(document.getElementById('inv-subtotal'))    document.getElementById('inv-subtotal').textContent    = formatThb(subtotal);
@@ -607,7 +615,8 @@ async function saveInvoice(status) {
   const vatAmt     = subtotal*(vatRate/100);
   const beforeWht  = subtotal+vatAmt;
   const whtRate    = parseFloat(document.getElementById('inv-wht-rate').value||0);
-  const whtAmt     = beforeWht*(whtRate/100);
+  // R6-002 fix: WHT คำนวณจากฐานก่อน VAT ตามกฎหมายไทย ภ.ง.ด.53
+  const whtAmt     = subtotal*(whtRate/100);
   const grandTotal = beforeWht-whtAmt;
 
   const editId = document.getElementById('inv-edit-id').value;
