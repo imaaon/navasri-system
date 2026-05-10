@@ -25,6 +25,21 @@ function openEditBelongingModal(belongingId, patientId) {
   document.getElementById('belonging-date-in').value = b.dateIn||'';
   document.getElementById('belonging-received-by').value = b.receivedBy||'';
   document.getElementById('belonging-note').value = b.note||'';
+  // รีเซ็ตช่องเลือกไฟล์ + โหลดรูปเดิมมาแสดงเป็น preview
+  const fileInp = document.getElementById('belonging-photo-file');
+  if (fileInp) fileInp.value = '';
+  const urlInp  = document.getElementById('belonging-photo-url');
+  if (urlInp) urlInp.value = b.photo || b.photoUrl || '';
+  const preview = document.getElementById('belonging-photo-preview');
+  const imgEl   = document.getElementById('belonging-photo-img');
+  const existingPhoto = b.photo || b.photoUrl || '';
+  if (existingPhoto) {
+    if (imgEl) imgEl.src = existingPhoto;
+    if (preview) preview.style.display = '';
+  } else {
+    if (imgEl) imgEl.src = '';
+    if (preview) preview.style.display = 'none';
+  }
   openModal('modal-belonging');
 }
 // ===== CLINICAL BELONGINGS =====
@@ -67,6 +82,7 @@ function openBelongingModal(id, patientId) {
   _belongingEditPatId   = patientId;
   _belongingEditPatName = (db.patients||[]).find(p=>String(p.id)===String(patientId))?.name || '';
   const actor = currentUser?.displayName || currentUser?.username || '';
+  _belongingEditId = '';  // เคลียร์ edit id (กันใช้ของเก่าค้าง)
   document.getElementById('belonging-item-name').value = '';
   document.getElementById('belonging-qty').value = 1;
   document.getElementById('belonging-condition').value = 'ดี';
@@ -74,6 +90,15 @@ function openBelongingModal(id, patientId) {
   document.getElementById('belonging-date-in').value = new Date().toISOString().split('T')[0];
   document.getElementById('belonging-received-by').value = actor;
   document.getElementById('belonging-note').value = '';
+  // รีเซ็ตช่องรูปทั้งหมด (file input + hidden url + preview + img)
+  const fileInp = document.getElementById('belonging-photo-file');
+  if (fileInp) fileInp.value = '';
+  const urlInp  = document.getElementById('belonging-photo-url');
+  if (urlInp) urlInp.value = '';
+  const preview = document.getElementById('belonging-photo-preview');
+  if (preview) preview.style.display = 'none';
+  const imgEl   = document.getElementById('belonging-photo-img');
+  if (imgEl) imgEl.src = '';
   openModal('modal-belonging');
 }
 
