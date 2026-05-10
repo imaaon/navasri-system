@@ -131,7 +131,7 @@ Frontend ไม่ต้องแก้ — ใช้ endpoint เดิม
 
 ดูคู่มือกู้คืนใน [`docs/RECOVERY_PROCEDURES.md`](docs/RECOVERY_PROCEDURES.md)
 
-### Phase 8 — Documentation & Versioning (HEAD pending)
+### Phase 8 — Documentation & Versioning (HEAD `8f2dc33`)
 
 - เพิ่ม [`README.md`](README.md) (root) — Quick reference + tech stack + structure
 - เพิ่ม [`CHANGELOG.md`](CHANGELOG.md) (root) — เอกสารฉบับนี้
