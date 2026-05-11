@@ -514,7 +514,7 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
         </div>
       </div>
       <div class="table-wrap">
-        <table>
+        <table class="responsive-card-table">
           <thead><tr>
             <th>วัน/เวลา</th>
             <th style="text-align:center;color:#e74c3c;">🩸 BP</th>
@@ -557,19 +557,19 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
                   const dtxAlert = v.dtx && (v.dtx<70 || v.dtx>150);
                   const anyAlert = bpAlert||spo2Alert||hrAlert||tempAlert||rrAlert||dtxAlert;
                   return `<tr ${anyAlert ? 'style="background:#fff8f8;"' : ''}>
-                    <td class="number" style="font-size:12px;white-space:nowrap;">${(v.recordedAt ? new Date(v.recordedAt).toLocaleString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',',' ') : '-')}</td>
-                    <td style="text-align:center;font-weight:${bpAlert?'700':'400'};color:${bpAlert?'#e74c3c':'inherit'};">${v.bp_sys ? v.bp_sys+'/'+v.bp_dia : '-'}</td>
-                    <td style="text-align:center;font-weight:${hrAlert?'700':'400'};color:${hrAlert?'#e74c3c':'inherit'};">${v.hr||'-'}</td>
-                    <td style="text-align:center;font-weight:${tempAlert?'700':'400'};color:${tempAlert?'#e74c3c':'inherit'};">${v.temp ? v.temp+'°C' : '-'}</td>
-                    <td style="text-align:center;font-weight:${spo2Alert?'700':'400'};color:${spo2Alert?'#e74c3c':'inherit'};">${v.spo2 ? v.spo2+'%' : '-'}</td>
-                    <td style="text-align:center;font-weight:${dtxAlert?'700':'400'};color:${dtxAlert?'#e74c3c':'inherit'};">${v.dtx ? v.dtx+' mg/dL' : '-'}</td>
-                    <td style="text-align:center;font-weight:${rrAlert?'700':'400'};color:${rrAlert?'#e74c3c':'inherit'};">${v.rr ? v.rr+'/min' : '-'}</td>
-                    <td style="text-align:center;font-size:12px;">${v.weight ? v.weight+' kg' : '-'}</td>
-                    <td style="text-align:center;font-size:12px;">${v.height ? v.height+' cm' : '-'}</td>
-                    <td style="font-size:12px;color:var(--text2);max-width:120px;">${v.otherFields||'-'}</td>
-                    <td style="font-size:12px;">${v.recordedBy||'-'}</td>
-                    <td style="font-size:12px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis;">${v.note||''}</td>
-                    <td><button class="btn btn-ghost btn-sm" onclick="openEditVitalModal('${patientId}','${pid}','${v.id}')" title="แก้ไข">✏️</button><button class="btn btn-ghost btn-sm" onclick="deleteVitalSign('${patientId}','${pid}','${v.id}')" title="ลบ">🗑️</button></td>
+                    <td data-label="วัน/เวลา" class="number" style="font-size:12px;white-space:nowrap;">${(v.recordedAt ? new Date(v.recordedAt).toLocaleString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',',' ') : '-')}</td>
+                    <td data-label="🩸 BP" style="text-align:center;font-weight:${bpAlert?'700':'400'};color:${bpAlert?'#e74c3c':'inherit'};">${v.bp_sys ? v.bp_sys+'/'+v.bp_dia : '-'}</td>
+                    <td data-label="💓 HR" style="text-align:center;font-weight:${hrAlert?'700':'400'};color:${hrAlert?'#e74c3c':'inherit'};">${v.hr||'-'}</td>
+                    <td data-label="🌡️ Temp" style="text-align:center;font-weight:${tempAlert?'700':'400'};color:${tempAlert?'#e74c3c':'inherit'};">${v.temp ? v.temp+'°C' : '-'}</td>
+                    <td data-label="🫁 SpO₂" style="text-align:center;font-weight:${spo2Alert?'700':'400'};color:${spo2Alert?'#e74c3c':'inherit'};">${v.spo2 ? v.spo2+'%' : '-'}</td>
+                    <td data-label="🍬 DTX" style="text-align:center;font-weight:${dtxAlert?'700':'400'};color:${dtxAlert?'#e74c3c':'inherit'};">${v.dtx ? v.dtx+' mg/dL' : '-'}</td>
+                    <td data-label="🫀 RR" style="text-align:center;font-weight:${rrAlert?'700':'400'};color:${rrAlert?'#e74c3c':'inherit'};">${v.rr ? v.rr+'/min' : '-'}</td>
+                    <td data-label="⚖️ น้ำหนัก" style="text-align:center;font-size:12px;">${v.weight ? v.weight+' kg' : '-'}</td>
+                    <td data-label="📏 ส่วนสูง" style="text-align:center;font-size:12px;">${v.height ? v.height+' cm' : '-'}</td>
+                    <td data-label="อื่นๆ" style="font-size:12px;color:var(--text2);max-width:120px;">${v.otherFields||'-'}</td>
+                    <td data-label="ผู้บันทึก" style="font-size:12px;">${v.recordedBy||'-'}</td>
+                    <td data-label="หมายเหตุ" style="font-size:12px;color:var(--text3);max-width:120px;overflow:hidden;text-overflow:ellipsis;">${v.note||''}</td>
+                    <td data-label=""><button class="btn btn-ghost btn-sm" onclick="openEditVitalModal('${patientId}','${pid}','${v.id}')" title="แก้ไข">✏️</button><button class="btn btn-ghost btn-sm" onclick="deleteVitalSign('${patientId}','${pid}','${v.id}')" title="ลบ">🗑️</button></td>
                   </tr>`;
                 }).join('');
               } catch(e) {

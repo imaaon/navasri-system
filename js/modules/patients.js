@@ -67,8 +67,8 @@ function renderPatients() {
     const dur    = p.admitDate ? calcDuration(p.admitDate, p.endDate) : '-';
     const isActive = p.status === 'active';
     return `<tr>
-      <td class="number" style="color:var(--text3);">${i+1}</td>
-      <td>
+      <td data-label="#" class="number" style="color:var(--text3);">${i+1}</td>
+      <td data-label="ชื่อ-นามสกุล">
         <div style="display:flex;align-items:center;gap:10px;">
           ${p.photo
             ? `<img src="${p.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--sage);cursor:zoom-in;flex-shrink:0;" onclick=\"showPatientPhoto('${p.id}')\" title="คลิกเพื่อขยาย">`
@@ -79,14 +79,14 @@ function renderPatients() {
           </div>
         </div>
       </td>
-      <td class="number" style="font-size:12px;color:var(--text2);">${idcard}</td>
-      <td class="number" style="font-size:12px;">${p.dob||'-'}</td>
-      <td style="font-size:12px;">${age}</td>
-      <td class="number" style="font-size:12px;">${p.admitDate||p.admit_date||'-'}</td>
-      <td class="number" style="font-size:12px;">${p.endDate||p.end_date||'-'}</td>
-      <td style="font-size:12px;color:var(--text2);">${dur}</td>
-      <td><span class="badge ${p.status==='active' ? 'badge-green' : p.status==='hospital' ? 'badge-blue' : 'badge-gray'}">${p.status==='active' ? 'พักอยู่' : p.status==='hospital' ? '🏥 อยู่ รพ.' : 'ออกแล้ว'}</span></td>
-      <td style="white-space:nowrap;">
+      <td data-label="เลขบัตรประชาชน" class="number" style="font-size:12px;color:var(--text2);">${idcard}</td>
+      <td data-label="วันเกิด" class="number" style="font-size:12px;">${p.dob||'-'}</td>
+      <td data-label="อายุ" style="font-size:12px;">${age}</td>
+      <td data-label="วันเข้ารับบริการ" class="number" style="font-size:12px;">${p.admitDate||p.admit_date||'-'}</td>
+      <td data-label="วันสิ้นสุดสัญญา" class="number" style="font-size:12px;">${p.endDate||p.end_date||'-'}</td>
+      <td data-label="ระยะเวลา" style="font-size:12px;color:var(--text2);">${dur}</td>
+      <td data-label="สถานะ"><span class="badge ${p.status==='active' ? 'badge-green' : p.status==='hospital' ? 'badge-blue' : 'badge-gray'}">${p.status==='active' ? 'พักอยู่' : p.status==='hospital' ? '🏥 อยู่ รพ.' : 'ออกแล้ว'}</span></td>
+      <td data-label="" style="white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" onclick=\"openPatientProfile('${p.id}')\" title="ดูโปรไฟล์">🔍</button>
         <button class="btn btn-ghost btn-sm" onclick=\"editPatient('${p.id}')\" title="แก้ไข">✏️</button>
       </td>
