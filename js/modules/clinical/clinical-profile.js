@@ -1519,7 +1519,7 @@ function _openOutputModal(row, patId, today) {
 
   // ── สร้าง overlay + modal ──
   var overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
+  overlay.className = 'modal-overlay open';
   overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;';
   var modal = document.createElement('div');
   modal.className = 'modal';
@@ -2776,7 +2776,7 @@ function _openIntakeModal(rec, patId, today) {
   var sharedShift = isEdit && rec.shift ? rec.shift : _shiftFromTime(sharedTime);
 
   var overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
+  overlay.className = 'modal-overlay open';
   overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;';
   var modal = document.createElement('div');
   modal.className = 'modal';

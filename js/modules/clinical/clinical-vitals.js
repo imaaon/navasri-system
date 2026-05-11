@@ -27,7 +27,7 @@ function _openVitalModal(rec, patientId, pid) {
   var initTime = isEdit && rec.recordedAt ? rec.recordedAt.slice(11,16) : nowStr;
 
   var overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
+  overlay.className = 'modal-overlay open';
   overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;';
   var modal = document.createElement('div');
   modal.className = 'modal';
@@ -1292,7 +1292,7 @@ window._ssOpenCloseModal = function(patientId, pid, date, shift, summaryId) {
   var dateThai = _formatDateTHFromYMD(date);
 
   var overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
+  overlay.className = 'modal-overlay open';
   overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;';
 
   var modal = document.createElement('div');
@@ -1371,7 +1371,7 @@ window._ssDoReopen = async function(patientId, pid, date, shift) {
 window._ssOpenReopenRequest = function(patientId, pid, date, shift) {
   var dateThai = _formatDateTHFromYMD(date);
   var overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
+  overlay.className = 'modal-overlay open';
   overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;';
   var modal = document.createElement('div');
   modal.style.cssText = 'background:#fff;border-radius:12px;padding:20px;width:500px;max-width:95vw;';
