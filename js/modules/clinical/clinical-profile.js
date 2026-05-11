@@ -1324,7 +1324,7 @@ function _shiftFromTime(timeStr) {
 
 // ── Lists of ลักษณะ ตามประเภท ──
 var _OUTPUT_CHARS = {
-  urine: ['ใส', 'เหลืองเข้ม', 'น้ำตาล', 'ขุ่น', 'มีเลือดปน'],
+  urine: ['ใส', 'เหลืองเข้ม', 'น้ำตาล', 'ขุ่น/มีตะกอน', 'มีเลือดปน'],
   stool: ['ปกติ', 'แข็ง', 'เหลว', 'เหลวเป็นน้ำ', 'มีเลือดปน'],
   vomit: ['เป็นอาหาร', 'เป็นน้ำใส', 'มีเลือดปน', 'มีน้ำดี (สีเหลือง/เขียว)']
 };
@@ -1345,11 +1345,19 @@ function _serializeChars(arr) {
   return arr.join(', ');
 }
 
+// ── Legacy mapping สำหรับ characteristics ที่ rename แล้ว ──
+var _CHAR_LEGACY_MAP = {
+  'urine': { 'ขุ่น': 'ขุ่น/มีตะกอน' }
+};
+
 // ── Build a multi-chip widget (returns {el, getValue, setValue}) ──
 function _buildCharChipsWidget(typeKey, initialChars) {
   // initialChars: string ของลักษณะที่บันทึกไว้แล้ว
   var standardList = _OUTPUT_CHARS[typeKey] || [];
-  var initialArr = _parseChars(initialChars);
+  var legacyMap = _CHAR_LEGACY_MAP[typeKey] || {};
+  var initialArr = _parseChars(initialChars).map(function(item) {
+    return legacyMap[item] || item;  // map ค่าเก่าเป็นชื่อใหม่
+  });
 
   // แยก: ใน standard list (active) กับ outside (custom)
   var activeSet = {};
