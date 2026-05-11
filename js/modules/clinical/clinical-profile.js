@@ -1072,22 +1072,19 @@ function _renderExcretionTab(patId) {
 
   // Date range filter
   var filterWrap = document.createElement('div');
-  filterWrap.className = 'excretion-date-filter';
-  filterWrap.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap';
+  filterWrap.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:13px';
   var lblFrom = document.createElement('span'); lblFrom.textContent = 'จาก'; lblFrom.style.cssText = 'color:#666';
-  lblFrom.className = 'date-range-label';
   var inpFrom = document.createElement('input');
   inpFrom.type = 'date'; inpFrom.value = el.dataset.dateFrom;
-  inpFrom.className = 'form-control form-control-sm date-range-input';
+  inpFrom.className = 'form-control form-control-sm';
   inpFrom.style.cssText = 'width:140px';
   var lblTo = document.createElement('span'); lblTo.textContent = 'ถึง'; lblTo.style.cssText = 'color:#666';
-  lblTo.className = 'date-range-label';
   var inpTo = document.createElement('input');
   inpTo.type = 'date'; inpTo.value = el.dataset.dateTo;
-  inpTo.className = 'form-control form-control-sm date-range-input';
+  inpTo.className = 'form-control form-control-sm';
   inpTo.style.cssText = 'width:140px';
   var btnToday = document.createElement('button');
-  btnToday.className = 'btn btn-ghost btn-sm date-preset-chip';
+  btnToday.className = 'btn btn-ghost btn-sm';
   btnToday.textContent = 'วันนี้';
   btnToday.style.cssText = 'font-size:12px';
   btnToday.addEventListener('click', function() {
@@ -1097,7 +1094,7 @@ function _renderExcretionTab(patId) {
   });
   // Preset buttons: 7 วันล่าสุด / เดือนนี้ / เดือนที่แล้ว
   var btn7days = document.createElement('button');
-  btn7days.className = 'btn btn-ghost btn-sm date-preset-chip';
+  btn7days.className = 'btn btn-ghost btn-sm';
   btn7days.textContent = '7 วันล่าสุด';
   btn7days.style.cssText = 'font-size:12px';
   btn7days.addEventListener('click', function() {
@@ -1109,7 +1106,7 @@ function _renderExcretionTab(patId) {
     _loadExcretionData(patId, el, canEdit);
   });
   var btnThisMonth = document.createElement('button');
-  btnThisMonth.className = 'btn btn-ghost btn-sm date-preset-chip';
+  btnThisMonth.className = 'btn btn-ghost btn-sm';
   btnThisMonth.textContent = 'เดือนนี้';
   btnThisMonth.style.cssText = 'font-size:12px';
   btnThisMonth.addEventListener('click', function() {
@@ -1120,7 +1117,7 @@ function _renderExcretionTab(patId) {
     _loadExcretionData(patId, el, canEdit);
   });
   var btnLastMonth = document.createElement('button');
-  btnLastMonth.className = 'btn btn-ghost btn-sm date-preset-chip';
+  btnLastMonth.className = 'btn btn-ghost btn-sm';
   btnLastMonth.textContent = 'เดือนที่แล้ว';
   btnLastMonth.style.cssText = 'font-size:12px';
   btnLastMonth.addEventListener('click', function() {
@@ -1193,22 +1190,20 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFr
   // ===== SECTION 1: 💧 น้ำเข้า (Intake) — ขึ้นก่อนตามที่อ้นขอ =====
   var intakeFluids = fluids.filter(function(f){ return f.direction === 'intake'; });
   var sec1 = document.createElement('div');
-  sec1.className = 'excretion-section intake-section';
   sec1.style.cssText = 'background:#f0f8f0;border-radius:8px;padding:16px;margin-bottom:16px';
   var s1hdr = document.createElement('div');
-  s1hdr.className = 'excretion-section-hdr';
   s1hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px';
   var s1title = document.createElement('strong');
   s1title.textContent = String.fromCodePoint(0x1F4A7) + ' น้ำเข้า (Intake)';
-  s1hdr.appendChild(s1title);
-  sec1.appendChild(s1hdr);
   if (canEdit) {
     var btnAdd1 = document.createElement('button');
-    btnAdd1.className = 'btn btn-sm btn-success excretion-add-btn intake-add-btn';
+    btnAdd1.className = 'btn btn-sm btn-success';
     btnAdd1.textContent = '+ เพิ่มน้ำเข้า';
     btnAdd1.addEventListener('click', function() { _openIntakeModal(null, patId, modalDefaultDate); });
-    sec1.appendChild(btnAdd1);
+    s1hdr.appendChild(btnAdd1);
   }
+  s1hdr.appendChild(s1title);
+  sec1.appendChild(s1hdr);
   _renderFluidTable(sec1, intakeFluids, canEdit, patId, 'intake', modalDefaultDate, rangeLabel);
   sectionsWrap.appendChild(sec1);
 
@@ -1218,22 +1213,20 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFr
   var outputFluids = fluids.filter(function(f){ return f.direction === 'output'; });
   var combinedOutput = _buildCombinedOutputRows(excretions, outputFluids);
   var sec2 = document.createElement('div');
-  sec2.className = 'excretion-section output-section';
   sec2.style.cssText = 'background:#fff0f0;border-radius:8px;padding:16px;margin-bottom:16px';
   var s2hdr = document.createElement('div');
-  s2hdr.className = 'excretion-section-hdr';
   s2hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px';
   var s2title = document.createElement('strong');
   s2title.textContent = String.fromCodePoint(0x1F6BD) + ' น้ำออก (Output)';
-  s2hdr.appendChild(s2title);
-  sec2.appendChild(s2hdr);
   if (canEdit) {
     var btnAdd2 = document.createElement('button');
-    btnAdd2.className = 'btn btn-sm btn-danger excretion-add-btn output-add-btn';
+    btnAdd2.className = 'btn btn-sm btn-danger';
     btnAdd2.textContent = '+ เพิ่มน้ำออก';
     btnAdd2.addEventListener('click', function() { _openOutputModal(null, patId, modalDefaultDate); });
-    sec2.appendChild(btnAdd2);
+    s2hdr.appendChild(btnAdd2);
   }
+  s2hdr.appendChild(s2title);
+  sec2.appendChild(s2hdr);
   _renderCombinedOutputTable(sec2, combinedOutput, canEdit, patId, modalDefaultDate, rangeLabel);
   sectionsWrap.appendChild(sec2);
 
@@ -1309,7 +1302,7 @@ function _renderCombinedOutputTable(sec, rows, canEdit, patId, modalDefaultDate,
     return;
   }
   var tbl = document.createElement('table');
-  tbl.className = 'table table-sm table-bordered responsive-card-table excretion-card-table';
+  tbl.className = 'table table-sm table-bordered';
   tbl.style.fontSize = '13px';
   var thead = document.createElement('thead');
   thead.innerHTML = '<tr><th>วันที่</th><th>เวลา</th><th>เวร</th><th>ประเภท</th><th>จำนวนครั้ง</th><th>ปริมาณ(ml)</th><th>ลักษณะ</th><th>หมายเหตุ</th>' + (canEdit ? '<th></th>' : '') + '</tr>';
@@ -1319,15 +1312,9 @@ function _renderCombinedOutputTable(sec, rows, canEdit, patId, modalDefaultDate,
     var tr = document.createElement('tr');
     var d = r.recorded_at ? r.recorded_at.slice(0,10) : '';
     var t = r.recorded_at ? r.recorded_at.slice(11,16) : '';
-    // ตรวจสอบว่ามี characteristic ผิดปกติไหม → เพิ่ม border-left แดง
-    var charText = r.characteristics || '';
-    var hasAbnormal = charText && (charText.indexOf('เลือด') >= 0 || charText.indexOf('น้ำดี') >= 0 || charText.indexOf('สีดำ') >= 0 || charText.indexOf('เป็นน้ำ') >= 0);
-    if (hasAbnormal) tr.setAttribute('data-abnormal', '1');
-    tr.innerHTML = '<td data-label="วันที่">' + d + '</td><td data-label="เวลา">' + t + '</td><td data-label="เวร">' + (r.shift||'') + '</td><td data-label="ประเภท" data-card-title="1">' + r.typeLabel + '</td><td data-label="จำนวนครั้ง">' + (r.count||'-') + '</td><td data-label="ปริมาณ" data-card-volume="1">' + (r.volume_ml ? r.volume_ml + ' ml' : '-') + '</td><td data-label="ลักษณะ">' + (r.characteristics||'-') + '</td><td data-label="หมายเหตุ">' + (r.note||'-') + '</td>';
+    tr.innerHTML = '<td>' + d + '</td><td>' + t + '</td><td>' + (r.shift||'') + '</td><td>' + r.typeLabel + '</td><td>' + (r.count||'-') + '</td><td>' + (r.volume_ml||'-') + '</td><td>' + (r.characteristics||'-') + '</td><td>' + (r.note||'-') + '</td>';
     if (canEdit) {
       var tdAct = document.createElement('td');
-      tdAct.setAttribute('data-label', '');
-      tdAct.setAttribute('data-card-actions', '1');
       var btnE = document.createElement('button');
       btnE.className = 'btn btn-xs btn-outline-secondary';
       btnE.textContent = '✒';
@@ -2020,7 +2007,7 @@ function _renderFluidTable(container, rows, canEdit, patId, direction, modalDefa
     return;
   }
   var tbl = document.createElement('table');
-  tbl.className = 'table table-sm table-bordered responsive-card-table excretion-card-table';
+  tbl.className = 'table table-sm table-bordered';
   tbl.style.fontSize = '13px';
   var th = document.createElement('thead');
   th.innerHTML = '<tr><th>วันที่</th><th>เวลา</th><th>เวร</th><th>ประเภทน้ำ</th><th>ปริมาณ(ml)</th><th>หมายเหตุ</th>' + (canEdit ? '<th></th>' : '') + '</tr>';
@@ -2033,16 +2020,15 @@ function _renderFluidTable(container, rows, canEdit, patId, direction, modalDefa
     // ── Legacy display mapping: 'น้ำดื่ม'/'น้ำเปล่า' → 'น้ำ' ──
     var displayType = r.fluid_type || '';
     if (direction === 'intake' && typeof _INTAKE_LEGACY_NAMES !== 'undefined') {
+      // รองรับ multi-value: split by ',' → map ทีละค่า → join
       var parts = displayType.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
       displayType = parts.map(function(p) {
         return (_INTAKE_LEGACY_NAMES.indexOf(p) >= 0) ? 'น้ำ' : p;
       }).join(', ');
     }
-    tr.innerHTML = '<td data-label="วันที่">' + d + '</td><td data-label="เวลา">' + t + '</td><td data-label="เวร">' + (r.shift||'') + '</td><td data-label="ประเภท" data-card-title="1">' + (direction === 'intake' ? '💧 ' : '') + displayType + '</td><td data-label="ปริมาณ" data-card-volume="1">' + (r.volume_ml ? r.volume_ml + ' ml' : '-') + '</td><td data-label="หมายเหตุ">' + (r.note || '-') + '</td>';
+    tr.innerHTML = '<td>' + d + '</td><td>' + t + '</td><td>' + (r.shift||'') + '</td><td>' + displayType + '</td><td>' + (r.volume_ml||'') + '</td><td>' + (r.note||'') + '</td>';
     if (canEdit) {
       var tdA = document.createElement('td');
-      tdA.setAttribute('data-label', '');
-      tdA.setAttribute('data-card-actions', '1');
       var bE = document.createElement('button');
       bE.className = 'btn btn-xs btn-outline-secondary';
       bE.textContent = '✒';
@@ -2086,20 +2072,9 @@ function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
   title3.textContent = String.fromCodePoint(0x1F4CA) + ' สรุป Balance' + (rangeLabel ? ' (' + rangeLabel + ')' : '');
   sec3.appendChild(title3);
 
-  // ── Container สำหรับ Balance content (table + card list) ──
-  var balanceContent = document.createElement('div');
-  balanceContent.style.cssText = 'margin-top:10px;';
-  sec3.appendChild(balanceContent);
-
-  // ── Mobile: Card list (ซ่อนบน desktop ผ่าน CSS) ──
-  var cardList = document.createElement('div');
-  cardList.className = 'balance-card-list';
-  balanceContent.appendChild(cardList);
-
-  // ── Desktop: Table (ซ่อนบน mobile ผ่าน CSS) ──
   var tbl = document.createElement('table');
-  tbl.className = 'table table-sm table-bordered balance-desktop-table';
-  tbl.style.cssText = 'font-size:13px';
+  tbl.className = 'table table-sm table-bordered';
+  tbl.style.cssText = 'margin-top:10px;font-size:13px';
   var thead = document.createElement('thead');
   thead.innerHTML =
     '<tr>' +
@@ -2147,8 +2122,6 @@ function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
     totIn += shIn; totOut += shOut;
     totUrine += shUrine; totStool += shStool; totVomit += shVomit;
     var bal = shIn - shOut;
-
-    // ── Desktop row ──
     var tr = document.createElement('tr');
     tr.style.color = bal < 0 ? '#c0392b' : '#1a5276';
     tr.innerHTML =
@@ -2160,29 +2133,6 @@ function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
       '<td>' + shStool + '</td>' +
       '<td>' + shVomit + '</td>';
     tbody.appendChild(tr);
-
-    // ── Mobile card (ขนานกัน) ──
-    var shiftIcon = sh.key === 'เช้า' ? '☀️' : '🌙';
-    var balColor = bal < 0 ? '#c0392b' : '#1a5276';
-    var balSign = bal >= 0 ? '+' : '';
-    var card = document.createElement('div');
-    card.className = 'balance-mobile-card';
-    card.innerHTML =
-      '<div class="bmc-hdr">' +
-        '<span>' + shiftIcon + ' เวร' + sh.label + '</span>' +
-        '<span class="bmc-sub">' + sh.sub + '</span>' +
-      '</div>' +
-      '<div class="bmc-total" style="color:' + balColor + ';">' + balSign + bal + ' <span class="bmc-unit">ml</span></div>' +
-      '<div class="bmc-flow">' +
-        '<div class="bmc-flow-item"><div class="bmc-flow-lbl">น้ำเข้า</div><div class="bmc-flow-val intake">' + shIn + ' ml</div></div>' +
-        '<div class="bmc-flow-item"><div class="bmc-flow-lbl">น้ำออก</div><div class="bmc-flow-val output">' + shOut + ' ml</div></div>' +
-      '</div>' +
-      '<div class="bmc-counts">' +
-        '<span class="bmc-count-chip">💛 ปัส ' + shUrine + ' ครั้ง</span>' +
-        '<span class="bmc-count-chip">💩 อุจ ' + shStool + ' ครั้ง</span>' +
-        '<span class="bmc-count-chip">🤮 อาเจียน ' + shVomit + ' ครั้ง</span>' +
-      '</div>';
-    cardList.appendChild(card);
   });
   var trTot = document.createElement('tr');
   trTot.style.cssText = 'background:#fef9c3;font-weight:bold';
@@ -2197,27 +2147,7 @@ function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
     '<td>' + totVomit + '</td>';
   tbody.appendChild(trTot);
   tbl.appendChild(tbody);
-  balanceContent.appendChild(tbl);
-
-  // ── Mobile total card ──
-  var totColor = totBal < 0 ? '#c0392b' : '#1a5276';
-  var totSign = totBal >= 0 ? '+' : '';
-  var totCard = document.createElement('div');
-  totCard.className = 'balance-mobile-card balance-mobile-total';
-  totCard.innerHTML =
-    '<div class="bmc-hdr"><span>📊 รวม 24 ชม.</span></div>' +
-    '<div class="bmc-total" style="color:' + totColor + ';">' + totSign + totBal + ' <span class="bmc-unit">ml</span></div>' +
-    '<div class="bmc-flow">' +
-      '<div class="bmc-flow-item"><div class="bmc-flow-lbl">เข้ารวม</div><div class="bmc-flow-val intake">' + totIn + ' ml</div></div>' +
-      '<div class="bmc-flow-item"><div class="bmc-flow-lbl">ออกรวม</div><div class="bmc-flow-val output">' + totOut + ' ml</div></div>' +
-    '</div>' +
-    '<div class="bmc-counts">' +
-      '<span class="bmc-count-chip">💛 ปัส ' + totUrine + ' ครั้ง</span>' +
-      '<span class="bmc-count-chip">💩 อุจ ' + totStool + ' ครั้ง</span>' +
-      '<span class="bmc-count-chip">🤮 อาเจียน ' + totVomit + ' ครั้ง</span>' +
-    '</div>';
-  cardList.appendChild(totCard);
-
+  sec3.appendChild(tbl);
   var note3 = document.createElement('p');
   note3.style.cssText = 'font-size:11px;color:#888;margin:4px 0 0';
   note3.textContent = 'หมายเหตุ: น้ำออก (ml) = ปัสสาวะ + อาเจียน + อื่นๆ · "จำนวนครั้ง" นับทุก record (รวมที่ไม่ได้กรอก ml)';
