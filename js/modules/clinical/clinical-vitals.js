@@ -83,7 +83,10 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
     </div>
     <div class="card">
       <div class="card-header" style="flex-wrap:wrap;gap:8px;">
-        <div class="card-title" style="font-size:13px;">📋 บันทึกสัญญาณชีพ</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="openAddVitalModal('${patientId}')">+ บันทึก</button>
+          <div class="card-title" style="font-size:13px;margin:0;">📋 บันทึกสัญญาณชีพ</div>
+        </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
           <span style="font-size:12px;color:var(--text3);">จาก:</span>
           <input type="date" id="vital-filter-from" class="form-control" style="width:140px;font-size:12px;padding:4px 8px;"
@@ -95,7 +98,6 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
           <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setVitalDateRange('7days','${pid}','${patientId}')">7 วันล่าสุด</button>
           <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setVitalDateRange('thisMonth','${pid}','${patientId}')">เดือนนี้</button>
           <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 8px;" onclick="setVitalDateRange('lastMonth','${pid}','${patientId}')">เดือนที่แล้ว</button>
-          <button class="btn btn-primary btn-sm" onclick="openAddVitalModal('${patientId}')">+ บันทึก</button>
         </div>
       </div>
       <div class="table-wrap">
