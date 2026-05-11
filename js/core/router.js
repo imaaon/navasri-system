@@ -45,6 +45,7 @@ function showPage(page) {
   closeSidebar();
   renderPage(page);
   if (typeof renderPageExtra === 'function') renderPageExtra(page);
+  if (typeof renderBottomTabBar === 'function') renderBottomTabBar();
 }
 
 function renderPage(page) {

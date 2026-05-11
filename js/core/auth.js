@@ -59,7 +59,7 @@ async function doLogin() {
 
     // ดึง profile จาก app_users — เฉพาะ record ของตัวเอง (RLS บังคับ)
     const { data: profile, error: profErr } = await supa.from('app_users')
-      .select('username, display_name, name, role, position, auth_id')
+      .select('username, display_name, name, role, position, auth_id, tab_bar_pages')
       .eq('auth_id', data.user.id)
       .single();
 
@@ -76,7 +76,7 @@ async function doLogin() {
     const displayName = profile.display_name || profile.name || u;
     const position    = profile.position || '';
 
-    currentUser = { username: u, displayName, role, position, authId: data.user?.id };
+    currentUser = { username: u, displayName, role, position, authId: data.user?.id, tabBarPages: profile.tab_bar_pages || null };
     try { sessionStorage.setItem('navasri_user', JSON.stringify(currentUser)); } catch(e) {}
 
     // Update UI
@@ -94,6 +94,7 @@ async function doLogin() {
     if (typeof updateSidebarForRole === 'function') updateSidebarForRole();
     if (typeof recordLastLogin === 'function') recordLastLogin(u);
     if (typeof showPage === 'function') showPage('dashboard');
+    if (typeof renderBottomTabBar === 'function') renderBottomTabBar();
 
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ'; }

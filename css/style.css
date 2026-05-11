@@ -845,3 +845,139 @@
     padding: 8px 14px;
   }
 }
+
+/* ═══ Task D: Bottom Tab Bar (mobile) ═══════════════════════ */
+
+/* ซ่อนบน desktop */
+.bottom-tab-bar { display: none; }
+.bottom-more-overlay { display: none; }
+
+@media (max-width: 768px) {
+  /* Bottom Tab Bar */
+  .bottom-tab-bar {
+    display: grid !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid var(--border);
+    padding: 6px 0;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
+    z-index: 200;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+  }
+  .bottom-tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 4px;
+    gap: 2px;
+    cursor: pointer;
+    position: relative;
+    min-height: 50px;
+    color: var(--text2);
+  }
+  .bottom-tab-item .tab-icon {
+    font-size: 20px;
+    line-height: 1;
+  }
+  .bottom-tab-item .tab-label {
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  .bottom-tab-item.active {
+    color: var(--accent2);
+  }
+  .bottom-tab-item.active .tab-icon {
+    transform: scale(1.1);
+  }
+  .bottom-tab-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 25%;
+    right: 25%;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 0 0 3px 3px;
+  }
+
+  /* Body padding-bottom เพื่อกัน content โดน bar บัง */
+  body {
+    padding-bottom: 64px;
+  }
+  body.has-safe-area {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  /* More menu overlay */
+  .bottom-more-overlay {
+    display: block !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 250;
+    display: flex !important;
+    align-items: flex-end;
+  }
+  .bottom-more-panel {
+    background: white;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 14px;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    max-height: 75vh;
+    overflow-y: auto;
+    animation: slideUp 0.2s ease-out;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .bottom-more-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .bottom-more-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .bottom-more-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 6px;
+    background: #fafafa;
+    border-radius: 12px;
+    text-align: center;
+    gap: 6px;
+    cursor: pointer;
+    border: 1px solid #f0f0f0;
+    min-height: 76px;
+  }
+  .bottom-more-item:active {
+    transform: scale(0.95);
+    background: var(--accent-light);
+  }
+  .bottom-more-item .icon { font-size: 22px; line-height: 1; }
+  .bottom-more-item .label { font-size: 11px; font-weight: 600; color: var(--text); }
+  .bottom-more-footer {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Hide hamburger บนมือถือ (ใช้ Bottom Tab Bar แทน) */
+  #hamburgerBtn { display: none !important; }
+}
