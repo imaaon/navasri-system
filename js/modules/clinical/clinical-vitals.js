@@ -138,14 +138,19 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
                   const bpAlert = v.bp_sys && (v.bp_sys>=160||v.bp_sys<=90);
                   const spo2Alert = v.spo2 && v.spo2<95;
                   const hrAlert = v.hr && (v.hr>100||v.hr<50);
-                  return `<tr ${bpAlert||spo2Alert||hrAlert ? 'style="background:#fff8f8;"' : ''}>
+                  // ── เกณฑ์ใหม่ ตามที่อ้นกำหนด ──
+                  const tempAlert = v.temp && (v.temp<35.5 || v.temp>=37.5);
+                  const rrAlert = v.rr && (v.rr<14 || v.rr>22);
+                  const dtxAlert = v.dtx && (v.dtx<70 || v.dtx>150);
+                  const anyAlert = bpAlert||spo2Alert||hrAlert||tempAlert||rrAlert||dtxAlert;
+                  return `<tr ${anyAlert ? 'style="background:#fff8f8;"' : ''}>
                     <td class="number" style="font-size:12px;white-space:nowrap;">${(v.recordedAt ? new Date(v.recordedAt).toLocaleString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',',' ') : '-')}</td>
                     <td style="text-align:center;font-weight:${bpAlert?'700':'400'};color:${bpAlert?'#e74c3c':'inherit'};">${v.bp_sys ? v.bp_sys+'/'+v.bp_dia : '-'}</td>
                     <td style="text-align:center;font-weight:${hrAlert?'700':'400'};color:${hrAlert?'#e74c3c':'inherit'};">${v.hr||'-'}</td>
-                    <td style="text-align:center;">${v.temp ? v.temp+'°C' : '-'}</td>
+                    <td style="text-align:center;font-weight:${tempAlert?'700':'400'};color:${tempAlert?'#e74c3c':'inherit'};">${v.temp ? v.temp+'°C' : '-'}</td>
                     <td style="text-align:center;font-weight:${spo2Alert?'700':'400'};color:${spo2Alert?'#e74c3c':'inherit'};">${v.spo2 ? v.spo2+'%' : '-'}</td>
-                    <td style="text-align:center;">${v.dtx ? v.dtx+' mg/dL' : '-'}</td>
-                    <td style="text-align:center;">${v.rr ? v.rr+'/min' : '-'}</td>
+                    <td style="text-align:center;font-weight:${dtxAlert?'700':'400'};color:${dtxAlert?'#e74c3c':'inherit'};">${v.dtx ? v.dtx+' mg/dL' : '-'}</td>
+                    <td style="text-align:center;font-weight:${rrAlert?'700':'400'};color:${rrAlert?'#e74c3c':'inherit'};">${v.rr ? v.rr+'/min' : '-'}</td>
                     <td style="text-align:center;font-size:12px;">${v.weight ? v.weight+' kg' : '-'}</td>
                     <td style="text-align:center;font-size:12px;">${v.height ? v.height+' cm' : '-'}</td>
                     <td style="font-size:12px;color:var(--text2);max-width:120px;">${v.otherFields||'-'}</td>
