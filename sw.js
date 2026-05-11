@@ -1,0 +1,76 @@
+// Navasri Service Worker
+const CACHE_VERSION = 'navasri-v1';
+const STATIC_CACHE = 'navasri-static-v1';
+
+const STATIC_ASSETS = [
+  '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/icon-512-maskable.png',
+  '/icons/apple-touch-icon.png'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter((k) => k !== STATIC_CACHE && k !== CACHE_VERSION)
+            .map((k) => caches.delete(k))
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Bypass Supabase API
+  if (url.hostname.includes('supabase.co') || url.hostname.includes('supabase.in')) {
+    return;
+  }
+  if (event.request.method !== 'GET') return;
+  if (!url.origin.startsWith(self.location.origin)) return;
+
+  // Cache-first สำหรับ icons + CSS
+  if (url.pathname.startsWith('/icons/') ||
+      url.pathname.match(/\.(png|jpg|jpeg|gif|svg|webp|ico|css)$/)) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        return cached || fetch(event.request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // Network-first สำหรับ JS/HTML/JSON
+  event.respondWith(
+    fetch(event.request).then((response) => {
+      if (response.ok) {
+        const clone = response.clone();
+        caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, clone));
+      }
+      return response;
+    }).catch(() => {
+      return caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        if (event.request.mode === 'navigate') {
+          return caches.match('/');
+        }
+        throw new Error('Network failed and no cache available');
+      });
+    })
+  );
+});
