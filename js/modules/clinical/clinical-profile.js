@@ -2391,135 +2391,259 @@ async function _deleteFluidRecord(id, patId) {
 // ── List ประเภทน้ำเข้า ──
 var _INTAKE_TYPES = ['น้ำดื่ม', 'อาหารสายยาง', 'ยา', 'IV', 'อื่นๆ'];
 
-// ── Modal น้ำเข้า (Intake) ใหม่ ──
+// ═══════════════════════════════════════════════════════════════
+// Multi-row Intake Modal
+// ═══════════════════════════════════════════════════════════════
+// rec = null → เพิ่มใหม่ (1 row ว่าง)
+// rec = patient_fluid_records row → edit mode
 function _openIntakeModal(rec, patId, today) {
   var isEdit = !!rec;
   var todayStr = new Date().toISOString().slice(0, 10);
   var nowStr = new Date().toTimeString().slice(0,5);
 
-  var dateVal = (rec && rec.recorded_at) ? rec.recorded_at.slice(0,10) : (today || todayStr);
-  var timeVal = (rec && rec.recorded_at) ? rec.recorded_at.slice(11,16) : nowStr;
-  var volVal = (rec && rec.volume_ml) ? rec.volume_ml : '';
-  var noteVal = (rec && rec.note) ? rec.note : '';
-
-  // เลือกประเภทจากค่าเดิม — ถ้าไม่ match กับ list → ถือว่าเป็น "อื่นๆ"
-  var existingType = (rec && rec.fluid_type) ? rec.fluid_type.trim() : '';
-  var typeIsListed = _INTAKE_TYPES.slice(0, 4).indexOf(existingType) >= 0;
-  var typeVal = isEdit ? (typeIsListed ? existingType : 'อื่นๆ') : 'น้ำดื่ม';
-  var otherTypeVal = (isEdit && !typeIsListed) ? existingType : '';
+  // Shared values
+  var sharedDate = isEdit && rec.recorded_at ? rec.recorded_at.slice(0,10) : (today || todayStr);
+  var sharedTime = isEdit && rec.recorded_at ? rec.recorded_at.slice(11,16) : nowStr;
+  var sharedShift = isEdit && rec.shift ? rec.shift : _shiftFromTime(sharedTime);
 
   var overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;';
   var modal = document.createElement('div');
   modal.className = 'modal';
-  modal.style.cssText = 'background:#fff;border-radius:12px;padding:20px;width:440px;max-width:95vw;max-height:92vh;overflow-y:auto;';
+  modal.style.cssText = 'background:#fff;border-radius:12px;padding:18px;width:460px;max-width:95vw;max-height:92vh;overflow-y:auto;';
 
   var h3 = document.createElement('div');
-  h3.style.cssText = 'font-size:16px;font-weight:700;color:var(--accent-dark);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);';
-  h3.textContent = (isEdit ? '💧 แก้ไขน้ำเข้า' : '💧 เพิ่มน้ำเข้า');
+  h3.style.cssText = 'font-size:16px;font-weight:700;color:var(--accent2);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);';
+  h3.textContent = isEdit ? '💧 แก้ไขน้ำเข้า' : '💧 เพิ่มน้ำเข้า';
   modal.appendChild(h3);
 
-  function mkRow(labelTxt) {
-    var row = document.createElement('div');
-    row.style.cssText = 'margin-bottom:12px';
-    var lbl = document.createElement('label');
-    lbl.style.cssText = 'display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;';
-    lbl.textContent = labelTxt;
-    row.appendChild(lbl);
-    return row;
-  }
-  function mkInput(type, val, placeholder, inputmode) {
-    var inp = document.createElement('input');
-    inp.type = type; inp.value = val || '';
-    if (placeholder) inp.placeholder = placeholder;
-    if (inputmode) inp.setAttribute('inputmode', inputmode);
-    inp.className = 'form-control';
-    inp.style.cssText = 'height:44px;font-size:15px;';
-    return inp;
-  }
+  // Shared header
+  var sharedSec = document.createElement('div');
+  sharedSec.className = 'mr-shared';
+  var sharedLabel = document.createElement('div');
+  sharedLabel.className = 'mr-shared-label';
+  sharedLabel.textContent = '📍 ใช้กับทุกรายการ';
+  sharedSec.appendChild(sharedLabel);
 
-  // วันที่ + เวลา + ตอนนี้
-  var dtRow = mkRow('วันที่ และ เวลา');
-  var dtWrap = document.createElement('div');
-  dtWrap.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;';
-  var inpDate = mkInput('date', dateVal);
-  var inpTime = mkInput('time', timeVal);
+  var dtGrid = document.createElement('div');
+  dtGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px;';
+  var inpDate = document.createElement('input');
+  inpDate.type = 'date'; inpDate.value = sharedDate; inpDate.className = 'form-control';
+  inpDate.style.cssText = 'height:44px;font-size:14px;';
+  var inpTime = document.createElement('input');
+  inpTime.type = 'time'; inpTime.value = sharedTime; inpTime.className = 'form-control';
+  inpTime.style.cssText = 'height:44px;font-size:14px;';
   var btnNow = document.createElement('button');
-  btnNow.type = 'button';
-  btnNow.style.cssText = 'height:44px;background:var(--accent-light);color:var(--accent-dark);border:1.5px solid var(--accent);font-size:12px;font-weight:600;white-space:nowrap;padding:0 12px;border-radius:8px;';
-  btnNow.textContent = '🕐 ตอนนี้';
+  btnNow.type = 'button'; btnNow.className = 'btn-now'; btnNow.textContent = '🕐 ตอนนี้';
   btnNow.addEventListener('click', function() {
     inpDate.value = new Date().toISOString().slice(0,10);
     inpTime.value = new Date().toTimeString().slice(0,5);
     selShift.value = _shiftFromTime(inpTime.value);
   });
-  dtWrap.appendChild(inpDate); dtWrap.appendChild(inpTime); dtWrap.appendChild(btnNow);
-  dtRow.appendChild(dtWrap);
-  modal.appendChild(dtRow);
+  dtGrid.appendChild(inpDate); dtGrid.appendChild(inpTime); dtGrid.appendChild(btnNow);
+  sharedSec.appendChild(dtGrid);
 
-  // เวร
-  var shiftRow = mkRow('เวร');
   var selShift = document.createElement('select');
   selShift.className = 'form-control';
-  selShift.style.cssText = 'height:44px;font-size:15px;';
-  ['เช้า (07:00–18:59)','ดึก (19:00–06:59)'].forEach(function(label, i) {
+  selShift.style.cssText = 'height:44px;font-size:14px;';
+  ['เช้า (07:00–18:59)', 'ดึก (19:00–06:59)'].forEach(function(label, i) {
     var opt = document.createElement('option');
     opt.value = i === 0 ? 'เช้า' : 'ดึก';
     opt.textContent = label;
     selShift.appendChild(opt);
   });
-  selShift.value = isEdit ? ((rec.shift === 'ดึก') ? 'ดึก' : 'เช้า') : _shiftFromTime(timeVal);
-  inpTime.addEventListener('change', function() {
-    if (!isEdit) selShift.value = _shiftFromTime(inpTime.value);
-  });
-  shiftRow.appendChild(selShift);
-  modal.appendChild(shiftRow);
+  selShift.value = sharedShift;
+  inpTime.addEventListener('change', function() { selShift.value = _shiftFromTime(inpTime.value); });
+  sharedSec.appendChild(selShift);
+  modal.appendChild(sharedSec);
 
-  // ประเภท (dropdown 5 options)
-  var typeRow = mkRow('ประเภท');
-  var selType = document.createElement('select');
-  selType.className = 'form-control';
-  selType.style.cssText = 'height:44px;font-size:15px;';
-  _INTAKE_TYPES.forEach(function(t) {
-    var opt = document.createElement('option');
-    opt.value = t; opt.textContent = t;
-    if (t === typeVal) opt.selected = true;
-    selType.appendChild(opt);
-  });
-  typeRow.appendChild(selType);
+  var rowsContainer = document.createElement('div');
+  modal.appendChild(rowsContainer);
 
-  // ระบุประเภท (อื่นๆ)
-  var otherWrap = document.createElement('div');
-  otherWrap.style.cssText = 'background:var(--accent-light);border-radius:6px;padding:8px;margin-top:6px;';
-  var lblOther = document.createElement('label');
-  lblOther.style.cssText = 'display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;';
-  lblOther.textContent = 'ระบุประเภท';
-  var inpOtherType = mkInput('text', otherTypeVal, 'เช่น น้ำผลไม้ปั่น, โอวัลติน');
-  otherWrap.appendChild(lblOther); otherWrap.appendChild(inpOtherType);
-  otherWrap.style.display = (typeVal === 'อื่นๆ') ? '' : 'none';
-  typeRow.appendChild(otherWrap);
-  selType.addEventListener('change', function() {
-    otherWrap.style.display = (selType.value === 'อื่นๆ') ? '' : 'none';
-  });
-  modal.appendChild(typeRow);
+  var rows = [];
 
-  // ปริมาณ ml
-  var volRow = mkRow('ปริมาณ (ml)');
-  var inpVol = mkInput('number', volVal, '', 'numeric');
-  inpVol.min = '0';
-  volRow.appendChild(inpVol);
-  modal.appendChild(volRow);
+  function _renumberBadges() {
+    rows.forEach(function(r, i) {
+      if (r.badgeEl) r.badgeEl.textContent = (r.kind === 'edit' ? '📝 แก้ไข ' : 'รายการ ') + (i + 1);
+    });
+  }
 
-  // หมายเหตุ
-  var noteRow = mkRow('หมายเหตุ (ไม่บังคับ)');
-  var inpNote = mkInput('text', noteVal, '');
-  noteRow.appendChild(inpNote);
-  modal.appendChild(noteRow);
+  function _createRowUI(opts) {
+    var kind = opts.kind || 'new';
+    var dbRow = opts.dbRow || null;
 
-  // ปุ่มล่าง
+    // initial values
+    var initTypeName, initOtherType, initVol, initNote;
+    if (dbRow) {
+      var ft = (dbRow.fluid_type || '').trim();
+      var ftIsListed = _INTAKE_TYPES.slice(0, 4).indexOf(ft) >= 0;
+      initTypeName = ftIsListed ? ft : 'อื่นๆ';
+      initOtherType = ftIsListed ? '' : ft;
+      initVol = dbRow.volume_ml || '';
+      initNote = dbRow.note || '';
+    } else {
+      initTypeName = '';  // ไม่เลือกอะไรไว้ก่อน — กัน default ค้าง
+      initOtherType = '';
+      initVol = '';
+      initNote = '';
+    }
+
+    var rowEl = document.createElement('div');
+    rowEl.className = 'mr-item intake' + (kind === 'edit' ? ' editing' : (rows.length > 0 ? ' new-row' : ''));
+
+    var badge = document.createElement('div');
+    badge.className = 'mr-badge' + (kind === 'edit' ? ' editing' : '');
+    badge.textContent = (kind === 'edit' ? '📝 แก้ไข ' : 'รายการ ') + (rows.length + 1);
+    rowEl.appendChild(badge);
+
+    var delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'mr-del';
+    delBtn.textContent = '✕';
+    delBtn.style.display = 'none';
+    delBtn.addEventListener('click', function() {
+      var idx = rows.indexOf(rowState);
+      if (idx >= 0) {
+        rows.splice(idx, 1);
+        rowEl.parentNode.removeChild(rowEl);
+        _renumberBadges();
+        _updateDelButtons();
+        _updateSaveBtnText();
+      }
+    });
+    rowEl.appendChild(delBtn);
+
+    // Type dropdown
+    var typeWrap = document.createElement('div');
+    typeWrap.style.cssText = 'margin-top:6px;';
+    var typeLbl = document.createElement('div');
+    typeLbl.style.cssText = 'font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;';
+    typeLbl.textContent = 'ประเภท';
+    typeWrap.appendChild(typeLbl);
+    var selType = document.createElement('select');
+    selType.className = 'form-control';
+    selType.style.cssText = 'height:44px;font-size:14px;';
+    // ใส่ "-- เลือก --" เป็น default (กัน default ค้าง)
+    var optPlaceholder = document.createElement('option');
+    optPlaceholder.value = ''; optPlaceholder.textContent = '-- เลือก --';
+    selType.appendChild(optPlaceholder);
+    _INTAKE_TYPES.forEach(function(t) {
+      var opt = document.createElement('option');
+      opt.value = t; opt.textContent = t;
+      if (t === initTypeName) opt.selected = true;
+      selType.appendChild(opt);
+    });
+    selType.value = initTypeName;
+    typeWrap.appendChild(selType);
+
+    // ระบุประเภท (เฉพาะ อื่นๆ)
+    var otherWrap = document.createElement('div');
+    otherWrap.className = 'cond-field-inline';
+    var otherLbl = document.createElement('div');
+    otherLbl.style.cssText = 'font-size:10px;font-weight:600;color:var(--text2);margin-bottom:3px;';
+    otherLbl.textContent = 'ระบุประเภท';
+    var inpOther = document.createElement('input');
+    inpOther.type = 'text'; inpOther.value = initOtherType;
+    inpOther.placeholder = 'เช่น น้ำผลไม้ปั่น, โอวัลติน';
+    inpOther.className = 'form-control'; inpOther.style.cssText = 'height:40px;';
+    otherWrap.appendChild(otherLbl); otherWrap.appendChild(inpOther);
+    otherWrap.style.display = (initTypeName === 'อื่นๆ') ? '' : 'none';
+    typeWrap.appendChild(otherWrap);
+    selType.addEventListener('change', function() {
+      otherWrap.style.display = (selType.value === 'อื่นๆ') ? '' : 'none';
+    });
+    rowEl.appendChild(typeWrap);
+
+    // ปริมาณ ml
+    var volWrap = document.createElement('div');
+    volWrap.style.cssText = 'margin-top:8px;';
+    var volLbl = document.createElement('div');
+    volLbl.style.cssText = 'font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;';
+    volLbl.textContent = 'ปริมาณ (ml)';
+    var inpVol = document.createElement('input');
+    inpVol.type = 'number'; inpVol.min = '0'; inpVol.setAttribute('inputmode','numeric');
+    inpVol.value = initVol;
+    inpVol.className = 'form-control'; inpVol.style.cssText = 'height:40px;';
+    volWrap.appendChild(volLbl); volWrap.appendChild(inpVol);
+    rowEl.appendChild(volWrap);
+
+    // หมายเหตุ
+    var noteWrap = document.createElement('div');
+    noteWrap.style.cssText = 'margin-top:8px;';
+    var noteLbl = document.createElement('div');
+    noteLbl.style.cssText = 'font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;';
+    noteLbl.textContent = 'หมายเหตุ (ไม่บังคับ)';
+    var inpNote = document.createElement('input');
+    inpNote.type = 'text'; inpNote.value = initNote;
+    inpNote.className = 'form-control'; inpNote.style.cssText = 'height:40px;';
+    noteWrap.appendChild(noteLbl); noteWrap.appendChild(inpNote);
+    rowEl.appendChild(noteWrap);
+
+    var rowState = {
+      kind: kind,
+      dbRow: dbRow,
+      container: rowEl,
+      badgeEl: badge,
+      delBtn: delBtn,
+      getValues: function() {
+        var typeName = selType.value;
+        var finalType = (typeName === 'อื่นๆ') ? (inpOther.value || '').trim() : typeName;
+        return {
+          typeName: typeName,
+          fluid_type: finalType,
+          volume_ml: parseFloat(inpVol.value) || null,
+          note: (inpNote.value || '').trim() || null
+        };
+      }
+    };
+
+    return rowState;
+  }
+
+  function _addRow(opts) {
+    var rowState = _createRowUI(opts || {});
+    rows.push(rowState);
+    rowsContainer.appendChild(rowState.container);
+    _renumberBadges();
+    _updateDelButtons();
+    _updateSaveBtnText();
+    return rowState;
+  }
+
+  function _updateDelButtons() {
+    rows.forEach(function(r) {
+      r.delBtn.style.display = (rows.length === 1) ? 'none' : '';
+    });
+  }
+
+  function _updateSaveBtnText() {
+    var editCount = rows.filter(function(r){ return r.kind === 'edit'; }).length;
+    var newCount = rows.filter(function(r){ return r.kind === 'new'; }).length;
+    var parts = [];
+    if (editCount > 0) parts.push(editCount + ' แก้');
+    if (newCount > 0) parts.push(newCount + ' ใหม่');
+    btnSave.textContent = '💾 บันทึก (' + parts.join(' + ') + ')';
+  }
+
+  // Initial rows
+  if (isEdit) {
+    _addRow({ kind: 'edit', dbRow: rec });
+  } else {
+    _addRow({ kind: 'new' });
+  }
+
+  // ปุ่ม เพิ่มรายการ
+  var btnAddRow = document.createElement('button');
+  btnAddRow.type = 'button';
+  btnAddRow.className = 'mr-add-row';
+  btnAddRow.textContent = '➕ เพิ่มรายการ';
+  btnAddRow.addEventListener('click', function() { _addRow({ kind: 'new' }); });
+  modal.appendChild(btnAddRow);
+
+  // ปุ่มล่างสุด
   var btnWrap = document.createElement('div');
-  btnWrap.style.cssText = 'display:flex;gap:8px;margin-top:14px;';
+  btnWrap.style.cssText = 'display:flex;gap:8px;margin-top:16px;';
   var btnCancel = document.createElement('button');
   btnCancel.type = 'button';
   btnCancel.className = 'btn btn-ghost';
@@ -2535,49 +2659,81 @@ function _openIntakeModal(rec, patId, today) {
 
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
+  _updateSaveBtnText();
 
   function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
   btnCancel.addEventListener('click', close);
   overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
 
+  // Save
   btnSave.addEventListener('click', function() {
-    var dateValSel = inpDate.value || dateVal;
+    var dateValSel = inpDate.value;
     var timeValSel = inpTime.value || '00:00';
     if (!dateValSel) { customAlert('กรุณาเลือกวันที่'); return; }
     var dObj = new Date(dateValSel + 'T' + timeValSel + ':00');
     if (isNaN(dObj.getTime())) { customAlert('วันที่/เวลาไม่ถูกต้อง'); return; }
     var dateTime = new Date(dObj.getTime() - dObj.getTimezoneOffset() * 60000).toISOString().slice(0, 19) + 'Z';
+    var shiftVal = selShift.value;
     var user = (window._currentUser && window._currentUser.username) ? window._currentUser.username : 'user';
 
-    var ft = selType.value;
-    if (ft === 'อื่นๆ') {
-      var otherText = (inpOtherType.value || '').trim();
-      if (!otherText) { customAlert('กรุณาระบุประเภท "อื่นๆ"'); return; }
-      ft = otherText;
+    // Validate ทุก row
+    var operations = [];
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var v = r.getValues();
+      if (!v.typeName) {
+        customAlert('รายการ ' + (i+1) + ': กรุณาเลือกประเภท');
+        return;
+      }
+      if (v.typeName === 'อื่นๆ' && !v.fluid_type) {
+        customAlert('รายการ ' + (i+1) + ': กรุณาระบุประเภท "อื่นๆ"');
+        return;
+      }
+      if (!v.volume_ml && !v.note) {
+        customAlert('รายการ ' + (i+1) + ': กรุณาระบุปริมาณ (ml) หรือหมายเหตุ');
+        return;
+      }
+      operations.push({ rowState: r, values: v });
     }
 
-    var volNum = parseFloat(inpVol.value) || null;
-    var noteFinal = inpNote.value || null;
-    if (!volNum && !noteFinal) {
-      customAlert('กรุณาระบุปริมาณ (ml) หรือหมายเหตุ');
-      return;
-    }
+    // Execute
+    var promises = operations.map(function(op) {
+      var v = op.values;
+      var rs = op.rowState;
+      var payload = {
+        patient_id: patId,
+        recorded_at: dateTime,
+        shift: shiftVal,
+        direction: 'intake',
+        fluid_type: v.fluid_type,
+        volume_ml: v.volume_ml,
+        note: v.note,
+        recorded_by: user
+      };
+      if (rs.kind === 'edit' && rs.dbRow) {
+        return supa.from('patient_fluid_records').update(payload).eq('id', rs.dbRow.id);
+      } else {
+        return supa.from('patient_fluid_records').insert(payload);
+      }
+    });
 
-    var payload = {
-      patient_id: patId,
-      recorded_at: dateTime,
-      shift: selShift.value,
-      direction: 'intake',
-      fluid_type: ft,
-      volume_ml: volNum,
-      note: noteFinal,
-      recorded_by: user
-    };
-    var prom = isEdit
-      ? supa.from('patient_fluid_records').update(payload).eq('id', rec.id)
-      : supa.from('patient_fluid_records').insert(payload);
-    prom.then(function(res) {
-      if (res.error) { customAlert('บันทึกไม่สำเร็จ: ' + res.error.message); return; }
+    btnSave.disabled = true;
+    btnSave.textContent = 'กำลังบันทึก...';
+
+    Promise.allSettled(promises.map(function(p){
+      return Promise.resolve(p).then(function(res){
+        if (res && res.error) throw res.error;
+        return res;
+      });
+    })).then(function(results) {
+      var fails = results.filter(function(r){ return r.status === 'rejected'; });
+      if (fails.length > 0) {
+        var msgs = fails.map(function(f, i){ return 'รายการ ' + (i+1) + ': ' + (f.reason.message || f.reason); }).join('\n');
+        customAlert('บันทึกไม่สำเร็จบางรายการ:\n' + msgs);
+        btnSave.disabled = false;
+        _updateSaveBtnText();
+        return;
+      }
       close();
       switchPatTab('excretion');
     });
