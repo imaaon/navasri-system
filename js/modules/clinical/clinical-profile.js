@@ -2341,13 +2341,31 @@ function _buildClinicalAlerts(excretions, fluids) {
   }
 
   // ─────────────────────────────────────────────────────────
-  // เรียงตามความรุนแรง: red → orange → gray → green
+  // กรอง: แสดงเฉพาะ 🟠 ส้ม และ 🔴 แดง (ตามที่อ้นขอ)
   // ─────────────────────────────────────────────────────────
-  var order = { red: 0, orange: 1, gray: 2, green: 3 };
-  alerts.sort(function(a, b) { return order[a.level] - order[b.level]; });
+  var filtered = alerts.filter(function(a) {
+    return a.level === 'red' || a.level === 'orange';
+  });
 
-  // Append all alerts
-  alerts.forEach(function(a) {
+  // ─────────────────────────────────────────────────────────
+  // เรียงตามความรุนแรง: red → orange
+  // ─────────────────────────────────────────────────────────
+  var order = { red: 0, orange: 1 };
+  filtered.sort(function(a, b) { return order[a.level] - order[b.level]; });
+
+  // ถ้าไม่มี alert ผิดปกติ → แสดงข้อความ "ปกติ" สั้นๆ
+  if (filtered.length === 0) {
+    var okDiv = document.createElement('div');
+    okDiv.style.cssText = 'background:#ecf9f0;border-radius:8px;padding:12px 14px;border-left:5px solid #27ae60;color:#1d8c4f;display:flex;gap:10px;font-size:13px;line-height:1.5';
+    okDiv.innerHTML = '<div style="font-size:22px;line-height:1">✓</div>' +
+                      '<div style="flex:1"><div style="font-weight:700">ไม่พบอาการผิดปกติ</div>' +
+                      '<div style="font-size:12px;opacity:0.85;margin-top:2px">ทุกอย่างอยู่ในเกณฑ์ปกติ</div></div>';
+    wrap.appendChild(okDiv);
+    return wrap;
+  }
+
+  // Append filtered alerts
+  filtered.forEach(function(a) {
     var div = document.createElement('div');
     div.innerHTML = a.html;
     wrap.appendChild(div.firstChild);
