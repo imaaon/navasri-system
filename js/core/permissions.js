@@ -58,7 +58,7 @@ const PATIENT_TAB_ACCESS = {
   notes:       ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist','dietitian','caregiver'],
   mar:         ['admin','manager','officer','nurse','parttime_nurse','doctor','dietitian','caregiver'],
   vitals:      ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist','dietitian','caregiver'],
-  excretion:    ['admin','manager','nurse','care'],
+  excretion:    ['admin','manager','nurse','parttime_nurse','caregiver'],
   lab:         ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist','dietitian'],
   nursing:     ['admin','manager','officer','nurse','parttime_nurse','doctor','physical_therapist','dietitian','caregiver'],
   appts:       ['admin','manager','officer','nurse','parttime_nurse'],
@@ -116,11 +116,11 @@ function canSeeAllHistory() {
 }
 
 function canSeeExcretion() {
-  return hasRole('admin', 'manager', 'nurse', 'care');
+  return hasRole('admin', 'manager', 'nurse', 'parttime_nurse', 'caregiver');
 }
 
 function canEditExcretion() {
-  return hasRole('admin', 'manager', 'nurse', 'care');
+  return hasRole('admin', 'manager', 'nurse', 'parttime_nurse', 'caregiver');
 }
 
 function canManageBilling() {
