@@ -1326,6 +1326,134 @@ var _OUTPUT_TYPE_META = {
   other: { label: 'อื่นๆ', icon: '📝', hasVolume: true, hasChar: false }
 };
 
+// ── Helper: parse string ลักษณะเป็น list (split by comma, trim) ──
+function _parseChars(s) {
+  if (!s) return [];
+  return s.split(',').map(function(x){ return x.trim(); }).filter(function(x){ return x.length > 0; });
+}
+function _serializeChars(arr) {
+  if (!arr || arr.length === 0) return '';
+  return arr.join(', ');
+}
+
+// ── Build a multi-chip widget (returns {el, getValue, setValue}) ──
+function _buildCharChipsWidget(typeKey, initialChars) {
+  // initialChars: string ของลักษณะที่บันทึกไว้แล้ว
+  var standardList = _OUTPUT_CHARS[typeKey] || [];
+  var initialArr = _parseChars(initialChars);
+
+  // แยก: ใน standard list (active) กับ outside (custom)
+  var activeSet = {};
+  var customs = [];
+  initialArr.forEach(function(item) {
+    if (standardList.indexOf(item) >= 0) {
+      activeSet[item] = true;
+    } else {
+      customs.push(item);
+    }
+  });
+
+  // Container
+  var wrap = document.createElement('div');
+
+  var chipsContainer = document.createElement('div');
+  chipsContainer.className = 'char-chips';
+  wrap.appendChild(chipsContainer);
+
+  // Standard chips
+  var standardChipEls = {};
+  standardList.forEach(function(opt) {
+    var chip = document.createElement('div');
+    chip.className = 'char-chip' + (activeSet[opt] ? ' active' : '');
+    chip.textContent = opt;
+    chip.addEventListener('click', function() {
+      if (activeSet[opt]) {
+        delete activeSet[opt];
+        chip.classList.remove('active');
+      } else {
+        activeSet[opt] = true;
+        chip.classList.add('active');
+      }
+    });
+    chipsContainer.appendChild(chip);
+    standardChipEls[opt] = chip;
+  });
+
+  // Custom chips (พิมพ์เอง)
+  function renderCustomChip(text) {
+    var chip = document.createElement('div');
+    chip.className = 'char-chip custom';
+    var span = document.createElement('span');
+    span.textContent = text;
+    chip.appendChild(span);
+    var rem = document.createElement('span');
+    rem.className = 'char-chip-remove';
+    rem.textContent = '✕';
+    rem.addEventListener('click', function() {
+      var idx = customs.indexOf(text);
+      if (idx >= 0) customs.splice(idx, 1);
+      chip.parentNode.removeChild(chip);
+    });
+    chip.appendChild(rem);
+    chipsContainer.appendChild(chip);
+  }
+  customs.forEach(renderCustomChip);
+
+  // Custom input
+  var customWrap = document.createElement('div');
+  customWrap.className = 'char-custom-wrap';
+  var customLabel = document.createElement('span');
+  customLabel.className = 'char-custom-label';
+  customLabel.textContent = 'หรือพิมพ์เอง:';
+  customWrap.appendChild(customLabel);
+  var customRow = document.createElement('div');
+  customRow.className = 'char-custom-row';
+  var customInput = document.createElement('input');
+  customInput.type = 'text';
+  customInput.className = 'form-control';
+  customInput.placeholder = 'ลักษณะอื่น...';
+  customInput.style.height = '36px';
+  var customBtn = document.createElement('button');
+  customBtn.type = 'button';
+  customBtn.className = 'char-custom-btn';
+  customBtn.textContent = '+ เพิ่ม';
+  customBtn.addEventListener('click', function() {
+    var v = (customInput.value || '').trim();
+    if (!v) return;
+    // กัน duplicate
+    if (standardList.indexOf(v) >= 0) {
+      // ถ้าตรงกับ standard option → set active แทน
+      activeSet[v] = true;
+      if (standardChipEls[v]) standardChipEls[v].classList.add('active');
+    } else if (customs.indexOf(v) < 0) {
+      customs.push(v);
+      renderCustomChip(v);
+    }
+    customInput.value = '';
+  });
+  customInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      customBtn.click();
+    }
+  });
+  customRow.appendChild(customInput);
+  customRow.appendChild(customBtn);
+  customWrap.appendChild(customRow);
+  wrap.appendChild(customWrap);
+
+  return {
+    el: wrap,
+    getValue: function() {
+      var arr = [];
+      // เรียงตาม standard order ก่อน, แล้วต่อด้วย custom
+      standardList.forEach(function(opt) { if (activeSet[opt]) arr.push(opt); });
+      customs.forEach(function(c) { arr.push(c); });
+      return _serializeChars(arr);
+    }
+  };
+}
+
 // ── Modal เพิ่ม/แก้ Output (รวม 4 ประเภท) ──
 function _openOutputModal(row, patId, today) {
   var isEdit = !!(row && row.source);
