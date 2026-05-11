@@ -471,7 +471,7 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
     if (fromDate > toDate) { const tmp = fromDate; fromDate = toDate; toDate = tmp; }
   }
 
-  return `
+  var _vitalsTabResult = `
     <div class="card" style="margin-bottom:14px;">
       <div class="card-header">
         <div class="card-title" style="font-size:13px;">📊 แนวโน้มสัญญาณชีพ (14 ครั้งล่าสุด)</div>
@@ -580,7 +580,29 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
           </tbody>
         </table>
       </div>
-    </div>`;
+    </div>
+
+    <!-- ── 📋 สรุปอาการรวมต่อเวร ── -->
+    <div class="card" style="margin-top:14px;">
+      <div class="card-header" style="border-bottom:1px solid var(--border);padding:12px 16px;">
+        <div class="card-title" style="font-size:14px;color:var(--accent2);">📋 สรุปอาการรวมต่อเวร <span style="font-size:11px;color:var(--text3);font-weight:400;">— ใช้ส่งเวร / แจ้งญาติ / ส่งแพทย์</span></div>
+      </div>
+      <div id="shift-summary-container" style="padding:14px;">
+        <div style="text-align:center;color:var(--text3);font-size:13px;">กำลังโหลด...</div>
+      </div>
+    </div>
+  `;
+  // Render shift summary section async (หลัง innerHTML ถูก mount)
+  setTimeout(function() {
+    var container = document.getElementById('shift-summary-container');
+    if (container) {
+      var f = document.getElementById('vital-filter-from');
+      var t = document.getElementById('vital-filter-to');
+      _ssRenderSection(container, patientId, pid, f ? f.value : null, t ? t.value : null);
+    }
+  }, 50);
+
+  return _vitalsTabResult;
 }
 
 // Helper: ปุ่ม preset date range สำหรับ Vitals
@@ -639,3 +661,462 @@ async function deleteVitalSign(patientId, pid, id) {
 }
 
 // ==========================================
+
+// ═══════════════════════════════════════════════════════════════
+// 📋 SHIFT SUMMARY — สรุปอาการรวมต่อเวร
+// ═══════════════════════════════════════════════════════════════
+// Workflow:
+// 1. Query data: vital_signs + patient_excretions + patient_fluid_records ในช่วง filter
+// 2. Group by เวร (วันที่ + เช้า/ดึก)
+// 3. แต่ละเวร: ดึง summary_text จาก DB ก่อน (manual override)
+//    - ถ้ามี → ใช้ตัวที่บันทึก
+//    - ถ้าไม่มี → generate auto-text
+// 4. แสดงเป็นกล่องแต่ละเวร เรียงล่าสุดบน
+// 5. ปุ่ม: Copy / Print / Edit / Regenerate / PDF
+
+// ── In-memory cache ของ manual summaries ──
+window._shiftSummaryCache = window._shiftSummaryCache || {};
+
+// ── Helper: ตรวจว่า hour อยู่เวรไหน ──
+function _ssShiftOf(hour) {
+  return (hour >= 7 && hour < 19) ? 'เช้า' : 'ดึก';
+}
+
+// ── Helper: หา shift_date (วันที่เวร) จาก timestamp ──
+// เวรเช้า: shift_date = วันเดียวกัน
+// เวรดึก: hour >= 19 → shift_date = วันเดียวกัน, hour < 7 → shift_date = วันก่อนหน้า
+function _ssShiftDateOf(dateStr) {
+  if (!dateStr) return null;
+  var d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  var hour = d.getHours();
+  if (hour < 7) {
+    // เวรดึก ของวันก่อนหน้า
+    d.setDate(d.getDate() - 1);
+  }
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+// ── สร้าง key สำหรับ shift bucket ──
+function _ssKey(date, shift) {
+  return date + '|' + shift;
+}
+
+// ── Group ข้อมูลทั้งหมดเป็น bucket per (date, shift) ──
+function _ssGroupByShift(vitals, excretions, fluids, fromDate, toDate) {
+  var buckets = {};
+
+  function _add(date, shift, kind, item) {
+    if (!date || !shift) return;
+    var k = _ssKey(date, shift);
+    if (!buckets[k]) {
+      buckets[k] = { date: date, shift: shift, vitals: [], excretions: [], fluids: [] };
+    }
+    buckets[k][kind].push(item);
+  }
+
+  (vitals || []).forEach(function(v) {
+    var ts = v.recordedAt || v.recorded_at;
+    if (!ts) return;
+    var sd = _ssShiftDateOf(ts);
+    var hour = new Date(ts).getHours();
+    _add(sd, _ssShiftOf(hour), 'vitals', v);
+  });
+
+  (excretions || []).forEach(function(r) {
+    if (!r.recorded_at || !r.shift) return;
+    var sd = _ssShiftDateOf(r.recorded_at);
+    _add(sd, r.shift, 'excretions', r);
+  });
+
+  (fluids || []).forEach(function(r) {
+    if (!r.recorded_at || !r.shift) return;
+    var sd = _ssShiftDateOf(r.recorded_at);
+    _add(sd, r.shift, 'fluids', r);
+  });
+
+  // กรองให้อยู่ใน range filter (ใช้ shift_date)
+  if (fromDate || toDate) {
+    Object.keys(buckets).forEach(function(k) {
+      var d = buckets[k].date;
+      if (fromDate && d < fromDate) delete buckets[k];
+      if (toDate && d > toDate) delete buckets[k];
+    });
+  }
+
+  return buckets;
+}
+
+// ── Generate paragraph text สรุปเวร ──
+function _ssGenerateText(bucket) {
+  var parts = [];
+  var vitals = bucket.vitals || [];
+  var excretions = bucket.excretions || [];
+  var fluids = bucket.fluids || [];
+
+  // ── Vital Signs ──
+  if (vitals.length === 0) {
+    parts.push('ไม่มีการวัดสัญญาณชีพในเวรนี้');
+  } else if (vitals.length === 1) {
+    var v = vitals[0];
+    var bits = [];
+    if (v.bp_sys && v.bp_dia) bits.push('BP ' + v.bp_sys + '/' + v.bp_dia);
+    if (v.hr) bits.push('HR ' + v.hr);
+    if (v.temp) bits.push('Temp ' + v.temp + '°C');
+    if (v.spo2) bits.push('SpO₂ ' + v.spo2 + '%');
+    if (v.rr) bits.push('RR ' + v.rr);
+    if (v.dtx) bits.push('DTX ' + v.dtx);
+    var tm = v.recordedAt ? new Date(v.recordedAt).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', hour12:false}) : '';
+    parts.push('วัดสัญญาณชีพ ' + (tm ? '(' + tm + ') ' : '') + bits.join(', '));
+    if (v.note) parts.push('อาการ: ' + v.note);
+  } else {
+    // หลายครั้ง — แสดง range
+    var bps = vitals.filter(function(v){ return v.bp_sys; });
+    var hrs = vitals.filter(function(v){ return v.hr; });
+    var temps = vitals.filter(function(v){ return v.temp; });
+    var spo2s = vitals.filter(function(v){ return v.spo2; });
+    var bits2 = [];
+    if (bps.length > 0) {
+      var minS = Math.min.apply(null, bps.map(function(v){return v.bp_sys;}));
+      var maxS = Math.max.apply(null, bps.map(function(v){return v.bp_sys;}));
+      bits2.push('BP ' + (minS === maxS ? minS : minS + '–' + maxS) + ' (SYS)');
+    }
+    if (hrs.length > 0) {
+      var minH = Math.min.apply(null, hrs.map(function(v){return v.hr;}));
+      var maxH = Math.max.apply(null, hrs.map(function(v){return v.hr;}));
+      bits2.push('HR ' + (minH === maxH ? minH : minH + '–' + maxH));
+    }
+    if (temps.length > 0) {
+      var minT = Math.min.apply(null, temps.map(function(v){return v.temp;}));
+      var maxT = Math.max.apply(null, temps.map(function(v){return v.temp;}));
+      bits2.push('Temp ' + (minT === maxT ? minT : minT + '–' + maxT) + '°C');
+    }
+    if (spo2s.length > 0) {
+      var minO = Math.min.apply(null, spo2s.map(function(v){return v.spo2;}));
+      var maxO = Math.max.apply(null, spo2s.map(function(v){return v.spo2;}));
+      bits2.push('SpO₂ ' + (minO === maxO ? minO : minO + '–' + maxO) + '%');
+    }
+    parts.push('วัดสัญญาณชีพ ' + vitals.length + ' ครั้ง: ' + bits2.join(', '));
+    var notes = vitals.filter(function(v){return v.note;}).map(function(v){return v.note;});
+    if (notes.length > 0) parts.push('อาการ: ' + notes.join('; '));
+  }
+
+  // ── Intake (น้ำเข้า) ──
+  var intakes = fluids.filter(function(f){ return f.direction === 'intake'; });
+  if (intakes.length > 0) {
+    var totalIn = intakes.reduce(function(s, r){ return s + (parseFloat(r.volume_ml) || 0); }, 0);
+    var typeBits = intakes.map(function(r) {
+      var t = (r.fluid_type || '').replace(/^น้ำดื่ม$|^น้ำเปล่า$/, 'น้ำ');
+      return t + (r.volume_ml ? ' ' + r.volume_ml + 'ml' : '');
+    });
+    parts.push('น้ำเข้า ' + totalIn + 'ml (' + typeBits.join(', ') + ')');
+  }
+
+  // ── Output (น้ำออก) ──
+  var urines = (excretions || []).filter(function(r){ return r.type === 'urine'; });
+  var stools = (excretions || []).filter(function(r){ return r.type === 'stool'; });
+  var vomits = fluids.filter(function(f){ return f.direction === 'output' && (f.fluid_type || '').trim() === 'อาเจียน'; });
+  var otherOutputs = fluids.filter(function(f){ return f.direction === 'output' && (f.fluid_type || '').trim() !== 'อาเจียน'; });
+
+  if (urines.length > 0) {
+    var urineCount = urines.reduce(function(s,r){ return s + (parseInt(r.count) || 1); }, 0);
+    var urineVol = urines.reduce(function(s,r){ return s + (parseFloat(r.volume_ml) || 0); }, 0);
+    var urineChars = Array.from(new Set(urines.map(function(r){ return r.characteristics; }).filter(Boolean)));
+    var urineStr = 'ปัสสาวะ ' + urineCount + ' ครั้ง';
+    if (urineVol > 0) urineStr += ' รวม ' + urineVol + 'ml';
+    if (urineChars.length > 0) urineStr += ' (' + urineChars.join(', ') + ')';
+    parts.push(urineStr);
+  } else {
+    parts.push('ไม่ปัสสาวะในเวรนี้');
+  }
+
+  if (stools.length > 0) {
+    var stoolCount = stools.reduce(function(s,r){ return s + (parseInt(r.count) || 1); }, 0);
+    var stoolChars = Array.from(new Set(stools.map(function(r){ return r.characteristics; }).filter(Boolean)));
+    var stoolStr = 'อุจจาระ ' + stoolCount + ' ครั้ง';
+    if (stoolChars.length > 0) stoolStr += ' (' + stoolChars.join(', ') + ')';
+    parts.push(stoolStr);
+  }
+
+  if (vomits.length > 0) {
+    var vomitVol = vomits.reduce(function(s,r){ return s + (parseFloat(r.volume_ml) || 0); }, 0);
+    parts.push('อาเจียน ' + vomits.length + ' ครั้ง' + (vomitVol > 0 ? ' รวม ' + vomitVol + 'ml' : ''));
+  }
+
+  if (otherOutputs.length > 0) {
+    otherOutputs.forEach(function(r) {
+      var s = (r.fluid_type || 'อื่นๆ') + ' ' + (parseFloat(r.volume_ml) || 0) + 'ml';
+      parts.push(s);
+    });
+  }
+
+  // ── Calculate balance ──
+  var totalInMl = intakes.reduce(function(s,r){ return s + (parseFloat(r.volume_ml) || 0); }, 0);
+  var totalOutMl = 
+    urines.reduce(function(s,r){ return s + (parseFloat(r.volume_ml) || 0); }, 0) +
+    vomits.reduce(function(s,r){ return s + (parseFloat(r.volume_ml) || 0); }, 0) +
+    otherOutputs.reduce(function(s,r){ return s + (parseFloat(r.volume_ml) || 0); }, 0);
+  if (totalInMl > 0 || totalOutMl > 0) {
+    var bal = totalInMl - totalOutMl;
+    parts.push('Balance ' + (bal >= 0 ? '+' : '') + bal + 'ml');
+  }
+
+  // Join เป็น paragraph เดียว
+  return parts.join('. ') + '.';
+}
+
+// ── ดึง manual summary จาก DB (ทุก patient ที่ render) ──
+async function _ssLoadManualSummaries(patientId) {
+  try {
+    var res = await supa.from('patient_shift_summaries')
+      .select('*').eq('patient_id', patientId);
+    if (res.error) {
+      console.error('[shift-summary] load error', res.error);
+      return {};
+    }
+    var map = {};
+    (res.data || []).forEach(function(r) {
+      map[_ssKey(r.shift_date, r.shift)] = r;
+    });
+    window._shiftSummaryCache[patientId] = map;
+    return map;
+  } catch (e) {
+    console.error('[shift-summary] exception', e);
+    return {};
+  }
+}
+
+// ── Save summary (insert หรือ update) ──
+async function _ssSaveSummary(patientId, shiftDate, shift, text) {
+  var user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+  var existing = (window._shiftSummaryCache[patientId] || {})[_ssKey(shiftDate, shift)];
+  var payload = {
+    patient_id: patientId,
+    shift_date: shiftDate,
+    shift: shift,
+    summary_text: text,
+    recorded_by: user
+  };
+  if (existing && existing.id) {
+    return supa.from('patient_shift_summaries').update(payload).eq('id', existing.id).select().single();
+  } else {
+    return supa.from('patient_shift_summaries').insert(payload).select().single();
+  }
+}
+
+// ── Delete (regenerate ใหม่) ──
+async function _ssDeleteSummary(patientId, shiftDate, shift) {
+  var existing = (window._shiftSummaryCache[patientId] || {})[_ssKey(shiftDate, shift)];
+  if (!existing || !existing.id) return { error: null };
+  return supa.from('patient_shift_summaries').delete().eq('id', existing.id);
+}
+
+// ── Render summary section (เรียกจาก renderVitalsTab ใต้สุด) ──
+async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
+  // Load manual summaries
+  var manual = await _ssLoadManualSummaries(patientId);
+
+  // Build query range — รวมเผื่อ 1 วันก่อน-หลัง (เพราะเวรดึกข้ามวัน)
+  var fromTs = fromDate ? new Date(fromDate + 'T00:00:00').toISOString() : null;
+  var toTs = toDate ? new Date(toDate + 'T23:59:59').toISOString() : null;
+
+  // Load excretions + fluids จาก Supabase (เฉพาะ patient นี้ + range)
+  var excretions = [];
+  var fluids = [];
+  try {
+    var q1 = supa.from('patient_excretions').select('*').eq('patient_id', patientId);
+    if (fromTs) q1 = q1.gte('recorded_at', fromTs);
+    if (toTs) q1 = q1.lte('recorded_at', toTs);
+    var res1 = await q1.order('recorded_at', { ascending: false });
+    if (!res1.error) excretions = res1.data || [];
+
+    var q2 = supa.from('patient_fluid_records').select('*').eq('patient_id', patientId);
+    if (fromTs) q2 = q2.gte('recorded_at', fromTs);
+    if (toTs) q2 = q2.lte('recorded_at', toTs);
+    var res2 = await q2.order('recorded_at', { ascending: false });
+    if (!res2.error) fluids = res2.data || [];
+  } catch (e) {
+    console.error('[shift-summary] data load error', e);
+  }
+
+  // Vital signs จาก cache (db.vitalSigns) — กรองตาม range
+  var allVitals = db.vitalSigns[pid] || [];
+  var vitals = allVitals.filter(function(v) {
+    if (!v.recordedAt) return false;
+    var d = v.recordedAt.slice(0,10);
+    if (fromDate && d < fromDate) return false;
+    if (toDate && d > toDate) return false;
+    return true;
+  });
+
+  // Group by shift
+  var buckets = _ssGroupByShift(vitals, excretions, fluids, fromDate, toDate);
+  var keys = Object.keys(buckets).sort(function(a,b){ return b.localeCompare(a); });  // ล่าสุดบน
+
+  if (keys.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">ไม่มีข้อมูลในช่วงที่เลือก</div>';
+    return;
+  }
+
+  var html = '';
+  keys.forEach(function(k) {
+    var b = buckets[k];
+    var override = manual[k];
+    var isManual = !!override;
+    var text = isManual ? override.summary_text : _ssGenerateText(b);
+
+    // วันที่ thai format
+    var dateThai = _formatDateTHFromYMD(b.date);
+    var summaryId = 'ss-' + k.replace(/[|\-]/g, '_');
+
+    html += '<div class="ss-card" style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;">';
+    html += '  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);">';
+    html += '    <div style="font-weight:700;color:var(--accent2);font-size:14px;">📋 สรุปเวร' + b.shift + ' <span style="color:var(--text2);font-weight:500;">' + dateThai + '</span></div>';
+    if (isManual) {
+      html += '    <span style="font-size:10px;background:#fff8e8;color:#d35400;padding:2px 8px;border-radius:10px;font-weight:600;">✏️ แก้ไขแล้ว</span>';
+    } else {
+      html += '    <span style="font-size:10px;background:#ecf9f0;color:#1d8c4f;padding:2px 8px;border-radius:10px;font-weight:600;">🤖 สรุปอัตโนมัติ</span>';
+    }
+    html += '  </div>';
+    html += '  <div id="' + summaryId + '-view" style="font-size:13px;line-height:1.65;color:var(--text);white-space:pre-wrap;">' + _escapeHtml(text) + '</div>';
+    html += '  <textarea id="' + summaryId + '-edit" style="display:none;width:100%;min-height:160px;padding:10px;font-size:13px;line-height:1.6;border:1.5px solid var(--accent);border-radius:6px;font-family:inherit;resize:vertical;">' + _escapeHtml(text) + '</textarea>';
+    html += '  <div id="' + summaryId + '-actions" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">';
+    html += '    <button class="btn btn-ghost btn-sm" onclick="_ssCopy(\'' + summaryId + '\')" style="font-size:11px;">📋 คัดลอก</button>';
+    html += '    <button class="btn btn-ghost btn-sm" onclick="_ssPrint(\'' + summaryId + '\', \'' + b.shift + '\', \'' + b.date + '\')" style="font-size:11px;">🖨️ พิมพ์</button>';
+    html += '    <button class="btn btn-ghost btn-sm" onclick="_ssEdit(\'' + summaryId + '\')" style="font-size:11px;">✏️ แก้ไข</button>';
+    if (isManual) {
+      html += '    <button class="btn btn-ghost btn-sm" onclick="_ssRegenerate(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\')" style="font-size:11px;color:var(--orange);">🔄 สร้างใหม่อัตโนมัติ</button>';
+    }
+    html += '    <button class="btn btn-ghost btn-sm" onclick="_ssExportPDF(\'' + summaryId + '\', \'' + b.shift + '\', \'' + b.date + '\')" style="font-size:11px;">📤 PDF</button>';
+    html += '  </div>';
+    html += '  <div id="' + summaryId + '-save-actions" style="display:none;gap:6px;margin-top:10px;">';
+    html += '    <button class="btn btn-primary btn-sm" onclick="_ssSaveEdit(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\',\'' + summaryId + '\')" style="font-size:12px;">💾 บันทึก</button>';
+    html += '    <button class="btn btn-ghost btn-sm" onclick="_ssCancelEdit(\'' + summaryId + '\')" style="font-size:12px;">ยกเลิก</button>';
+    html += '  </div>';
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+// ── Helpers ──
+function _escapeHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function _formatDateTHFromYMD(s) {
+  if (!s) return '—';
+  var p = s.split('-');
+  if (p.length !== 3) return s;
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+// ── Actions (window-scoped) ──
+window._ssCopy = function(summaryId) {
+  var el = document.getElementById(summaryId + '-view');
+  if (!el) return;
+  var text = el.textContent || el.innerText;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() {
+      toast('คัดลอกแล้ว', 'success');
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('คัดลอกแล้ว', 'success'); } catch(e) {}
+    document.body.removeChild(ta);
+  }
+};
+
+window._ssPrint = function(summaryId, shift, date) {
+  var el = document.getElementById(summaryId + '-view');
+  if (!el) return;
+  var text = el.textContent || el.innerText;
+  var dateThai = _formatDateTHFromYMD(date);
+  var w = window.open('', '_blank');
+  w.document.write('<html><head><title>สรุปเวร' + shift + ' ' + dateThai + '</title>' +
+    '<style>body{font-family:"Sarabun",sans-serif;padding:30px;line-height:1.7;font-size:14px;}' +
+    'h2{color:#2e6b4f;border-bottom:2px solid #2e6b4f;padding-bottom:8px;}' +
+    '.meta{font-size:11px;color:#888;margin-top:20px;}</style></head><body>' +
+    '<h2>📋 สรุปอาการ — เวร' + shift + ' ' + dateThai + '</h2>' +
+    '<div>' + _escapeHtml(text).replace(/\n/g,'<br>') + '</div>' +
+    '<div class="meta">พิมพ์เมื่อ: ' + new Date().toLocaleString('th-TH') + '</div>' +
+    '</body></html>');
+  w.document.close();
+  setTimeout(function() { w.print(); }, 500);
+};
+
+window._ssEdit = function(summaryId) {
+  document.getElementById(summaryId + '-view').style.display = 'none';
+  document.getElementById(summaryId + '-edit').style.display = 'block';
+  document.getElementById(summaryId + '-actions').style.display = 'none';
+  document.getElementById(summaryId + '-save-actions').style.display = 'flex';
+};
+
+window._ssCancelEdit = function(summaryId) {
+  // Reset textarea เป็นค่าที่อยู่ใน view
+  var view = document.getElementById(summaryId + '-view');
+  var edit = document.getElementById(summaryId + '-edit');
+  if (view && edit) edit.value = view.textContent || view.innerText;
+  view.style.display = 'block';
+  edit.style.display = 'none';
+  document.getElementById(summaryId + '-actions').style.display = 'flex';
+  document.getElementById(summaryId + '-save-actions').style.display = 'none';
+};
+
+window._ssSaveEdit = async function(patientId, pid, date, shift, summaryId) {
+  var edit = document.getElementById(summaryId + '-edit');
+  if (!edit) return;
+  var text = (edit.value || '').trim();
+  if (!text) { toast('กรุณากรอกข้อความ', 'warning'); return; }
+  var res = await _ssSaveSummary(patientId, date, shift, text);
+  if (res.error) { toast('บันทึกไม่สำเร็จ: ' + res.error.message, 'error'); return; }
+  // อัปเดต cache
+  if (!window._shiftSummaryCache[patientId]) window._shiftSummaryCache[patientId] = {};
+  window._shiftSummaryCache[patientId][_ssKey(date, shift)] = res.data;
+  toast('บันทึกแล้ว', 'success');
+  // Re-render section
+  var container = document.getElementById('shift-summary-container');
+  if (container) {
+    var f = document.getElementById('vital-filter-from');
+    var t = document.getElementById('vital-filter-to');
+    await _ssRenderSection(container, patientId, pid, f ? f.value : null, t ? t.value : null);
+  }
+};
+
+window._ssRegenerate = async function(patientId, pid, date, shift) {
+  if (!(await customConfirm('สร้างใหม่อัตโนมัติ? — ข้อความที่แก้ไว้จะหายไป'))) return;
+  var res = await _ssDeleteSummary(patientId, date, shift);
+  if (res.error) { toast('ไม่สามารถลบ override: ' + res.error.message, 'error'); return; }
+  // ล้าง cache
+  if (window._shiftSummaryCache[patientId]) delete window._shiftSummaryCache[patientId][_ssKey(date, shift)];
+  toast('สร้างใหม่แล้ว', 'success');
+  // Re-render
+  var container = document.getElementById('shift-summary-container');
+  if (container) {
+    var f = document.getElementById('vital-filter-from');
+    var t = document.getElementById('vital-filter-to');
+    await _ssRenderSection(container, patientId, pid, f ? f.value : null, t ? t.value : null);
+  }
+};
+
+window._ssExportPDF = function(summaryId, shift, date) {
+  // ใช้ print แต่แนะนำให้ "Save as PDF" ในกล่อง print dialog
+  var el = document.getElementById(summaryId + '-view');
+  if (!el) return;
+  var text = el.textContent || el.innerText;
+  var dateThai = _formatDateTHFromYMD(date);
+  var w = window.open('', '_blank');
+  w.document.write('<html><head><title>สรุปเวร' + shift + ' ' + dateThai + '</title>' +
+    '<style>body{font-family:"Sarabun",sans-serif;padding:30px;line-height:1.7;font-size:14px;}' +
+    'h2{color:#2e6b4f;border-bottom:2px solid #2e6b4f;padding-bottom:8px;}' +
+    '.meta{font-size:11px;color:#888;margin-top:20px;}' +
+    '.hint{background:#fff8e8;border-left:4px solid #d35400;padding:10px 14px;margin:14px 0;font-size:12px;}</style></head><body>' +
+    '<div class="hint">💡 กด Ctrl+P (หรือ Cmd+P) → เลือก "Save as PDF" เพื่อบันทึกเป็น PDF</div>' +
+    '<h2>📋 สรุปอาการ — เวร' + shift + ' ' + dateThai + '</h2>' +
+    '<div>' + _escapeHtml(text).replace(/\n/g,'<br>') + '</div>' +
+    '<div class="meta">สร้างเมื่อ: ' + new Date().toLocaleString('th-TH') + '</div>' +
+    '</body></html>');
+  w.document.close();
+};
