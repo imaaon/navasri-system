@@ -236,6 +236,17 @@
     color: var(--text); transition: border-color 0.15s, box-shadow 0.15s;
   }
   .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(46,196,182,0.18); }
+  /* ── Select arrow fix (iOS Safari doesn't render default arrow on styled selects) ── */
+  select.form-control {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%232e6b4f' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 10px 7px;
+    padding-right: 32px;
+  }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .form-row { display: flex; gap: 12px; align-items: flex-end; }
   .form-row .form-group { flex: 1; margin-bottom: 0; }
