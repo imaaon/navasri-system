@@ -1232,6 +1232,15 @@ function _buildCombinedOutputRows(excretions, outputFluids) {
   outputFluids.forEach(function(f) {
     var ft = (f.fluid_type || '').trim();
     var isVomit = ft === 'อาเจียน';
+    // Extract [ลักษณะ: xxx] จาก note ออกมาเป็น characteristics
+    var noteRaw = f.note || '';
+    var charExtracted = null;
+    var noteClean = noteRaw;
+    var m = noteRaw.match(/^\[ลักษณะ:\s*([^\]]+)\]\s*(.*)$/);
+    if (m) {
+      charExtracted = m[1].trim();
+      noteClean = m[2].trim();
+    }
     rows.push({
       source: 'fluid',
       id: f.id,
@@ -1241,8 +1250,8 @@ function _buildCombinedOutputRows(excretions, outputFluids) {
       typeLabel: isVomit ? 'อาเจียน' : ('อื่นๆ' + (ft ? ': ' + ft : '')),
       count: null,
       volume_ml: f.volume_ml,
-      characteristics: null,
-      note: f.note,
+      characteristics: charExtracted,
+      note: noteClean,
       raw: f
     });
   });
