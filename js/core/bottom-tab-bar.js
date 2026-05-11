@@ -165,3 +165,39 @@ function _openMoreMenu() {
 
 // Re-render เมื่อเปลี่ยน page
 window.addEventListener('hashchange', renderBottomTabBar);
+
+// ─────────────────────────────────────────────────────────────
+// 📱 Patient Info Modal (Mobile) — ดูข้อมูลด้านซ้ายของ desktop ในรูป popup
+// ─────────────────────────────────────────────────────────────
+window._openPatientInfoModal = function(patientId) {
+  var leftCol = document.querySelector('.patprofile-left-col');
+  if (!leftCol) return;
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open patient-info-modal-overlay';
+  overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:300;';
+  
+  var modal = document.createElement('div');
+  modal.style.cssText = 'background:white;border-radius:14px;padding:0;width:92%;max-width:480px;max-height:88vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,0.3);';
+  
+  // Header
+  var header = document.createElement('div');
+  header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:white;z-index:1;';
+  header.innerHTML = '<div style="font-size:15px;font-weight:700;color:var(--green-dark);">ℹ️ ข้อมูลผู้รับบริการ</div>' +
+    '<button class="btn btn-ghost btn-sm" style="font-size:18px;line-height:1;padding:4px 10px;" onclick="this.closest(\'.modal-overlay\').remove();">✕</button>';
+  modal.appendChild(header);
+
+  // Body — clone left col content
+  var body = document.createElement('div');
+  body.style.cssText = 'padding:14px;';
+  body.innerHTML = leftCol.innerHTML;  // clone HTML (event listeners ไม่ถูก clone — แต่ใช้ inline onclick อยู่แล้ว)
+  modal.appendChild(body);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Click outside → close
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.remove();
+  });
+};

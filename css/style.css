@@ -1089,3 +1089,126 @@
     display: none;
   }
 }
+
+/* ═══ Fix Mobile Patient Profile Layout ═════════════════════ */
+
+/* Desktop: ซ่อน mobile header */
+.patprofile-mobile-header { display: none; }
+
+@media (max-width: 768px) {
+  /* Mobile: layout 1 column + ซ่อน left col */
+  .patprofile-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .patprofile-left-col {
+    display: none !important;
+  }
+
+  /* แสดง mobile header */
+  .patprofile-mobile-header {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2, #26a89c));
+    color: white;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(46, 196, 182, 0.25);
+  }
+  .pmh-photo {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+    flex-shrink: 0;
+  }
+  .pmh-photo-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+  .pmh-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .pmh-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pmh-meta {
+    font-size: 11px;
+    opacity: 0.95;
+    line-height: 1.3;
+  }
+  .pmh-info-btn {
+    background: rgba(255,255,255,0.25) !important;
+    border: 1px solid rgba(255,255,255,0.45) !important;
+    color: white !important;
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+    border-radius: 8px !important;
+    flex-shrink: 0;
+    min-height: auto !important;
+  }
+  .pmh-info-btn:hover {
+    background: rgba(255,255,255,0.35) !important;
+  }
+
+  /* Allergy banner ถ้ามี */
+  .allergy-banner { margin-bottom: 10px; }
+}
+
+/* ═══ Fix Modal Center (z-index + hide bottom-bar) ═════════════════════ */
+
+/* บน mobile: modal z-index สูงกว่า bottom-tab-bar */
+@media (max-width: 768px) {
+  .modal-overlay,
+  .modal-overlay.open {
+    z-index: 300 !important;
+  }
+  /* ปุ่ม patient info modal ก็ z-index 300 */
+  .patient-info-modal-overlay {
+    z-index: 310 !important;
+  }
+  /* Bottom Tab Bar z-index 200 — ต่ำกว่า modal */
+  .bottom-tab-bar {
+    z-index: 200 !important;
+  }
+  /* ซ่อน bottom bar เมื่อ modal เปิด — ใช้ :has() (Safari 15.4+, Chrome 105+) */
+  body:has(.modal-overlay.open) .bottom-tab-bar,
+  body:has(.patient-info-modal-overlay) .bottom-tab-bar {
+    display: none !important;
+  }
+  /* Modal กลางจอ + max-height ครอบคลุม viewport */
+  .modal-overlay .modal,
+  .modal-overlay .modal-box {
+    margin: auto;
+    max-height: 88vh;
+  }
+}
+
+/* Make Patient app grid scrollable (สำหรับ 19 tabs) */
+@media (max-width: 768px) {
+  .pat-app-grid {
+    /* ไม่จำกัด height — ให้ scroll ตามปกติของ body */
+    overflow-y: visible;
+  }
+  /* เนื่องจาก body มี padding-bottom: 64px อยู่แล้ว (เพื่อกันชน bottom bar)
+     และมี container scroll หลัก = window  → grid จะ scroll พร้อม window
+     ถ้า user เลื่อนลง จะเห็น tab ทั้ง 19 ตัว */
+}
