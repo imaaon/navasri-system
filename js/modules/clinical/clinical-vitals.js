@@ -886,10 +886,28 @@ async function _ssLoadManualSummaries(patientId) {
   }
 }
 
+// ── Permission helpers สำหรับ shift closure ──
+// roles ที่เปิดเวรใหม่ได้ตรงๆ (ตามที่อ้นเลือก option B)
+function _ssCanReopenDirectly() {
+  return typeof hasRole === 'function' && hasRole('admin','manager','nurse','parttime_nurse','doctor');
+}
+// roles ที่อนุมัติคำขอ reopen ของ caregiver ได้
+function _ssCanApproveReopen() {
+  return typeof hasRole === 'function' && hasRole('admin','manager','nurse','parttime_nurse');
+}
+function _ssIsCaregiver() {
+  return typeof hasRole === 'function' && hasRole('caregiver');
+}
+
 // ── Save summary (insert หรือ update) ──
+// guard: ถ้าเวรปิดแล้ว และผู้ใช้ไม่ใช่ admin/manager/nurse → ห้ามแก้
 async function _ssSaveSummary(patientId, shiftDate, shift, text) {
   var user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
   var existing = (window._shiftSummaryCache[patientId] || {})[_ssKey(shiftDate, shift)];
+  // ── Guard: ห้ามแก้เวรที่ปิดแล้ว ยกเว้น admin/manager/nurse/pt-nurse/doctor ──
+  if (existing && existing.is_closed && !_ssCanReopenDirectly()) {
+    return { error: { message: 'เวรนี้ถูกปิดแล้ว กรุณาขอเปิดเวรใหม่ก่อน' } };
+  }
   var payload = {
     patient_id: patientId,
     shift_date: shiftDate,
@@ -908,7 +926,77 @@ async function _ssSaveSummary(patientId, shiftDate, shift, text) {
 async function _ssDeleteSummary(patientId, shiftDate, shift) {
   var existing = (window._shiftSummaryCache[patientId] || {})[_ssKey(shiftDate, shift)];
   if (!existing || !existing.id) return { error: null };
+  // Guard: ห้ามลบเวรที่ปิดแล้ว
+  if (existing.is_closed && !_ssCanReopenDirectly()) {
+    return { error: { message: 'เวรนี้ถูกปิดแล้ว ไม่สามารถสร้างใหม่ได้' } };
+  }
   return supa.from('patient_shift_summaries').delete().eq('id', existing.id);
+}
+
+// ── ปิดเวร (close) ──
+// ผู้ใดก็ปิดได้ — เป็นการ "submit" สรุปอย่างเป็นทางการ
+async function _ssCloseShift(patientId, shiftDate, shift, finalText) {
+  var user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+  var existing = (window._shiftSummaryCache[patientId] || {})[_ssKey(shiftDate, shift)];
+  var payload = {
+    patient_id: patientId,
+    shift_date: shiftDate,
+    shift: shift,
+    summary_text: finalText,
+    recorded_by: user,
+    is_closed: true,
+    closed_at: new Date().toISOString(),
+    closed_by: user,
+    reopen_requested: false,  // clear any pending request
+    reopen_requested_at: null,
+    reopen_requested_by: null,
+    reopen_reason: null
+  };
+  if (existing && existing.id) {
+    return supa.from('patient_shift_summaries').update(payload).eq('id', existing.id).select().single();
+  } else {
+    return supa.from('patient_shift_summaries').insert(payload).select().single();
+  }
+}
+
+// ── เปิดเวรใหม่ (reopen) — ใช้ได้กับ admin/manager/nurse/pt-nurse/doctor ──
+async function _ssReopenShift(patientId, shiftDate, shift) {
+  var existing = (window._shiftSummaryCache[patientId] || {})[_ssKey(shiftDate, shift)];
+  if (!existing || !existing.id) return { error: { message: 'ไม่พบสรุปเวรนี้' } };
+  return supa.from('patient_shift_summaries').update({
+    is_closed: false,
+    closed_at: null,
+    closed_by: null,
+    reopen_requested: false,
+    reopen_requested_at: null,
+    reopen_requested_by: null,
+    reopen_reason: null
+  }).eq('id', existing.id).select().single();
+}
+
+// ── ขอเปิดเวรใหม่ (caregiver request) ──
+async function _ssRequestReopen(patientId, shiftDate, shift, reason) {
+  var user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+  var existing = (window._shiftSummaryCache[patientId] || {})[_ssKey(shiftDate, shift)];
+  if (!existing || !existing.id) return { error: { message: 'ไม่พบสรุปเวรนี้' } };
+  return supa.from('patient_shift_summaries').update({
+    reopen_requested: true,
+    reopen_requested_at: new Date().toISOString(),
+    reopen_requested_by: user,
+    reopen_reason: (reason || '').trim()
+  }).eq('id', existing.id).select().single();
+}
+
+// ── ปฏิเสธคำขอ reopen ──
+async function _ssDenyReopen(patientId, shiftDate, shift) {
+  var existing = (window._shiftSummaryCache[patientId] || {})[_ssKey(shiftDate, shift)];
+  if (!existing || !existing.id) return { error: { message: 'ไม่พบสรุปเวรนี้' } };
+  return supa.from('patient_shift_summaries').update({
+    reopen_requested: false,
+    reopen_requested_at: null,
+    reopen_requested_by: null,
+    reopen_reason: null
+  }).eq('id', existing.id).select().single();
 }
 
 // ── Render summary section (เรียกจาก renderVitalsTab ใต้สุด) ──
@@ -959,40 +1047,99 @@ async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
   }
 
   var html = '';
+  // Banner รวมจำนวน reopen pending (ถ้าเป็น approver และมี pending)
+  var pendingReopens = [];
+  Object.keys(manual).forEach(function(mk) {
+    if (manual[mk].reopen_requested) pendingReopens.push(manual[mk]);
+  });
+  if (pendingReopens.length > 0 && _ssCanApproveReopen()) {
+    html += '<div style="background:#fff8e8;border-left:4px solid #d35400;border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#8a4d00;">';
+    html += '<strong>⚠️ มีคำขอเปิดเวรใหม่ ' + pendingReopens.length + ' รายการ</strong> รออนุมัติ (ดูที่ card สีส้มด้านล่าง)';
+    html += '</div>';
+  }
+
   keys.forEach(function(k) {
     var b = buckets[k];
     var override = manual[k];
     var isManual = !!override;
+    var isClosed = !!(override && override.is_closed);
+    var isReopenPending = !!(override && override.reopen_requested);
     var text = isManual ? override.summary_text : _ssGenerateText(b);
 
-    // วันที่ thai format
     var dateThai = _formatDateTHFromYMD(b.date);
     var summaryId = 'ss-' + k.replace(/[|\-]/g, '_');
 
-    html += '<div class="ss-card" style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;">';
-    html += '  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);">';
-    html += '    <div style="font-weight:700;color:var(--accent2);font-size:14px;">📋 สรุปเวร' + b.shift + ' <span style="color:var(--text2);font-weight:500;">' + dateThai + '</span></div>';
-    if (isManual) {
-      html += '    <span style="font-size:10px;background:#fff8e8;color:#d35400;padding:2px 8px;border-radius:10px;font-weight:600;">✏️ แก้ไขแล้ว</span>';
+    // ── Card style ตาม state ──
+    var cardStyle = 'background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;';
+    if (isClosed && !isReopenPending) cardStyle = 'background:#f0f9f4;border:1.5px solid #1d8c4f;border-radius:10px;padding:14px;margin-bottom:12px;';
+    if (isReopenPending) cardStyle = 'background:#fff8e8;border:1.5px solid #d35400;border-radius:10px;padding:14px;margin-bottom:12px;';
+
+    html += '<div class="ss-card" style="' + cardStyle + '">';
+    html += '  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;">';
+    html += '    <div style="font-weight:700;color:var(--accent2);font-size:14px;flex:1;">📋 สรุปเวร' + b.shift + ' <span style="color:var(--text2);font-weight:500;">' + dateThai + '</span></div>';
+
+    // ── Badge ──
+    if (isReopenPending) {
+      html += '    <span style="font-size:10px;background:#fff;color:#d35400;border:1.5px solid #d35400;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">⏳ รออนุมัติเปิดเวร</span>';
+    } else if (isClosed) {
+      var closedAt = override.closed_at ? new Date(override.closed_at).toLocaleString('th-TH',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '';
+      html += '    <span style="font-size:10px;background:#1d8c4f;color:#fff;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">🔒 ปิดเวรแล้ว · ' + (override.closed_by || '—') + ' · ' + closedAt + '</span>';
+    } else if (isManual) {
+      html += '    <span style="font-size:10px;background:#fff8e8;color:#d35400;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">✏️ แก้ไขแล้ว</span>';
     } else {
-      html += '    <span style="font-size:10px;background:#ecf9f0;color:#1d8c4f;padding:2px 8px;border-radius:10px;font-weight:600;">🤖 สรุปอัตโนมัติ</span>';
+      html += '    <span style="font-size:10px;background:#ecf9f0;color:#1d8c4f;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">🤖 สรุปอัตโนมัติ</span>';
     }
     html += '  </div>';
+
+    // ── Reopen request info (ถ้ามี) ──
+    if (isReopenPending) {
+      var reqAt = override.reopen_requested_at ? new Date(override.reopen_requested_at).toLocaleString('th-TH',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '';
+      html += '  <div style="background:#fff;border-left:4px solid #d35400;padding:10px 12px;margin-bottom:10px;font-size:12px;line-height:1.6;border-radius:4px;">';
+      html += '    <div style="font-weight:700;color:#d35400;margin-bottom:4px;">📝 คำขอเปิดเวรจาก ' + (override.reopen_requested_by || '—') + ' · ' + reqAt + '</div>';
+      if (override.reopen_reason) {
+        html += '    <div style="color:var(--text);">เหตุผล: <em>' + _escapeHtml(override.reopen_reason) + '</em></div>';
+      }
+      html += '  </div>';
+    }
+
     html += '  <div id="' + summaryId + '-view" style="font-size:13px;line-height:1.65;color:var(--text);white-space:pre-wrap;">' + _escapeHtml(text) + '</div>';
     html += '  <textarea id="' + summaryId + '-edit" style="display:none;width:100%;min-height:160px;padding:10px;font-size:13px;line-height:1.6;border:1.5px solid var(--accent);border-radius:6px;font-family:inherit;resize:vertical;">' + _escapeHtml(text) + '</textarea>';
+
+    // ── Actions ──
     html += '  <div id="' + summaryId + '-actions" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">';
     html += '    <button class="btn btn-ghost btn-sm" onclick="_ssCopy(\'' + summaryId + '\')" style="font-size:11px;">📋 คัดลอก</button>';
     html += '    <button class="btn btn-ghost btn-sm" onclick="_ssPrint(\'' + summaryId + '\', \'' + b.shift + '\', \'' + b.date + '\')" style="font-size:11px;">🖨️ พิมพ์</button>';
-    html += '    <button class="btn btn-ghost btn-sm" onclick="_ssEdit(\'' + summaryId + '\')" style="font-size:11px;">✏️ แก้ไข</button>';
-    if (isManual) {
-      html += '    <button class="btn btn-ghost btn-sm" onclick="_ssRegenerate(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\')" style="font-size:11px;color:var(--orange);">🔄 สร้างใหม่อัตโนมัติ</button>';
-    }
     html += '    <button class="btn btn-ghost btn-sm" onclick="_ssExportPDF(\'' + summaryId + '\', \'' + b.shift + '\', \'' + b.date + '\')" style="font-size:11px;">📤 PDF</button>';
+
+    if (!isClosed) {
+      // เปิดอยู่ — ให้แก้ + ปิดเวร + regenerate (ถ้า manual)
+      html += '    <button class="btn btn-ghost btn-sm" onclick="_ssEdit(\'' + summaryId + '\')" style="font-size:11px;">✏️ แก้ไข</button>';
+      if (isManual) {
+        html += '    <button class="btn btn-ghost btn-sm" onclick="_ssRegenerate(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\')" style="font-size:11px;color:var(--orange);">🔄 สร้างใหม่อัตโนมัติ</button>';
+      }
+      html += '    <button class="btn btn-primary btn-sm" onclick="_ssOpenCloseModal(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\',\'' + summaryId + '\')" style="font-size:11px;font-weight:600;">🔒 ปิดเวร / สรุปส่งเวร</button>';
+    } else {
+      // ปิดแล้ว — โชว์ปุ่มเปิดเวร / ขออนุมัติ
+      if (_ssCanReopenDirectly()) {
+        html += '    <button class="btn btn-ghost btn-sm" onclick="_ssDoReopen(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\')" style="font-size:11px;color:var(--orange);">🔓 เปิดเวรใหม่</button>';
+      } else if (_ssIsCaregiver() && !isReopenPending) {
+        html += '    <button class="btn btn-ghost btn-sm" onclick="_ssOpenReopenRequest(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\')" style="font-size:11px;color:var(--orange);">📨 ขอเปิดเวร</button>';
+      }
+
+      // Approver — มี request pending → approve / deny
+      if (isReopenPending && _ssCanApproveReopen()) {
+        html += '    <button class="btn btn-primary btn-sm" onclick="_ssApproveReopen(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\')" style="font-size:11px;background:#1d8c4f;border-color:#1d8c4f;">✅ อนุมัติ</button>';
+        html += '    <button class="btn btn-ghost btn-sm" onclick="_ssDenyReopenAction(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\')" style="font-size:11px;color:var(--red);">❌ ปฏิเสธ</button>';
+      }
+    }
     html += '  </div>';
+
+    // Save action group (edit mode)
     html += '  <div id="' + summaryId + '-save-actions" style="display:none;gap:6px;margin-top:10px;">';
     html += '    <button class="btn btn-primary btn-sm" onclick="_ssSaveEdit(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\',\'' + summaryId + '\')" style="font-size:12px;">💾 บันทึก</button>';
     html += '    <button class="btn btn-ghost btn-sm" onclick="_ssCancelEdit(\'' + summaryId + '\')" style="font-size:12px;">ยกเลิก</button>';
     html += '  </div>';
+
     html += '</div>';
   });
 
@@ -1119,4 +1266,165 @@ window._ssExportPDF = function(summaryId, shift, date) {
     '<div class="meta">สร้างเมื่อ: ' + new Date().toLocaleString('th-TH') + '</div>' +
     '</body></html>');
   w.document.close();
+};
+
+// ═══════════════════════════════════════════════════════════════
+// 🔒 Close shift modal + Reopen workflow
+// ═══════════════════════════════════════════════════════════════
+
+// Helper: re-render section ปัจจุบัน
+async function _ssRerender(patientId, pid) {
+  var container = document.getElementById('shift-summary-container');
+  if (!container) return;
+  var f = document.getElementById('vital-filter-from');
+  var t = document.getElementById('vital-filter-to');
+  await _ssRenderSection(container, patientId, pid, f ? f.value : null, t ? t.value : null);
+}
+
+// เปิด modal ยืนยันปิดเวร
+window._ssOpenCloseModal = function(patientId, pid, date, shift, summaryId) {
+  // ดึง text ปัจจุบัน (จาก view หรือ textarea)
+  var view = document.getElementById(summaryId + '-view');
+  var editEl = document.getElementById(summaryId + '-edit');
+  // ถ้า edit เปิดอยู่ ใช้ค่าใน textarea
+  var inEditMode = editEl && editEl.style.display !== 'none';
+  var currentText = inEditMode ? editEl.value : (view ? (view.textContent || view.innerText) : '');
+  var dateThai = _formatDateTHFromYMD(date);
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;';
+
+  var modal = document.createElement('div');
+  modal.style.cssText = 'background:#fff;border-radius:12px;padding:20px;width:600px;max-width:95vw;max-height:92vh;overflow-y:auto;';
+
+  modal.innerHTML =
+    '<div style="font-size:16px;font-weight:700;color:#1d8c4f;margin-bottom:6px;">🔒 ปิดเวร / สรุปส่งเวร</div>' +
+    '<div style="font-size:13px;color:var(--text2);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">เวร' + shift + ' · ' + dateThai + '</div>' +
+    '<div style="background:#fff8e8;border-left:4px solid #d35400;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a4d00;line-height:1.6;border-radius:4px;">⚠️ การปิดเวรเป็นการรับรองข้อมูลอย่างเป็นทางการ — หลังปิดแล้วจะแก้ไขไม่ได้ (ยกเว้น admin/manager/nurse)</div>' +
+    '<div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;">📋 สรุปสุดท้าย (แก้ไขได้):</div>' +
+    '<textarea id="close-shift-text" style="width:100%;min-height:200px;padding:12px;font-size:13px;line-height:1.65;border:1.5px solid var(--accent);border-radius:6px;font-family:inherit;resize:vertical;">' + _escapeHtml(currentText) + '</textarea>' +
+    '<div style="margin-top:14px;padding:12px;background:#f5f6f8;border-radius:8px;">' +
+    '  <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:13px;line-height:1.5;">' +
+    '    <input type="checkbox" id="close-shift-confirm" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;">' +
+    '    <span><strong>ฉันตรวจสอบและรับรองข้อมูลแล้ว</strong><br><span style="font-size:11px;color:var(--text3);">ข้อมูลในสรุปนี้ถูกต้องและพร้อมส่งต่อ</span></span>' +
+    '  </label>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:16px;">' +
+    '  <button class="btn btn-ghost" id="close-shift-cancel" style="flex:1;height:44px;font-size:14px;">ยกเลิก</button>' +
+    '  <button class="btn btn-primary" id="close-shift-confirm-btn" disabled style="flex:1;height:44px;font-size:14px;font-weight:600;opacity:0.5;cursor:not-allowed;">✅ ยืนยันปิดเวร</button>' +
+    '</div>';
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  var chk = modal.querySelector('#close-shift-confirm');
+  var btnOk = modal.querySelector('#close-shift-confirm-btn');
+  var btnCancel = modal.querySelector('#close-shift-cancel');
+  var textEl = modal.querySelector('#close-shift-text');
+
+  chk.addEventListener('change', function() {
+    btnOk.disabled = !chk.checked;
+    btnOk.style.opacity = chk.checked ? '1' : '0.5';
+    btnOk.style.cursor = chk.checked ? 'pointer' : 'not-allowed';
+  });
+
+  function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+  btnCancel.addEventListener('click', close);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+
+  btnOk.addEventListener('click', async function() {
+    if (!chk.checked) return;
+    var finalText = (textEl.value || '').trim();
+    if (!finalText) { toast('กรุณากรอกข้อความสรุป', 'warning'); return; }
+    btnOk.disabled = true;
+    btnOk.textContent = 'กำลังปิดเวร...';
+
+    var res = await _ssCloseShift(patientId, date, shift, finalText);
+    if (res.error) {
+      toast('ปิดเวรไม่สำเร็จ: ' + res.error.message, 'error');
+      btnOk.disabled = false;
+      btnOk.textContent = '✅ ยืนยันปิดเวร';
+      return;
+    }
+    // อัปเดต cache
+    if (!window._shiftSummaryCache[patientId]) window._shiftSummaryCache[patientId] = {};
+    window._shiftSummaryCache[patientId][_ssKey(date, shift)] = res.data;
+    toast('ปิดเวรแล้ว', 'success');
+    close();
+    await _ssRerender(patientId, pid);
+  });
+};
+
+// เปิดเวรโดยตรง (สำหรับ admin/manager/nurse/pt-nurse/doctor)
+window._ssDoReopen = async function(patientId, pid, date, shift) {
+  if (!(await customConfirm('เปิดเวรนี้ใหม่? — ข้อมูลจะแก้ไขได้อีกครั้ง'))) return;
+  var res = await _ssReopenShift(patientId, date, shift);
+  if (res.error) { toast('เปิดเวรไม่สำเร็จ: ' + res.error.message, 'error'); return; }
+  if (!window._shiftSummaryCache[patientId]) window._shiftSummaryCache[patientId] = {};
+  window._shiftSummaryCache[patientId][_ssKey(date, shift)] = res.data;
+  toast('เปิดเวรใหม่แล้ว', 'success');
+  await _ssRerender(patientId, pid);
+};
+
+// caregiver ขอเปิดเวร — modal เด้งให้กรอกเหตุผล
+window._ssOpenReopenRequest = function(patientId, pid, date, shift) {
+  var dateThai = _formatDateTHFromYMD(date);
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;';
+  var modal = document.createElement('div');
+  modal.style.cssText = 'background:#fff;border-radius:12px;padding:20px;width:500px;max-width:95vw;';
+
+  modal.innerHTML =
+    '<div style="font-size:16px;font-weight:700;color:#d35400;margin-bottom:6px;">📨 ขอเปิดเวรใหม่</div>' +
+    '<div style="font-size:13px;color:var(--text2);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">เวร' + shift + ' · ' + dateThai + '</div>' +
+    '<div style="background:#fff8e8;border-left:4px solid #d35400;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a4d00;line-height:1.6;border-radius:4px;">⚠️ คำขอจะถูกส่งไปยังหัวหน้าเวร (admin/manager/nurse) เพื่อพิจารณาอนุมัติ</div>' +
+    '<div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;">เหตุผลที่ต้องการเปิดเวร <span style="color:var(--red);">*</span></div>' +
+    '<textarea id="reopen-reason" placeholder="เช่น กรอกค่า BP ผิด, ลืมบันทึกการอาเจียน..." style="width:100%;min-height:100px;padding:10px;font-size:13px;line-height:1.5;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;resize:vertical;"></textarea>' +
+    '<div style="display:flex;gap:8px;margin-top:16px;">' +
+    '  <button class="btn btn-ghost" id="reopen-cancel" style="flex:1;height:44px;font-size:14px;">ยกเลิก</button>' +
+    '  <button class="btn btn-primary" id="reopen-submit" style="flex:1;height:44px;font-size:14px;font-weight:600;background:#d35400;border-color:#d35400;">📨 ส่งคำขอ</button>' +
+    '</div>';
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+  modal.querySelector('#reopen-cancel').addEventListener('click', close);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+
+  modal.querySelector('#reopen-submit').addEventListener('click', async function() {
+    var reason = (modal.querySelector('#reopen-reason').value || '').trim();
+    if (!reason) { toast('กรุณากรอกเหตุผล', 'warning'); return; }
+    var res = await _ssRequestReopen(patientId, date, shift, reason);
+    if (res.error) { toast('ส่งคำขอไม่สำเร็จ: ' + res.error.message, 'error'); return; }
+    if (!window._shiftSummaryCache[patientId]) window._shiftSummaryCache[patientId] = {};
+    window._shiftSummaryCache[patientId][_ssKey(date, shift)] = res.data;
+    toast('ส่งคำขอเปิดเวรแล้ว — รออนุมัติ', 'success');
+    close();
+    await _ssRerender(patientId, pid);
+  });
+};
+
+// อนุมัติคำขอ reopen
+window._ssApproveReopen = async function(patientId, pid, date, shift) {
+  if (!(await customConfirm('อนุมัติคำขอเปิดเวรนี้?'))) return;
+  var res = await _ssReopenShift(patientId, date, shift);  // re-use reopen logic
+  if (res.error) { toast('อนุมัติไม่สำเร็จ: ' + res.error.message, 'error'); return; }
+  if (!window._shiftSummaryCache[patientId]) window._shiftSummaryCache[patientId] = {};
+  window._shiftSummaryCache[patientId][_ssKey(date, shift)] = res.data;
+  toast('อนุมัติแล้ว — เวรเปิดให้แก้ไขได้', 'success');
+  await _ssRerender(patientId, pid);
+};
+
+// ปฏิเสธคำขอ reopen
+window._ssDenyReopenAction = async function(patientId, pid, date, shift) {
+  if (!(await customConfirm('ปฏิเสธคำขอเปิดเวรนี้?'))) return;
+  var res = await _ssDenyReopen(patientId, date, shift);
+  if (res.error) { toast('ปฏิเสธไม่สำเร็จ: ' + res.error.message, 'error'); return; }
+  if (!window._shiftSummaryCache[patientId]) window._shiftSummaryCache[patientId] = {};
+  window._shiftSummaryCache[patientId][_ssKey(date, shift)] = res.data;
+  toast('ปฏิเสธคำขอแล้ว', 'success');
+  await _ssRerender(patientId, pid);
 };
