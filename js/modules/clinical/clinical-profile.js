@@ -1981,8 +1981,12 @@ function _renderFluidTable(container, rows, canEdit, patId, direction, modalDefa
     var t = r.recorded_at ? r.recorded_at.slice(11,16) : '';
     // ── Legacy display mapping: 'น้ำดื่ม'/'น้ำเปล่า' → 'น้ำ' ──
     var displayType = r.fluid_type || '';
-    if (direction === 'intake' && typeof _INTAKE_LEGACY_NAMES !== 'undefined' && _INTAKE_LEGACY_NAMES.indexOf(displayType) >= 0) {
-      displayType = 'น้ำ';
+    if (direction === 'intake' && typeof _INTAKE_LEGACY_NAMES !== 'undefined') {
+      // รองรับ multi-value: split by ',' → map ทีละค่า → join
+      var parts = displayType.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+      displayType = parts.map(function(p) {
+        return (_INTAKE_LEGACY_NAMES.indexOf(p) >= 0) ? 'น้ำ' : p;
+      }).join(', ');
     }
     tr.innerHTML = '<td>' + d + '</td><td>' + t + '</td><td>' + (r.shift||'') + '</td><td>' + displayType + '</td><td>' + (r.volume_ml||'') + '</td><td>' + (r.note||'') + '</td>';
     if (canEdit) {
@@ -2499,21 +2503,26 @@ function _openIntakeModal(rec, patId, today) {
     var dbRow = opts.dbRow || null;
 
     // initial values
-    var initTypeName, initOtherType, initVol, initNote;
+    // activeTypes: Set ของประเภทมาตรฐาน (น้ำ/อาหารสายยาง/ยา/IV)
+    // initOtherType: ชื่อประเภทที่อยู่นอก list มาตรฐาน
+    var activeTypes = {}, initOtherType = '', initVol = '', initNote = '';
     if (dbRow) {
-      var ft = (dbRow.fluid_type || '').trim();
-      // ── Legacy mapping: "น้ำดื่ม" / "น้ำเปล่า" → "น้ำ" ──
-      if (_INTAKE_LEGACY_NAMES.indexOf(ft) >= 0) ft = 'น้ำ';
-      var ftIsListed = _INTAKE_TYPES.slice(0, 4).indexOf(ft) >= 0;
-      initTypeName = ftIsListed ? ft : 'อื่นๆ';
-      initOtherType = ftIsListed ? '' : ft;
+      var ftRaw = (dbRow.fluid_type || '').trim();
+      // split by ',' รองรับ multi-select (เช่น "น้ำ, ยา")
+      var parts = ftRaw.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+      parts.forEach(function(p) {
+        // Legacy mapping: "น้ำดื่ม"/"น้ำเปล่า" → "น้ำ"
+        if (_INTAKE_LEGACY_NAMES.indexOf(p) >= 0) p = 'น้ำ';
+        if (_INTAKE_TYPES.slice(0, 4).indexOf(p) >= 0) {
+          activeTypes[p] = true;
+        } else {
+          // ค่าที่ไม่อยู่ใน list มาตรฐาน → เก็บใน "อื่นๆ"
+          activeTypes['อื่นๆ'] = true;
+          if (!initOtherType) initOtherType = p;
+        }
+      });
       initVol = dbRow.volume_ml || '';
       initNote = dbRow.note || '';
-    } else {
-      initTypeName = '';  // ไม่เลือกอะไรไว้ก่อน — กัน default ค้าง
-      initOtherType = '';
-      initVol = '';
-      initNote = '';
     }
 
     var rowEl = document.createElement('div');
@@ -2541,33 +2550,35 @@ function _openIntakeModal(rec, patId, today) {
     });
     rowEl.appendChild(delBtn);
 
-    // Type chips (single-select)
+    // Type chips (multi-select)
     var typeWrap = document.createElement('div');
     typeWrap.style.cssText = 'margin-top:6px;';
     var typeLbl = document.createElement('div');
     typeLbl.style.cssText = 'font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;';
-    typeLbl.textContent = 'ประเภท';
+    typeLbl.innerHTML = 'ประเภท <span style="color:var(--text3);font-weight:400;font-size:10px;">(เลือกได้หลายอย่าง)</span>';
     typeWrap.appendChild(typeLbl);
 
     // chips grid — 2 cols, "อื่นๆ" span 2 cols
     var typeChips = document.createElement('div');
     typeChips.className = 'type-chips';
     typeChips.style.cssText = 'grid-template-columns:1fr 1fr;';
-    var currentTypeName = initTypeName;
     var typeChipEls = {};
     _INTAKE_TYPES.forEach(function(t) {
       var meta = _INTAKE_TYPE_META[t];
       var chip = document.createElement('div');
-      chip.className = 'type-chip' + (t === currentTypeName ? ' active' : '');
+      chip.className = 'type-chip' + (activeTypes[t] ? ' active' : '');
       chip.innerHTML = '<span class="icon">' + meta.icon + '</span><span>' + meta.label + '</span>';
       if (t === 'อื่นๆ') chip.style.gridColumn = 'span 2';
       chip.addEventListener('click', function() {
-        currentTypeName = t;
-        Object.keys(typeChipEls).forEach(function(k) {
-          if (k === t) typeChipEls[k].classList.add('active');
-          else typeChipEls[k].classList.remove('active');
-        });
-        otherWrap.style.display = (t === 'อื่นๆ') ? '' : 'none';
+        if (activeTypes[t]) {
+          delete activeTypes[t];
+          chip.classList.remove('active');
+        } else {
+          activeTypes[t] = true;
+          chip.classList.add('active');
+        }
+        // Toggle other input
+        otherWrap.style.display = activeTypes['อื่นๆ'] ? '' : 'none';
       });
       typeChips.appendChild(chip);
       typeChipEls[t] = chip;
@@ -2585,7 +2596,7 @@ function _openIntakeModal(rec, patId, today) {
     inpOther.placeholder = 'เช่น น้ำผลไม้ปั่น, โอวัลติน';
     inpOther.className = 'form-control'; inpOther.style.cssText = 'height:40px;';
     otherWrap.appendChild(otherLbl); otherWrap.appendChild(inpOther);
-    otherWrap.style.display = (initTypeName === 'อื่นๆ') ? '' : 'none';
+    otherWrap.style.display = activeTypes['อื่นๆ'] ? '' : 'none';
     typeWrap.appendChild(otherWrap);
     rowEl.appendChild(typeWrap);
 
@@ -2621,10 +2632,23 @@ function _openIntakeModal(rec, patId, today) {
       badgeEl: badge,
       delBtn: delBtn,
       getValues: function() {
-        var typeName = currentTypeName;
-        var finalType = (typeName === 'อื่นๆ') ? (inpOther.value || '').trim() : typeName;
+        // รวมประเภทที่ติด ✓ — เรียงตาม _INTAKE_TYPES order
+        var selected = [];
+        _INTAKE_TYPES.forEach(function(t) {
+          if (!activeTypes[t]) return;
+          if (t === 'อื่นๆ') {
+            var custom = (inpOther.value || '').trim();
+            if (custom) selected.push(custom);
+          } else {
+            selected.push(t);
+          }
+        });
+        var finalType = selected.join(', ');
+        // hasOther: true เมื่อมี chip อื่นๆ active แต่ยังไม่ระบุประเภท
+        var hasOtherUnfilled = !!activeTypes['อื่นๆ'] && !(inpOther.value || '').trim();
         return {
-          typeName: typeName,
+          hasAny: selected.length > 0,
+          hasOtherUnfilled: hasOtherUnfilled,
           fluid_type: finalType,
           volume_ml: parseFloat(inpVol.value) || null,
           note: (inpNote.value || '').trim() || null
@@ -2715,11 +2739,11 @@ function _openIntakeModal(rec, patId, today) {
     for (var i = 0; i < rows.length; i++) {
       var r = rows[i];
       var v = r.getValues();
-      if (!v.typeName) {
-        customAlert('รายการ ' + (i+1) + ': กรุณาเลือกประเภท');
+      if (!v.hasAny) {
+        customAlert('รายการ ' + (i+1) + ': กรุณาเลือกประเภทอย่างน้อย 1 อย่าง');
         return;
       }
-      if (v.typeName === 'อื่นๆ' && !v.fluid_type) {
+      if (v.hasOtherUnfilled) {
         customAlert('รายการ ' + (i+1) + ': กรุณาระบุประเภท "อื่นๆ"');
         return;
       }
