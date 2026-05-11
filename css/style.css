@@ -750,3 +750,43 @@
   table { min-width: 380px; }
   .tab { font-size: 11px; padding: 6px 9px; }
 }
+
+/* Mobile UX Phase M1 - Touch targets */
+@media (max-width: 768px) {
+  .btn { min-height: 44px; padding: 10px 16px; font-size: 14px; }
+  .btn-sm { min-height: 38px; padding: 8px 12px; font-size: 13px; }
+  .btn-xs { min-height: 32px; padding: 6px 10px; font-size: 12px; }
+
+  .form-control,
+  input[type="text"], input[type="number"], input[type="email"],
+  input[type="tel"], input[type="password"], input[type="date"],
+  input[type="time"], input[type="datetime-local"],
+  select, textarea {
+    min-height: 48px;
+    font-size: 16px !important;
+    padding: 10px 12px;
+  }
+  textarea { min-height: 80px; line-height: 1.5; }
+  select { background-position: right 12px center; background-size: 16px; }
+
+  input[type="checkbox"], input[type="radio"] { width: 20px; height: 20px; }
+  label { cursor: pointer; user-select: none; }
+
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 13px; margin-bottom: 6px; }
+
+  .modal { padding: 18px; }
+  .modal-header { margin-bottom: 14px; }
+  .modal-footer { padding-top: 14px; }
+  .modal-footer .btn, .mr-add-row { width: 100%; margin-bottom: 6px; }
+
+  .type-chip, .char-chip {
+    min-height: 44px; padding: 10px 14px; font-size: 13px;
+  }
+
+  td .btn-ghost.btn-sm {
+    min-height: 36px; min-width: 36px; padding: 4px 8px;
+  }
+
+  .btn:hover, .type-chip:hover, .char-chip:hover { transform: none; }
+}
