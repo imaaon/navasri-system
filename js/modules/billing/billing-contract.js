@@ -617,16 +617,20 @@ function _refreshPatientContractsModal() {
   
   let html = '';
   
-  // ปุ่ม + เพิ่มแพ็กเกจ
-  html += '<div style="margin-bottom:14px;display:flex;justify-content:flex-end;">';
-  html += '  <button class="btn btn-primary btn-sm" onclick="_pcAddNew()">+ เพิ่มแพ็กเกจ</button>';
-  html += '</div>';
+  // ปุ่ม + เพิ่มแพ็กเกจ (เฉพาะ role ที่เห็นราคา/จัดการแพ็กเกจได้)
+  if (canSeePrice()) {
+    html += '<div style="margin-bottom:14px;display:flex;justify-content:flex-end;">';
+    html += '  <button class="btn btn-primary btn-sm" onclick="_pcAddNew()">+ เพิ่มแพ็กเกจ</button>';
+    html += '</div>';
+  }
   
   if (all.length === 0) {
     html += '<div style="text-align:center;padding:40px 20px;color:var(--text3);">';
     html += '  <div style="font-size:32px;margin-bottom:10px;">📋</div>';
     html += '  <div style="font-size:14px;margin-bottom:6px;">ยังไม่มีแพ็กเกจของผู้รับบริการรายนี้</div>';
-    html += '  <div style="font-size:12px;">กดปุ่ม "+ เพิ่มแพ็กเกจ" เพื่อเริ่มต้น</div>';
+    if (canSeePrice()) {
+      html += '  <div style="font-size:12px;">กดปุ่ม "+ เพิ่มแพ็กเกจ" เพื่อเริ่มต้น</div>';
+    }
     html += '</div>';
   } else {
     if (active.length > 0) {
@@ -643,15 +647,16 @@ function _refreshPatientContractsModal() {
 }
 
 function _pcRenderTable(contracts, isActive) {
+  const showPrice = canSeePrice();
   let html = '<div style="overflow-x:auto;"><table class="data-table" style="font-size:12px;">';
   html += '<thead><tr>';
   html += '<th>ชื่อแพ็กเกจ</th>';
   html += '<th>รายการ</th>';
-  html += '<th style="text-align:right;">ยอด/เดือน</th>';
+  if (showPrice) html += '<th style="text-align:right;">ยอด/เดือน</th>';
   html += '<th style="text-align:center;">วันออกบิล</th>';
   if (isActive) html += '<th>ครั้งถัดไป</th>';
   if (!isActive) html += '<th>วันสิ้นสุด</th>';
-  html += '<th style="white-space:nowrap;"></th>';
+  if (showPrice) html += '<th style="white-space:nowrap;"></th>';
   html += '</tr></thead><tbody>';
   
   contracts.forEach(function(c) {
@@ -660,7 +665,9 @@ function _pcRenderTable(contracts, isActive) {
     html += '<tr>';
     html += '<td style="font-weight:500;">' + _pcEsc(c.name) + '</td>';
     html += '<td style="color:var(--text2);">' + (itemsTxt || '-') + '</td>';
-    html += '<td style="text-align:right;font-weight:700;color:var(--accent);">' + formatThb(c.totalMonthly) + '</td>';
+    if (showPrice) {
+      html += '<td style="text-align:right;font-weight:700;color:var(--accent);">' + formatThb(c.totalMonthly) + '</td>';
+    }
     html += '<td style="text-align:center;">วันที่ ' + (c.billingDay || 1) + '</td>';
     if (isActive) {
       const next = getNextBillingDate(c);
@@ -671,13 +678,16 @@ function _pcRenderTable(contracts, isActive) {
     } else {
       html += '<td style="font-size:11px;color:var(--text3);">' + (c.endDate || '-') + '</td>';
     }
-    html += '<td style="white-space:nowrap;">';
-    if (isActive) {
-      html += '<button class="btn btn-primary btn-sm" onclick="_pcGenerateInvoice(\'' + cId + '\')">💎 ออกบิล</button> ';
+    if (showPrice) {
+      html += '<td style="white-space:nowrap;">';
+      if (isActive) {
+        html += '<button class="btn btn-primary btn-sm" onclick="_pcGenerateInvoice(\'' + cId + '\')">💎 ออกบิล</button> ';
+      }
+      html += '<button class="btn btn-ghost btn-sm" onclick="_pcEdit(\'' + cId + '\')">✏️</button> ';
+      html += '<button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="_pcDelete(\'' + cId + '\')">🗑️</button>';
+      html += '</td>';
     }
-    html += '<button class="btn btn-ghost btn-sm" onclick="_pcEdit(\'' + cId + '\')">✏️</button> ';
-    html += '<button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="_pcDelete(\'' + cId + '\')">🗑️</button>';
-    html += '</td></tr>';
+    html += '</tr>';
   });
   
   html += '</tbody></table></div>';
@@ -685,20 +695,24 @@ function _pcRenderTable(contracts, isActive) {
 }
 
 function _pcAddNew() {
+  if (!canSeePrice()) { toast('ไม่มีสิทธิ์จัดการแพ็กเกจ', 'warning'); return; }
   const ctx = window._patientContractsCtx;
   if (!ctx) { toast('ไม่พบบริบทผู้รับบริการ', 'error'); return; }
   openAddContractModal(null, { patientId: ctx.patientId, patientName: ctx.patientName });
 }
 
 function _pcEdit(contractId) {
+  if (!canSeePrice()) { toast('ไม่มีสิทธิ์จัดการแพ็กเกจ', 'warning'); return; }
   openAddContractModal(contractId);
 }
 
 async function _pcDelete(contractId) {
+  if (!canSeePrice()) { toast('ไม่มีสิทธิ์จัดการแพ็กเกจ', 'warning'); return; }
   await deleteContract(contractId);
 }
 
 async function _pcGenerateInvoice(contractId) {
+  if (!canSeePrice()) { toast('ไม่มีสิทธิ์ออกบิล', 'warning'); return; }
   if (typeof generateContractInvoice === 'function') {
     await generateContractInvoice(contractId);
   }
