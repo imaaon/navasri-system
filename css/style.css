@@ -1330,3 +1330,259 @@
     display: none !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════ */
+/*  🚽 Excretion / Fluid Mobile — Cards + Chips (no horizontal scroll)  */
+/* ═══════════════════════════════════════════════════════════════ */
+
+/* Desktop: ซ่อน mobile balance card list */
+.balance-card-list { display: none; }
+
+@media (max-width: 768px) {
+  /* ── Section box: ไม่ overflow ── */
+  .excretion-section {
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  /* ── Section header: ลบ row layout ของ desktop ── */
+  .excretion-section .excretion-section-hdr {
+    margin-bottom: 8px !important;
+  }
+
+  /* ── ปุ่ม + เพิ่ม : full-width border-dashed ── */
+  .excretion-add-btn {
+    display: block !important;
+    width: 100% !important;
+    background: white !important;
+    border: 2px dashed currentColor !important;
+    border-radius: 10px !important;
+    padding: 10px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    margin-bottom: 10px !important;
+    min-height: 44px !important;
+  }
+  .intake-add-btn {
+    color: #1d8c4f !important;
+    background: rgba(255,255,255,0.7) !important;
+  }
+  .output-add-btn {
+    color: #b03a3a !important;
+    background: rgba(255,255,255,0.7) !important;
+  }
+
+  /* ── Excretion card-table: เปลี่ยน table เป็น card list ── */
+  .excretion-card-table {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+  }
+  .excretion-card-table thead { display: none; }
+  .excretion-card-table tbody {
+    display: block;
+    width: 100%;
+  }
+  .excretion-card-table tr {
+    display: block;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  /* แสดง border-left แดงถ้ามีลักษณะผิดปกติ */
+  .excretion-card-table tr[data-abnormal="1"] {
+    border-left: 3px solid #c0392b;
+  }
+
+  .excretion-card-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 3px 0;
+    border: none;
+    text-align: right;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .excretion-card-table td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text3);
+    font-size: 11px;
+    text-align: left;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  /* td ที่ว่าง (data-label="") ซ่อน label */
+  .excretion-card-table td[data-label=""]:before {
+    display: none;
+  }
+
+  /* td type/ประเภท = title (ใหญ่ ด้านบน) */
+  .excretion-card-table td[data-card-title="1"] {
+    display: block;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .excretion-card-table td[data-card-title="1"]:before {
+    display: none;
+  }
+
+  /* td ปริมาณ = volume (ใหญ่ เด่น) */
+  .excretion-card-table td[data-card-volume="1"] {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .excretion-card-table td[data-card-volume="1"]:before {
+    font-weight: 600;
+    color: var(--text2);
+  }
+
+  /* td action buttons = full row ด้านล่าง */
+  .excretion-card-table td[data-card-actions="1"] {
+    display: flex !important;
+    justify-content: flex-end;
+    gap: 6px;
+    padding-top: 8px !important;
+    margin-top: 6px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .excretion-card-table td[data-card-actions="1"]:before {
+    display: none;
+  }
+  .excretion-card-table td[data-card-actions="1"] button {
+    min-height: 32px !important;
+    min-width: 32px !important;
+    padding: 4px 8px !important;
+  }
+
+  /* td ที่เป็น "-" → ซ่อน */
+  .excretion-card-table td[data-label="หมายเหตุ"]:has(+ td):empty,
+  .excretion-card-table td[data-label="ลักษณะ"]:has(+ td):empty {
+    display: none;
+  }
+
+  /* ── Balance: ซ่อน desktop table, แสดง card list ── */
+  .balance-desktop-table {
+    display: none !important;
+  }
+  .balance-card-list {
+    display: block !important;
+  }
+  .balance-mobile-card {
+    background: white;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .balance-mobile-card.balance-mobile-total {
+    background: #fff8e1;
+    border: 1.5px solid #d4a300;
+  }
+  .balance-mobile-card .bmc-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .balance-mobile-card .bmc-sub {
+    font-size: 11px;
+    color: var(--text3);
+    font-weight: 500;
+  }
+  .balance-mobile-card .bmc-total {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    line-height: 1;
+  }
+  .balance-mobile-card .bmc-unit {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.8;
+  }
+  .balance-mobile-card .bmc-flow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .balance-mobile-card .bmc-flow-item {
+    background: #f5f6f8;
+    border-radius: 6px;
+    padding: 6px 8px;
+  }
+  .balance-mobile-card .bmc-flow-lbl {
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 2px;
+  }
+  .balance-mobile-card .bmc-flow-val {
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .balance-mobile-card .bmc-flow-val.intake { color: #1d8c4f; }
+  .balance-mobile-card .bmc-flow-val.output { color: #b03a3a; }
+  .balance-mobile-card .bmc-counts {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .balance-mobile-card .bmc-count-chip {
+    background: #f5f6f8;
+    border-radius: 10px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  /* ── Date Filter: ซ่อน date inputs, แสดง chips ── */
+  .excretion-date-filter {
+    width: 100%;
+    gap: 6px !important;
+    padding: 6px 0;
+  }
+  .excretion-date-filter .date-range-label,
+  .excretion-date-filter .date-range-input {
+    display: none !important;
+  }
+  .excretion-date-filter .date-preset-chip {
+    background: white !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 14px !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--text2) !important;
+    min-height: 34px !important;
+    flex: 0 0 auto;
+  }
+  .excretion-date-filter .date-preset-chip:active {
+    background: var(--accent-light, #e0f7f5) !important;
+    color: var(--accent2, #26a89c) !important;
+  }
+
+  /* Section header ของ excretion tab — stack แนวตั้ง */
+  .section-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .section-header h4 {
+    font-size: 16px;
+  }
+}
