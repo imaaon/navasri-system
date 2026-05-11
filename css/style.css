@@ -981,3 +981,42 @@
   /* Hide hamburger บนมือถือ (ใช้ Bottom Tab Bar แทน) */
   #hamburgerBtn { display: none !important; }
 }
+
+/* ═══ Task E: iOS-specific tweaks ═══════════════════════════ */
+@media (max-width: 768px) {
+  /* Safe area สำหรับ notch + home indicator */
+  .topbar {
+    padding-top: env(safe-area-inset-top, 0);
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+  }
+
+  /* ป้องกัน overscroll/bounce ที่ iOS ทำให้ดูแปลก */
+  html, body {
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ปิด text selection โดย default สำหรับ buttons + chips (เลือกได้ใน content) */
+  .btn, .tab, .type-chip, .char-chip, .pat-app-btn, .bottom-tab-item, .bottom-more-item {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ปิด iOS auto-format/auto-capitalize สำหรับ input */
+  input[type="text"], input[type="email"], input[type="search"] {
+    -webkit-appearance: none;
+  }
+
+  /* Modal — รองรับ safe area */
+  .modal-overlay {
+    padding-top: env(safe-area-inset-top, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  /* Standalone mode (Add to Home Screen) — แสดง padding-top เผื่อ status bar */
+  @supports (-webkit-touch-callout: none) {
+    body { padding-top: env(safe-area-inset-top, 0); }
+  }
+}
