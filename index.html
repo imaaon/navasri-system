@@ -199,21 +199,23 @@ window.onload = async function() {
   var iv = setInterval(tryRender, 1000);
   
   // Also hook into showPage to re-render when returning to dashboard
-  var origShowPage = window.showPage;
-  Object.defineProperty(window, 'showPage', {
-    configurable: true,
-    set: function(v) { origShowPage = v; },
-    get: function() {
-      return function() {
-        var result = origShowPage.apply(this, arguments);
-        if (arguments[0] === 'dashboard') {
-          setTimeout(tryRender, 100);
-          setTimeout(tryRender, 500);
-        }
-        return result;
-      };
-    }
-  });
+  try {
+    var origShowPage = window.showPage;
+    Object.defineProperty(window, 'showPage', {
+      configurable: true,
+      set: function(v) { origShowPage = v; },
+      get: function() {
+        return function() {
+          var result = origShowPage.apply(this, arguments);
+          if (arguments[0] === 'dashboard') {
+            setTimeout(tryRender, 100);
+            setTimeout(tryRender, 500);
+          }
+          return result;
+        };
+      }
+    });
+  } catch(e) { console.warn('[fix] showPage wrap skipped:', e.message); }
 })();
 </script>
 <!-- _uaPoller END -->
