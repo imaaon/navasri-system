@@ -1161,10 +1161,9 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFr
   var sec1 = document.createElement('div');
   sec1.style.cssText = 'background:#f8f9fa;border-radius:8px;padding:16px;margin-bottom:16px';
   var s1hdr = document.createElement('div');
-  s1hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';
+  s1hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px';
   var s1title = document.createElement('strong');
   s1title.textContent = 'ปัสสาวะ / อุจจาระ';
-  s1hdr.appendChild(s1title);
   if (canEdit) {
     var btnAdd1 = document.createElement('button');
     btnAdd1.className = 'btn btn-sm btn-primary';
@@ -1172,6 +1171,7 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFr
     btnAdd1.addEventListener('click', function() { _openExcretionModal(null, patId, modalDefaultDate); });
     s1hdr.appendChild(btnAdd1);
   }
+  s1hdr.appendChild(s1title);
   sec1.appendChild(s1hdr);
 
   if (excretions.length === 0) {
@@ -1219,10 +1219,9 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFr
   var sec2 = document.createElement('div');
   sec2.style.cssText = 'background:#f0f8f0;border-radius:8px;padding:16px;margin-bottom:16px';
   var s2hdr = document.createElement('div');
-  s2hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';
+  s2hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px';
   var s2title = document.createElement('strong');
   s2title.textContent = String.fromCodePoint(0x1F4A7) + ' น้ำเข้า (Intake)';
-  s2hdr.appendChild(s2title);
   if (canEdit) {
     var btnAdd2 = document.createElement('button');
     btnAdd2.className = 'btn btn-sm btn-success';
@@ -1230,6 +1229,7 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFr
     btnAdd2.addEventListener('click', function() { _openFluidModal(null, patId, 'intake', modalDefaultDate); });
     s2hdr.appendChild(btnAdd2);
   }
+  s2hdr.appendChild(s2title);
   sec2.appendChild(s2hdr);
   _renderFluidTable(sec2, intakeFluids, canEdit, patId, 'intake', modalDefaultDate, rangeLabel);
   sectionsWrap.appendChild(sec2);
@@ -1239,10 +1239,9 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFr
   var sec2b = document.createElement('div');
   sec2b.style.cssText = 'background:#fff0f0;border-radius:8px;padding:16px;margin-bottom:16px';
   var s2bhdr = document.createElement('div');
-  s2bhdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';
+  s2bhdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px';
   var s2btitle = document.createElement('strong');
   s2btitle.textContent = '☂ น้ำออกอื่นๆ (อาเจียน / Drainage / อื่นๆ)';
-  s2bhdr.appendChild(s2btitle);
   if (canEdit) {
     var btnAdd2b = document.createElement('button');
     btnAdd2b.className = 'btn btn-sm btn-danger';
@@ -1250,6 +1249,7 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFr
     btnAdd2b.addEventListener('click', function() { _openFluidModal(null, patId, 'output', modalDefaultDate); });
     s2bhdr.appendChild(btnAdd2b);
   }
+  s2bhdr.appendChild(s2btitle);
   sec2b.appendChild(s2bhdr);
   _renderFluidTable(sec2b, outputFluids, canEdit, patId, 'output', modalDefaultDate, rangeLabel);
   sectionsWrap.appendChild(sec2b);
