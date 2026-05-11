@@ -2122,7 +2122,291 @@ function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
   note3.style.cssText = 'font-size:11px;color:#888;margin:4px 0 0';
   note3.textContent = 'หมายเหตุ: น้ำออก (ml) = ปัสสาวะ + อาเจียน + อื่นๆ · "จำนวนครั้ง" นับทุก record (รวมที่ไม่ได้กรอก ml)';
   sec3.appendChild(note3);
+
+  // ── 🚨 แจ้งเตือนอาการผิดปกติ ──
+  var alertsEl = _buildClinicalAlerts(excretions, fluids);
+  sec3.appendChild(alertsEl);
+
   container.appendChild(sec3);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 🚨 Clinical Alerts (แจ้งเตือนอาการผิดปกติ)
+// ═══════════════════════════════════════════════════════════════
+// excretions: rows ของ patient_excretions ในช่วง filter
+// fluids: rows ของ patient_fluid_records ในช่วง filter
+function _buildClinicalAlerts(excretions, fluids) {
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'background:#fff;border-radius:10px;padding:14px;margin-top:14px;border:1.5px solid #e5e7eb';
+
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:13px;font-weight:700;color:#555;margin-bottom:10px';
+  title.textContent = '🚨 แจ้งเตือนอาการผิดปกติ';
+  wrap.appendChild(title);
+
+  var alerts = [];
+
+  // Helper สร้าง alert item
+  function mkAlert(level, icon, titleText, detailText) {
+    var styles = {
+      green:  { bg: '#ecf9f0', border: '#27ae60', color: '#1d8c4f' },
+      orange: { bg: '#fff8e8', border: '#d35400', color: '#8a4d00' },
+      red:    { bg: '#fff0f0', border: '#c0392b', color: '#8a1a0e' },
+      gray:   { bg: '#f5f5f5', border: '#b0b0b0', color: '#999' }
+    };
+    var s = styles[level] || styles.gray;
+    return {
+      level: level,
+      html: '<div style="border-radius:8px;padding:12px 14px;margin-bottom:8px;border-left:5px solid ' + s.border +
+            ';background:' + s.bg + ';color:' + s.color + ';display:flex;gap:10px;font-size:13px;line-height:1.5">' +
+            '<div style="font-size:22px;line-height:1">' + icon + '</div>' +
+            '<div style="flex:1">' +
+              '<div style="font-weight:700;margin-bottom:3px">' + titleText + '</div>' +
+              '<div style="font-size:12px;opacity:0.85;line-height:1.55">' + detailText + '</div>' +
+            '</div>' +
+          '</div>'
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // SECTION 1: อุจจาระ
+  // ─────────────────────────────────────────────────────────
+  var stools = (excretions || []).filter(function(r){ return r.type === 'stool'; });
+
+  // Alert #1: ไม่ถ่ายอุจจาระกี่เวร (คำนวณจากปัจจุบัน)
+  if (stools.length === 0) {
+    alerts.push(mkAlert('gray', '—', 'อุจจาระ — ยังไม่มีบันทึก', 'ไม่สามารถประเมินสถานะการขับถ่ายได้'));
+  } else {
+    // เรียงจากใหม่สุด
+    var stoolsSorted = stools.slice().sort(function(a,b){
+      return (b.recorded_at || '').localeCompare(a.recorded_at || '');
+    });
+    var lastStool = stoolsSorted[0];
+    var noStoolShifts = _countShiftsSinceLast(lastStool.recorded_at);
+    var detail = 'ถ่ายล่าสุด: <strong>' + _formatDateTimeTH(lastStool.recorded_at) + ' (เวร' + (lastStool.shift || '—') + ')</strong>';
+
+    if (noStoolShifts <= 3) {
+      alerts.push(mkAlert('green', '✓', 'การถ่ายอุจจาระ — ปกติ', detail + ' · ไม่ถ่ายมาแล้ว <strong>' + noStoolShifts + ' เวร</strong>'));
+    } else if (noStoolShifts <= 5) {
+      alerts.push(mkAlert('orange', '⚠️', 'ไม่ถ่ายอุจจาระมาแล้ว ' + noStoolShifts + ' เวร', detail + ' · ควรเฝ้าระวังท้องผูก'));
+    } else {
+      alerts.push(mkAlert('red', '🆘', 'ไม่ถ่ายอุจจาระมาแล้ว ' + noStoolShifts + ' เวร — อันตราย', detail + ' · ควรปรึกษาแพทย์/พยาบาลด่วน'));
+    }
+  }
+
+  // Alert #2: ถ่าย ≥ 3 ครั้งใน 1 เวร (เช็คทุกเวรใน filter range)
+  var stoolShiftBuckets = {};  // key = "วันที่|เวร", value = count รวม
+  stools.forEach(function(r) {
+    if (!r.recorded_at || !r.shift) return;
+    var dateKey = r.recorded_at.slice(0,10) + '|' + r.shift;
+    stoolShiftBuckets[dateKey] = (stoolShiftBuckets[dateKey] || 0) + (parseInt(r.count) || 1);
+  });
+  var overflowShifts = Object.keys(stoolShiftBuckets).filter(function(k) {
+    return stoolShiftBuckets[k] >= 3;
+  });
+  if (overflowShifts.length > 0) {
+    var listHtml = overflowShifts.map(function(k) {
+      var p = k.split('|');
+      return '<strong>เวร' + p[1] + ' ' + _formatDateTH(p[0]) + ': ' + stoolShiftBuckets[k] + ' ครั้ง</strong>';
+    }).join('<br>');
+    alerts.push(mkAlert('red', '🆘', 'ถ่ายอุจจาระบ่อย — เกิน 3 ครั้ง/เวร', listHtml + '<br>อาจมีอาการท้องเสีย'));
+  } else if (stools.length > 0) {
+    alerts.push(mkAlert('green', '✓', 'จำนวนการถ่ายต่อเวร — ปกติ', 'ไม่พบเวรที่ถ่ายเกิน 3 ครั้ง'));
+  }
+
+  // Alert #3: มีเลือดในอุจจาระ
+  var stoolBlood = stools.filter(function(r) {
+    return (r.characteristics || '').indexOf('เลือด') >= 0;
+  });
+  if (stoolBlood.length > 0) {
+    var latest = stoolBlood.sort(function(a,b){
+      return (b.recorded_at || '').localeCompare(a.recorded_at || '');
+    })[0];
+    var moreText = stoolBlood.length > 1 ? ' (พบทั้งหมด ' + stoolBlood.length + ' ครั้ง)' : '';
+    alerts.push(mkAlert('red', '🆘', 'พบเลือดในอุจจาระ',
+      _formatDateTimeTH(latest.recorded_at) + ' (เวร' + (latest.shift||'—') + ') · ลักษณะ: "' + (latest.characteristics||'') + '"' + moreText + '<br>ควรแจ้งแพทย์'));
+  } else if (stools.length > 0) {
+    alerts.push(mkAlert('green', '✓', 'ไม่พบเลือดในอุจจาระ', 'ลักษณะที่บันทึก: ' + (Array.from(new Set(stools.map(function(r){ return r.characteristics || '—'; }))).slice(0,3).join(', '))));
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // SECTION 2: ปัสสาวะ
+  // ─────────────────────────────────────────────────────────
+  var urines = (excretions || []).filter(function(r){ return r.type === 'urine'; });
+
+  // เตรียม bucket per เวร (วันที่|เวร → {count, volSum, samples})
+  var urineShiftBuckets = {};
+  urines.forEach(function(r) {
+    if (!r.recorded_at || !r.shift) return;
+    var dateKey = r.recorded_at.slice(0,10) + '|' + r.shift;
+    if (!urineShiftBuckets[dateKey]) urineShiftBuckets[dateKey] = { count: 0, volSum: 0, samples: [] };
+    urineShiftBuckets[dateKey].count += (parseInt(r.count) || 1);
+    urineShiftBuckets[dateKey].volSum += (parseFloat(r.volume_ml) || 0);
+    urineShiftBuckets[dateKey].samples.push(r);
+  });
+
+  // Alert: ไม่ปัสสาวะใน 1 เวร (เช็คเวรที่ผ่านมาในช่วง filter)
+  // → ใช้วิธีคล้าย stool: หาเวรล่าสุดที่ฉี่
+  if (urines.length === 0) {
+    alerts.push(mkAlert('gray', '—', 'ปัสสาวะ — ยังไม่มีบันทึก', 'ไม่สามารถประเมินสถานะการขับถ่ายได้'));
+  } else {
+    var urinesSorted = urines.slice().sort(function(a,b){
+      return (b.recorded_at || '').localeCompare(a.recorded_at || '');
+    });
+    var lastUrine = urinesSorted[0];
+    var noUrineShifts = _countShiftsSinceLast(lastUrine.recorded_at);
+    if (noUrineShifts >= 1) {
+      alerts.push(mkAlert('red', '🆘', 'ไม่ปัสสาวะมาแล้ว ' + noUrineShifts + ' เวร',
+        'ฉี่ล่าสุด: <strong>' + _formatDateTimeTH(lastUrine.recorded_at) + ' (เวร' + (lastUrine.shift||'—') + ')</strong>'));
+    } else {
+      alerts.push(mkAlert('green', '✓', 'การปัสสาวะ — ปกติ',
+        'ฉี่ล่าสุด: ' + _formatDateTimeTH(lastUrine.recorded_at) + ' (เวร' + (lastUrine.shift||'—') + ')'));
+    }
+  }
+
+  // Alert: ปริมาณน้อย < 300 ml/เวร
+  var lowVolShifts = Object.keys(urineShiftBuckets).filter(function(k) {
+    return urineShiftBuckets[k].volSum > 0 && urineShiftBuckets[k].volSum < 300;
+  });
+  if (lowVolShifts.length > 0) {
+    var listHtml = lowVolShifts.map(function(k) {
+      var p = k.split('|');
+      return '<strong>เวร' + p[1] + ' ' + _formatDateTH(p[0]) + ': ' + urineShiftBuckets[k].volSum + ' ml</strong>';
+    }).join('<br>');
+    alerts.push(mkAlert('red', '🆘', 'ปัสสาวะน้อย — &lt; 300 ml/เวร', listHtml));
+  }
+
+  // Alert: Polyuria > 1,000 ml/เวร
+  var highVolShifts = Object.keys(urineShiftBuckets).filter(function(k) {
+    return urineShiftBuckets[k].volSum > 1000;
+  });
+  if (highVolShifts.length > 0) {
+    var listHtml2 = highVolShifts.map(function(k) {
+      var p = k.split('|');
+      return '<strong>เวร' + p[1] + ' ' + _formatDateTH(p[0]) + ': ' + urineShiftBuckets[k].volSum + ' ml</strong>';
+    }).join('<br>');
+    alerts.push(mkAlert('red', '🆘', 'ปัสสาวะมาก (Polyuria) — &gt; 1,000 ml/เวร', listHtml2));
+  }
+
+  // Alert: มีเลือดในปัสสาวะ
+  var urineBlood = urines.filter(function(r) {
+    return (r.characteristics || '').indexOf('เลือด') >= 0;
+  });
+  if (urineBlood.length > 0) {
+    var latestU = urineBlood.sort(function(a,b){
+      return (b.recorded_at || '').localeCompare(a.recorded_at || '');
+    })[0];
+    var moreUText = urineBlood.length > 1 ? ' (พบทั้งหมด ' + urineBlood.length + ' ครั้ง)' : '';
+    alerts.push(mkAlert('red', '🆘', 'พบเลือดในปัสสาวะ',
+      _formatDateTimeTH(latestU.recorded_at) + ' (เวร' + (latestU.shift||'—') + ') · ลักษณะ: "' + (latestU.characteristics||'') + '"' + moreUText + '<br>ควรแจ้งแพทย์'));
+  }
+
+  // Alert: ปัสสาวะสีน้ำตาล หรือ ขุ่น/มีตะกอน
+  var urineAbnormal = urines.filter(function(r) {
+    var c = r.characteristics || '';
+    return (c.indexOf('น้ำตาล') >= 0 || c.indexOf('ขุ่น') >= 0);
+  });
+  if (urineAbnormal.length > 0) {
+    var latestA = urineAbnormal.sort(function(a,b){
+      return (b.recorded_at || '').localeCompare(a.recorded_at || '');
+    })[0];
+    var moreAText = urineAbnormal.length > 1 ? ' (พบทั้งหมด ' + urineAbnormal.length + ' ครั้ง)' : '';
+    alerts.push(mkAlert('orange', '⚠️', 'ปัสสาวะสีผิดปกติ',
+      _formatDateTimeTH(latestA.recorded_at) + ' (เวร' + (latestA.shift||'—') + ') · ลักษณะ: "' + (latestA.characteristics||'') + '"' + moreAText));
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // SECTION 3: อาเจียน
+  // ─────────────────────────────────────────────────────────
+  var vomits = (fluids || []).filter(function(r) {
+    return r.direction === 'output' && (r.fluid_type || '').trim() === 'อาเจียน';
+  });
+  if (vomits.length > 0) {
+    // group ตามเวรเพื่อรายงาน
+    var vomitShiftBuckets = {};
+    vomits.forEach(function(r) {
+      if (!r.recorded_at || !r.shift) return;
+      var dateKey = r.recorded_at.slice(0,10) + '|' + r.shift;
+      if (!vomitShiftBuckets[dateKey]) vomitShiftBuckets[dateKey] = 0;
+      vomitShiftBuckets[dateKey]++;
+    });
+    var vomitListHtml = Object.keys(vomitShiftBuckets).sort(function(a,b){ return b.localeCompare(a); }).slice(0,3).map(function(k) {
+      var p = k.split('|');
+      return 'เวร' + p[1] + ' ' + _formatDateTH(p[0]) + ': ' + vomitShiftBuckets[k] + ' ครั้ง';
+    }).join('<br>');
+    var moreVomit = Object.keys(vomitShiftBuckets).length > 3 ? '<br>(และอีก ' + (Object.keys(vomitShiftBuckets).length - 3) + ' เวร)' : '';
+    alerts.push(mkAlert('red', '🆘', 'พบอาเจียน', vomitListHtml + moreVomit + '<br>ควรเฝ้าระวัง'));
+  } else {
+    alerts.push(mkAlert('green', '✓', 'ไม่พบอาเจียน', 'ไม่มีบันทึกอาเจียนในช่วงที่เลือก'));
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // เรียงตามความรุนแรง: red → orange → gray → green
+  // ─────────────────────────────────────────────────────────
+  var order = { red: 0, orange: 1, gray: 2, green: 3 };
+  alerts.sort(function(a, b) { return order[a.level] - order[b.level]; });
+
+  // Append all alerts
+  alerts.forEach(function(a) {
+    var div = document.createElement('div');
+    div.innerHTML = a.html;
+    wrap.appendChild(div.firstChild);
+  });
+
+  return wrap;
+}
+
+// ── Helper: นับเวรที่ผ่านมาตั้งแต่ "เวรของ event ล่าสุด" จนถึงเวรล่าสุดที่จบไปแล้ว ──
+// ไม่นับเวรปัจจุบันที่ยังไม่จบ
+function _countShiftsSinceLast(lastEventAt) {
+  if (!lastEventAt) return 0;
+  var lastDate = new Date(lastEventAt);
+  var now = new Date();
+  if (isNaN(lastDate.getTime())) return 0;
+
+  // หาเวรของ lastEvent
+  var lastShiftStart = _shiftStartOf(lastDate);  // วันที่+เวลาเริ่มเวรของ event
+  // หาเวรปัจจุบัน (เวรที่กำลังเกิดอยู่ตอน "now")
+  var nowShiftStart = _shiftStartOf(now);
+
+  // นับจำนวน 12-hr blocks ระหว่าง lastShiftStart และ nowShiftStart
+  // (lastShiftStart และ nowShiftStart เป็น "เวลาเริ่มเวร")
+  var diffMs = nowShiftStart.getTime() - lastShiftStart.getTime();
+  var blocks = Math.round(diffMs / (12 * 3600 * 1000));
+  // blocks = 0 → อยู่เวรเดียวกัน (เพิ่งเกิด) = ไม่ถ่ายมา 0 เวร
+  // blocks = 1 → ผ่านมา 1 เวร แต่เวรปัจจุบันยังไม่จบ → ไม่นับ → ไม่ถ่ายมา 0 เวร
+  // เราต้องการ "เวรที่จบไปแล้วและไม่มี event" = blocks - 1 (ถ้า blocks ≥ 1)
+  if (blocks <= 0) return 0;
+  return blocks - 1;  // ไม่นับเวรปัจจุบัน (ตามที่อ้นขอ — Q2.3)
+}
+
+// ── Helper: เวลาเริ่มเวรของ Date นี้ ──
+// เช้า: 07:00 ของวันนั้น
+// ดึก: 19:00 ของวันก่อนหน้า (ถ้า hour < 7) หรือ 19:00 ของวันเดียวกัน (ถ้า hour >= 19)
+function _shiftStartOf(d) {
+  var hour = d.getHours();
+  var year = d.getFullYear(), month = d.getMonth(), day = d.getDate();
+  if (hour >= 7 && hour < 19) {
+    return new Date(year, month, day, 7, 0, 0, 0);  // เวรเช้า
+  } else if (hour >= 19) {
+    return new Date(year, month, day, 19, 0, 0, 0);  // เวรดึกของวันเดียวกัน
+  } else {
+    return new Date(year, month, day - 1, 19, 0, 0, 0);  // เวรดึกของเมื่อวาน
+  }
+}
+
+// ── Helper: format date เป็น dd/mm/yyyy ──
+function _formatDateTH(s) {
+  if (!s) return '—';
+  var p = s.split('-');
+  if (p.length !== 3) return s;
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+// ── Helper: format datetime ──
+function _formatDateTimeTH(s) {
+  if (!s) return '—';
+  return _formatDateTH(s.slice(0,10)) + ' ' + s.slice(11,16);
 }
 
 function _openExcretionModal(rec, patId, today) {
