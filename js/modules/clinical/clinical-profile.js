@@ -1979,7 +1979,12 @@ function _renderFluidTable(container, rows, canEdit, patId, direction, modalDefa
     var tr = document.createElement('tr');
     var d = r.recorded_at ? r.recorded_at.slice(0,10) : '';
     var t = r.recorded_at ? r.recorded_at.slice(11,16) : '';
-    tr.innerHTML = '<td>' + d + '</td><td>' + t + '</td><td>' + (r.shift||'') + '</td><td>' + (r.fluid_type||'') + '</td><td>' + (r.volume_ml||'') + '</td><td>' + (r.note||'') + '</td>';
+    // ── Legacy display mapping: 'น้ำดื่ม'/'น้ำเปล่า' → 'น้ำ' ──
+    var displayType = r.fluid_type || '';
+    if (direction === 'intake' && typeof _INTAKE_LEGACY_NAMES !== 'undefined' && _INTAKE_LEGACY_NAMES.indexOf(displayType) >= 0) {
+      displayType = 'น้ำ';
+    }
+    tr.innerHTML = '<td>' + d + '</td><td>' + t + '</td><td>' + (r.shift||'') + '</td><td>' + displayType + '</td><td>' + (r.volume_ml||'') + '</td><td>' + (r.note||'') + '</td>';
     if (canEdit) {
       var tdA = document.createElement('td');
       var bE = document.createElement('button');
