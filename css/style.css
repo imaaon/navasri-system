@@ -1212,3 +1212,61 @@
      และมี container scroll หลัก = window  → grid จะ scroll พร้อม window
      ถ้า user เลื่อนลง จะเห็น tab ทั้ง 19 ตัว */
 }
+
+/* ═══ Fix: Lock modal center — prevent horizontal scroll ═══════ */
+@media (max-width: 768px) {
+  /* ล็อคไม่ให้ body เลื่อนซ้าย-ขวา */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Lock body scroll เมื่อ modal เปิด — กัน touch scroll ลามถึง body */
+  body:has(.modal-overlay.open),
+  body:has(.patient-info-modal-overlay) {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Modal overlay — เต็มจอ + ล็อค */
+  .modal-overlay,
+  .modal-overlay.open,
+  .patient-info-modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important; /* dynamic viewport (รองรับ mobile address bar) */
+    overflow: hidden !important;
+    padding: 12px;
+    -webkit-overflow-scrolling: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Modal content — กึ่งกลาง + scroll ภายในตัวเอง */
+  .modal-overlay .modal,
+  .modal-overlay .modal-box,
+  .patient-info-modal-overlay > div {
+    width: calc(100vw - 24px) !important;
+    max-width: 480px !important;
+    max-height: calc(100vh - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    margin: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ปิด animation transform — กัน modal เลื่อนหลุดจอ */
+  .modal-overlay .modal,
+  .modal-overlay .modal-box {
+    animation: none !important;
+    transform: none !important;
+  }
+}
