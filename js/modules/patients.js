@@ -232,7 +232,8 @@ function onPatBedChange() {
   const bed  = db.beds.find(b => b.id == bedId);
   const room = bed ? db.rooms.find(r => r.id == bed.roomId) : null;
   if (room) {
-    infoDiv.innerHTML = `🏠 ${room.roomType} · ${room.zone||''} · ค่าห้อง <strong>${room.monthlyRate?.toLocaleString('th-TH')||0} ฿/เดือน</strong>${room.dailyRate ? ` หรือ ${room.dailyRate.toLocaleString('th-TH')} ฿/วัน` : ''}`;
+    const priceHtml = canSeePrice() ? ` · ค่าห้อง <strong>${room.monthlyRate?.toLocaleString('th-TH')||0} ฿/เดือน</strong>${room.dailyRate ? ` หรือ ${room.dailyRate.toLocaleString('th-TH')} ฿/วัน` : ''}` : '';
+    infoDiv.innerHTML = `🏠 ${room.roomType} · ${room.zone||''}${priceHtml}`;
     infoDiv.style.display = 'block';
   }
 }

@@ -25,7 +25,8 @@ function onReqPatientChange() {
   const bed = getPatientBed(patient);
   if (bed) {
     const room = getPatientRoom(patient);
-    bedText.textContent = `ห้อง: ${room?.name||'-'} · เตียง: ${bed.bedCode} · ประเภท: ${room?.roomType||'-'} · ค่าห้อง: ${room?.monthlyRate ? room.monthlyRate.toLocaleString('th-TH')+'฿/เดือน' : '-'}`;
+    const priceText = canSeePrice() && room?.monthlyRate ? ' · ค่าห้อง: ' + room.monthlyRate.toLocaleString('th-TH') + '฿/เดือน' : '';
+    bedText.textContent = `ห้อง: ${room?.name||'-'} · เตียง: ${bed.bedCode} · ประเภท: ${room?.roomType||'-'}${priceText}`;
     bedDiv.style.display = 'block';
   } else {
     bedDiv.style.display = 'none';
