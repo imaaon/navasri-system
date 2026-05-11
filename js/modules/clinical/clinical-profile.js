@@ -41,9 +41,9 @@ async function openPatientProfile(id, activeTab) {
             <div style="font-size:11px;color:var(--text2);">หน่วยรวม</div>
           </div>
         </div>
-        <div style="margin-top:8px;display:flex;gap:6px;">
-          <button class="btn btn-outline-primary" style="flex:1;font-size:13px;" onclick="openContractFilesModal('${p.id}','${p.name}')">📄 สัญญา</button>
-          <button class="btn btn-outline-primary" style="flex:1;font-size:13px;" onclick="openPatientContractsModal('${p.id}','${p.name}')">📋 แพ็กเกจ</button>
+        <div style="margin-top:8px;display:flex;gap:6px;${canSeePrice() ? '' : 'justify-content:center;'}">
+          ${canSeePrice() ? `<button class="btn btn-outline-primary" style="flex:1;font-size:13px;" onclick="openContractFilesModal('${p.id}','${p.name}')">📄 สัญญา</button>` : ''}
+          <button class="btn btn-outline-primary" style="${canSeePrice() ? 'flex:1;' : 'min-width:60%;'}font-size:13px;" onclick="openPatientContractsModal('${p.id}','${p.name}')">📋 แพ็กเกจ</button>
         </div>
         <div style="margin-top:16px;">
           <button class="btn btn-primary" style="width:100%;" onclick="editPatient('${p.id}')">✏️ แก้ไขข้อมูล</button>
@@ -1651,6 +1651,7 @@ async function _deleteFluidRecord(id, patId) {
 
 // ===== CONTRACT FILES MODAL =====
 async function openContractFilesModal(patientId, patientName) {
+  if (!canSeePrice()) { toast('ไม่มีสิทธิ์ดูไฟล์สัญญา', 'warning'); return; }
   // สร้าง overlay
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
