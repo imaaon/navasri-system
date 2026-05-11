@@ -2398,7 +2398,18 @@ async function _deleteFluidRecord(id, patId) {
 }
 
 // ── List ประเภทน้ำเข้า ──
-var _INTAKE_TYPES = ['น้ำดื่ม', 'อาหารสายยาง', 'ยา', 'IV', 'อื่นๆ'];
+var _INTAKE_TYPES = ['น้ำ', 'อาหารสายยาง', 'ยา', 'IV', 'อื่นๆ'];
+// ── Icons + label สำหรับ chips ──
+var _INTAKE_TYPE_META = {
+  'น้ำ':           { icon: '💧', label: 'น้ำ' },
+  'อาหารสายยาง':   { icon: '🥣', label: 'อาหารสายยาง' },
+  'ยา':            { icon: '💊', label: 'ยา' },
+  'IV':            { icon: '💉', label: 'IV' },
+  'อื่นๆ':         { icon: '📝', label: 'อื่นๆ (ระบุ)' }
+};
+
+// ── Legacy mapping: ค่าเก่าใน DB ที่ต้อง map เป็น 'น้ำ' (สำหรับ edit mode) ──
+var _INTAKE_LEGACY_NAMES = ['น้ำดื่ม', 'น้ำเปล่า'];
 
 // ═══════════════════════════════════════════════════════════════
 // Multi-row Intake Modal
@@ -2486,6 +2497,8 @@ function _openIntakeModal(rec, patId, today) {
     var initTypeName, initOtherType, initVol, initNote;
     if (dbRow) {
       var ft = (dbRow.fluid_type || '').trim();
+      // ── Legacy mapping: "น้ำดื่ม" / "น้ำเปล่า" → "น้ำ" ──
+      if (_INTAKE_LEGACY_NAMES.indexOf(ft) >= 0) ft = 'น้ำ';
       var ftIsListed = _INTAKE_TYPES.slice(0, 4).indexOf(ft) >= 0;
       initTypeName = ftIsListed ? ft : 'อื่นๆ';
       initOtherType = ftIsListed ? '' : ft;
@@ -2523,28 +2536,38 @@ function _openIntakeModal(rec, patId, today) {
     });
     rowEl.appendChild(delBtn);
 
-    // Type dropdown
+    // Type chips (single-select)
     var typeWrap = document.createElement('div');
     typeWrap.style.cssText = 'margin-top:6px;';
     var typeLbl = document.createElement('div');
-    typeLbl.style.cssText = 'font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;';
+    typeLbl.style.cssText = 'font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;';
     typeLbl.textContent = 'ประเภท';
     typeWrap.appendChild(typeLbl);
-    var selType = document.createElement('select');
-    selType.className = 'form-control';
-    selType.style.cssText = 'height:44px;font-size:14px;';
-    // ใส่ "-- เลือก --" เป็น default (กัน default ค้าง)
-    var optPlaceholder = document.createElement('option');
-    optPlaceholder.value = ''; optPlaceholder.textContent = '-- เลือก --';
-    selType.appendChild(optPlaceholder);
+
+    // chips grid — 2 cols, "อื่นๆ" span 2 cols
+    var typeChips = document.createElement('div');
+    typeChips.className = 'type-chips';
+    typeChips.style.cssText = 'grid-template-columns:1fr 1fr;';
+    var currentTypeName = initTypeName;
+    var typeChipEls = {};
     _INTAKE_TYPES.forEach(function(t) {
-      var opt = document.createElement('option');
-      opt.value = t; opt.textContent = t;
-      if (t === initTypeName) opt.selected = true;
-      selType.appendChild(opt);
+      var meta = _INTAKE_TYPE_META[t];
+      var chip = document.createElement('div');
+      chip.className = 'type-chip' + (t === currentTypeName ? ' active' : '');
+      chip.innerHTML = '<span class="icon">' + meta.icon + '</span><span>' + meta.label + '</span>';
+      if (t === 'อื่นๆ') chip.style.gridColumn = 'span 2';
+      chip.addEventListener('click', function() {
+        currentTypeName = t;
+        Object.keys(typeChipEls).forEach(function(k) {
+          if (k === t) typeChipEls[k].classList.add('active');
+          else typeChipEls[k].classList.remove('active');
+        });
+        otherWrap.style.display = (t === 'อื่นๆ') ? '' : 'none';
+      });
+      typeChips.appendChild(chip);
+      typeChipEls[t] = chip;
     });
-    selType.value = initTypeName;
-    typeWrap.appendChild(selType);
+    typeWrap.appendChild(typeChips);
 
     // ระบุประเภท (เฉพาะ อื่นๆ)
     var otherWrap = document.createElement('div');
@@ -2559,9 +2582,6 @@ function _openIntakeModal(rec, patId, today) {
     otherWrap.appendChild(otherLbl); otherWrap.appendChild(inpOther);
     otherWrap.style.display = (initTypeName === 'อื่นๆ') ? '' : 'none';
     typeWrap.appendChild(otherWrap);
-    selType.addEventListener('change', function() {
-      otherWrap.style.display = (selType.value === 'อื่นๆ') ? '' : 'none';
-    });
     rowEl.appendChild(typeWrap);
 
     // ปริมาณ ml
@@ -2596,7 +2616,7 @@ function _openIntakeModal(rec, patId, today) {
       badgeEl: badge,
       delBtn: delBtn,
       getValues: function() {
-        var typeName = selType.value;
+        var typeName = currentTypeName;
         var finalType = (typeName === 'อื่นๆ') ? (inpOther.value || '').trim() : typeName;
         return {
           typeName: typeName,
