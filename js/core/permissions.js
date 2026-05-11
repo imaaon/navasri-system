@@ -127,6 +127,13 @@ function canManageBilling() {
   return hasRole('admin', 'manager', 'officer');
 }
 
+// ── Hide prices/money figures from non-finance roles ─────────
+// เห็นราคา: admin, manager, officer, nurse, parttime_nurse
+// ซ่อนราคา: caregiver, doctor, physical_therapist, dietitian, warehouse
+function canSeePrice() {
+  return hasRole('admin', 'manager', 'officer', 'nurse', 'parttime_nurse');
+}
+
 function canManagePatients() {
   return hasRole('admin', 'manager', 'officer', 'nurse', 'parttime_nurse');
 }
