@@ -79,7 +79,7 @@ async function openPatientProfile(id, activeTab) {
           <div><span style="color:var(--text3);min-width:80px;display:inline-block;">เตียง</span><strong>${bed.bedCode}</strong></div>
           <div><span style="color:var(--text3);min-width:80px;display:inline-block;">ประเภท</span><strong>${room?.roomType||'-'}</strong></div>
           <div><span style="color:var(--text3);min-width:80px;display:inline-block;">โซน</span><strong>${room?.zone||'-'}</strong></div>
-          <div><span style="color:var(--text3);min-width:80px;display:inline-block;">ค่าห้อง</span><strong style="color:var(--accent);">${room?.monthlyRate ? room.monthlyRate.toLocaleString('th-TH')+' ฿/เดือน' : '-'}</strong></div>
+          ${canSeePrice() ? `<div><span style="color:var(--text3);min-width:80px;display:inline-block;">ค่าห้อง</span><strong style="color:var(--accent);">${room?.monthlyRate ? room.monthlyRate.toLocaleString('th-TH')+' ฿/เดือน' : '-'}</strong></div>` : ''}
         </div>
       </div>`; })()}
     </div>
@@ -239,12 +239,14 @@ async function openPatientProfile(id, activeTab) {
           </div>
           <div id="pat-dispense-list-${p.id}"></div>
         </div>
+        ${canSeePrice() ? `
         <div class="card" style="margin-top:12px;">
           <div class="card-header">
             <div class="card-title" style="font-size:13px;color:var(--orange);">🧾 รายการที่ยังไม่ออกบิล</div>
           </div>
           <div id="pat-unbilled-list-${p.id}"></div>
         </div>
+        ` : ''}
       </div>
       <!-- DEPOSITS TAB -->
       ${(ROLE_PAGES[currentUser?.role]||[]).includes('deposits') ? `
