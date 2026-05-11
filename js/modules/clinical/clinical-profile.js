@@ -1694,11 +1694,16 @@ function _renderFluidTable(container, rows, canEdit, patId, direction, modalDefa
 }
 
 function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
+  // ── เวร 2 ตัวใหม่: เช้า 07:00-18:59 (h: 7-18), ดึก 19:00-06:59 (h: 19-23 || 0-6) ──
   var shifts = [
-    {key:'เช้า', start:6, end:14},
-    {key:'บ่าย', start:14, end:22},
-    {key:'ดึก', start:22, end:30}
+    {key:'เช้า', label:'เช้า', sub:'07:00–18:59'},
+    {key:'ดึก',  label:'ดึก',  sub:'19:00–06:59'}
   ];
+  function _inShift(hour, shKey) {
+    if (hour < 0) return false;
+    return shKey === 'เช้า' ? (hour >= 7 && hour < 19) : (hour >= 19 || hour < 7);
+  }
+
   var sec3 = document.createElement('div');
   sec3.style.cssText = 'background:#fffbe6;border-radius:8px;padding:16px;margin-bottom:16px';
   var title3 = document.createElement('strong');
@@ -1710,44 +1715,81 @@ function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
   tbl.className = 'table table-sm table-bordered';
   tbl.style.cssText = 'margin-top:10px;font-size:13px';
   var thead = document.createElement('thead');
-  thead.innerHTML = '<tr><th>เวร</th><th>น้ำเข้า (ml)</th><th>น้ำออก (ml)</th><th>Balance (ml)</th><th>อุจจาระ (ครั้ง)</th></tr>';
+  thead.innerHTML =
+    '<tr>' +
+      '<th>เวร</th>' +
+      '<th>น้ำเข้า (ml)</th>' +
+      '<th>น้ำออก (ml)</th>' +
+      '<th>Balance (ml)</th>' +
+      '<th>ปัสสาวะ (ครั้ง)</th>' +
+      '<th>อุจจาระ (ครั้ง)</th>' +
+      '<th>อาเจียน (ครั้ง)</th>' +
+    '</tr>';
   tbl.appendChild(thead);
   var tbody = document.createElement('tbody');
-  var totIn = 0, totOut = 0, totStool = 0;
+  var totIn = 0, totOut = 0, totUrine = 0, totStool = 0, totVomit = 0;
+
   shifts.forEach(function(sh) {
-    var shIn = 0, shOut = 0, shStool = 0;
+    var shIn = 0, shOut = 0, shUrine = 0, shStool = 0, shVomit = 0;
+    // ── fluids ──
     fluids.forEach(function(f) {
       var h = f.recorded_at ? parseInt(f.recorded_at.slice(11,13)) : -1;
-      var inShift = sh.key === 'ดึก' ? (h >= 22 || h < 6) : (h >= sh.start && h < sh.end);
-      if (!inShift) return;
+      if (!_inShift(h, sh.key)) return;
       var vol = parseFloat(f.volume_ml) || 0;
-      if (f.direction === 'intake') shIn += vol;
-      else if (f.direction === 'output') shOut += vol;
+      if (f.direction === 'intake') {
+        shIn += vol;
+      } else if (f.direction === 'output') {
+        shOut += vol;
+        // นับครั้งของ output fluid (อาเจียน หรือ อื่นๆ)
+        var ft = (f.fluid_type || '').trim();
+        if (ft === 'อาเจียน') shVomit += 1;
+        // 'อื่นๆ' ไม่นับในคอลัมน์ครั้งหลัก (เพราะ user เห็นใน table หลัก)
+      }
     });
+    // ── excretions ──
     excretions.forEach(function(r) {
       var h = r.recorded_at ? parseInt(r.recorded_at.slice(11,13)) : -1;
-      var inShift = sh.key === 'ดึก' ? (h >= 22 || h < 6) : (h >= sh.start && h < sh.end);
-      if (!inShift) return;
-      if (r.type === 'urine') shOut += parseFloat(r.volume_ml) || 0;
-      if (r.type === 'stool') shStool += parseInt(r.count) || 0;
+      if (!_inShift(h, sh.key)) return;
+      if (r.type === 'urine') {
+        shOut += parseFloat(r.volume_ml) || 0;
+        // ── ข้อ 6 ──: นับครั้งของปัสสาวะ ใช้ count ถ้ามี, ถ้าไม่มี count ให้นับเป็น 1
+        shUrine += (parseInt(r.count) || 1);
+      } else if (r.type === 'stool') {
+        shStool += (parseInt(r.count) || 1);
+      }
     });
-    totIn += shIn; totOut += shOut; totStool += shStool;
+    totIn += shIn; totOut += shOut;
+    totUrine += shUrine; totStool += shStool; totVomit += shVomit;
     var bal = shIn - shOut;
     var tr = document.createElement('tr');
     tr.style.color = bal < 0 ? '#c0392b' : '#1a5276';
-    tr.innerHTML = '<td>' + sh.key + '</td><td>' + shIn + '</td><td>' + shOut + '</td><td><strong>' + (bal >= 0 ? '+' : '') + bal + '</strong></td><td>' + shStool + '</td>';
+    tr.innerHTML =
+      '<td>' + sh.label + '<br><span style="font-size:10px;color:var(--text3);font-weight:normal;">' + sh.sub + '</span></td>' +
+      '<td>' + shIn + '</td>' +
+      '<td>' + shOut + '</td>' +
+      '<td><strong>' + (bal >= 0 ? '+' : '') + bal + '</strong></td>' +
+      '<td>' + shUrine + '</td>' +
+      '<td>' + shStool + '</td>' +
+      '<td>' + shVomit + '</td>';
     tbody.appendChild(tr);
   });
   var trTot = document.createElement('tr');
   trTot.style.cssText = 'background:#fef9c3;font-weight:bold';
   var totBal = totIn - totOut;
-  trTot.innerHTML = '<td>รวม 24ชม.</td><td>' + totIn + '</td><td>' + totOut + '</td><td style="color:' + (totBal < 0 ? '#c0392b' : '#1a5276') + '">' + (totBal >= 0 ? '+' : '') + totBal + '</td><td>' + totStool + '</td>';
+  trTot.innerHTML =
+    '<td>รวม 24 ชม.</td>' +
+    '<td>' + totIn + '</td>' +
+    '<td>' + totOut + '</td>' +
+    '<td style="color:' + (totBal < 0 ? '#c0392b' : '#1a5276') + '">' + (totBal >= 0 ? '+' : '') + totBal + '</td>' +
+    '<td>' + totUrine + '</td>' +
+    '<td>' + totStool + '</td>' +
+    '<td>' + totVomit + '</td>';
   tbody.appendChild(trTot);
   tbl.appendChild(tbody);
   sec3.appendChild(tbl);
   var note3 = document.createElement('p');
   note3.style.cssText = 'font-size:11px;color:#888;margin:4px 0 0';
-  note3.textContent = 'หมายเหตุ: น้ำออก = ปัสสาวะ (ml) + น้ำออกอื่นๆ' + (rangeLabel ? ' | ช่วง ' + rangeLabel : ' | เฉพาะข้อมูลวันนี้');
+  note3.textContent = 'หมายเหตุ: น้ำออก (ml) = ปัสสาวะ + อาเจียน + อื่นๆ · "จำนวนครั้ง" นับทุก record (รวมที่ไม่ได้กรอก ml)';
   sec3.appendChild(note3);
   container.appendChild(sec3);
 }
