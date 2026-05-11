@@ -1157,107 +1157,166 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFr
   var modalDefaultDate = dateFrom;
   var rangeLabel = (dateFrom === dateTo) ? dateFrom : (dateFrom + ' ถึง ' + dateTo);
 
-  // ===== SECTION 1: EXCRETIONS =====
+  // ===== SECTION 1: 💧 น้ำเข้า (Intake) — ขึ้นก่อนตามที่อ้นขอ =====
+  var intakeFluids = fluids.filter(function(f){ return f.direction === 'intake'; });
   var sec1 = document.createElement('div');
-  sec1.style.cssText = 'background:#f8f9fa;border-radius:8px;padding:16px;margin-bottom:16px';
+  sec1.style.cssText = 'background:#f0f8f0;border-radius:8px;padding:16px;margin-bottom:16px';
   var s1hdr = document.createElement('div');
   s1hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px';
   var s1title = document.createElement('strong');
-  s1title.textContent = 'ปัสสาวะ / อุจจาระ';
+  s1title.textContent = String.fromCodePoint(0x1F4A7) + ' น้ำเข้า (Intake)';
   if (canEdit) {
     var btnAdd1 = document.createElement('button');
-    btnAdd1.className = 'btn btn-sm btn-primary';
-    btnAdd1.textContent = '+ เพิ่มรายการ';
-    btnAdd1.addEventListener('click', function() { _openExcretionModal(null, patId, modalDefaultDate); });
+    btnAdd1.className = 'btn btn-sm btn-success';
+    btnAdd1.textContent = '+ เพิ่มน้ำเข้า';
+    btnAdd1.addEventListener('click', function() { _openFluidModal(null, patId, 'intake', modalDefaultDate); });
     s1hdr.appendChild(btnAdd1);
   }
   s1hdr.appendChild(s1title);
   sec1.appendChild(s1hdr);
-
-  if (excretions.length === 0) {
-    var nodata1 = document.createElement('p');
-    nodata1.style.color = '#888';
-    nodata1.textContent = 'ไม่มีข้อมูลในช่วง ' + rangeLabel;
-    sec1.appendChild(nodata1);
-  } else {
-    var tbl1 = document.createElement('table');
-    tbl1.className = 'table table-sm table-bordered';
-    tbl1.style.fontSize = '13px';
-    var thead1 = document.createElement('thead');
-    thead1.innerHTML = '<tr><th>วันที่</th><th>เวลา</th><th>เวร</th><th>ประเภท</th><th>จำนวนครั้ง</th><th>ปริมาณ(ml)</th><th>ลักษณะ</th><th>หมายเหตุ</th>' + (canEdit ? '<th></th>' : '') + '</tr>';
-    tbl1.appendChild(thead1);
-    var tbody1 = document.createElement('tbody');
-    excretions.forEach(function(r) {
-      var tr = document.createElement('tr');
-      var d = r.recorded_at ? r.recorded_at.slice(0,10) : '';
-      var t = r.recorded_at ? r.recorded_at.slice(11,16) : '';
-      var typeLabel = r.type === 'urine' ? 'ปัสสาวะ' : r.type === 'stool' ? 'อุจจาระ' : (r.type || '');
-      tr.innerHTML = '<td>' + d + '</td><td>' + t + '</td><td>' + (r.shift||'') + '</td><td>' + typeLabel + '</td><td>' + (r.count||'') + '</td><td>' + (r.volume_ml||'') + '</td><td>' + (r.characteristics||'') + '</td><td>' + (r.note||'') + '</td>';
-      if (canEdit) {
-        var tdAct = document.createElement('td');
-        var btnE = document.createElement('button');
-        btnE.className = 'btn btn-xs btn-outline-secondary';
-        btnE.textContent = '✒';
-        btnE.style.marginRight = '4px';
-        btnE.addEventListener('click', (function(rec){ return function(){ _openExcretionModal(rec, patId, modalDefaultDate); }; })(r));
-        var btnD = document.createElement('button');
-        btnD.className = 'btn btn-xs btn-outline-danger';
-        btnD.textContent = '✕';
-        btnD.addEventListener('click', (function(id){ return function(){ _deleteExcretion(id, patId); }; })(r.id));
-        tdAct.appendChild(btnE); tdAct.appendChild(btnD);
-        tr.appendChild(tdAct);
-      }
-      tbody1.appendChild(tr);
-    });
-    tbl1.appendChild(tbody1);
-    sec1.appendChild(tbl1);
-  }
+  _renderFluidTable(sec1, intakeFluids, canEdit, patId, 'intake', modalDefaultDate, rangeLabel);
   sectionsWrap.appendChild(sec1);
 
-  // ===== SECTION 2: FLUID INTAKE =====
-  var intakeFluids = fluids.filter(function(f){ return f.direction === 'intake'; });
+  // ===== SECTION 2: 🚽 น้ำออก (Output) — รวม 4 ประเภท =====
+  // ปัสสาวะ + อุจจาระ (จาก patient_excretions)
+  // อาเจียน + อื่นๆ (จาก patient_fluid_records.direction='output')
+  var outputFluids = fluids.filter(function(f){ return f.direction === 'output'; });
+  var combinedOutput = _buildCombinedOutputRows(excretions, outputFluids);
   var sec2 = document.createElement('div');
-  sec2.style.cssText = 'background:#f0f8f0;border-radius:8px;padding:16px;margin-bottom:16px';
+  sec2.style.cssText = 'background:#fff0f0;border-radius:8px;padding:16px;margin-bottom:16px';
   var s2hdr = document.createElement('div');
   s2hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px';
   var s2title = document.createElement('strong');
-  s2title.textContent = String.fromCodePoint(0x1F4A7) + ' น้ำเข้า (Intake)';
+  s2title.textContent = String.fromCodePoint(0x1F6BD) + ' น้ำออก (Output)';
   if (canEdit) {
     var btnAdd2 = document.createElement('button');
-    btnAdd2.className = 'btn btn-sm btn-success';
-    btnAdd2.textContent = '+ เพิ่มน้ำเข้า';
-    btnAdd2.addEventListener('click', function() { _openFluidModal(null, patId, 'intake', modalDefaultDate); });
+    btnAdd2.className = 'btn btn-sm btn-danger';
+    btnAdd2.textContent = '+ เพิ่มน้ำออก';
+    btnAdd2.addEventListener('click', function() { _openOutputModal(null, patId, modalDefaultDate); });
     s2hdr.appendChild(btnAdd2);
   }
   s2hdr.appendChild(s2title);
   sec2.appendChild(s2hdr);
-  _renderFluidTable(sec2, intakeFluids, canEdit, patId, 'intake', modalDefaultDate, rangeLabel);
+  _renderCombinedOutputTable(sec2, combinedOutput, canEdit, patId, modalDefaultDate, rangeLabel);
   sectionsWrap.appendChild(sec2);
-
-  // ===== SECTION 2b: FLUID OUTPUT (other) =====
-  var outputFluids = fluids.filter(function(f){ return f.direction === 'output'; });
-  var sec2b = document.createElement('div');
-  sec2b.style.cssText = 'background:#fff0f0;border-radius:8px;padding:16px;margin-bottom:16px';
-  var s2bhdr = document.createElement('div');
-  s2bhdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px';
-  var s2btitle = document.createElement('strong');
-  s2btitle.textContent = '☂ น้ำออกอื่นๆ (อาเจียน / Drainage / อื่นๆ)';
-  if (canEdit) {
-    var btnAdd2b = document.createElement('button');
-    btnAdd2b.className = 'btn btn-sm btn-danger';
-    btnAdd2b.textContent = '+ เพิ่มน้ำออก';
-    btnAdd2b.addEventListener('click', function() { _openFluidModal(null, patId, 'output', modalDefaultDate); });
-    s2bhdr.appendChild(btnAdd2b);
-  }
-  s2bhdr.appendChild(s2btitle);
-  sec2b.appendChild(s2bhdr);
-  _renderFluidTable(sec2b, outputFluids, canEdit, patId, 'output', modalDefaultDate, rangeLabel);
-  sectionsWrap.appendChild(sec2b);
 
   // ===== SECTION 3: BALANCE SUMMARY =====
   _renderBalanceSummary(sectionsWrap, excretions, fluids, rangeLabel);
 
   el.appendChild(sectionsWrap);
+}
+
+// ── Helper: รวม excretions + output fluids เป็น list เดียว เรียงตามเวลา ──
+function _buildCombinedOutputRows(excretions, outputFluids) {
+  var rows = [];
+  // ปัสสาวะ / อุจจาระ (จาก patient_excretions)
+  excretions.forEach(function(r) {
+    var typeLabel = r.type === 'urine' ? 'ปัสสาวะ'
+                  : r.type === 'stool' ? 'อุจจาระ'
+                  : (r.type || '');
+    rows.push({
+      source: 'excretion',
+      id: r.id,
+      recorded_at: r.recorded_at,
+      shift: r.shift,
+      type: r.type,
+      typeLabel: typeLabel,
+      count: r.count,
+      volume_ml: r.volume_ml,
+      characteristics: r.characteristics,
+      note: r.note,
+      raw: r
+    });
+  });
+  // อาเจียน / อื่นๆ (จาก patient_fluid_records.direction='output')
+  outputFluids.forEach(function(f) {
+    var ft = (f.fluid_type || '').trim();
+    var isVomit = ft === 'อาเจียน';
+    rows.push({
+      source: 'fluid',
+      id: f.id,
+      recorded_at: f.recorded_at,
+      shift: f.shift,
+      type: isVomit ? 'vomit' : 'other',
+      typeLabel: isVomit ? 'อาเจียน' : ('อื่นๆ' + (ft ? ': ' + ft : '')),
+      count: null,
+      volume_ml: f.volume_ml,
+      characteristics: null,
+      note: f.note,
+      raw: f
+    });
+  });
+  // เรียงตามเวลา (ใหม่สุดล่าง — เหมือนของเดิม)
+  rows.sort(function(a, b) {
+    return (a.recorded_at || '').localeCompare(b.recorded_at || '');
+  });
+  return rows;
+}
+
+// ── Render combined output table ──
+function _renderCombinedOutputTable(sec, rows, canEdit, patId, modalDefaultDate, rangeLabel) {
+  if (rows.length === 0) {
+    var nodata = document.createElement('p');
+    nodata.style.color = '#888';
+    nodata.textContent = 'ไม่มีข้อมูลในช่วง ' + rangeLabel;
+    sec.appendChild(nodata);
+    return;
+  }
+  var tbl = document.createElement('table');
+  tbl.className = 'table table-sm table-bordered';
+  tbl.style.fontSize = '13px';
+  var thead = document.createElement('thead');
+  thead.innerHTML = '<tr><th>วันที่</th><th>เวลา</th><th>เวร</th><th>ประเภท</th><th>จำนวนครั้ง</th><th>ปริมาณ(ml)</th><th>ลักษณะ</th><th>หมายเหตุ</th>' + (canEdit ? '<th></th>' : '') + '</tr>';
+  tbl.appendChild(thead);
+  var tbody = document.createElement('tbody');
+  rows.forEach(function(r) {
+    var tr = document.createElement('tr');
+    var d = r.recorded_at ? r.recorded_at.slice(0,10) : '';
+    var t = r.recorded_at ? r.recorded_at.slice(11,16) : '';
+    tr.innerHTML = '<td>' + d + '</td><td>' + t + '</td><td>' + (r.shift||'') + '</td><td>' + r.typeLabel + '</td><td>' + (r.count||'-') + '</td><td>' + (r.volume_ml||'-') + '</td><td>' + (r.characteristics||'-') + '</td><td>' + (r.note||'-') + '</td>';
+    if (canEdit) {
+      var tdAct = document.createElement('td');
+      var btnE = document.createElement('button');
+      btnE.className = 'btn btn-xs btn-outline-secondary';
+      btnE.textContent = '✒';
+      btnE.style.marginRight = '4px';
+      btnE.addEventListener('click', (function(row){ return function(){ _openOutputModal(row, patId, modalDefaultDate); }; })(r));
+      var btnD = document.createElement('button');
+      btnD.className = 'btn btn-xs btn-outline-danger';
+      btnD.textContent = '✕';
+      btnD.addEventListener('click', (function(row){ return function(){ _deleteOutputRow(row, patId); }; })(r));
+      tdAct.appendChild(btnE); tdAct.appendChild(btnD);
+      tr.appendChild(tdAct);
+    }
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+  sec.appendChild(tbl);
+}
+
+// ── Router: ลบ row จาก source ที่ถูกต้อง ──
+async function _deleteOutputRow(row, patId) {
+  if (!(await customConfirm('ยืนยันลบรายการนี้?'))) return;
+  var promise = row.source === 'excretion'
+    ? supa.from('patient_excretions').delete().eq('id', row.id)
+    : supa.from('patient_fluid_records').delete().eq('id', row.id);
+  promise.then(function(res) {
+    if (res.error) { customAlert('ลบไม่สำเร็จ: ' + res.error.message); return; }
+    switchPatTab('excretion');
+  });
+}
+
+// ── Router: เปิด modal แก้/เพิ่ม Output (Commit 3 จะแทนด้วย unified modal) ──
+function _openOutputModal(row, patId, today) {
+  // ชั่วคราว: ถ้าเป็น row เก่า ส่งไป modal ตามแหล่งข้อมูล
+  if (row && row.source === 'excretion') {
+    _openExcretionModal(row.raw, patId, today);
+  } else if (row && row.source === 'fluid') {
+    _openFluidModal(row.raw, patId, 'output', today);
+  } else {
+    // เพิ่มใหม่ — ชั่วคราว default ไป excretion modal
+    _openExcretionModal(null, patId, today);
+  }
 }
 
 function _renderFluidTable(container, rows, canEdit, patId, direction, modalDefaultDate, rangeLabel) {
