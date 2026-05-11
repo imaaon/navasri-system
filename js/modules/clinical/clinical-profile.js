@@ -1306,17 +1306,344 @@ async function _deleteOutputRow(row, patId) {
   });
 }
 
-// ── Router: เปิด modal แก้/เพิ่ม Output (Commit 3 จะแทนด้วย unified modal) ──
+// ── Helper: คำนวณเวรจากเวลา (2 เวร: เช้า 07:00-18:59 / ดึก 19:00-06:59) ──
+function _shiftFromTime(timeStr) {
+  if (!timeStr) return 'เช้า';
+  var h = parseInt(timeStr.slice(0,2));
+  return (h >= 7 && h < 19) ? 'เช้า' : 'ดึก';
+}
+
+// ── Lists of ลักษณะ ตามประเภท ──
+var _OUTPUT_CHARS = {
+  urine: ['ใส', 'เหลืองเข้ม', 'น้ำตาล', 'ขุ่น', 'มีเลือดปน'],
+  stool: ['ปกติ', 'แข็ง', 'เหลว', 'เหลวเป็นน้ำ', 'มีเลือดปน'],
+  vomit: ['เป็นอาหาร', 'เป็นน้ำใส', 'มีเลือดปน', 'มีน้ำดี (สีเหลือง/เขียว)']
+};
+var _OUTPUT_TYPE_META = {
+  urine: { label: 'ปัสสาวะ', icon: '💛', hasVolume: true, hasChar: true },
+  stool: { label: 'อุจจาระ', icon: '💩', hasVolume: false, hasChar: true },
+  vomit: { label: 'อาเจียน', icon: '🤢', hasVolume: true, hasChar: true },
+  other: { label: 'อื่นๆ', icon: '📝', hasVolume: true, hasChar: false }
+};
+
+// ── Modal เพิ่ม/แก้ Output (รวม 4 ประเภท) ──
 function _openOutputModal(row, patId, today) {
-  // ชั่วคราว: ถ้าเป็น row เก่า ส่งไป modal ตามแหล่งข้อมูล
-  if (row && row.source === 'excretion') {
-    _openExcretionModal(row.raw, patId, today);
-  } else if (row && row.source === 'fluid') {
-    _openFluidModal(row.raw, patId, 'output', today);
+  var isEdit = !!(row && row.source);
+  var todayStr = new Date().toISOString().slice(0, 10);
+  var nowStr = new Date().toTimeString().slice(0,5);
+
+  // ── เตรียมค่า initial ──
+  var dateVal, timeVal, typeVal, countVal, volVal, charVal, otherTypeVal, noteVal;
+  if (isEdit) {
+    dateVal = row.recorded_at ? row.recorded_at.slice(0,10) : (today || todayStr);
+    timeVal = row.recorded_at ? row.recorded_at.slice(11,16) : nowStr;
+    typeVal = row.type || 'urine';
+    countVal = row.count || '';
+    volVal = row.volume_ml || '';
+    charVal = row.characteristics || '';
+    noteVal = row.note || '';
+    // ถ้า source='fluid' และ type='other' → ดึง fluid_type ออกมาใส่ otherTypeVal
+    otherTypeVal = '';
+    if (row.source === 'fluid' && row.raw) {
+      var ft = (row.raw.fluid_type || '').trim();
+      if (ft && ft !== 'อาเจียน') otherTypeVal = ft;
+    }
   } else {
-    // เพิ่มใหม่ — ชั่วคราว default ไป excretion modal
-    _openExcretionModal(null, patId, today);
+    dateVal = today || todayStr;
+    timeVal = nowStr;
+    typeVal = 'urine';
+    countVal = '1';
+    volVal = '';
+    charVal = '';
+    otherTypeVal = '';
+    noteVal = '';
   }
+
+  // ── สร้าง overlay + modal ──
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;';
+  var modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.cssText = 'background:#fff;border-radius:12px;padding:20px;width:480px;max-width:95vw;max-height:92vh;overflow-y:auto;';
+
+  // Title
+  var h3 = document.createElement('div');
+  h3.style.cssText = 'font-size:16px;font-weight:700;color:var(--accent-dark);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);';
+  h3.textContent = (isEdit ? '🚽 แก้ไขน้ำออก' : '🚽 เพิ่มน้ำออก');
+  modal.appendChild(h3);
+
+  // ── Helpers ──
+  function mkRow(labelTxt) {
+    var row = document.createElement('div');
+    row.style.cssText = 'margin-bottom:12px';
+    var lbl = document.createElement('label');
+    lbl.className = 'form-label';
+    lbl.style.cssText = 'display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;';
+    lbl.textContent = labelTxt;
+    row.appendChild(lbl);
+    return row;
+  }
+  function mkInput(type, val, placeholder, inputmode) {
+    var inp = document.createElement('input');
+    inp.type = type; inp.value = val || '';
+    if (placeholder) inp.placeholder = placeholder;
+    if (inputmode) inp.setAttribute('inputmode', inputmode);
+    inp.className = 'form-control';
+    inp.style.cssText = 'height:44px;font-size:15px;';
+    return inp;
+  }
+
+  // ── วันที่ + เวลา + ปุ่ม "ตอนนี้" ──
+  var dtRow = mkRow('วันที่ และ เวลา');
+  var dtWrap = document.createElement('div');
+  dtWrap.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;';
+  var inpDate = mkInput('date', dateVal);
+  var inpTime = mkInput('time', timeVal);
+  var btnNow = document.createElement('button');
+  btnNow.type = 'button';
+  btnNow.className = 'btn btn-sm';
+  btnNow.style.cssText = 'height:44px;background:var(--accent-light);color:var(--accent-dark);border:1.5px solid var(--accent);font-size:12px;font-weight:600;white-space:nowrap;padding:0 12px;border-radius:8px;';
+  btnNow.textContent = '🕐 ตอนนี้';
+  btnNow.addEventListener('click', function() {
+    inpDate.value = new Date().toISOString().slice(0,10);
+    inpTime.value = new Date().toTimeString().slice(0,5);
+    selShift.value = _shiftFromTime(inpTime.value);
+  });
+  dtWrap.appendChild(inpDate); dtWrap.appendChild(inpTime); dtWrap.appendChild(btnNow);
+  dtRow.appendChild(dtWrap);
+  modal.appendChild(dtRow);
+
+  // ── เวร (auto จากเวลา) ──
+  var shiftRow = mkRow('เวร');
+  var selShift = document.createElement('select');
+  selShift.className = 'form-control';
+  selShift.style.cssText = 'height:44px;font-size:15px;';
+  ['เช้า (07:00–18:59)','ดึก (19:00–06:59)'].forEach(function(label, i) {
+    var opt = document.createElement('option');
+    opt.value = i === 0 ? 'เช้า' : 'ดึก';
+    opt.textContent = label;
+    selShift.appendChild(opt);
+  });
+  selShift.value = isEdit ? ((row.shift === 'ดึก') ? 'ดึก' : 'เช้า') : _shiftFromTime(timeVal);
+  inpTime.addEventListener('change', function() {
+    if (!isEdit) selShift.value = _shiftFromTime(inpTime.value);  // ไม่ override ถ้ากำลังแก้
+  });
+  shiftRow.appendChild(selShift);
+  modal.appendChild(shiftRow);
+
+  // ── ประเภท (chips) ──
+  var typeRow = mkRow('ประเภท');
+  var chipsWrap = document.createElement('div');
+  chipsWrap.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;';
+  var chips = {};
+  ['urine','stool','vomit','other'].forEach(function(t) {
+    var c = document.createElement('div');
+    c.style.cssText = 'padding:10px 8px;border:1.5px solid var(--border);border-radius:8px;text-align:center;font-size:13px;font-weight:600;color:var(--text2);background:#fff;cursor:pointer;user-select:none;min-height:44px;display:flex;align-items:center;justify-content:center;gap:4px;';
+    c.innerHTML = _OUTPUT_TYPE_META[t].icon + ' ' + _OUTPUT_TYPE_META[t].label;
+    c.addEventListener('click', function() {
+      typeVal = t;
+      _refreshTypeUI();
+    });
+    chipsWrap.appendChild(c);
+    chips[t] = c;
+  });
+  typeRow.appendChild(chipsWrap);
+
+  // ช่อง "ระบุ" สำหรับ "อื่นๆ"
+  var otherTypeWrap = document.createElement('div');
+  otherTypeWrap.style.cssText = 'background:var(--accent-light);border-radius:6px;padding:8px;margin-top:6px;display:none;';
+  var lblOther = document.createElement('label');
+  lblOther.className = 'form-label';
+  lblOther.style.cssText = 'display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;';
+  lblOther.textContent = 'ระบุประเภท';
+  var inpOtherType = mkInput('text', otherTypeVal, 'เช่น Drainage, เหงื่อ, เลือดออก');
+  otherTypeWrap.appendChild(lblOther); otherTypeWrap.appendChild(inpOtherType);
+  typeRow.appendChild(otherTypeWrap);
+  modal.appendChild(typeRow);
+
+  // ── จำนวนครั้ง + ปริมาณ (grid 2 col) ──
+  var qtyRow = document.createElement('div');
+  qtyRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px';
+  var countDiv = mkRow('จำนวนครั้ง');
+  var inpCount = mkInput('number', countVal, '1', 'numeric');
+  inpCount.min = '0';
+  countDiv.appendChild(inpCount);
+  var volDiv = mkRow('ปริมาณ (ml)');
+  var inpVol = mkInput('number', volVal, '', 'numeric');
+  inpVol.min = '0';
+  volDiv.appendChild(inpVol);
+  qtyRow.appendChild(countDiv); qtyRow.appendChild(volDiv);
+  modal.appendChild(qtyRow);
+
+  // ── ลักษณะ (dropdown ตามประเภท + text สำหรับ other) ──
+  var charRow = mkRow('ลักษณะ');
+  var selChar = document.createElement('select');
+  selChar.className = 'form-control';
+  selChar.style.cssText = 'height:44px;font-size:15px;';
+  var inpCharText = mkInput('text', charVal, 'พิมพ์เอง');
+  inpCharText.style.display = 'none';
+  charRow.appendChild(selChar);
+  charRow.appendChild(inpCharText);
+  modal.appendChild(charRow);
+
+  // ── หมายเหตุ ──
+  var noteRow = mkRow('หมายเหตุ (ไม่บังคับ)');
+  var inpNote = mkInput('text', noteVal, '');
+  noteRow.appendChild(inpNote);
+  modal.appendChild(noteRow);
+
+  // ── ปุ่มบันทึก/ยกเลิก ──
+  var btnWrap = document.createElement('div');
+  btnWrap.style.cssText = 'display:flex;gap:8px;margin-top:14px;';
+  var btnCancel = document.createElement('button');
+  btnCancel.type = 'button';
+  btnCancel.className = 'btn btn-ghost';
+  btnCancel.style.cssText = 'flex:1;height:44px;font-size:14px;';
+  btnCancel.textContent = 'ยกเลิก';
+  var btnSave = document.createElement('button');
+  btnSave.type = 'button';
+  btnSave.className = 'btn btn-primary';
+  btnSave.style.cssText = 'flex:1;height:44px;font-size:14px;font-weight:600;';
+  btnSave.textContent = '💾 บันทึก';
+  btnWrap.appendChild(btnCancel); btnWrap.appendChild(btnSave);
+  modal.appendChild(btnWrap);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // ── Refresh UI ตามประเภท ──
+  function _refreshTypeUI() {
+    // chip active state
+    Object.keys(chips).forEach(function(k) {
+      if (k === typeVal) {
+        chips[k].style.borderColor = 'var(--accent)';
+        chips[k].style.background = 'var(--accent-light)';
+        chips[k].style.color = 'var(--accent-dark)';
+      } else {
+        chips[k].style.borderColor = 'var(--border)';
+        chips[k].style.background = '#fff';
+        chips[k].style.color = 'var(--text2)';
+      }
+    });
+    var meta = _OUTPUT_TYPE_META[typeVal];
+    // ระบุประเภท (เฉพาะ other)
+    otherTypeWrap.style.display = (typeVal === 'other') ? '' : 'none';
+    // ปริมาณ ml
+    volDiv.style.display = meta.hasVolume ? '' : 'none';
+    // ลักษณะ (dropdown vs text)
+    if (meta.hasChar) {
+      selChar.style.display = '';
+      inpCharText.style.display = 'none';
+      // ปรับ options
+      selChar.innerHTML = '';
+      var optDefault = document.createElement('option');
+      optDefault.value = '';
+      optDefault.textContent = '-- เลือก --';
+      selChar.appendChild(optDefault);
+      (_OUTPUT_CHARS[typeVal] || []).forEach(function(c) {
+        var o = document.createElement('option');
+        o.value = c; o.textContent = c;
+        if (c === charVal) o.selected = true;
+        selChar.appendChild(o);
+      });
+    } else {
+      // other → text input
+      selChar.style.display = 'none';
+      inpCharText.style.display = '';
+    }
+  }
+  _refreshTypeUI();
+
+  // ── Close handlers ──
+  function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+  btnCancel.addEventListener('click', close);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+
+  // ── Save ──
+  btnSave.addEventListener('click', function() {
+    var dateValSel = inpDate.value || dateVal;
+    var timeValSel = inpTime.value || '00:00';
+    if (!dateValSel) { customAlert('กรุณาเลือกวันที่'); return; }
+    var dObj = new Date(dateValSel + 'T' + timeValSel + ':00');
+    if (isNaN(dObj.getTime())) { customAlert('วันที่/เวลาไม่ถูกต้อง'); return; }
+    var dateTime = new Date(dObj.getTime() - dObj.getTimezoneOffset() * 60000).toISOString().slice(0, 19) + 'Z';
+    var user = (window._currentUser && window._currentUser.username) ? window._currentUser.username : 'user';
+
+    var meta = _OUTPUT_TYPE_META[typeVal];
+    var countNum = parseInt(inpCount.value) || null;
+    var volNum = meta.hasVolume ? (parseFloat(inpVol.value) || null) : null;
+    var charFinal = meta.hasChar ? (selChar.value || '') : (inpCharText.value || '');
+    var noteFinal = inpNote.value || null;
+
+    // ต้องมีอย่างน้อย count หรือ vol หรือ char หรือ note
+    if (!countNum && !volNum && !charFinal && !noteFinal) {
+      customAlert('กรุณาระบุข้อมูลอย่างน้อย 1 อย่าง (จำนวนครั้ง, ปริมาณ, ลักษณะ หรือ หมายเหตุ)');
+      return;
+    }
+
+    // ── Routing: ปัสสาวะ/อุจจาระ → patient_excretions, อาเจียน/อื่นๆ → patient_fluid_records ──
+    var promise;
+    if (typeVal === 'urine' || typeVal === 'stool') {
+      var payload = {
+        patient_id: patId,
+        recorded_at: dateTime,
+        shift: selShift.value,
+        type: typeVal,
+        count: countNum,
+        volume_ml: volNum,
+        characteristics: charFinal || null,
+        note: noteFinal,
+        recorded_by: user
+      };
+      // ── ถ้าแก้ row เดิม จาก excretions ──
+      if (isEdit && row.source === 'excretion') {
+        promise = supa.from('patient_excretions').update(payload).eq('id', row.id);
+      }
+      // ── ถ้าแก้ row เดิมจาก fluid (เปลี่ยนประเภทจาก vomit/other → urine/stool) ──
+      else if (isEdit && row.source === 'fluid') {
+        promise = supa.from('patient_fluid_records').delete().eq('id', row.id)
+          .then(function() { return supa.from('patient_excretions').insert(payload); });
+      } else {
+        promise = supa.from('patient_excretions').insert(payload);
+      }
+    } else {
+      // vomit / other
+      var fluidType = (typeVal === 'vomit') ? 'อาเจียน' : ((inpOtherType.value || '').trim() || 'อื่นๆ');
+      // characteristics ของ vomit/other → เก็บใน note (table fluid_records ไม่มี characteristics)
+      var noteCombined = charFinal
+        ? ('[ลักษณะ: ' + charFinal + ']' + (noteFinal ? ' ' + noteFinal : ''))
+        : noteFinal;
+      var fluidPayload = {
+        patient_id: patId,
+        recorded_at: dateTime,
+        shift: selShift.value,
+        direction: 'output',
+        fluid_type: fluidType,
+        volume_ml: volNum,
+        note: noteCombined,
+        recorded_by: user
+      };
+      if (isEdit && row.source === 'fluid') {
+        promise = supa.from('patient_fluid_records').update(fluidPayload).eq('id', row.id);
+      }
+      // ── ถ้าแก้ row เดิมจาก excretions (เปลี่ยน urine/stool → vomit/other) ──
+      else if (isEdit && row.source === 'excretion') {
+        promise = supa.from('patient_excretions').delete().eq('id', row.id)
+          .then(function() { return supa.from('patient_fluid_records').insert(fluidPayload); });
+      } else {
+        promise = supa.from('patient_fluid_records').insert(fluidPayload);
+      }
+    }
+
+    Promise.resolve(promise).then(function(res) {
+      if (res && res.error) { customAlert('บันทึกไม่สำเร็จ: ' + res.error.message); return; }
+      close();
+      switchPatTab('excretion');
+    }).catch(function(err) {
+      customAlert('บันทึกไม่สำเร็จ: ' + (err.message || err));
+    });
+  });
 }
 
 function _renderFluidTable(container, rows, canEdit, patId, direction, modalDefaultDate, rangeLabel) {
