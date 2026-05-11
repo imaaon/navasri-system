@@ -1,31 +1,444 @@
 
-async function openEditVitalModal(patientId, pid, vitalId) {
-  const vitals = db.vitalSigns[pid] || [];
-  const v = vitals.find(x => x.id == vitalId);
-  if (!v) return;
-  document.getElementById('vital-pat-id').value = patientId;
-  document.getElementById('vital-pat-id').dataset.editId = vitalId;
-  document.getElementById('vital-pat-id').dataset.pid = pid;
-  // set datetime
-  const dt = v.recordedAt ? new Date(v.recordedAt) : new Date();
-  const dtLocal = new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
-  document.getElementById('vital-time').value = dtLocal;
-  document.getElementById('vital-by').value = v.recordedBy || '';
-  // vital fields
-  document.getElementById('vital-bp-sys').value = v.bp_sys || '';
-  document.getElementById('vital-bp-dia').value = v.bp_dia || '';
-  document.getElementById('vital-hr').value = v.hr || '';
-  document.getElementById('vital-temp').value = v.temp || '';
-  document.getElementById('vital-spo2').value = v.spo2 || '';
-  document.getElementById('vital-dtx').value = v.dtx || '';
-  document.getElementById('vital-rr').value = v.rr || '';
-  document.getElementById('vital-weight').value = v.weight || '';
-  document.getElementById('vital-height').value = v.height || '';
-  document.getElementById('vital-other').value = v.otherFields || '';
-  document.getElementById('vital-note').value = v.note || '';
-  document.getElementById('modal-vital-title').textContent = '✏️ แก้ไข Vital Signs';
-  openModal('modal-add-vital');
+// ═══════════════════════════════════════════════════════════════
+// VITAL SIGNS — Multi-row chip selector modal (ใหม่)
+// ═══════════════════════════════════════════════════════════════
+// 5 chips lock: BP, HR, Temp, SpO₂, RR
+// 3 chips optional: DTX, น้ำหนัก, ส่วนสูง
+// "อาการ/หมายเหตุ" textarea — เอา other_fields ออก
+// Multi-row: shared = วันที่ · per-row = เวลา + chips + values + textarea
+// ═══════════════════════════════════════════════════════════════
+
+var _VITAL_CHIPS = [
+  { key: 'bp',     icon: '🩸', label: 'ความดัน',  color: '#e74c3c', unit: 'mmHg', double: true, locked: true,  fields: ['bp_sys','bp_dia'] },
+  { key: 'hr',     icon: '💓', label: 'ชีพจร',    color: '#3498db', unit: 'bpm',  locked: true,  fields: ['hr'] },
+  { key: 'temp',   icon: '🌡️', label: 'อุณหภูมิ', color: '#e67e22', unit: '°C',   locked: true,  fields: ['temp'], step: '0.1' },
+  { key: 'spo2',   icon: '🫁', label: 'SpO₂',     color: '#27ae60', unit: '%',    locked: true,  fields: ['spo2'] },
+  { key: 'rr',     icon: '🫀', label: 'RR',       color: '#16a085', unit: '/min', locked: true,  fields: ['rr'] },
+  { key: 'dtx',    icon: '🍬', label: 'DTX',      color: '#8e44ad', unit: 'mg/dL',locked: false, fields: ['dtx'] },
+  { key: 'weight', icon: '⚖️', label: 'น้ำหนัก',  color: '#7f8c8d', unit: 'กก.',  locked: false, fields: ['weight'], step: '0.1' },
+  { key: 'height', icon: '📏', label: 'ส่วนสูง',  color: '#7f8c8d', unit: 'ซม.',  locked: false, fields: ['height'], step: '0.1' }
+];
+
+function _openVitalModal(rec, patientId, pid) {
+  var isEdit = !!rec;
+  var todayStr = new Date().toISOString().slice(0,10);
+  var nowStr = new Date().toTimeString().slice(0,5);
+  var sharedDate = isEdit && rec.recordedAt ? rec.recordedAt.slice(0,10) : todayStr;
+  var initTime = isEdit && rec.recordedAt ? rec.recordedAt.slice(11,16) : nowStr;
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;';
+  var modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.cssText = 'background:#fff;border-radius:12px;padding:18px;width:520px;max-width:95vw;max-height:92vh;overflow-y:auto;';
+
+  var h3 = document.createElement('div');
+  h3.style.cssText = 'font-size:16px;font-weight:700;color:var(--accent2);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);';
+  h3.textContent = isEdit ? '📊 แก้ไขสัญญาณชีพ' : '📊 บันทึกสัญญาณชีพ';
+  modal.appendChild(h3);
+
+  // Shared header (วันที่)
+  var sharedSec = document.createElement('div');
+  sharedSec.className = 'mr-shared';
+  var sharedLabel = document.createElement('div');
+  sharedLabel.className = 'mr-shared-label';
+  sharedLabel.textContent = '📍 วันที่ (ใช้กับทุกรายการ)';
+  sharedSec.appendChild(sharedLabel);
+  var inpDate = document.createElement('input');
+  inpDate.type = 'date'; inpDate.value = sharedDate; inpDate.className = 'form-control';
+  inpDate.style.cssText = 'height:44px;font-size:14px;';
+  sharedSec.appendChild(inpDate);
+  modal.appendChild(sharedSec);
+
+  var rowsContainer = document.createElement('div');
+  modal.appendChild(rowsContainer);
+
+  var rows = [];
+
+  function _renumberBadges() {
+    rows.forEach(function(r, i) {
+      if (r.badgeEl) r.badgeEl.textContent = (r.kind === 'edit' ? '📝 แก้ไข ' : 'รายการ ') + (i + 1);
+    });
+  }
+
+  function _createRowUI(opts) {
+    var kind = opts.kind || 'new';
+    var dbRow = opts.dbRow || null;
+
+    // initial activeChips - default 5 lock
+    var activeChips = { bp:true, hr:true, temp:true, spo2:true, rr:true };
+    var initValues = {};
+    var initTimeR = (kind === 'new') ? new Date().toTimeString().slice(0,5) : (initTime || nowStr);
+    var initNote = '';
+
+    if (dbRow) {
+      // edit mode: chip ติด ✓ ตาม field ที่มีค่า
+      activeChips = {};
+      _VITAL_CHIPS.forEach(function(c) {
+        var has = c.fields.some(function(f) {
+          var v = dbRow[f] !== undefined ? dbRow[f] : dbRow[_camel(f)];
+          return v !== null && v !== '' && v !== undefined;
+        });
+        if (has || c.locked) activeChips[c.key] = true;
+      });
+      _VITAL_CHIPS.forEach(function(c) {
+        c.fields.forEach(function(f) {
+          var v = dbRow[f] !== undefined ? dbRow[f] : dbRow[_camel(f)];
+          if (v !== null && v !== undefined) initValues[f] = v;
+        });
+      });
+      initTimeR = dbRow.recordedAt ? dbRow.recordedAt.slice(11,16) : initTimeR;
+      initNote = dbRow.note || '';
+    }
+
+    var rowEl = document.createElement('div');
+    rowEl.className = 'mr-item' + (kind === 'edit' ? ' editing' : (rows.length > 0 ? ' new-row' : ''));
+    rowEl.style.cssText = 'background:#fff;';
+
+    var badge = document.createElement('div');
+    badge.className = 'mr-badge' + (kind === 'edit' ? ' editing' : (kind === 'new' && rows.length > 0 ? ' new-row' : ''));
+    badge.textContent = (kind === 'edit' ? '📝 แก้ไข ' : 'รายการ ') + (rows.length + 1);
+    rowEl.appendChild(badge);
+
+    var delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'mr-del';
+    delBtn.textContent = '✕';
+    delBtn.style.display = 'none';
+    delBtn.addEventListener('click', function() {
+      var idx = rows.indexOf(rowState);
+      if (idx >= 0) {
+        rows.splice(idx, 1);
+        rowEl.parentNode.removeChild(rowEl);
+        _renumberBadges();
+        _updateDelButtons();
+        _updateSaveBtnText();
+      }
+    });
+    rowEl.appendChild(delBtn);
+
+    // Time row
+    var timeHeader = document.createElement('div');
+    timeHeader.style.cssText = 'display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center;margin:8px 0 10px 0;padding-bottom:8px;border-bottom:1px dashed var(--border);';
+    var timeLbl = document.createElement('span');
+    timeLbl.style.cssText = 'font-size:11px;font-weight:600;color:var(--text2);white-space:nowrap;';
+    timeLbl.textContent = '🕐 เวลา';
+    var inpTime = document.createElement('input');
+    inpTime.type = 'time'; inpTime.value = initTimeR; inpTime.className = 'form-control';
+    inpTime.style.cssText = 'height:40px;font-size:14px;';
+    var btnNowR = document.createElement('button');
+    btnNowR.type = 'button';
+    btnNowR.className = 'btn-now';
+    btnNowR.style.cssText = 'height:40px;font-size:11px;padding:0 10px;';
+    btnNowR.textContent = 'ตอนนี้';
+    btnNowR.addEventListener('click', function() {
+      inpTime.value = new Date().toTimeString().slice(0,5);
+    });
+    timeHeader.appendChild(timeLbl);
+    timeHeader.appendChild(inpTime);
+    timeHeader.appendChild(btnNowR);
+    rowEl.appendChild(timeHeader);
+
+    // Vital chips selector
+    var chipsLbl = document.createElement('div');
+    chipsLbl.style.cssText = 'font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;';
+    chipsLbl.innerHTML = 'ค่าที่จะวัด <span style="color:var(--text3);font-weight:400;font-size:10px;">(แตะเพื่อเปิด/ปิด)</span>';
+    rowEl.appendChild(chipsLbl);
+
+    var chipsContainer = document.createElement('div');
+    chipsContainer.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;';
+
+    var valueFieldsContainer = document.createElement('div');
+
+    var chipEls = {};
+    var valueWrappers = {};
+    var valueInputs = {};
+
+    _VITAL_CHIPS.forEach(function(c) {
+      var chip = document.createElement('div');
+      chip.className = 'type-chip' + (activeChips[c.key] ? ' active' : '');
+      chip.style.cssText = 'border-radius:8px;';
+      chip.innerHTML = '<span class="icon">' + c.icon + '</span><span>' + c.label + '</span>';
+      chip.addEventListener('click', function() {
+        if (activeChips[c.key]) {
+          delete activeChips[c.key];
+          chip.classList.remove('active');
+        } else {
+          activeChips[c.key] = true;
+          chip.classList.add('active');
+        }
+        if (valueWrappers[c.key]) {
+          valueWrappers[c.key].style.display = activeChips[c.key] ? '' : 'none';
+        }
+      });
+      chipsContainer.appendChild(chip);
+      chipEls[c.key] = chip;
+    });
+    rowEl.appendChild(chipsContainer);
+
+    // Value field for each chip (showing only active ones)
+    _VITAL_CHIPS.forEach(function(c) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'background:#fafbfc;border-radius:8px;padding:10px;margin-bottom:6px;border-left:3px solid ' + c.color + ';';
+      wrap.style.display = activeChips[c.key] ? '' : 'none';
+
+      var header = document.createElement('div');
+      header.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:12px;font-weight:700;color:var(--text);';
+      header.innerHTML = '<span style="color:' + c.color + ';">' + c.icon + '</span> ' + c.label;
+      wrap.appendChild(header);
+
+      if (c.double) {
+        // BP: SYS / DIA
+        var grid = document.createElement('div');
+        grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;';
+        c.fields.forEach(function(fn, idx) {
+          var fwrap = document.createElement('div');
+          var fl = document.createElement('div');
+          fl.style.cssText = 'font-size:10px;color:var(--text3);margin-bottom:3px;';
+          fl.textContent = (idx === 0 ? 'SYS' : 'DIA');
+          fwrap.appendChild(fl);
+          var iwrap = document.createElement('div');
+          iwrap.style.cssText = 'display:grid;grid-template-columns:1fr auto;gap:4px;align-items:center;';
+          var inp = document.createElement('input');
+          inp.type = 'number';
+          inp.setAttribute('inputmode','numeric');
+          inp.className = 'form-control';
+          inp.style.cssText = 'height:44px;padding:0 10px;font-size:16px;font-weight:600;';
+          inp.placeholder = (idx === 0 ? '120' : '80');
+          if (initValues[fn] !== undefined) inp.value = initValues[fn];
+          var unit = document.createElement('span');
+          unit.style.cssText = 'font-size:11px;color:var(--text3);padding-left:2px;';
+          unit.textContent = c.unit;
+          iwrap.appendChild(inp);
+          iwrap.appendChild(unit);
+          fwrap.appendChild(iwrap);
+          grid.appendChild(fwrap);
+          valueInputs[fn] = inp;
+        });
+        wrap.appendChild(grid);
+      } else {
+        // Single field
+        var iwrap2 = document.createElement('div');
+        iwrap2.style.cssText = 'display:grid;grid-template-columns:1fr auto;gap:4px;align-items:center;';
+        var inp2 = document.createElement('input');
+        inp2.type = 'number';
+        inp2.setAttribute('inputmode', c.step ? 'decimal' : 'numeric');
+        if (c.step) inp2.step = c.step;
+        inp2.className = 'form-control';
+        inp2.style.cssText = 'height:44px;padding:0 10px;font-size:16px;font-weight:600;';
+        if (initValues[c.fields[0]] !== undefined) inp2.value = initValues[c.fields[0]];
+        var unit2 = document.createElement('span');
+        unit2.style.cssText = 'font-size:11px;color:var(--text3);padding-left:2px;';
+        unit2.textContent = c.unit;
+        iwrap2.appendChild(inp2);
+        iwrap2.appendChild(unit2);
+        wrap.appendChild(iwrap2);
+        valueInputs[c.fields[0]] = inp2;
+      }
+
+      valueFieldsContainer.appendChild(wrap);
+      valueWrappers[c.key] = wrap;
+    });
+
+    rowEl.appendChild(valueFieldsContainer);
+
+    // อาการ/หมายเหตุ
+    var noteWrap = document.createElement('div');
+    noteWrap.style.cssText = 'margin-top:10px;';
+    var noteLbl = document.createElement('div');
+    noteLbl.style.cssText = 'font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;';
+    noteLbl.textContent = '📝 อาการ/หมายเหตุ';
+    var inpNote = document.createElement('textarea');
+    inpNote.rows = 3;
+    inpNote.className = 'form-control';
+    inpNote.style.cssText = 'min-height:80px;padding:8px 10px;font-size:14px;font-family:inherit;resize:vertical;';
+    inpNote.placeholder = 'อาการที่สังเกต / หมายเหตุพิเศษ';
+    inpNote.value = initNote;
+    noteWrap.appendChild(noteLbl);
+    noteWrap.appendChild(inpNote);
+    rowEl.appendChild(noteWrap);
+
+    var rowState = {
+      kind: kind,
+      dbRow: dbRow,
+      container: rowEl,
+      badgeEl: badge,
+      delBtn: delBtn,
+      getValues: function() {
+        var data = { recorded_at: null, note: (inpNote.value || '').trim() || null };
+        // Field values for active chips only — inactive chips → null
+        _VITAL_CHIPS.forEach(function(c) {
+          c.fields.forEach(function(f) {
+            if (activeChips[c.key] && valueInputs[f]) {
+              var v = valueInputs[f].value;
+              data[f] = (v === '' || v === null || v === undefined) ? null : parseFloat(v);
+            } else {
+              data[f] = null;
+            }
+          });
+        });
+        // datetime: combine sharedDate + this row's time
+        var t = inpTime.value || '00:00';
+        if (inpDate.value && t) {
+          var d = new Date(inpDate.value + 'T' + t + ':00');
+          if (!isNaN(d.getTime())) {
+            data.recorded_at = new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString();
+          }
+        }
+        return data;
+      }
+    };
+
+    return rowState;
+  }
+
+  function _addRow(opts) {
+    var rs = _createRowUI(opts || {});
+    rows.push(rs);
+    rowsContainer.appendChild(rs.container);
+    _renumberBadges();
+    _updateDelButtons();
+    _updateSaveBtnText();
+    return rs;
+  }
+
+  function _updateDelButtons() {
+    rows.forEach(function(r) {
+      r.delBtn.style.display = (rows.length === 1) ? 'none' : '';
+    });
+  }
+
+  function _updateSaveBtnText() {
+    var editCount = rows.filter(function(r){ return r.kind === 'edit'; }).length;
+    var newCount = rows.filter(function(r){ return r.kind === 'new'; }).length;
+    var parts = [];
+    if (editCount > 0) parts.push(editCount + ' แก้');
+    if (newCount > 0) parts.push(newCount + ' ใหม่');
+    if (typeof btnSave !== 'undefined' && btnSave) btnSave.textContent = '💾 บันทึก (' + parts.join(' + ') + ')';
+  }
+
+  // Initial rows
+  if (isEdit) _addRow({ kind:'edit', dbRow: rec });
+  else _addRow({ kind:'new' });
+
+  // ปุ่มเพิ่มรายการ
+  var btnAddRow = document.createElement('button');
+  btnAddRow.type = 'button';
+  btnAddRow.className = 'mr-add-row';
+  btnAddRow.textContent = '➕ เพิ่มการวัดอีกเวลา';
+  btnAddRow.addEventListener('click', function() { _addRow({ kind:'new' }); });
+  modal.appendChild(btnAddRow);
+
+  // ปุ่มล่างสุด
+  var btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:8px;margin-top:16px;';
+  var btnCancel = document.createElement('button');
+  btnCancel.type = 'button';
+  btnCancel.className = 'btn btn-ghost';
+  btnCancel.style.cssText = 'flex:1;height:44px;font-size:14px;';
+  btnCancel.textContent = 'ยกเลิก';
+  var btnSave = document.createElement('button');
+  btnSave.type = 'button';
+  btnSave.className = 'btn btn-primary';
+  btnSave.style.cssText = 'flex:1;height:44px;font-size:14px;font-weight:600;';
+  btnSave.textContent = '💾 บันทึก';
+  btnRow.appendChild(btnCancel);
+  btnRow.appendChild(btnSave);
+  modal.appendChild(btnRow);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  _updateSaveBtnText();
+
+  function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+  btnCancel.addEventListener('click', close);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+
+  // Save logic
+  btnSave.addEventListener('click', async function() {
+    if (!inpDate.value) { toast('กรุณาเลือกวันที่','warning'); return; }
+    var user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+
+    var operations = [];
+    for (var i = 0; i < rows.length; i++) {
+      var v = rows[i].getValues();
+      if (!v.recorded_at) {
+        toast('รายการ ' + (i+1) + ': กรุณาระบุเวลา', 'warning');
+        return;
+      }
+      var vitalFields = ['bp_sys','bp_dia','hr','temp','spo2','dtx','rr','weight','height'];
+      var hasVital = vitalFields.some(function(f) { return v[f] !== null; });
+      var hasText = !!v.note;
+      if (!hasVital && !hasText) {
+        toast('รายการ ' + (i+1) + ': กรุณาระบุค่าสัญญาณชีพอย่างน้อย 1 ค่า หรือบันทึกหมายเหตุ','warning');
+        return;
+      }
+      operations.push({ rowState: rows[i], data: v });
+    }
+
+    btnSave.disabled = true;
+    btnSave.textContent = 'กำลังบันทึก...';
+
+    var results = await Promise.allSettled(operations.map(function(op) {
+      var payload = Object.assign({ patient_id: patientId, recorded_by: user, other_fields: '' }, op.data);
+      if (op.rowState.kind === 'edit' && op.rowState.dbRow) {
+        return supa.from('vital_signs').update(payload).eq('id', op.rowState.dbRow.id).select().single().then(function(r) {
+          if (r.error) throw r.error;
+          if (db.vitalSigns[pid]) {
+            db.vitalSigns[pid] = db.vitalSigns[pid].map(function(x) {
+              return String(x.id) === String(op.rowState.dbRow.id) ? mapVitalSign(r.data) : x;
+            });
+          }
+          return r;
+        });
+      } else {
+        return supa.from('vital_signs').insert(payload).select().single().then(function(r) {
+          if (r.error) throw r.error;
+          if (!db.vitalSigns[pid]) db.vitalSigns[pid] = [];
+          db.vitalSigns[pid].unshift(mapVitalSign(r.data));
+          return r;
+        });
+      }
+    }));
+
+    var fails = results.filter(function(r){ return r.status === 'rejected'; });
+    if (fails.length > 0) {
+      toast('บันทึกไม่สำเร็จ ' + fails.length + ' รายการ: ' + (fails[0].reason.message || fails[0].reason), 'error');
+      btnSave.disabled = false;
+      _updateSaveBtnText();
+      return;
+    }
+
+    toast('บันทึกแล้ว ' + results.length + ' รายการ', 'success');
+    close();
+    var tabEl = document.getElementById('patprofile-tab-vitals');
+    if (tabEl) tabEl.innerHTML = renderVitalsTab(pid, patientId);
+  });
 }
+
+// Helper: snake_case → camelCase (สำหรับ db.vitalSigns ที่ใช้ otherFields แทน other_fields)
+function _camel(s) { return s.replace(/_([a-z])/g, function(_, c){ return c.toUpperCase(); }); }
+
+function openAddVitalModal(patientId) {
+  // ค้นหา pid (key ใน db.vitalSigns) จาก patientId
+  var pid = String(patientId);
+  _openVitalModal(null, patientId, pid);
+}
+
+async function openEditVitalModal(patientId, pid, vitalId) {
+  var vitals = db.vitalSigns[pid] || [];
+  var v = vitals.find(function(x) { return x.id == vitalId; });
+  if (!v) { toast('ไม่พบรายการที่ต้องการแก้ไข','error'); return; }
+  _openVitalModal(v, patientId, pid);
+}
+
+// Legacy stub — saveVitalSign ถูกแทนที่ด้วย save logic ใน _openVitalModal
+// เก็บไว้ในกรณีมี HTML เก่าเรียกใช้
+async function saveVitalSign() {
+  console.warn('[vitals] saveVitalSign() is deprecated — use new _openVitalModal');
+}
+
 // ===== CLINICAL: VITALS + NURSING NOTES =====
 
 // ===== VITAL SIGNS ========================
@@ -214,66 +627,6 @@ function vitalsSparkline(values, color, min, max) {
       return `<circle cx="${x}" cy="${y}" r="3" fill="${color}"/>`;
     }).join('')}
   </svg>`;
-}
-
-function openAddVitalModal(patientId) {
-  document.getElementById('vital-pat-id').value = patientId;
-  document.getElementById('vital-pat-id').dataset.editId = '';
-    const _user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
-  document.getElementById('vital-by').value = _user;
-  ['vital-bp-sys','vital-bp-dia','vital-hr','vital-temp','vital-spo2','vital-dtx','vital-rr','vital-other','vital-note']
-    .forEach(id => { document.getElementById(id).value = ''; });
-  const now = new Date();
-  document.getElementById('vital-time').value = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
-  document.getElementById('vital-by').value = currentUser?.displayName || currentUser?.username || '';
-  openModal('modal-add-vital');
-}
-
-async function saveVitalSign() {
-  const editId = document.getElementById('vital-pat-id').dataset.editId || '';
-  document.getElementById('vital-pat-id').dataset.editId = '';
-  const patientId = document.getElementById('vital-pat-id').value;
-  const time = document.getElementById('vital-time').value;
-  if (!time) { toast('กรุณาระบุวัน/เวลา','warning'); return; }
-  const n = v => { const x=document.getElementById(v).value; return x===''?null:parseFloat(x); };
-  const data = {
-    patient_id: patientId,
-    recorded_at: new Date(time + ':00').toISOString(),
-    recorded_by: document.getElementById('vital-by').value.trim(),
-    bp_sys: n('vital-bp-sys'), bp_dia: n('vital-bp-dia'),
-    hr: n('vital-hr'), temp: n('vital-temp'),
-    spo2: n('vital-spo2'), dtx: n('vital-dtx'), rr: n('vital-rr'),
-    weight: n('vital-weight'), height: n('vital-height'),
-    other_fields: document.getElementById('vital-other').value.trim(),
-    note: document.getElementById('vital-note').value.trim(),
-  };
-  // R4-001 fix: ป้องกันบันทึก row ว่าง — ต้องมีอย่างน้อย 1 ค่า vital หรือ note/other_fields
-  const vitalFields = ['bp_sys','bp_dia','hr','temp','spo2','dtx','rr','weight','height'];
-  const hasVital = vitalFields.some(f => data[f] !== null);
-  const hasText  = data.other_fields || data.note;
-  if (!hasVital && !hasText) {
-    toast('กรุณาระบุค่าสัญญาณชีพอย่างน้อย 1 ค่า หรือบันทึกหมายเหตุ','warning');
-    return;
-  }
-  const pid = String(patientId);
-  let ins, error;
-  if (editId) {
-    // แก้ไขรายการเดิม
-    ({ data: ins, error } = await supa.from('vital_signs').update(data).eq('id', editId).select().single());
-    if (error) { toast('แก้ไขไม่สำเร็จ: '+error.message,'error'); return; }
-    if(!db.vitalSigns[pid]) db.vitalSigns[pid]=[];
-    db.vitalSigns[pid] = db.vitalSigns[pid].map(v => String(v.id)===String(editId) ? mapVitalSign(ins) : v);
-    toast('แก้ไข Vital Signs แล้ว','success');
-  } else {
-    // เพิ่มรายการใหม่
-    ({ data: ins, error } = await supa.from('vital_signs').insert(data).select().single());
-    if (error) { toast('บันทึกไม่สำเร็จ: '+error.message,'error'); return; }
-    if(!db.vitalSigns[pid]) db.vitalSigns[pid]=[];
-    db.vitalSigns[pid].unshift(mapVitalSign(ins));
-    toast('บันทึก Vital Signs แล้ว','success');
-  }
-  closeModal('modal-add-vital');
-  document.getElementById('patprofile-tab-vitals').innerHTML = renderVitalsTab(pid, patientId);
 }
 
 async function deleteVitalSign(patientId, pid, id) {

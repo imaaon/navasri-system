@@ -28,7 +28,7 @@ window.scanLabResult=function(){_scanFile('scan-vital-btn','labresult',function(
 var _origOpenRecv=window.openReceiveModal;if(typeof _origOpenRecv==='function'){window.openReceiveModal=function(){_origOpenRecv.apply(this,arguments);setTimeout(function(){_injectScanBtn('modal-receive','scan-receive-btn','สแกนใบส่งของ',window.scanReceive);},80);};}
 var _origOpenAppt=window.openApptModal;if(typeof _origOpenAppt==='function'){window.openApptModal=function(){_origOpenAppt.apply(this,arguments);setTimeout(function(){_injectScanBtn('modal-appt','scan-appt-btn','สแกนใบนัด',window.scanAppointment);},80);};}
 var _origOpenMed=window.openAddMedModal;if(typeof _origOpenMed==='function'){window.openAddMedModal=function(){_origOpenMed.apply(this,arguments);setTimeout(function(){_injectScanBtn('modal-add-medication','scan-med-btn','สแกนยา',window.scanMedication);},80);};}
-var _origOpenVital=window.openAddVitalModal;if(typeof _origOpenVital==='function'){window.openAddVitalModal=function(){_origOpenVital.apply(this,arguments);setTimeout(function(){_injectScanBtn('modal-add-vital','scan-vital-btn','สแกนแล็บ',window.scanLabResult);},80);};}
+// vital scan patch removed — modal-add-vital ถูกแทนที่ด้วย programmatic modal
 var _origOpenAddExp=window.openAddExpenseModal;if(typeof _origOpenAddExp==='function'){window.openAddExpenseModal=function(){_origOpenAddExp.apply(this,arguments);setTimeout(function(){if(document.getElementById('scan-expense-btn'))return;var modal=document.getElementById('modal-addExpense');if(!modal)return;var closeBtn=modal.querySelector('.modal-close');if(!closeBtn)return;var btn=document.createElement('button');btn.id='scan-expense-btn';btn.className='btn btn-ghost btn-sm';btn.style.cssText='font-size:13px;display:inline-flex;align-items:center;margin-right:8px;';btn.innerHTML='📷 สแกนค่าใช้จ่าย';btn.onclick=function(){scanExpense();};closeBtn.parentNode.insertBefore(btn,closeBtn);},80);};}
 var _origOpenLab=window.openAddLabModal;if(typeof _origOpenLab==='function'){var _origOpenLabOrig=_origOpenLab;window.openAddLabModal=function(patientId){_origOpenLabOrig(patientId);setTimeout(function(){_injectScanBtn('modal-add-lab','scan-lab-btn','สแกนแล็บ',function(){_scanFile('scan-lab-btn','labresult',function(d){if(d.test_date)document.getElementById('lab-test-date').value=d.test_date;if(d.hospital)document.getElementById('lab-hospital').value=d.hospital;if(d.doctor)document.getElementById('lab-doctor').value=d.doctor;if(d.summary)document.getElementById('lab-summary').value=d.summary;window._labRows=(d.results||[]).map(function(r){return{test_name:r.test_name||'',value:r.value||'',unit:r.unit||'',reference_range:r.reference_range||'',status:r.status||'normal'};});window._renderLabRows();toast('อ่านเรียบร้อย','success');});});},80);};}
 window.scanSupInv=function(){_scanFile('scan-supinv-btn','invoice',function(d){if(d.invoice_no)document.getElementById('supinv-no').value=d.invoice_no;if(d.invoice_date)document.getElementById('supinv-date').value=d.invoice_date;if(d.due_date)document.getElementById('supinv-due').value=d.due_date;if(d.supplier_name){var manualEl=document.getElementById('supinv-supplier-manual');if(manualEl)manualEl.value=d.supplier_name;var inpEl=document.getElementById('ta-sis-inp');if(inpEl)inpEl.value=d.supplier_name;}if(d.vat_rate!=null)document.getElementById('supinv-vat').value=d.vat_rate;if(d.wht_rate!=null)document.getElementById('supinv-wht-rate').value=d.wht_rate;if(d.items&&d.items.length>0&&typeof addSupInvLine==='function'){var cont=document.getElementById('supinv-lines-container');if(cont)cont.innerHTML='';d.items.forEach(function(it){addSupInvLine({item_name:it.item_name||'',qty:it.qty||1,unit:it.unit||'',unit_price:it.unit_price||0,total:it.total||0,line_type:'service',update_stock:false});});}if(d.subtotal!=null)document.getElementById('supinv-subtotal').value=d.subtotal;if(typeof calcSupInvTotal==='function')calcSupInvTotal();toast('อ่านใบแจ้งหนี้เรียบร้อย','success');});};
@@ -675,15 +675,7 @@ function _setModalDefaults(fields) {
 })();
 
 // ===== ADD VITAL =====
-(function() {
-  var _orig = window.openAddVitalModal;
-  if (typeof _orig !== 'function') return;
-  window.openAddVitalModal = function(patientId) {
-    _clearModalFields('modal-add-vital', ['vital-time','vital-by']);
-    _setModalDefaults([{id:'vital-time',value:'__now__'},{id:'vital-by',value:'__user__'}]);
-    _orig.apply(this, arguments);
-  };
-})();
+// removed — vital modal ถูกแทนที่ด้วย programmatic multi-row modal (no longer uses modal-add-vital HTML)
 
 // ===== ADD MED =====
 (function() {
