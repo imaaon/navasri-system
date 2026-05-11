@@ -1169,7 +1169,7 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFr
     var btnAdd1 = document.createElement('button');
     btnAdd1.className = 'btn btn-sm btn-success';
     btnAdd1.textContent = '+ เพิ่มน้ำเข้า';
-    btnAdd1.addEventListener('click', function() { _openFluidModal(null, patId, 'intake', modalDefaultDate); });
+    btnAdd1.addEventListener('click', function() { _openIntakeModal(null, patId, modalDefaultDate); });
     s1hdr.appendChild(btnAdd1);
   }
   s1hdr.appendChild(s1title);
@@ -1672,7 +1672,14 @@ function _renderFluidTable(container, rows, canEdit, patId, direction, modalDefa
       bE.className = 'btn btn-xs btn-outline-secondary';
       bE.textContent = '✒';
       bE.style.marginRight = '4px';
-      bE.addEventListener('click', (function(rec){ return function(){ _openFluidModal(rec, patId, direction, modalDefaultDate); }; })(r));
+      // ใช้ _openIntakeModal สำหรับ direction='intake' (ของใหม่)
+      // _openFluidModal เก็บไว้สำหรับ direction='output' (backward compat — output ใช้ผ่าน combined table)
+      bE.addEventListener('click', (function(rec, dir){
+        return function() {
+          if (dir === 'intake') _openIntakeModal(rec, patId, modalDefaultDate);
+          else _openFluidModal(rec, patId, dir, modalDefaultDate);
+        };
+      })(r, direction));
       var bD = document.createElement('button');
       bD.className = 'btn btn-xs btn-outline-danger';
       bD.textContent = '✕';
@@ -2031,6 +2038,202 @@ async function _deleteFluidRecord(id, patId) {
   supa.from('patient_fluid_records').delete().eq('id', id).then(function(res) {
     if (res.error) { customAlert('ลบไม่สำเร็จ: ' + res.error.message); return; }
     switchPatTab('excretion');
+  });
+}
+
+// ── List ประเภทน้ำเข้า ──
+var _INTAKE_TYPES = ['น้ำดื่ม', 'อาหารสายยาง', 'ยา', 'IV', 'อื่นๆ'];
+
+// ── Modal น้ำเข้า (Intake) ใหม่ ──
+function _openIntakeModal(rec, patId, today) {
+  var isEdit = !!rec;
+  var todayStr = new Date().toISOString().slice(0, 10);
+  var nowStr = new Date().toTimeString().slice(0,5);
+
+  var dateVal = (rec && rec.recorded_at) ? rec.recorded_at.slice(0,10) : (today || todayStr);
+  var timeVal = (rec && rec.recorded_at) ? rec.recorded_at.slice(11,16) : nowStr;
+  var volVal = (rec && rec.volume_ml) ? rec.volume_ml : '';
+  var noteVal = (rec && rec.note) ? rec.note : '';
+
+  // เลือกประเภทจากค่าเดิม — ถ้าไม่ match กับ list → ถือว่าเป็น "อื่นๆ"
+  var existingType = (rec && rec.fluid_type) ? rec.fluid_type.trim() : '';
+  var typeIsListed = _INTAKE_TYPES.slice(0, 4).indexOf(existingType) >= 0;
+  var typeVal = isEdit ? (typeIsListed ? existingType : 'อื่นๆ') : 'น้ำดื่ม';
+  var otherTypeVal = (isEdit && !typeIsListed) ? existingType : '';
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;';
+  var modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.cssText = 'background:#fff;border-radius:12px;padding:20px;width:440px;max-width:95vw;max-height:92vh;overflow-y:auto;';
+
+  var h3 = document.createElement('div');
+  h3.style.cssText = 'font-size:16px;font-weight:700;color:var(--accent-dark);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);';
+  h3.textContent = (isEdit ? '💧 แก้ไขน้ำเข้า' : '💧 เพิ่มน้ำเข้า');
+  modal.appendChild(h3);
+
+  function mkRow(labelTxt) {
+    var row = document.createElement('div');
+    row.style.cssText = 'margin-bottom:12px';
+    var lbl = document.createElement('label');
+    lbl.style.cssText = 'display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;';
+    lbl.textContent = labelTxt;
+    row.appendChild(lbl);
+    return row;
+  }
+  function mkInput(type, val, placeholder, inputmode) {
+    var inp = document.createElement('input');
+    inp.type = type; inp.value = val || '';
+    if (placeholder) inp.placeholder = placeholder;
+    if (inputmode) inp.setAttribute('inputmode', inputmode);
+    inp.className = 'form-control';
+    inp.style.cssText = 'height:44px;font-size:15px;';
+    return inp;
+  }
+
+  // วันที่ + เวลา + ตอนนี้
+  var dtRow = mkRow('วันที่ และ เวลา');
+  var dtWrap = document.createElement('div');
+  dtWrap.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;';
+  var inpDate = mkInput('date', dateVal);
+  var inpTime = mkInput('time', timeVal);
+  var btnNow = document.createElement('button');
+  btnNow.type = 'button';
+  btnNow.style.cssText = 'height:44px;background:var(--accent-light);color:var(--accent-dark);border:1.5px solid var(--accent);font-size:12px;font-weight:600;white-space:nowrap;padding:0 12px;border-radius:8px;';
+  btnNow.textContent = '🕐 ตอนนี้';
+  btnNow.addEventListener('click', function() {
+    inpDate.value = new Date().toISOString().slice(0,10);
+    inpTime.value = new Date().toTimeString().slice(0,5);
+    selShift.value = _shiftFromTime(inpTime.value);
+  });
+  dtWrap.appendChild(inpDate); dtWrap.appendChild(inpTime); dtWrap.appendChild(btnNow);
+  dtRow.appendChild(dtWrap);
+  modal.appendChild(dtRow);
+
+  // เวร
+  var shiftRow = mkRow('เวร');
+  var selShift = document.createElement('select');
+  selShift.className = 'form-control';
+  selShift.style.cssText = 'height:44px;font-size:15px;';
+  ['เช้า (07:00–18:59)','ดึก (19:00–06:59)'].forEach(function(label, i) {
+    var opt = document.createElement('option');
+    opt.value = i === 0 ? 'เช้า' : 'ดึก';
+    opt.textContent = label;
+    selShift.appendChild(opt);
+  });
+  selShift.value = isEdit ? ((rec.shift === 'ดึก') ? 'ดึก' : 'เช้า') : _shiftFromTime(timeVal);
+  inpTime.addEventListener('change', function() {
+    if (!isEdit) selShift.value = _shiftFromTime(inpTime.value);
+  });
+  shiftRow.appendChild(selShift);
+  modal.appendChild(shiftRow);
+
+  // ประเภท (dropdown 5 options)
+  var typeRow = mkRow('ประเภท');
+  var selType = document.createElement('select');
+  selType.className = 'form-control';
+  selType.style.cssText = 'height:44px;font-size:15px;';
+  _INTAKE_TYPES.forEach(function(t) {
+    var opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    if (t === typeVal) opt.selected = true;
+    selType.appendChild(opt);
+  });
+  typeRow.appendChild(selType);
+
+  // ระบุประเภท (อื่นๆ)
+  var otherWrap = document.createElement('div');
+  otherWrap.style.cssText = 'background:var(--accent-light);border-radius:6px;padding:8px;margin-top:6px;';
+  var lblOther = document.createElement('label');
+  lblOther.style.cssText = 'display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;';
+  lblOther.textContent = 'ระบุประเภท';
+  var inpOtherType = mkInput('text', otherTypeVal, 'เช่น น้ำผลไม้ปั่น, โอวัลติน');
+  otherWrap.appendChild(lblOther); otherWrap.appendChild(inpOtherType);
+  otherWrap.style.display = (typeVal === 'อื่นๆ') ? '' : 'none';
+  typeRow.appendChild(otherWrap);
+  selType.addEventListener('change', function() {
+    otherWrap.style.display = (selType.value === 'อื่นๆ') ? '' : 'none';
+  });
+  modal.appendChild(typeRow);
+
+  // ปริมาณ ml
+  var volRow = mkRow('ปริมาณ (ml)');
+  var inpVol = mkInput('number', volVal, '', 'numeric');
+  inpVol.min = '0';
+  volRow.appendChild(inpVol);
+  modal.appendChild(volRow);
+
+  // หมายเหตุ
+  var noteRow = mkRow('หมายเหตุ (ไม่บังคับ)');
+  var inpNote = mkInput('text', noteVal, '');
+  noteRow.appendChild(inpNote);
+  modal.appendChild(noteRow);
+
+  // ปุ่มล่าง
+  var btnWrap = document.createElement('div');
+  btnWrap.style.cssText = 'display:flex;gap:8px;margin-top:14px;';
+  var btnCancel = document.createElement('button');
+  btnCancel.type = 'button';
+  btnCancel.className = 'btn btn-ghost';
+  btnCancel.style.cssText = 'flex:1;height:44px;font-size:14px;';
+  btnCancel.textContent = 'ยกเลิก';
+  var btnSave = document.createElement('button');
+  btnSave.type = 'button';
+  btnSave.className = 'btn btn-primary';
+  btnSave.style.cssText = 'flex:1;height:44px;font-size:14px;font-weight:600;';
+  btnSave.textContent = '💾 บันทึก';
+  btnWrap.appendChild(btnCancel); btnWrap.appendChild(btnSave);
+  modal.appendChild(btnWrap);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+  btnCancel.addEventListener('click', close);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+
+  btnSave.addEventListener('click', function() {
+    var dateValSel = inpDate.value || dateVal;
+    var timeValSel = inpTime.value || '00:00';
+    if (!dateValSel) { customAlert('กรุณาเลือกวันที่'); return; }
+    var dObj = new Date(dateValSel + 'T' + timeValSel + ':00');
+    if (isNaN(dObj.getTime())) { customAlert('วันที่/เวลาไม่ถูกต้อง'); return; }
+    var dateTime = new Date(dObj.getTime() - dObj.getTimezoneOffset() * 60000).toISOString().slice(0, 19) + 'Z';
+    var user = (window._currentUser && window._currentUser.username) ? window._currentUser.username : 'user';
+
+    var ft = selType.value;
+    if (ft === 'อื่นๆ') {
+      var otherText = (inpOtherType.value || '').trim();
+      if (!otherText) { customAlert('กรุณาระบุประเภท "อื่นๆ"'); return; }
+      ft = otherText;
+    }
+
+    var volNum = parseFloat(inpVol.value) || null;
+    var noteFinal = inpNote.value || null;
+    if (!volNum && !noteFinal) {
+      customAlert('กรุณาระบุปริมาณ (ml) หรือหมายเหตุ');
+      return;
+    }
+
+    var payload = {
+      patient_id: patId,
+      recorded_at: dateTime,
+      shift: selShift.value,
+      direction: 'intake',
+      fluid_type: ft,
+      volume_ml: volNum,
+      note: noteFinal,
+      recorded_by: user
+    };
+    var prom = isEdit
+      ? supa.from('patient_fluid_records').update(payload).eq('id', rec.id)
+      : supa.from('patient_fluid_records').insert(payload);
+    prom.then(function(res) {
+      if (res.error) { customAlert('บันทึกไม่สำเร็จ: ' + res.error.message); return; }
+      close();
+      switchPatTab('excretion');
+    });
   });
 }
 
