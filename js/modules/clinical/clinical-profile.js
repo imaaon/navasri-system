@@ -1794,7 +1794,7 @@ function _openOutputModal(row, patId, today) {
     var parts = [];
     if (editCount > 0) parts.push(editCount + ' แก้');
     if (newCount > 0) parts.push(newCount + ' ใหม่');
-    btnSave.textContent = '💾 บันทึก (' + parts.join(' + ') + ')';
+    if (typeof btnSave !== 'undefined' && btnSave) btnSave.textContent = '💾 บันทึก (' + parts.join(' + ') + ')';
   }
 
   // ── Initial rows ──
@@ -2623,7 +2623,7 @@ function _openIntakeModal(rec, patId, today) {
     var parts = [];
     if (editCount > 0) parts.push(editCount + ' แก้');
     if (newCount > 0) parts.push(newCount + ' ใหม่');
-    btnSave.textContent = '💾 บันทึก (' + parts.join(' + ') + ')';
+    if (typeof btnSave !== 'undefined' && btnSave) btnSave.textContent = '💾 บันทึก (' + parts.join(' + ') + ')';
   }
 
   // Initial rows
