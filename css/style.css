@@ -790,3 +790,58 @@
 
   .btn:hover, .type-chip:hover, .char-chip:hover { transform: none; }
 }
+
+/* ═══ Task C: Patient Tab Grid (mobile) ═══════════════════════ */
+
+/* Desktop: ซ่อน grid + back, แสดง tabs เหมือนเดิม */
+.pat-app-grid { display: none; }
+.pat-app-back { display: none; }
+
+/* Mobile: ซ่อน tabs, แสดง grid */
+@media (max-width: 768px) {
+  #patprofileTabs { display: none !important; }
+  .pat-app-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 4px;
+  }
+  .pat-app-btn {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    text-align: center;
+    min-height: 88px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .pat-app-btn:active {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  .pat-app-icon {
+    font-size: 26px;
+    line-height: 1;
+  }
+  .pat-app-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .pat-app-back {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    padding: 8px 14px;
+  }
+}

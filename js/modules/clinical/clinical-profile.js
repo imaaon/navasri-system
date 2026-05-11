@@ -550,6 +550,10 @@ function switchPatTab(tab) {
   document.querySelectorAll('#patprofileTabs .tab').forEach(el => {
     const t = el.getAttribute('onclick')?.match(/'([^']+)'/)?.[1]; el.classList.toggle('active', t === tab);
   });
+  // mobile: scroll ขึ้นบนหลังเลือก tab (เพราะ grid อยู่บนสุด)
+  if (window.innerWidth <= 768) {
+    setTimeout(function() { window.scrollTo({ top: 0, behavior: 'smooth' }); }, 50);
+  }
     if (tab === 'medical') {
       const _medEl = document.getElementById('patprofile-tab-medical');
       if (_medEl && _medEl.dataset.patid) { _renderMedicalFilesSection(_medEl.dataset.patid); }
@@ -1013,7 +1017,20 @@ function renderPatientTabBar(p, totalReqs) {
   const tabsHtml = visibleTabs.map(t =>
     '<div class="tab" onclick="switchPatTab(\'' + t.k + '\')">' + t.label + '</div>'
   ).join('\n        ');
-  return '<div class="tabs" id="patprofileTabs" style="margin-bottom:16px;">\n        ' + tabsHtml + '\n      </div>';
+  // Grid view (mobile) — แสดงเป็นปุ่มแอพ
+  const gridHtml = visibleTabs.map(t =>
+    '<div class="pat-app-btn" onclick="switchPatTab(\'' + t.k + '\');document.getElementById(\'patAppGrid\').style.display=\'none\';document.getElementById(\'patAppGridBackBtn\').style.display=\'\';">' +
+    '<div class="pat-app-icon">' + t.label.split(' ')[0] + '</div>' +
+    '<div class="pat-app-label">' + t.label.split(' ').slice(1).join(' ').replace(/<[^>]*>/g,'') + '</div>' +
+    '</div>'
+  ).join('\n        ');
+  return (
+    // Desktop: tabs (horizontal scroll)
+    '<div class="tabs" id="patprofileTabs" style="margin-bottom:16px;">\n        ' + tabsHtml + '\n      </div>\n' +
+    // Mobile: grid (3 cols) + back button
+    '<button class="btn btn-ghost pat-app-back" id="patAppGridBackBtn" style="display:none;margin-bottom:10px;" onclick="document.getElementById(\'patAppGrid\').style.display=\'\';document.getElementById(\'patAppGridBackBtn\').style.display=\'none\';">← กลับไปเลือกแท็บ</button>\n' +
+    '<div class="pat-app-grid" id="patAppGrid">\n        ' + gridHtml + '\n      </div>'
+  );
 }
 
 // ========== EXCRETION TAB ==========
