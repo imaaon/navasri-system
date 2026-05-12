@@ -1746,3 +1746,30 @@
     text-align-last: center !important;
   }
 }
+
+
+/* === Requisition Form Layout (12พค69 ค่ำ #1) === */
+@media (max-width: 768px) {
+  /* ขยายช่องรายการสินค้า (col 2) ลด จำนวน/หน่วยนับ (col 3, 4) */
+  #page-requisition div[style*="align-items:flex-end"]:has(> div):has(> button) > div:nth-child(2) {
+    flex: 7 !important;
+  }
+  #page-requisition div[style*="align-items:flex-end"]:has(> div):has(> button) > div:nth-child(3) {
+    flex: 0 0 60px !important;
+    min-width: 60px !important;
+  }
+  #page-requisition div[style*="align-items:flex-end"]:has(> div):has(> button) > div:nth-child(4) {
+    flex: 0 0 70px !important;
+    min-width: 70px !important;
+  }
+  /* ปุ่มล่างสุด ล้างข้อมูล + บันทึก: equal 1fr 1fr */
+  #page-requisition div[style*="justify-content:flex-end"]:has(> button.btn-ghost):has(> button.btn-primary) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    justify-content: stretch !important;
+  }
+  #page-requisition div[style*="justify-content:flex-end"]:has(> button.btn-ghost):has(> button.btn-primary) > button {
+    width: 100% !important;
+  }
+}
