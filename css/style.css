@@ -2034,3 +2034,26 @@
     text-align: center !important;
   }
 }
+
+
+/* === BI Analytics toolbar fix #10b: align baseline + force input full width === */
+@media (max-width: 768px) {
+  #bi-section-analytics > div:first-child {
+    align-items: end !important;
+  }
+  #bi-section-analytics > div:first-child > div:nth-child(1) input[type="month"] {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #bi-section-analytics > div:first-child > div:nth-child(1) {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px;
+  }
+  #bi-section-analytics > div:first-child > button:nth-child(2) {
+    height: 50px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
