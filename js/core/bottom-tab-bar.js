@@ -36,7 +36,6 @@ var BOTTOM_TAB_META = {
   expenses:         { icon: '💸', label: 'ค่าใช้จ่าย' },
   report:           { icon: '📊', label: 'รายงาน' },
   healthreport:     { icon: '🏥', label: 'รายงานสุขภาพ' },
-  stock:            { icon: '🏷️', label: 'สินค้า' },
   suppliers:        { icon: '🚚', label: 'ซัพพลาย' },
   purchasehistory:  { icon: '📜', label: 'ซื้อ' },
   purchaserequests: { icon: '📝', label: 'PR' },
