@@ -1244,3 +1244,31 @@
     box-sizing: border-box;
   }
 }
+
+
+/* === Patients Mobile Lock (12พค69 ค่ำ) === */
+/* Lock horizontal scroll หน้า Patients + บีบตาราง card view ไม่ให้ล้นจอ */
+/* ใช้ :has() apply เฉพาะ #page-patients active = ไม่กระทบเมนูอื่น */
+@media (max-width: 768px) {
+  .main:has(.content > #page-patients:not([style*="display: none"])) {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  .content:has(> #page-patients:not([style*="display: none"])) {
+    overflow-x: hidden !important;
+    max-width: 100%;
+  }
+  #page-patients {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+  #page-patients .table-wrap {
+    overflow-x: hidden !important;
+    max-width: 100%;
+  }
+  #page-patients .table-wrap table {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
