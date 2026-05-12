@@ -2066,12 +2066,61 @@
 }
 
 
-/* === Modal Mobile: balanced margins (12พค69 ค่ำ) === */
+/* === Universal Modal Mobile (12พค69 ค่ำ) === */
 @media (max-width: 768px) {
+  /* Modal frame: balanced margins, no outer padding */
   .modal-overlay > .modal {
     max-width: calc(100% - 16px) !important;
     width: calc(100% - 16px) !important;
     margin: 20px auto !important;
+    padding: 0 !important;
     box-sizing: border-box !important;
+  }
+  /* form-grid rows: align inputs by their bottom (label heights vary) */
+  .modal .form-grid {
+    align-items: end !important;
+  }
+  /* form-group: stack label on top, input below */
+  .modal .form-grid > .form-group,
+  .modal .form-group {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .modal .form-grid > .form-group > label,
+  .modal .form-group > label {
+    margin-bottom: 6px !important;
+    min-height: 0 !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+  }
+  /* Modal body / header padding tighter on mobile */
+  .modal .modal-body {
+    padding: 16px !important;
+  }
+  .modal .modal-header {
+    padding: 14px 16px !important;
+  }
+  /* Footer: action buttons span full width equally */
+  div.modal-footer {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    padding: 14px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+  div.modal-footer:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) {
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+  div.modal-footer > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 14px !important;
+    padding: 12px 4px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
