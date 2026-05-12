@@ -2015,23 +2015,30 @@
   }
   /* container ของปุ่มอยู่ใน block 0 */
 
-  /* #13 Audit: 2 cols form-groups */
+  /* #13 Audit: 2 cols (4 fields rows 1-2, วันที่สิ้น+ล้าง row 3) */
   #page-audit > div:nth-child(2) > .card-body {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 10px !important;
-    align-items: stretch !important;
+    align-items: end !important;
   }
   #page-audit > div:nth-child(2) > .card-body > * {
     width: 100% !important;
     min-width: 0 !important;
+    box-sizing: border-box;
+  }
+  #page-audit > div:nth-child(2) > .card-body input,
+  #page-audit > div:nth-child(2) > .card-body select {
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   #page-audit > div:nth-child(2) > .card-body > button {
-    grid-column: 1 / -1 !important;
+    grid-column: auto !important;
     font-size: 13px !important;
     padding: 8px 4px !important;
     justify-content: center !important;
     text-align: center !important;
+    height: 50px !important;
   }
 }
 
