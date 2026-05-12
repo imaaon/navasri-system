@@ -35,13 +35,60 @@
     }
   </script>
 
-  <!-- ── DEBUG: Eruda mobile console (เปิดด้วย ?debug=1 เท่านั้น) ── -->
+  <!-- ── DEBUG: Eruda mobile console + auto-inspect button (เปิดด้วย ?debug=1) ── -->
   <script>
     if (location.search.indexOf('debug=1') !== -1) {
       var s = document.createElement('script');
       s.src = 'https://cdn.jsdelivr.net/npm/eruda';
       s.onload = function() { eruda.init(); };
       document.head.appendChild(s);
+
+      // เพิ่มปุ่ม "Inspect" ลอยอยู่ — กดปุ่มเดียวเห็น state ทุกอย่าง
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var btn = document.createElement('button');
+          btn.id = '__debug_inspect_btn';
+          btn.textContent = '🔍 Inspect';
+          btn.style.cssText = 'position:fixed;top:60px;right:10px;z-index:99999998;background:#f57c00;color:white;border:none;padding:10px 14px;border-radius:6px;font-size:13px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
+          btn.onclick = function() {
+            var d = document, b = d.body, bs = getComputedStyle(b), hs = getComputedStyle(d.documentElement);
+            var modals = [].slice.call(d.querySelectorAll('.modal-overlay')).filter(function(e) { return getComputedStyle(e).display !== 'none' && e.offsetWidth > 0; });
+            var fix = [].slice.call(d.querySelectorAll('body *')).filter(function(e) { var c = getComputedStyle(e); return c.position === 'fixed' && c.display !== 'none' && e.offsetHeight > 100; }).slice(0, 8);
+            var info = '=== PAGE ===\n' +
+              'URL path: ' + location.pathname + location.search + '\n' +
+              'docH: ' + d.documentElement.scrollHeight + ' | innerH: ' + window.innerHeight + ' | scrollY: ' + window.scrollY + '\n\n' +
+              '=== BODY ===\n' +
+              'position: ' + bs.position + '\n' +
+              'overflow: ' + bs.overflow + '\n' +
+              'touch-action: ' + bs.touchAction + '\n' +
+              'height: ' + bs.height + '\n\n' +
+              '=== HTML ===\n' +
+              'overflow: ' + hs.overflow + '\n' +
+              'height: ' + hs.height + '\n\n' +
+              '=== VISIBLE MODAL-OVERLAYS: ' + modals.length + ' ===\n' +
+              modals.map(function(m) { var r = m.getBoundingClientRect(); return '  #' + m.id + ' cls=[' + m.className + '] z=' + getComputedStyle(m).zIndex + ' rect=' + Math.round(r.x) + ',' + Math.round(r.y) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height); }).join('\n') + '\n\n' +
+              '=== FIXED ELEMENTS (h>100): ' + fix.length + ' ===\n' +
+              fix.map(function(e) { var c = getComputedStyle(e), r = e.getBoundingClientRect(); return '  ' + e.tagName + (e.id ? '#' + e.id : '') + '.' + (e.className || '').toString().slice(0, 40) + '\n    z=' + c.zIndex + ' rect=' + Math.round(r.x) + ',' + Math.round(r.y) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height); }).join('\n');
+
+            var ov = d.createElement('div');
+            ov.id = '__debug_overlay';
+            ov.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:#1a1a1a;color:#e0e0e0;padding:14px;font-family:monospace;font-size:11px;white-space:pre-wrap;z-index:99999999;border-radius:8px;max-height:80vh;overflow:auto;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+            ov.textContent = info;
+            var copyBtn = d.createElement('button');
+            copyBtn.textContent = '📋 คัดลอก';
+            copyBtn.style.cssText = 'position:sticky;top:0;display:block;margin:0 0 8px;background:#2e6b4f;color:white;border:none;padding:8px 14px;border-radius:4px;font-size:13px;width:100%;';
+            copyBtn.onclick = function() { navigator.clipboard.writeText(info).then(function() { copyBtn.textContent = '✅ คัดลอกแล้ว'; }); };
+            var clsBtn = d.createElement('button');
+            clsBtn.textContent = '✕ ปิด';
+            clsBtn.style.cssText = 'position:sticky;top:0;display:block;margin:0 0 8px;background:#c62828;color:white;border:none;padding:8px 14px;border-radius:4px;font-size:13px;width:100%;';
+            clsBtn.onclick = function() { ov.remove(); };
+            ov.insertBefore(copyBtn, ov.firstChild);
+            ov.insertBefore(clsBtn, ov.firstChild);
+            d.body.appendChild(ov);
+          };
+          document.body.appendChild(btn);
+        }, 500);
+      });
     }
   </script>
 </head>
