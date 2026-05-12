@@ -1272,3 +1272,19 @@
     max-width: 100% !important;
   }
 }
+
+
+/* === Patients Summary Chips 2x2 Grid (12พค69 ค่ำ) === */
+/* จัด 4 chips (ทั้งหมด/พักอยู่/อยู่โรงพยาบาล/ออกแล้ว) เป็น 2x2 เต็มจอบน mobile */
+/* #patSummary เป็น id unique = ไม่กระทบหน้าอื่น */
+@media (max-width: 768px) {
+  #patSummary > div {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  #patSummary > div > div {
+    min-width: 0;
+    text-align: center;
+  }
+}
