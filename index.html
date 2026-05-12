@@ -199,6 +199,7 @@ window.onload = async function() {
   var iv = setInterval(tryRender, 1000);
   
   // Also hook into showPage to re-render when returning to dashboard
+try {
   var origShowPage = window.showPage;
   Object.defineProperty(window, 'showPage', {
     configurable: true,
@@ -214,6 +215,7 @@ window.onload = async function() {
       };
     }
   });
+  } catch(e) { console.warn('[fix] showPage wrap skipped:', e.message); }
 })();
 </script>
 <!-- _uaPoller END -->
