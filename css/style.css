@@ -521,6 +521,17 @@
     }
     .stats-grid { grid-template-columns: repeat(2,1fr); }
     .topbar { padding: 0 12px; }
+    /* Phase 2v2: แก้ Dashboard regression — inline grid 1fr 1fr ทำให้ column 2 ดันออก
+       เพราะ table ใน column 1 มี min-width ที่ติดมาแต่ดั้งเดิม
+       แก้แบบ surgical: stack grid 1fr 1fr → 1col + clip ที่ .content
+       (ไม่แตะ html, body, table — pattern พังที่เจอมาแล้ว 2 รอบวันนี้) */
+    .content {
+      overflow-x: hidden;
+    }
+    [style*="grid-template-columns:1fr 1fr"],
+    [style*="grid-template-columns: 1fr 1fr"] {
+      grid-template-columns: 1fr !important;
+    }
   }
   #sidebarOverlay {
     display: none; position: fixed; inset: 0;
