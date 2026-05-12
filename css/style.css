@@ -1773,3 +1773,49 @@
     width: 100% !important;
   }
 }
+
+
+/* === Rooms Mobile Layout fix (12พค69 ค่ำ #2) === */
+@media (max-width: 768px) {
+  /* Top section: flex column - บังคับ stack ทุกบรรทัด */
+  #page-rooms > div:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  /* ← กลับ ปุ่มเล็กชิดซ้าย ขึ้นบรรทัดแรก */
+  #page-rooms > div:first-child > button {
+    align-self: flex-start;
+    order: -2 !important;
+  }
+  /* H2 ใหญ่กึ่งกลาง บรรทัด 2 */
+  #page-rooms > div:first-child > h2 {
+    order: -1 !important;
+    font-size: 20px !important;
+    text-align: center;
+    margin: 0;
+  }
+  /* 4 buttons (Excel/ประวัติ/+เพิ่มห้อง/+เพิ่มเตียง) → 2x2 grid */
+  #page-rooms > div:first-child > div[style*="margin-left:auto"] {
+    margin-left: 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100%;
+  }
+  #page-rooms > div:first-child > div[style*="margin-left:auto"] > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
+    padding: 8px 4px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* room summary cards: 2 cols */
+  #room-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
