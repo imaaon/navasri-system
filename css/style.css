@@ -1840,3 +1840,197 @@
     box-sizing: border-box;
   }
 }
+
+
+/* === Touch-ups #5-#13 Mobile (12พค69 ค่ำ) === */
+@media (max-width: 768px) {
+
+  /* #5 Settings: 2 ปุ่มทดสอบเท่ากัน */
+  #page-settings div[style*="gap:8px"][style*="margin-top:12px"][style*="flex-wrap:wrap"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  #page-settings div[style*="gap:8px"][style*="margin-top:12px"][style*="flex-wrap:wrap"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
+    padding: 8px 4px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* #6 Purchaserequests: ทุกสถานะ + เพิ่มรายการ — 2 cols เท่ากัน */
+  #page-purchaserequests > div:first-child {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  #page-purchaserequests > div:first-child > * {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  #page-purchaserequests > div:first-child > button {
+    font-size: 13px !important;
+    padding: 8px 4px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: nowrap;
+  }
+  #page-purchaserequests > div:first-child > select {
+    font-size: 12px !important;
+    padding: 6px 4px !important;
+    text-align: center !important;
+    text-align-last: center !important;
+  }
+
+  /* #7 Incident: 2 บรรทัดบนสุดเท่ากัน */
+  #page-incident > div:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  #page-incident > div:first-child > div {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  #page-incident > div:first-child > div > * {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  #page-incident > div:first-child > div > button {
+    font-size: 13px !important;
+    padding: 8px 4px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: nowrap;
+  }
+  #page-incident > div:first-child > div > select {
+    font-size: 12px !important;
+    padding: 6px 4px !important;
+    text-align: center !important;
+    text-align-last: center !important;
+  }
+
+  /* #8 Dietary: บรรทัดบนสุด 2 ปุ่มเท่ากัน */
+  #page-dietary > div:first-child > div:first-child:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100%;
+  }
+  #page-dietary > div:first-child > div:first-child > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
+    padding: 8px 4px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* #9 Deposits: search + dropdown 50/50 */
+  #page-deposits div[style*="display:flex"][style*="gap:8px"][style*="align-items:center"]:has(> #deposit-search):has(> #deposit-filter-status) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  #page-deposits #deposit-search,
+  #page-deposits #deposit-filter-status {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* #10 BI: เดือน toolbar — เดือน + อัปเดต 1fr 1fr เต็ม + spacer/caption stack */
+  #bi-section-analytics > div:first-child {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  #bi-section-analytics > div:first-child > div:nth-child(1) {
+    width: 100% !important;
+  }
+  #bi-section-analytics > div:first-child > button:nth-child(2) {
+    width: 100% !important;
+    font-size: 13px !important;
+    padding: 8px 4px !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  #bi-section-analytics > div:first-child > div:nth-child(3) {
+    display: none !important;
+  }
+  #bi-section-analytics > div:first-child > div:nth-child(4) {
+    grid-column: 1 / -1 !important;
+    text-align: center;
+  }
+
+  /* #11 Expenses: title แถวบน + ปุ่ม 2 cols + filter row */
+  #page-expenses > div:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  #page-expenses > div:first-child > div:first-child {
+    flex: none !important;
+    width: 100%;
+  }
+  /* container ของ 2 ปุ่ม (+ บันทึก / Export) อยู่หลัง title — selectable as nth-child 2+ ที่เป็น button หรือ div with button */
+  #page-expenses > div:first-child > button {
+    width: 100% !important;
+  }
+  /* filter row (block 2): 3 dropdowns ใส่กริด 1fr 1fr 1fr + search เต็มแถว */
+  #page-expenses > div:nth-child(3) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  #page-expenses > div:nth-child(3) > * {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  #page-expenses > div:nth-child(3) > select {
+    font-size: 12px !important;
+    padding: 6px 4px !important;
+    text-align: center !important;
+    text-align-last: center !important;
+  }
+  #page-expenses > div:nth-child(3) > input {
+    grid-column: 1 / -1 !important;
+    order: -1 !important;
+  }
+
+  /* #12 Assets: title แถวบน + 2 ปุ่มเท่ากัน */
+  #page-assets > div:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  /* container ของปุ่มอยู่ใน block 0 */
+
+  /* #13 Audit: 2 cols form-groups */
+  #page-audit > div:nth-child(2) > .card-body {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+  #page-audit > div:nth-child(2) > .card-body > * {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  #page-audit > div:nth-child(2) > .card-body > button {
+    grid-column: 1 / -1 !important;
+    font-size: 13px !important;
+    padding: 8px 4px !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+}
