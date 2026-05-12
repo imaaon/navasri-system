@@ -3,8 +3,18 @@
 <head>
   <link rel="icon" type="image/png" href="img/logo.png">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>นวศรี เนอร์สซิ่งโฮม -- ระบบบริหารจัดการ</title>
+
+  <!-- ── PWA Manifest + Icons ── -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2e6b4f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Navasri">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -12,7 +22,18 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <link rel="stylesheet" href="css/style.css?v=13">
+  <link rel="stylesheet" href="css/style.css?v=21">
+
+  <!-- ── PWA: Register Service Worker ── -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(reg) { console.log('[PWA] SW registered, scope:', reg.scope); })
+          .catch(function(err) { console.warn('[PWA] SW registration failed:', err); });
+      });
+    }
+  </script>
 </head>
 <body>
 <div id="login-placeholder"></div>
@@ -53,6 +74,7 @@
 <script src="js/core/permissions.js?v=11"></script>
 <script src="js/core/auth.js?v=4"></script>
 <script src="js/core/router.js?v=7"></script>
+<script src="js/core/bottom-tab-bar.js?v=2"></script>
 <script src="js/shared/utils.js?v=4"></script>
 <script src="js/shared/ui.js?v=9"></script>
 <script src="js/shared/events.js?v=2"></script>
