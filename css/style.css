@@ -1398,3 +1398,351 @@
     overflow-x: auto !important;
   }
 }
+
+
+/* === Universal Mobile Layout for All Main Pages (12พค69 ค่ำ Phase 1) === */
+@media (max-width: 768px) {
+  /* Lock horizontal scroll on 16 main pages */
+  .main:has(.content > #page-bi:not([style*="display: none"])),
+  .main:has(.content > #page-history:not([style*="display: none"])),
+  .main:has(.content > #page-report:not([style*="display: none"])),
+  .main:has(.content > #page-staff:not([style*="display: none"])),
+  .main:has(.content > #page-purchasehistory:not([style*="display: none"])),
+  .main:has(.content > #page-accounts:not([style*="display: none"])),
+  .main:has(.content > #page-reqform:not([style*="display: none"])),
+  .main:has(.content > #page-incident:not([style*="display: none"])),
+  .main:has(.content > #page-dietary:not([style*="display: none"])),
+  .main:has(.content > #page-deposits:not([style*="display: none"])),
+  .main:has(.content > #page-suppliers:not([style*="display: none"])),
+  .main:has(.content > #page-supplierinvoices:not([style*="display: none"])),
+  .main:has(.content > #page-purchaserequests:not([style*="display: none"])),
+  .main:has(.content > #page-expenses:not([style*="display: none"])),
+  .main:has(.content > #page-assets:not([style*="display: none"])),
+  .main:has(.content > #page-audit:not([style*="display: none"])) {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  .content:has(> #page-bi:not([style*="display: none"])),
+  .content:has(> #page-history:not([style*="display: none"])),
+  .content:has(> #page-report:not([style*="display: none"])),
+  .content:has(> #page-staff:not([style*="display: none"])),
+  .content:has(> #page-purchasehistory:not([style*="display: none"])),
+  .content:has(> #page-accounts:not([style*="display: none"])),
+  .content:has(> #page-reqform:not([style*="display: none"])),
+  .content:has(> #page-incident:not([style*="display: none"])),
+  .content:has(> #page-dietary:not([style*="display: none"])),
+  .content:has(> #page-deposits:not([style*="display: none"])),
+  .content:has(> #page-suppliers:not([style*="display: none"])),
+  .content:has(> #page-supplierinvoices:not([style*="display: none"])),
+  .content:has(> #page-purchaserequests:not([style*="display: none"])),
+  .content:has(> #page-expenses:not([style*="display: none"])),
+  .content:has(> #page-assets:not([style*="display: none"])),
+  .content:has(> #page-audit:not([style*="display: none"])) {
+    overflow-x: hidden !important;
+    max-width: 100%;
+  }
+  #page-bi,
+  #page-history,
+  #page-report,
+  #page-staff,
+  #page-purchasehistory,
+  #page-accounts,
+  #page-reqform,
+  #page-incident,
+  #page-dietary,
+  #page-deposits,
+  #page-suppliers,
+  #page-supplierinvoices,
+  #page-purchaserequests,
+  #page-expenses,
+  #page-assets,
+  #page-audit {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+  #page-bi .table-wrap,
+  #page-history .table-wrap,
+  #page-report .table-wrap,
+  #page-staff .table-wrap,
+  #page-purchasehistory .table-wrap,
+  #page-accounts .table-wrap,
+  #page-reqform .table-wrap,
+  #page-incident .table-wrap,
+  #page-dietary .table-wrap,
+  #page-deposits .table-wrap,
+  #page-suppliers .table-wrap,
+  #page-supplierinvoices .table-wrap,
+  #page-purchaserequests .table-wrap,
+  #page-expenses .table-wrap,
+  #page-assets .table-wrap,
+  #page-audit .table-wrap {
+    overflow-x: auto !important;
+    max-width: 100%;
+  }
+  #page-bi > .card,
+  #page-history > .card,
+  #page-report > .card,
+  #page-staff > .card,
+  #page-purchasehistory > .card,
+  #page-accounts > .card,
+  #page-reqform > .card,
+  #page-incident > .card,
+  #page-dietary > .card,
+  #page-deposits > .card,
+  #page-suppliers > .card,
+  #page-supplierinvoices > .card,
+  #page-purchaserequests > .card,
+  #page-expenses > .card,
+  #page-assets > .card,
+  #page-audit > .card {
+    max-width: 100% !important;
+    overflow: hidden;
+  }
+
+  /* Stat cards: reduce font size to fit mobile screens */
+  #page-bi .stat-value,
+  #page-history .stat-value,
+  #page-report .stat-value,
+  #page-staff .stat-value,
+  #page-purchasehistory .stat-value,
+  #page-accounts .stat-value,
+  #page-reqform .stat-value,
+  #page-incident .stat-value,
+  #page-dietary .stat-value,
+  #page-deposits .stat-value,
+  #page-suppliers .stat-value,
+  #page-supplierinvoices .stat-value,
+  #page-purchaserequests .stat-value,
+  #page-expenses .stat-value,
+  #page-assets .stat-value,
+  #page-audit .stat-value {
+    font-size: 16px !important;
+    word-break: break-all;
+  }
+  #page-bi .stat-label,
+  #page-history .stat-label,
+  #page-report .stat-label,
+  #page-staff .stat-label,
+  #page-purchasehistory .stat-label,
+  #page-accounts .stat-label,
+  #page-reqform .stat-label,
+  #page-incident .stat-label,
+  #page-dietary .stat-label,
+  #page-deposits .stat-label,
+  #page-suppliers .stat-label,
+  #page-supplierinvoices .stat-label,
+  #page-purchaserequests .stat-label,
+  #page-expenses .stat-label,
+  #page-assets .stat-label,
+  #page-audit .stat-label {
+    font-size: 11px !important;
+  }
+  #page-bi .stat-sub,
+  #page-history .stat-sub,
+  #page-report .stat-sub,
+  #page-staff .stat-sub,
+  #page-purchasehistory .stat-sub,
+  #page-accounts .stat-sub,
+  #page-reqform .stat-sub,
+  #page-incident .stat-sub,
+  #page-dietary .stat-sub,
+  #page-deposits .stat-sub,
+  #page-suppliers .stat-sub,
+  #page-supplierinvoices .stat-sub,
+  #page-purchaserequests .stat-sub,
+  #page-expenses .stat-sub,
+  #page-assets .stat-sub,
+  #page-audit .stat-sub {
+    font-size: 10px !important;
+  }
+  #page-bi .stat-icon,
+  #page-history .stat-icon,
+  #page-report .stat-icon,
+  #page-staff .stat-icon,
+  #page-purchasehistory .stat-icon,
+  #page-accounts .stat-icon,
+  #page-reqform .stat-icon,
+  #page-incident .stat-icon,
+  #page-dietary .stat-icon,
+  #page-deposits .stat-icon,
+  #page-suppliers .stat-icon,
+  #page-supplierinvoices .stat-icon,
+  #page-purchaserequests .stat-icon,
+  #page-expenses .stat-icon,
+  #page-assets .stat-icon,
+  #page-audit .stat-icon {
+    font-size: 20px !important;
+  }
+
+  /* Page header (title + buttons row with justify-content:space-between) → stack column */
+  #page-bi > div[style*="justify-content:space-between"]:first-child,
+  #page-history > div[style*="justify-content:space-between"]:first-child,
+  #page-report > div[style*="justify-content:space-between"]:first-child,
+  #page-staff > div[style*="justify-content:space-between"]:first-child,
+  #page-purchasehistory > div[style*="justify-content:space-between"]:first-child,
+  #page-accounts > div[style*="justify-content:space-between"]:first-child,
+  #page-reqform > div[style*="justify-content:space-between"]:first-child,
+  #page-incident > div[style*="justify-content:space-between"]:first-child,
+  #page-dietary > div[style*="justify-content:space-between"]:first-child,
+  #page-deposits > div[style*="justify-content:space-between"]:first-child,
+  #page-suppliers > div[style*="justify-content:space-between"]:first-child,
+  #page-supplierinvoices > div[style*="justify-content:space-between"]:first-child,
+  #page-purchaserequests > div[style*="justify-content:space-between"]:first-child,
+  #page-expenses > div[style*="justify-content:space-between"]:first-child,
+  #page-assets > div[style*="justify-content:space-between"]:first-child,
+  #page-audit > div[style*="justify-content:space-between"]:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  /* Generic: 2 action buttons with margin-left:auto → grid 1fr 1fr */
+  #page-bi div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-history div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-report div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-staff div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-purchasehistory div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-accounts div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-reqform div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-incident div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-dietary div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-deposits div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-suppliers div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-supplierinvoices div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-purchaserequests div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-expenses div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-assets div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))),
+  #page-audit div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) {
+    margin-left: 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100%;
+  }
+  #page-bi div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-history div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-report div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-staff div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-purchasehistory div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-accounts div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-reqform div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-incident div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-dietary div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-deposits div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-suppliers div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-supplierinvoices div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-purchaserequests div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-expenses div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-assets div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button,
+  #page-audit div[style*="margin-left:auto"]:has(> button:nth-child(2)):not(:has(> button:nth-child(3))) > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
+    padding: 8px 4px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Generic: 3 action buttons with margin-left:auto → grid 1fr 1fr 1fr */
+  #page-bi div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-history div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-report div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-staff div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-purchasehistory div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-accounts div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-reqform div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-incident div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-dietary div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-deposits div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-suppliers div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-supplierinvoices div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-purchaserequests div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-expenses div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-assets div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))),
+  #page-audit div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) {
+    margin-left: 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100%;
+  }
+  #page-bi div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-history div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-report div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-staff div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-purchasehistory div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-accounts div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-reqform div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-incident div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-dietary div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-deposits div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-suppliers div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-supplierinvoices div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-purchaserequests div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-expenses div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-assets div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button,
+  #page-audit div[style*="margin-left:auto"]:has(> button:nth-child(3)):not(:has(> button:nth-child(4))) > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 13px !important;
+    padding: 8px 4px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Staff: 6 chips → 3x2 grid (over inline flex-wrap) */
+  #staffSummary > div {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+  #staffSummary > div > div {
+    min-width: 0;
+    max-width: 100%;
+    text-align: center;
+    font-size: 11px !important;
+    padding: 8px 4px !important;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
+    box-sizing: border-box;
+  }
+
+  /* Purchasehistory toolbar: title + 3 controls 1fr 1fr 1fr */
+  #ph-section-purchase > div:first-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  #ph-section-purchase > div:first-child > div:first-child {
+    flex: none !important;
+    margin-bottom: 8px;
+  }
+  #ph-section-purchase > div:first-child > div:nth-child(2) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100%;
+  }
+  #ph-section-purchase > div:first-child > div:nth-child(2) > * {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  #ph-section-purchase > div:first-child > div:nth-child(2) > button {
+    font-size: 13px !important;
+    padding: 8px 4px !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  #ph-section-purchase > div:first-child > div:nth-child(2) > select {
+    font-size: 12px !important;
+    padding: 6px 4px !important;
+    text-align: center !important;
+    text-align-last: center !important;
+  }
+}
