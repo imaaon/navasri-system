@@ -1212,3 +1212,35 @@
      และมี container scroll หลัก = window  → grid จะ scroll พร้อม window
      ถ้า user เลื่อนลง จะเห็น tab ทั้ง 19 ตัว */
 }
+
+
+/* === Dashboard Mobile Lock (12พค69 บ่าย) === */
+/* Lock horizontal scroll เฉพาะหน้า Dashboard บน mobile */
+/* ใช้ :has() apply เฉพาะตอน #page-dashboard active เพื่อไม่กระทบเมนูอื่น */
+/* ไม่แตะ html/body overflow-x เพื่อไม่ block vertical scroll (hard rule #4) */
+@media (max-width: 768px) {
+  .main:has(.content > #page-dashboard:not([style*="display: none"])) {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  .content:has(> #page-dashboard:not([style*="display: none"])) {
+    overflow-x: hidden !important;
+    max-width: 100%;
+  }
+  #page-dashboard {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+  #page-dashboard .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    max-width: 100%;
+  }
+  #page-dashboard > div:not(.stats-grid):not(.card) {
+    grid-template-columns: 1fr !important;
+    max-width: 100%;
+  }
+  #page-dashboard .card {
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+}
