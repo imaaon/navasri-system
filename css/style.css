@@ -511,27 +511,9 @@
   @media (max-width: 768px) {
     .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; z-index: 1100; }
     .sidebar.open { transform: translateX(0); }
-    /* Fix: .main ต้องเต็ม parent flex (เดิม flex:0 1 auto ทำให้ขนาดตาม content - หน้าใหญ่ขยายเกินจอ, หน้าเล็กก็แคบ) */
-    .main {
-      margin-left: 0;
-      flex: 1 1 auto;
-      width: 100%;
-      min-width: 0;
-      max-width: 100vw;
-    }
+    .main { margin-left: 0; }
     .stats-grid { grid-template-columns: repeat(2,1fr); }
     .topbar { padding: 0 12px; }
-    /* Phase 2v2: แก้ Dashboard regression — inline grid 1fr 1fr ทำให้ column 2 ดันออก
-       เพราะ table ใน column 1 มี min-width ที่ติดมาแต่ดั้งเดิม
-       แก้แบบ surgical: stack grid 1fr 1fr → 1col + clip ที่ .content
-       (ไม่แตะ html, body, table — pattern พังที่เจอมาแล้ว 2 รอบวันนี้) */
-    .content {
-      overflow-x: hidden;
-    }
-    [style*="grid-template-columns:1fr 1fr"],
-    [style*="grid-template-columns: 1fr 1fr"] {
-      grid-template-columns: 1fr !important;
-    }
   }
   #sidebarOverlay {
     display: none; position: fixed; inset: 0;
