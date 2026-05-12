@@ -2064,3 +2064,14 @@
     box-sizing: border-box !important;
   }
 }
+
+
+/* === Modal Mobile: balanced margins (12พค69 ค่ำ) === */
+@media (max-width: 768px) {
+  .modal-overlay > .modal {
+    max-width: calc(100% - 16px) !important;
+    width: calc(100% - 16px) !important;
+    margin: 20px auto !important;
+    box-sizing: border-box !important;
+  }
+}
