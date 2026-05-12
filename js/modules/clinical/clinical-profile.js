@@ -24,9 +24,22 @@ async function openPatientProfile(id, activeTab) {
   const pid = String(id);
 
   document.getElementById('patprofile-content').innerHTML = `
-  <div style="display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start;">
+  <!-- Mobile-only compact header (ซ่อนบน desktop) -->
+  <div class="patprofile-mobile-header" id="patprofile-mobile-header" style="display:none;">
+    ${(p.photo||"") ? `<img src="${p.photo}" class="pmh-photo">` : `<div class="pmh-photo-placeholder">👤</div>`}
+    <div class="pmh-info">
+      <div class="pmh-name">${p.name}</div>
+      <div class="pmh-meta">
+        ${p.dob ? calcAge(p.dob) + ' · ' : ''}${(() => { const bed = getPatientBed(p); const room = getPatientRoom(p); return room?.name ? 'ห้อง ' + room.name : ''; })()}
+        <span class="badge ${isActive ? 'badge-green' : p.status==='hospital' ? 'badge-blue' : 'badge-gray'}" style="font-size:10px;padding:1px 8px;margin-left:4px;">${isActive ? 'พักอยู่' : p.status==='hospital' ? '🏥 อยู่ รพ.' : 'ออกแล้ว'}</span>
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm pmh-info-btn" onclick="_openPatientInfoModal('${p.id}')">ℹ️ ข้อมูล</button>
+  </div>
+
+  <div class="patprofile-grid" style="display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start;">
     <!-- LEFT: Profile card -->
-    <div>
+    <div class="patprofile-left-col">
       <div class="card" style="text-align:center;padding:28px 20px;">
         ${(p.photo||"") ? `<img src="${p.photo}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--sage);margin:0 auto 12px;">` : `<div style="width:96px;height:96px;border-radius:50%;background:var(--sage-light);border:3px solid var(--sage);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:40px;">👤</div>`}
         <div style="font-size:17px;font-weight:700;margin-bottom:4px;">${p.name}</div>
@@ -550,6 +563,10 @@ function switchPatTab(tab) {
   document.querySelectorAll('#patprofileTabs .tab').forEach(el => {
     const t = el.getAttribute('onclick')?.match(/'([^']+)'/)?.[1]; el.classList.toggle('active', t === tab);
   });
+  // mobile: scroll ขึ้นบนหลังเลือก tab (เพราะ grid อยู่บนสุด)
+  if (window.innerWidth <= 768) {
+    setTimeout(function() { window.scrollTo({ top: 0, behavior: 'smooth' }); }, 50);
+  }
     if (tab === 'medical') {
       const _medEl = document.getElementById('patprofile-tab-medical');
       if (_medEl && _medEl.dataset.patid) { _renderMedicalFilesSection(_medEl.dataset.patid); }
@@ -1013,7 +1030,20 @@ function renderPatientTabBar(p, totalReqs) {
   const tabsHtml = visibleTabs.map(t =>
     '<div class="tab" onclick="switchPatTab(\'' + t.k + '\')">' + t.label + '</div>'
   ).join('\n        ');
-  return '<div class="tabs" id="patprofileTabs" style="margin-bottom:16px;">\n        ' + tabsHtml + '\n      </div>';
+  // Grid view (mobile) — แสดงเป็นปุ่มแอพ
+  const gridHtml = visibleTabs.map(t =>
+    '<div class="pat-app-btn" onclick="switchPatTab(\'' + t.k + '\');document.getElementById(\'patAppGrid\').style.display=\'none\';document.getElementById(\'patAppGridBackBtn\').style.display=\'\';">' +
+    '<div class="pat-app-icon">' + t.label.split(' ')[0] + '</div>' +
+    '<div class="pat-app-label">' + t.label.split(' ').slice(1).join(' ').replace(/<[^>]*>/g,'') + '</div>' +
+    '</div>'
+  ).join('\n        ');
+  return (
+    // Desktop: tabs (horizontal scroll)
+    '<div class="tabs" id="patprofileTabs" style="margin-bottom:16px;">\n        ' + tabsHtml + '\n      </div>\n' +
+    // Mobile: grid (3 cols) + back button
+    '<button class="btn btn-ghost pat-app-back" id="patAppGridBackBtn" style="display:none;margin-bottom:10px;" onclick="document.getElementById(\'patAppGrid\').style.display=\'\';document.getElementById(\'patAppGridBackBtn\').style.display=\'none\';">← กลับไปเลือกแท็บ</button>\n' +
+    '<div class="pat-app-grid" id="patAppGrid">\n        ' + gridHtml + '\n      </div>'
+  );
 }
 
 // ========== EXCRETION TAB ==========
@@ -1489,7 +1519,7 @@ function _openOutputModal(row, patId, today) {
 
   // ── สร้าง overlay + modal ──
   var overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
+  overlay.className = 'modal-overlay open';
   overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;';
   var modal = document.createElement('div');
   modal.className = 'modal';
@@ -2746,7 +2776,7 @@ function _openIntakeModal(rec, patId, today) {
   var sharedShift = isEdit && rec.shift ? rec.shift : _shiftFromTime(sharedTime);
 
   var overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
+  overlay.className = 'modal-overlay open';
   overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;';
   var modal = document.createElement('div');
   modal.className = 'modal';
