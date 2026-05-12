@@ -5,96 +5,129 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Navasri Debug</title>
   <style>
-    body { font-family: -apple-system, sans-serif; padding: 16px; background: #f0f4f8; margin: 0; font-size: 14px; }
-    h2 { color: #2e6b4f; margin: 16px 0 8px; font-size: 16px; }
-    .card { background: white; border-radius: 8px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-    .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; gap: 10px; word-break: break-all; }
+    body { font-family: -apple-system, sans-serif; padding: 12px; background: #f0f4f8; margin: 0; font-size: 13px; }
+    h2 { color: #2e6b4f; margin: 8px 0 12px; font-size: 16px; }
+    #results { background: white; border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .row { padding: 5px 0; border-bottom: 1px solid #eee; word-break: break-all; }
     .row:last-child { border: none; }
-    .label { color: #555; font-weight: 500; flex-shrink: 0; }
-    .val { color: #1a4f3a; text-align: right; font-family: monospace; font-size: 12px; }
-    .ok { color: #2e7d32; }
+    .label { color: #555; font-weight: 500; }
+    .val { color: #1a4f3a; font-family: monospace; font-size: 12px; }
+    .ok { color: #2e7d32; font-weight: 700; }
     .bad { color: #c62828; font-weight: 700; }
-    .warn { color: #f57c00; }
-    button { background: #2e6b4f; color: white; border: none; padding: 12px 16px; border-radius: 6px; font-size: 14px; width: 100%; margin: 6px 0; }
-    pre { background: #1a1a1a; color: #e0e0e0; padding: 10px; border-radius: 6px; font-size: 11px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+    .warn { color: #f57c00; font-weight: 700; }
+    .section { margin-top: 10px; font-weight: 700; color: #2e6b4f; background: #eef4ee; padding: 4px 8px; border-radius: 4px; }
+    button { background: #2e6b4f; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 14px; width: 100%; margin-top: 8px; }
   </style>
 </head>
 <body>
   <h2>🔍 Navasri Mobile Debug</h2>
-  <div class="card" id="results">กำลังเริ่ม...</div>
-  <button onclick="runAll()">🔄 รันใหม่</button>
-  <button onclick="navigator.clipboard.writeText(document.getElementById('results').textContent).then(()=>alert('คัดลอกแล้ว'))">📋 คัดลอกผล</button>
+  <div id="results"><div class="row">เริ่มทำงาน...</div></div>
+  <button onclick="navigator.clipboard.writeText(document.getElementById('results').innerText).then(()=>alert('คัดลอกแล้ว')).catch(e=>alert('คัดลอกไม่ได้: '+e.message))">📋 คัดลอกผล</button>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/core/supabase.js"></script>
   <script>
-    const SUPABASE_URL = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url) || 'https://umueucsxowjaurlaubwa.supabase.co';
-    const SUPABASE_KEY = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.anonKey) || '';
-    let lines = [];
-    function add(label, value, status) {
-      const cls = status === 'ok' ? 'ok' : status === 'bad' ? 'bad' : status === 'warn' ? 'warn' : '';
-      lines.push(`<div class="row"><span class="label">${label}</span><span class="val ${cls}">${value}</span></div>`);
-      document.getElementById('results').innerHTML = lines.join('');
-    }
-    function section(title) { lines.push(`<div style="margin-top:8px;font-weight:700;color:#2e6b4f;">${title}</div>`); document.getElementById('results').innerHTML = lines.join(''); }
-    async function runAll() {
-      lines = [];
-      section('📱 Device');
-      add('UA', navigator.userAgent.slice(0, 60));
-      add('Online', navigator.onLine ? 'true' : 'false', navigator.onLine ? 'ok' : 'bad');
-      add('Width × Height', window.innerWidth + ' × ' + window.innerHeight);
-      add('CSS v', document.querySelector('link[href*=style]')?.href?.split('?').pop() || 'none');
+    // จับ error ทันที — ก่อน script อื่นจะรัน
+    window.addEventListener('error', function(e) {
+      addRow('❌ ERROR', e.message + ' @ ' + (e.filename||'?') + ':' + (e.lineno||'?'), 'bad');
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+      addRow('❌ PROMISE REJECT', (e.reason?.message || e.reason || 'unknown'), 'bad');
+    });
 
-      section('🔐 Service Worker');
+    const lines = ['<div class="row">⏳ กำลังตรวจสอบ...</div>'];
+    function flush() { document.getElementById('results').innerHTML = lines.join(''); }
+    function addRow(label, val, status) {
+      const cls = status || '';
+      lines.push('<div class="row"><span class="label">'+label+':</span> <span class="val '+cls+'">'+String(val).slice(0,200)+'</span></div>');
+      flush();
+    }
+    function addSection(title) {
+      lines.push('<div class="section">'+title+'</div>');
+      flush();
+    }
+
+    // เริ่มทันที — ไม่รอ load อื่น
+    (async function() {
+      lines.length = 0;
+      addSection('📱 1. Device');
+      addRow('Online', navigator.onLine, navigator.onLine ? 'ok' : 'bad');
+      addRow('UA', navigator.userAgent.slice(0, 80));
+      addRow('Viewport', window.innerWidth + ' × ' + window.innerHeight);
+
+      addSection('🔐 2. Service Worker');
       try {
         const regs = await navigator.serviceWorker.getRegistrations();
-        add('SW count', regs.length);
-        regs.forEach((r, i) => add('SW ' + i, (r.active?.state || '?')+' @ '+(r.active?.scriptURL?.split('/').pop() || '?')));
-        const caches_ = await caches.keys();
-        add('Caches', caches_.join(', ') || 'none');
-      } catch (e) { add('SW error', e.message, 'bad'); }
+        addRow('SW count', regs.length);
+        for (let i = 0; i < regs.length; i++) {
+          addRow('SW '+i+' state', regs[i].active?.state || '?');
+          addRow('SW '+i+' script', regs[i].active?.scriptURL?.split('/').pop() || '?');
+        }
+        const keys = await caches.keys();
+        addRow('Cache names', keys.join(', ') || 'none');
+      } catch(e) {
+        addRow('SW error', e.message, 'bad');
+      }
 
-      section('🌐 Supabase Network');
+      addSection('🌐 3. Internet test (10s timeout)');
       const t0 = Date.now();
       try {
         const r = await Promise.race([
-          fetch(SUPABASE_URL + '/rest/v1/?apikey=' + SUPABASE_KEY),
+          fetch('https://www.gstatic.com/generate_204', {mode:'no-cors'}),
           new Promise((_, rej) => setTimeout(() => rej(new Error('TIMEOUT-10s')), 10000))
         ]);
-        add('REST ping', r.status + ' in ' + (Date.now()-t0) + 'ms', r.ok ? 'ok' : 'bad');
-      } catch (e) {
-        add('REST ping', 'FAILED: ' + e.message + ' after ' + (Date.now()-t0) + 'ms', 'bad');
+        addRow('Internet', 'OK in '+(Date.now()-t0)+'ms', 'ok');
+      } catch(e) {
+        addRow('Internet', 'FAIL: '+e.message+' after '+(Date.now()-t0)+'ms', 'bad');
       }
 
-      section('🔑 Supabase Auth');
+      addSection('🗄️ 4. Supabase REST (10s timeout)');
+      const t1 = Date.now();
       try {
-        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const t1 = Date.now();
-        const sessionResult = await Promise.race([
-          client.auth.getSession(),
+        const SUPA_URL = 'https://umueucsxowjaurlaubwa.supabase.co';
+        const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtdWV1Y3N4b3dqYXVybGF1YndhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMTQwMjAsImV4cCI6MjA4ODc5MDAyMH0.qUSPM1NO5UkUEf-p81k1Kw93C0BCJBrbJzkHL9Ai3mk';
+        const r = await Promise.race([
+          fetch(SUPA_URL + '/rest/v1/?apikey=' + SUPA_KEY),
           new Promise((_, rej) => setTimeout(() => rej(new Error('TIMEOUT-10s')), 10000))
         ]);
-        add('getSession()', (Date.now()-t1) + 'ms', 'ok');
-        add('hasSession', sessionResult.data.session ? 'YES' : 'NO', sessionResult.data.session ? 'ok' : 'warn');
-        if (sessionResult.error) add('session err', sessionResult.error.message, 'bad');
-      } catch (e) {
-        add('getSession()', 'FAILED: ' + e.message, 'bad');
+        addRow('Supabase REST', 'HTTP '+r.status+' in '+(Date.now()-t1)+'ms', r.ok ? 'ok' : 'warn');
+      } catch(e) {
+        addRow('Supabase REST', 'FAIL: '+e.message+' after '+(Date.now()-t1)+'ms', 'bad');
       }
 
-      section('💾 LocalStorage');
+      addSection('🔑 5. Supabase Auth endpoint (10s timeout)');
+      const t2 = Date.now();
       try {
-        const keys = Object.keys(localStorage).filter(k => k.toLowerCase().includes('supa') || k.toLowerCase().includes('auth') || k.toLowerCase().includes('token'));
-        add('Auth keys', keys.length || 'none');
-        keys.forEach(k => {
+        const SUPA_URL = 'https://umueucsxowjaurlaubwa.supabase.co';
+        const r = await Promise.race([
+          fetch(SUPA_URL + '/auth/v1/health'),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('TIMEOUT-10s')), 10000))
+        ]);
+        addRow('Auth health', 'HTTP '+r.status+' in '+(Date.now()-t2)+'ms', r.ok ? 'ok' : 'warn');
+        if (r.ok) {
+          const text = await r.text();
+          addRow('Auth body', text.slice(0,100));
+        }
+      } catch(e) {
+        addRow('Auth health', 'FAIL: '+e.message+' after '+(Date.now()-t2)+'ms', 'bad');
+      }
+
+      addSection('💾 6. LocalStorage');
+      try {
+        const allKeys = Object.keys(localStorage);
+        const authKeys = allKeys.filter(k => k.toLowerCase().includes('supa') || k.toLowerCase().includes('auth') || k.toLowerCase().includes('sb-'));
+        addRow('Total keys', allKeys.length);
+        addRow('Auth keys', authKeys.length);
+        authKeys.forEach(k => {
           const v = localStorage.getItem(k) || '';
-          add(k.slice(0,40), v.length + ' chars');
+          addRow(k.slice(0,40), v.length+' chars');
         });
-      } catch (e) { add('LS error', e.message, 'bad'); }
+      } catch(e) {
+        addRow('LS', 'FAIL: '+e.message, 'bad');
+      }
 
-      section('✅ Done');
-      add('Time', new Date().toLocaleTimeString());
-    }
-    runAll();
+      addSection('✅ Done @ ' + new Date().toLocaleTimeString());
+    })().catch(function(e) {
+      addRow('❌ MAIN CATCH', e.message + ' / ' + (e.stack||'').split('\n')[0], 'bad');
+    });
   </script>
 </body>
 </html>
