@@ -2233,3 +2233,40 @@
     box-sizing: border-box !important;
   }
 }
+
+/* ============================================================
+   MOBILE — #bi-profitbed (ตารางกำไร/เตียง) compact table fix
+   - grid 3 in #bi-section-analytics: force minmax(0,1fr) to prevent
+     table content from breaking 50/50 column split
+   - table-wrap: horizontal scroll if needed
+   - table: font-size 10px, compact padding, columns 2-5 align left
+   Date: 2026-05-13
+   ============================================================ */
+@media (max-width: 480px) {
+  #page-bi #bi-section-analytics > div[style*="grid-template-columns:1fr 1fr"]:has(#bi-profitbed) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    align-items: start !important;
+  }
+  #page-bi #bi-profitbed {
+    min-width: 0 !important;
+  }
+  #page-bi #bi-profitbed .table-wrap {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+  #page-bi #bi-profitbed table {
+    font-size: 10px !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+  #page-bi #bi-profitbed th,
+  #page-bi #bi-profitbed td {
+    padding: 4px 5px !important;
+    white-space: nowrap;
+  }
+  #page-bi #bi-profitbed table th:not(:first-child),
+  #page-bi #bi-profitbed table td:not(:first-child) {
+    text-align: left !important;
+  }
+}
