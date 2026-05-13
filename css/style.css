@@ -2453,6 +2453,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    justify-content: center !important;
+    text-align: center !important;
   }
   /* 5th+ button (e.g. "+ บันทึกใหม่") — full row, centered */
   #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > button:nth-of-type(n+5) {
@@ -2461,5 +2463,7 @@
     max-width: 280px;
     font-size: 14px !important;
     padding: 8px 16px !important;
+    justify-content: center !important;
+    text-align: center !important;
   }}
 }
