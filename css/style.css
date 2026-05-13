@@ -2233,3 +2233,42 @@
     box-sizing: border-box !important;
   }
 }
+
+/* ============================================================
+   MOBILE — #bi-profitbed (ตารางกำไร/เตียง) layout
+   - grid ที่มี #bi-profitbed: stack vertical (1 card เต็มจอ, Scenario ลงข้างล่าง)
+   - card max-height 280px + table scroll แนวตั้งภายใน
+   - table width 100% เต็มกรอบ, font 13px, columns 2-5 align left
+   Date: 2026-05-13
+   ============================================================ */
+@media (max-width: 480px) {
+  #page-bi #bi-section-analytics > div[style*="grid-template-columns:1fr 1fr"]:has(#bi-profitbed) {
+    grid-template-columns: 1fr !important;
+  }
+  #page-bi #bi-profitbed {
+    max-height: 280px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  #page-bi #bi-profitbed .table-wrap {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  #page-bi #bi-profitbed table {
+    width: 100% !important;
+    table-layout: auto !important;
+    font-size: 13px !important;
+  }
+  #page-bi #bi-profitbed th,
+  #page-bi #bi-profitbed td {
+    padding: 8px 6px !important;
+  }
+  #page-bi #bi-profitbed th:not(:first-child),
+  #page-bi #bi-profitbed td:not(:first-child) {
+    text-align: left !important;
+  }
+}
