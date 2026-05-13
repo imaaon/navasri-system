@@ -2273,3 +2273,28 @@
     text-align: left !important;
   }
 }
+
+/* ============================================================
+   FIX 1: Login button "เข้าสู่ระบบ" — center text (all roles)
+   ปุ่ม btn-primary ใน #loginScreen ใช้ inline-flex ทำให้ text-align ไม่ทำงาน
+   ต้องใช้ justify-content: center แทน
+
+   FIX 2: Topbar user display name — show on mobile (all roles)
+   #userDisplayName ถูก display:none บน mobile ทำให้ชื่ออ่านไม่ออก
+   show + ellipsis ถ้าชื่อยาวเกิน max-width
+
+   Date: 2026-05-13
+   ============================================================ */
+#loginScreen .btn-primary {
+  justify-content: center !important;
+}
+@media (max-width: 480px) {
+  #userDisplayName {
+    display: inline-block !important;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+}
