@@ -2510,16 +2510,10 @@ html {
     margin-right: 28px !important;
   }
   .user-chip {
-    min-width: 200px !important;
-    padding-left: 8px !important;
+    padding-left: 14px !important;
     padding-right: 14px !important;
   }
-  .user-chip #userDisplayName {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+  .user-chip #userAvatar {
+    display: none !important;
   }
 }
