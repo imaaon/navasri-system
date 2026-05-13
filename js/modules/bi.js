@@ -841,7 +841,7 @@ function renderProfitPerBed() {
 
   el.innerHTML = '<div class="table-wrap"><table><thead><tr>' +
     '<th>โซน</th><th style="text-align:right;">เตียงใช้</th>' +
-    '<th style="text-align:right;">ครอง</th><th style="text-align:right;">กำไรรวม</th>' +
+    '<th style="text-align:right;">ใช้งาน</th><th style="text-align:right;">กำไรรวม</th>' +
     '<th style="text-align:right;">กำไร/เตียง</th>' +
     '</tr></thead><tbody>' +
     rows.map(r => {
