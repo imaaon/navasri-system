@@ -2298,3 +2298,27 @@
     vertical-align: middle;
   }
 }
+
+/* ============================================================
+   FIX: Patient Profile - lock content width on mobile (all roles, all sub-tabs)
+   Problem: .main with flex:0 1 auto + flex-basis:auto shrinks to content width
+   ทำให้ sub-tab บางอันสั้น (310px) บางอันยาว (380px) — หน้าย่อ/ขยาย
+   Solution: บังคับ .main + #page-patprofile เต็ม viewport บน mobile
+   Date: 2026-05-13
+   ============================================================ */
+@media (max-width: 768px) {
+  .main:has(#page-patprofile:not([style*="display: none"])) {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+  }
+  #page-patprofile {
+    width: 100% !important;
+  }
+  #page-patprofile > * {
+    max-width: 100% !important;
+  }
+  #patprofile-content {
+    width: 100% !important;
+  }
+}
