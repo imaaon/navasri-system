@@ -2467,3 +2467,21 @@
     text-align: center !important;
   }}
 }
+
+
+/* ============================================================
+   FIX: Desktop main width consistency (2026-05-13)
+   Problem: .main uses flex:0 1 auto + flex-basis:auto on desktop
+   หน้าที่ content แคบ (assets, deposits) → .main shrink 651px
+   หน้าที่ content กว้าง (staff, patients) → .main expand 1236px
+   = ขอบขวาไม่ตรงกันระหว่างหน้าต่าง ๆ
+   Fix: บังคับ .main ขยายเต็มพื้นที่ที่เหลือ (viewport - sidebar)
+   ============================================================ */
+@media (min-width: 769px) {
+  .main {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+}
