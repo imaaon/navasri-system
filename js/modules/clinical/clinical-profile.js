@@ -55,14 +55,14 @@ async function openPatientProfile(id, activeTab) {
           </div>
         </div>
         <div style="margin-top:8px;display:flex;gap:6px;${canSeePrice() ? '' : 'justify-content:center;'}">
-          ${canSeePrice() ? `<button class="btn btn-outline-primary" style="flex:1;font-size:13px;" onclick="openContractFilesModal('${p.id}','${p.name}')">📄 สัญญา</button>` : ''}
-          <button class="btn btn-outline-primary" style="${canSeePrice() ? 'flex:1;' : 'min-width:60%;'}font-size:13px;" onclick="openPatientContractsModal('${p.id}','${p.name}')">📋 แพ็กเกจ</button>
+          ${canSeePrice() ? `<button class="btn btn-outline-primary" style="flex:1;font-size:13px;" onclick="document.querySelectorAll('.patient-info-modal-overlay').forEach(m=>m.remove()); openContractFilesModal('${p.id}','${p.name}')">📄 สัญญา</button>` : ''}
+          <button class="btn btn-outline-primary" style="${canSeePrice() ? 'flex:1;' : 'min-width:60%;'}font-size:13px;" onclick="document.querySelectorAll('.patient-info-modal-overlay').forEach(m=>m.remove()); openPatientContractsModal('${p.id}','${p.name}')">📋 แพ็กเกจ</button>
         </div>
         <div style="margin-top:16px;">
-          <button class="btn btn-primary" style="width:100%;" onclick="editPatient('${p.id}')">✏️ แก้ไขข้อมูล</button>
+          <button class="btn btn-primary" style="width:100%;" onclick="document.querySelectorAll('.patient-info-modal-overlay').forEach(m=>m.remove()); editPatient('${p.id}')">✏️ แก้ไขข้อมูล</button>
         </div>
         <div style="margin-top:8px;">
-          <button class="btn btn-ghost" style="width:100%;font-size:13px;" onclick="openHealthReportModal('${p.id}')">📋 รายงานสุขภาพ</button>
+          <button class="btn btn-ghost" style="width:100%;font-size:13px;" onclick="document.querySelectorAll('.patient-info-modal-overlay').forEach(m=>m.remove()); openHealthReportModal('${p.id}')">📋 รายงานสุขภาพ</button>
         </div>
       </div>
       <!-- Info card -->
