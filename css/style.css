@@ -2143,3 +2143,93 @@
     min-height: 2.6em !important;
   }
 }
+
+/* ============================================================
+   MOBILE — #page-bi (BI & วิเคราะห์กำไร) layout fixes
+   1) Tab bar (.bi-tab parent): 2x2 grid ปุ่มสูงเท่ากัน
+   2) Month/update row: 2 cols + align bottom + caption ลงล่าง
+   3) KPI cards (#bi-kpi-cards inner): 2 columns + ใส่กรอบ + เงา
+   4) Section cards (case/roi/investor): กั้นซ้ายขวาเท่ากัน + ปิด overflow
+   Date: 2026-05-13
+   ============================================================ */
+@media (max-width: 480px) {
+  /* (4) gutter ซ้ายขวาเท่ากัน + ปิดบล็อกล้นขอบขวา */
+  #page-bi {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+  #page-bi #bi-section-case,
+  #page-bi #bi-section-roi,
+  #page-bi #bi-section-investor {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+  #page-bi #bi-section-case .card,
+  #page-bi #bi-section-roi .card,
+  #page-bi #bi-section-investor .card {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* (1) Tab bar: parent of .bi-tab — 2x2 grid */
+  #page-bi .bi-tab:first-child,
+  #page-bi .bi-tab {
+    /* see parent override below */
+  }
+  /* parent of .bi-tab is the inline-styled flex-wrap container */
+  #page-bi div:has(> .bi-tab) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 4px !important;
+  }
+  #page-bi .bi-tab {
+    text-align: center !important;
+    justify-content: center !important;
+    border-bottom: 2px solid transparent !important;
+    margin-bottom: -2px !important;
+    box-sizing: border-box !important;
+  }
+  #page-bi .bi-tab.active {
+    border-bottom-color: var(--accent) !important;
+  }
+
+  /* (2) Month/update row: parent of #bi-month — use :has() */
+  #page-bi div:has(> #bi-month) {
+    /* this is the inner flex container with label+input — keep as is */
+  }
+  /* The grandparent (sibling row with input + button + caption) */
+  #page-bi #bi-section-analytics > div:first-of-type:has(#bi-month) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    align-items: end !important;
+  }
+  /* Caption ("ข้อมูลจาก: ...") — last text-only DIV in that row, span full width */
+  #page-bi #bi-section-analytics > div:first-of-type:has(#bi-month) > div:last-child {
+    grid-column: 1 / -1 !important;
+    margin-top: 4px !important;
+  }
+  /* Hide empty spacer DIV (between button and caption) */
+  #page-bi #bi-section-analytics > div:first-of-type:has(#bi-month) > div:nth-child(3):empty {
+    display: none !important;
+  }
+
+  /* (3) KPI cards inner grid: 2 columns + frame + shadow */
+  #page-bi #bi-kpi-cards > div:first-child {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  #page-bi #bi-kpi-cards > div:first-child > * {
+    width: auto !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    background: var(--surface) !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+    box-sizing: border-box !important;
+  }
+}
