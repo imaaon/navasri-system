@@ -2124,3 +2124,22 @@
     text-overflow: ellipsis;
   }
 }
+
+/* ============================================================
+   MOBILE FIX — #modal-addItem form-grid label alignment
+   Issue: when one label wraps to 2 lines (e.g. 'บาร์โค้ดผู้ผลิต (ถ้ามี)')
+   and the other stays at 1 line, align-items:end causes the
+   input on the 1-line side to appear visually misaligned.
+   Fix: switch to align-items:start + force label min-height
+        to 2 lines so inputs share the same top.
+   Scope: mobile only (≤ 480px), modal-addItem only.
+   Date: 2026-05-13
+   ============================================================ */
+@media (max-width: 480px) {
+  #modal-addItem .form-grid {
+    align-items: start !important;
+  }
+  #modal-addItem .form-grid > .form-group > .form-label {
+    min-height: 2.6em !important;
+  }
+}
