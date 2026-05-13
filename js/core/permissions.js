@@ -3,18 +3,18 @@
 // ===== ROLE-BASED ACCESS CONTROL =====
 const ROLE_PAGES = {
   admin: ['dashboard','stock','requisition','history','report','patients','rooms','staff',
-          'healthreport','items','purchasehistory','accounts','settings','billing','billing-settings',
+          'healthreport','purchasehistory','accounts','settings','billing','billing-settings',
           'suppliers','supplierinvoices','purchaserequests','stockreport',
           'incident','dietary','deposits','bi','expenses','assets','audit'],
 
   manager: ['dashboard','stock','requisition','history','report','patients','rooms','staff',
-             'healthreport','items','purchasehistory','accounts','settings','billing','billing-settings',
+             'healthreport','purchasehistory','accounts','settings','billing','billing-settings',
              'suppliers','supplierinvoices','purchaserequests','stockreport',
              'incident','dietary','deposits','bi','expenses','assets','audit'],
 
   // ธุรการ: เห็นหมด ยกเว้น accounts/audit/settings + อนุมัติใบเบิก
   officer: ['dashboard','stock','requisition','history','report','patients','rooms','staff',
-             'healthreport','items','purchasehistory','billing','billing-settings',
+             'healthreport','purchasehistory','billing','billing-settings',
              'suppliers','supplierinvoices','purchaserequests','stockreport',
              'incident','dietary','deposits','bi','expenses','assets'],
 
@@ -40,7 +40,7 @@ const ROLE_PAGES = {
 
   // พนักงานผู้ช่วยฯ (ตรวจสต็อค): สต็อค + เบิกของ + ประวัติ
   warehouse: ['dashboard','stock','requisition','history','report',
-               'items','purchasehistory','suppliers','purchaserequests','stockreport'],
+               'purchasehistory','suppliers','purchaserequests','stockreport'],
 
   // Legacy
   supervisor: ['dashboard','requisition','history','report','patients','rooms'],
