@@ -2513,7 +2513,10 @@ html {
     padding-left: 14px !important;
     padding-right: 14px !important;
   }
-  .user-chip #userAvatar {
-    display: none !important;
-  }
+}
+
+
+/* Hide user-avatar circle on ALL viewports (mobile + desktop) */
+.user-chip #userAvatar {
+  display: none !important;
 }
