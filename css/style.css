@@ -2300,13 +2300,25 @@
 }
 
 /* ============================================================
-   FIX: Patient Profile - lock content width on mobile (all roles, all sub-tabs)
-   Problem: .main with flex:0 1 auto + flex-basis:auto shrinks to content width
-   ทำให้ sub-tab บางอันสั้น (310px) บางอันยาว (380px) — หน้าย่อ/ขยาย
-   Solution: บังคับ .main + #page-patprofile เต็ม viewport บน mobile
+   FIX: Patient Profile Mobile Layout (all roles, all 19 sub-tabs)
+   ปัญหาเดิม:
+   1. .main shrink-to-fit ทำให้ tab ที่ content น้อยหน้าหด ทาบที่ยาวหน้าขยาย
+   2. .patprofile-grid ใช้ inline "300px 1fr" บนมือถือก็ยังเป็น 2 col → overflow
+   3. .card มี border แต่ไม่มี border-box ทำให้ R=391.6 (เกิน 1.6px)
+   4. .section-header inline flex ไม่ wrap → ปุ่มออกนอกจอ
+   5. table 5+ cols กว้างกว่าจอ → ดันหน้าทั้งหมด
+   6. card-title บางอัน center align ไม่ตรงกับ header อื่น
+   วิธีแก้:
+   - .main + #page-patprofile + content lock 100% width
+   - .patprofile-grid → 1 column on mobile (stack vertical)
+   - .card → box-sizing border-box + max-width 100%
+   - .section-header + inline flex → flex-wrap
+   - table → display block + overflow-x:auto (scroll ภายในการ์ดเอง)
+   - .card-title → left align
    Date: 2026-05-13
    ============================================================ */
 @media (max-width: 768px) {
+  /* 1. Lock main + page-patprofile + content to viewport width */
   .main:has(#page-patprofile:not([style*="display: none"])) {
     width: 100% !important;
     flex: 1 1 100% !important;
@@ -2320,5 +2332,55 @@
   }
   #patprofile-content {
     width: 100% !important;
+  }
+
+  /* 2. patprofile-grid stack vertical on mobile */
+  #page-patprofile .patprofile-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  #page-patprofile .patprofile-grid > * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* 3. card border-box + clamp width */
+  #page-patprofile .card {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+  }
+
+  /* 4. section-header & inline flex children → wrap */
+  #page-patprofile .section-header {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  #page-patprofile .section-header > div {
+    flex-wrap: wrap !important;
+  }
+  #page-patprofile [style*="display: flex"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* 5. table inside patprofile → scroll horizontally inside card */
+  #page-patprofile .patprofile-grid table,
+  #page-patprofile #patprofile-content table {
+    display: block !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  #page-patprofile .responsive-card-table,
+  #page-patprofile .table-wrap {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 6. headers left-align */
+  #page-patprofile .card-title,
+  #page-patprofile .card-header > * {
+    text-align: left !important;
   }
 }
