@@ -2485,3 +2485,16 @@
     min-width: 0 !important;
   }
 }
+
+
+/* ============================================================
+   FIX: Reserve scrollbar gutter (2026-05-13)
+   Problem: หน้า content สั้นไม่มี scrollbar → main = 1296
+            หน้า content ยาวมี scrollbar → main = 1281
+            = สลับเมนู → layout shift 15px
+   Fix: scrollbar-gutter:stable → เว้น gutter เสมอ ไม่ว่ามี scrollbar หรือไม่
+   = ทุกหน้า width 1281 เสมอกัน (กลุ่ม 1 เหมือนกลุ่ม 2)
+   ============================================================ */
+html {
+  scrollbar-gutter: stable;
+}
