@@ -2498,3 +2498,28 @@
 html {
   scrollbar-gutter: stable;
 }
+
+
+/* ============================================================
+   FIX: Topbar align with content + user-chip wider (2026-05-13)
+   1. Topbar margin-right 28px → ขอบเขียวด้านขวาตรงกับ card ด้านล่าง
+   2. User-chip min-width 200px + center text → กรอบกว้างพอใส่ชื่อยาว
+   ============================================================ */
+@media (min-width: 769px) {
+  .topbar {
+    margin-right: 28px !important;
+  }
+  .user-chip {
+    min-width: 200px !important;
+    padding-left: 8px !important;
+    padding-right: 14px !important;
+  }
+  .user-chip #userDisplayName {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
