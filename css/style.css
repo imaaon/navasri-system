@@ -2414,63 +2414,52 @@
     max-width: 100% !important;
   }
 
-  /* TASKS 2,3,4: Filter row layout
-     Target: parent div with date inputs + 4 filter buttons (vital/excretion/nursing)
-     Layout: Row 1 = label/input/label/input (4 cols)
-             Row 2 = 4 equal buttons
-             Row 3+ = additional buttons (e.g. + บันทึกใหม่) full width */
+  /* TASKS 2,3,4: Filter row layout (vital/excretion/nursing)
+     Target: parent div with date inputs + 4 filter buttons
+     Layout: 
+       Row 1 = "จาก: [input] ถึง: [input]" centered, inputs 130px wide
+       Row 2 = 4 equal buttons (วันนี้/7วัน/เดือนนี้/เดือนที่แล้ว) centered
+       Row 3 = "+ บันทึกใหม่" centered (nursing only) */
   #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr 1fr 1fr !important;
-    grid-template-areas:
-      "l1 i1 l2 i2"
-      "b1 b2 b3 b4" !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
     gap: 6px !important;
     align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
-  #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > span:nth-child(1) {
-    grid-area: l1;
+  /* Labels (จาก:/ถึง:) — small fixed */
+  #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > span {
+    flex: 0 0 auto;
     font-size: 12px;
-    justify-self: end;
     white-space: nowrap;
   }
-  #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > input[type="date"]:nth-of-type(1) {
-    grid-area: i1;
-    width: 100% !important;
-    min-width: 0 !important;
+  /* Date inputs — 130px wide so "13/05/2026" shows in full */
+  #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > input[type="date"] {
+    flex: 0 1 130px !important;
+    min-width: 120px !important;
+    max-width: 130px !important;
     font-size: 12px;
-    padding: 6px 2px !important;
+    padding: 6px 4px !important;
   }
-  #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > span:nth-child(3) {
-    grid-area: l2;
-    font-size: 12px;
-    justify-self: end;
-    white-space: nowrap;
-  }
-  #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > input[type="date"]:nth-of-type(2) {
-    grid-area: i2;
-    width: 100% !important;
-    min-width: 0 !important;
-    font-size: 12px;
-    padding: 6px 2px !important;
-  }
-  #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > button:nth-of-type(1) { grid-area: b1; }
-  #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > button:nth-of-type(2) { grid-area: b2; }
-  #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > button:nth-of-type(3) { grid-area: b3; }
-  #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > button:nth-of-type(4) { grid-area: b4; }
+  /* 4 filter buttons — equal 25% (force wrap to row 2) */
   #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > button:nth-of-type(-n+4) {
+    flex: 1 1 calc(25% - 6px) !important;
+    max-width: calc(25% - 6px) !important;
     min-width: 0 !important;
-    width: 100% !important;
     padding: 6px 2px !important;
     font-size: 11px !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  /* 5th+ button (e.g. "+ บันทึกใหม่" in nursing) — full width below */
+  /* 5th+ button (e.g. "+ บันทึกใหม่") — full row, centered */
   #page-patprofile div:has(> input[type="date"] + span):has(> button + button + button + button) > button:nth-of-type(n+5) {
-    grid-column: 1 / -1 !important;
+    flex: 0 0 auto !important;
+    min-width: 200px;
+    max-width: 280px;
     font-size: 14px !important;
-    padding: 8px !important;
-  }
+    padding: 8px 16px !important;
+  }}
 }
