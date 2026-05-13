@@ -2124,31 +2124,3 @@
     text-overflow: ellipsis;
   }
 }
-
-
-/* === Modal Input Height Lock (13พค69) === */
-@media (max-width: 768px) {
-  /* Force uniform input height in all modals — fixes mobile rendering inconsistency */
-  .modal .form-grid input,
-  .modal .form-grid select,
-  .modal .form-grid textarea {
-    height: 48px !important;
-    min-height: 48px !important;
-    box-sizing: border-box !important;
-  }
-  .modal .form-grid textarea {
-    height: auto !important;
-    min-height: 80px !important;
-  }
-  /* Also apply to non-grid form-group fields */
-  .modal .form-group > input,
-  .modal .form-group > select {
-    height: 48px !important;
-    min-height: 48px !important;
-    box-sizing: border-box !important;
-  }
-  .modal .form-group > textarea {
-    min-height: 80px !important;
-    box-sizing: border-box !important;
-  }
-}
