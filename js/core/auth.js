@@ -90,6 +90,7 @@ async function doLogin() {
     if (ls2) ls2.style.display = 'none';
     if (as2) as2.style.display = 'flex';
     resetIdleTimer();
+    if (typeof updateLineStatusDot === 'function') updateLineStatusDot();
     if (typeof loadDB === 'function') await loadDB();
     if (typeof updateSidebarForRole === 'function') updateSidebarForRole();
     if (typeof recordLastLogin === 'function') recordLastLogin(u);
