@@ -840,8 +840,8 @@ function renderProfitPerBed() {
   }
 
   el.innerHTML = '<div class="table-wrap"><table><thead><tr>' +
-    '<th>โซน</th><th style="text-align:right;">เตียงใช้/ทั้งหมด</th>' +
-    '<th style="text-align:right;">Occupancy</th><th style="text-align:right;">กำไรรวม</th>' +
+    '<th>โซน</th><th style="text-align:right;">เตียงใช้</th>' +
+    '<th style="text-align:right;">ครอง</th><th style="text-align:right;">กำไรรวม</th>' +
     '<th style="text-align:right;">กำไร/เตียง</th>' +
     '</tr></thead><tbody>' +
     rows.map(r => {
