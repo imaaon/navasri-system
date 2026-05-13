@@ -3,20 +3,23 @@
 // ===== ROLE-BASED ACCESS CONTROL =====
 const ROLE_PAGES = {
   admin: ['dashboard','stock','requisition','history','report','patients','rooms','staff',
-          'healthreport','purchasehistory','accounts','settings','billing','billing-settings',
+          'healthreport','purchasehistory','billing',
           'suppliers','supplierinvoices','purchaserequests','stockreport',
-          'incident','dietary','deposits','bi','expenses','assets','audit'],
+          'incident','dietary','deposits','bi','expenses','assets','audit',
+          'accounts','billing-settings','settings'],
 
   manager: ['dashboard','stock','requisition','history','report','patients','rooms','staff',
-             'healthreport','purchasehistory','accounts','settings','billing','billing-settings',
+             'healthreport','purchasehistory','billing',
              'suppliers','supplierinvoices','purchaserequests','stockreport',
-             'incident','dietary','deposits','bi','expenses','assets','audit'],
+             'incident','dietary','deposits','bi','expenses','assets','audit',
+             'accounts','billing-settings','settings'],
 
   // ธุรการ: เห็นหมด ยกเว้น accounts/audit/settings + อนุมัติใบเบิก
   officer: ['dashboard','stock','requisition','history','report','patients','rooms','staff',
-             'healthreport','purchasehistory','billing','billing-settings',
+             'healthreport','purchasehistory','billing',
              'suppliers','supplierinvoices','purchaserequests','stockreport',
-             'incident','dietary','deposits','bi','expenses','assets'],
+             'incident','dietary','deposits','bi','expenses','assets',
+             'billing-settings'],
 
   // พยาบาลวิชาชีพ: ดูแลคนไข้ครบ + deposits + เบิกของ + PR + สต็อค(ดูอย่างเดียว)
   nurse: ['dashboard','requisition','history','report','patients','rooms',
