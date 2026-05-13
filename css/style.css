@@ -2243,7 +2243,8 @@
    ============================================================ */
 @media (max-width: 480px) {
   #page-bi #bi-section-analytics > div[style*="grid-template-columns:1fr 1fr"]:has(#bi-profitbed) {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 360px) !important;
+    justify-content: start !important;
   }
   #page-bi #bi-profitbed {
     max-height: 280px !important;
