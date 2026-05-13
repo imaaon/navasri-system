@@ -801,7 +801,7 @@
 @media (max-width: 768px) {
   #patprofileTabs { display: none !important; }
   .pat-app-grid {
-    display: grid !important;
+    display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
     margin-bottom: 14px;
