@@ -2767,3 +2767,336 @@ html {
 .user-chip #userAvatar {
   display: none !important;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   R3 COMPONENT CSS REFRESH (Session B · 14พค69)
+   ════════════════════════════════════════════════════════════════
+   Refresh component visual ให้เข้ากับ sage+cream design tokens
+   Strategy: Override rules เดิมด้วย selector เดียวกัน + รวมท้ายไฟล์
+              (specificity เท่า, ลำดับชนะ — no !important spam)
+
+   ตามลำดับ MIGRATION_MAP sections:
+   1. Sidebar  2. Topbar  3. Buttons  4. Cards  5. Tables
+   6. Forms    7. Tabs    8. Modals   9. Bottom tab bar
+
+   Rollback: ลบทั้ง block นี้ → กลับสู่ Session A baseline
+   ════════════════════════════════════════════════════════════════ */
+
+/* ──────────── 1. SIDEBAR ──────────── */
+.sidebar {
+  background: var(--sage-50);
+  border-right: 1px solid var(--sage-200);
+  color: var(--sage-800);
+}
+.sidebar-logo {
+  background: var(--brand);
+  color: var(--ink-on-brand);
+}
+.sidebar-logo .logo-icon {
+  background: var(--amber);
+  color: var(--brand-dark);
+}
+.sidebar-logo .logo-name {
+  color: var(--ink-on-brand);
+}
+.sidebar-logo .logo-sub {
+  color: rgba(232, 242, 236, 0.7);
+}
+.nav-section {
+  color: var(--brand);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  opacity: 0.85;
+}
+.nav-item {
+  color: var(--sage-800);
+  border-left: 3px solid transparent;
+}
+.nav-item:hover {
+  background: rgba(46, 107, 79, 0.08);
+  color: var(--sage-900);
+}
+.nav-item.active {
+  background: var(--brand);
+  color: var(--ink-on-brand);
+  border-left-color: var(--sage-300);
+}
+.sidebar-footer {
+  border-top: 1px solid var(--sage-200);
+  color: var(--sage-700);
+}
+
+/* ──────────── 2. TOPBAR ──────────── */
+.topbar {
+  background: var(--brand);
+  border-bottom: 1px solid var(--brand-dark);
+  color: var(--ink-on-brand);
+}
+.page-title {
+  color: var(--ink-on-brand);
+}
+.topbar-right {
+  color: var(--ink-on-brand);
+}
+.topbar-date {
+  color: rgba(232, 242, 236, 0.7);
+}
+#notif-bell-btn {
+  color: var(--ink-on-brand);
+}
+.user-chip {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ink-on-brand);
+}
+.user-chip:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ──────────── 3. BUTTONS ──────────── */
+.btn {
+  border-radius: var(--r-md);
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.btn-primary {
+  background: var(--brand);
+  color: white;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover {
+  background: var(--brand-dark);
+  transform: none;            /* remove lift effect ที่ไม่เข้ากับ professional tone */
+  box-shadow: var(--shadow-md);
+}
+.btn-secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+}
+.btn-secondary:hover {
+  background: var(--surface-2);
+  border-color: var(--ink-4);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+.btn-danger:hover {
+  background: var(--danger-text);
+}
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+.btn-success:hover {
+  background: var(--success-text);
+}
+.btn-soft {
+  background: var(--sage-100);
+  color: var(--sage-700);
+}
+.btn-soft:hover {
+  background: var(--sage-200);
+}
+
+/* ──────────── 4. CARDS ──────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+.card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--divider);
+}
+.card-title {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ──────────── 5. TABLES ──────────── */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+th {
+  background: var(--surface-2);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--border);
+}
+td {
+  border-bottom: 1px solid var(--divider);
+  color: var(--ink-2);
+}
+tr:last-child td {
+  border-bottom: none;
+}
+tr:hover td {
+  background: var(--sage-50);
+}
+/* Zebra striping สำหรับ responsive-card-table บน desktop เท่านั้น
+   (mobile transform อยู่ใน @media block อื่น — ไม่กระทบ) */
+@media (min-width: 769px) {
+  .responsive-card-table tbody tr:nth-child(even) td {
+    background: rgba(244, 241, 234, 0.4);
+  }
+  .responsive-card-table tbody tr:nth-child(even):hover td {
+    background: var(--sage-50);
+  }
+}
+
+/* ──────────── 6. FORMS ──────────── */
+.form-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.form-label .required {
+  color: var(--danger);
+}
+.form-control {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-control:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--sage-100);
+}
+.form-control::placeholder {
+  color: var(--ink-4);
+}
+
+/* ──────────── 7. TABS (Unified 6 variants) ──────────── */
+.tabs {
+  background: transparent;
+  padding: 0;
+  border-bottom: 1px solid var(--divider);
+  border-radius: 0;
+  gap: 0;
+  margin-bottom: 16px;
+}
+.tab,
+.bi-tab,
+.sr-tab,
+.history-tab,
+.billing-tab {
+  padding: 10px 18px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--ink-3);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  margin-bottom: -1px;
+  box-shadow: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab.active,
+.bi-tab.active,
+.sr-tab.active,
+.history-tab.active,
+.history-tab.active-htab,
+.billing-tab.active {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+  font-weight: 600;
+  background: transparent;
+  box-shadow: none;
+}
+.tab:hover:not(.active),
+.bi-tab:hover:not(.active),
+.sr-tab:hover:not(.active),
+.history-tab:hover:not(.active-htab),
+.billing-tab:hover:not(.active) {
+  color: var(--ink);
+}
+.tab.tab-alert {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* ──────────── 8. MODALS ──────────── */
+.modal-overlay {
+  background: rgba(20, 30, 15, 0.42);
+  backdrop-filter: blur(3px);
+}
+.modal,
+.modal-box {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
+}
+.modal-header {
+  border-bottom: 1px solid var(--divider);
+}
+.modal-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.modal-close {
+  color: var(--ink-3);
+  border-radius: var(--r-sm);
+}
+.modal-close:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.modal-footer {
+  border-top: 1px solid var(--divider);
+  background: var(--surface-2);
+}
+
+/* ──────────── 9. BOTTOM TAB BAR (mobile) ──────────── */
+@media (max-width: 768px) {
+  .bottom-tab-bar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 16px rgba(40, 50, 30, 0.06);
+  }
+  .bottom-tab-item {
+    color: var(--ink-4);
+    min-height: 44px;
+  }
+  .bottom-tab-item.active {
+    color: var(--brand);
+    font-weight: 600;
+  }
+}
+
+/* ──────────── 10. SEARCH WRAP + ICON ──────────── */
+.search-icon {
+  color: var(--ink-4);
+}
+.search-wrap input.form-control {
+  padding-left: 36px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END OF R3 COMPONENT CSS REFRESH
+   ════════════════════════════════════════════════════════════════ */
