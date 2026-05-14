@@ -176,6 +176,39 @@ function openMAREntryModal(patientId, pid, medId) {
   document.getElementById('mar-entry-by').value = _user;
   const med = (db.medications[pid]||[]).find(m=>m.id==medId);
   document.getElementById('mar-entry-med-name').textContent = med ? `${med.name} ${med.dose||''} ${med.unit||''}` : '';
+
+  // [R6-D 14พค69] Populate patient pill ที่หัว modal
+  const _pillEl = document.getElementById('mar-entry-patient-pill');
+  if (_pillEl) {
+    const _patient = (typeof db !== 'undefined' && db.patients) ? db.patients.find(function(x){ return x.id == patientId; }) : null;
+    if (_patient) {
+      const _patName = _patient.name || '';
+      const _patHN = _patient.hn || _patient.id || '-';
+      const _patAge = (_patient.dob && typeof calcAge === 'function') ? calcAge(_patient.dob) : '';
+      const _patGender = _patient.gender || '';
+      let _patBed = '';
+      if (typeof getPatientBed === 'function' && typeof getPatientRoom === 'function') {
+        const _b = getPatientBed(_patient); const _r = getPatientRoom(_patient);
+        if (_r && _r.name) _patBed = _r.name + (_b && _b.bedCode ? '/' + _b.bedCode : '');
+      }
+      const _patInitials = _patName ? _patName.trim().split(/\s+/).slice(0,2).map(s=>s.charAt(0)).join('') : '?';
+      const _patStatus = _patient.status === 'active' ? 'อยู่ในศูนย์' : _patient.status === 'hospital' ? '🏥 อยู่ รพ.' : 'ออกแล้ว';
+      _pillEl.innerHTML =
+        '<div style="width:40px;height:40px;border-radius:50%;background:var(--sage-100,#eaf1eb);color:var(--brand,#2e6b4f);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">' + _patInitials + '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-weight:700;font-size:14px;letter-spacing:-0.2px;">' + _patName + '</div>' +
+          '<div style="font-size:11.5px;color:var(--text2,#5e5e5e);margin-top:2px;">HN <span style="font-family:var(--mono,monospace);">' + _patHN + '</span>' +
+            (_patBed ? ' · ห้อง ' + _patBed : '') +
+            (_patGender || _patAge ? ' · ' + _patGender + (_patAge ? ' ' + _patAge + ' ปี' : '') : '') +
+          '</div>' +
+        '</div>' +
+        '<span style="background:var(--brand,#2e6b4f);color:white;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;flex-shrink:0;">' + _patStatus + '</span>';
+      _pillEl.style.display = 'flex';
+    } else {
+      _pillEl.style.display = 'none';
+    }
+  }
+
   document.getElementById('mar-entry-timing').value = med?.timings?.[0] || 'เช้า';
   // Populate timing select with this med's timings
   const sel = document.getElementById('mar-entry-timing');

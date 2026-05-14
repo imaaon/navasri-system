@@ -3979,3 +3979,31 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R6
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R6-D · MAR ENTRY MODAL — Patient pill + status pills
+   ════════════════════════════════════════════════════════════════ */
+
+.mar-entry-modal-r6 .mar-patient-pill { transition: all 0.15s; }
+
+/* Status select styling — make options visible */
+.mar-entry-modal-r6 #mar-entry-status {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Time field — Plex Mono */
+.mar-entry-modal-r6 #mar-entry-time {
+  font-family: var(--mono, monospace);
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .mar-entry-modal-r6 .mar-patient-pill {
+    padding: 10px 12px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R6-D
+   ════════════════════════════════════════════════════════════════ */
