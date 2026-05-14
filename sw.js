@@ -1,6 +1,6 @@
 // Navasri Service Worker
-const CACHE_VERSION = 'navasri-v1';
-const STATIC_CACHE = 'navasri-static-v1';
+const CACHE_VERSION = 'navasri-v2';
+const STATIC_CACHE = 'navasri-static-v2';
 
 const STATIC_ASSETS = [
   '/manifest.json',
