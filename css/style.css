@@ -3691,3 +3691,27 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R4 P2
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R4 P3 · PATIENT PROFILE — Tab Content (History + Medical)
+   ════════════════════════════════════════════════════════════════ */
+
+.patprofile-info-card {
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+@media (max-width: 900px) {
+  .patprofile-info-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    font-size: 13px !important;
+  }
+  .patprofile-info-card {
+    padding: 14px 16px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R4 P3
+   ════════════════════════════════════════════════════════════════ */

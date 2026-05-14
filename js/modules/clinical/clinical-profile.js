@@ -144,7 +144,39 @@ async function openPatientProfile(id, activeTab) {
     <div>
       ${renderPatientTabBar(p, totalReqs)}
       <div id="patprofile-tab-history">
+        <!-- [R4 P3 14พค69] Patient general info section (ตาม mockup page 14: ข้อมูลทั่วไป → ข้อมูลส่วนตัว) -->
+        <div class="card patprofile-info-card" style="margin-bottom:14px;padding:18px 22px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border,#e8e3d4);">
+            <span style="font-size:18px;">👤</span>
+            <h3 style="font-size:15px;font-weight:700;margin:0;letter-spacing:-0.3px;">ข้อมูลส่วนตัว</h3>
+          </div>
+          <div class="patprofile-info-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 32px;font-size:13.5px;">
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);">
+              <span style="color:var(--text2);">ชื่อ-นามสกุล</span>
+              <strong style="text-align:right;">${p.name||'-'}</strong>
+            </div>
+            ${p.nickname ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">ชื่อเล่น</span><strong style="text-align:right;">${p.nickname}</strong></div>` : ''}
+            ${p.gender ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">เพศ</span><strong style="text-align:right;">${p.gender}</strong></div>` : ''}
+            ${p.dob ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">วันเกิด</span><strong style="text-align:right;">${p.dob}</strong></div>` : ''}
+            ${age !== '-' ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">อายุ</span><strong style="text-align:right;">${age} ปี</strong></div>` : ''}
+            ${idcard !== '-' ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">เลขบัตรประชาชน</span><strong style="text-align:right;font-family:var(--mono,monospace);">${idcard}</strong></div>` : ''}
+            ${p.bloodType ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">หมู่เลือด</span><strong style="text-align:right;color:#c0392b;">${p.bloodType}</strong></div>` : ''}
+            ${p.insurance ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">สิทธิ์การรักษา</span><strong style="text-align:right;">${p.insurance}</strong></div>` : ''}
+            ${p.phone ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">โทรศัพท์</span><strong style="text-align:right;font-family:var(--mono,monospace);">${p.phone}</strong></div>` : ''}
+            ${p.admitDate ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">วันแรกรับ</span><strong style="text-align:right;">${p.admitDate}</strong></div>` : ''}
+            ${p.endDate ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">วันสิ้นสัญญา</span><strong style="text-align:right;">${p.endDate}</strong></div>` : ''}
+            ${dur !== '-' ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">ระยะเวลาพัก</span><strong style="text-align:right;color:var(--brand,#2e6b4f);">${dur}</strong></div>` : ''}
+            ${p.address ? `<div style="grid-column:1/-1;padding:8px 0;border-top:1px solid var(--border,#e8e3d4);margin-top:4px;"><div style="color:var(--text2);font-size:12px;margin-bottom:4px;">ที่อยู่</div><strong>${p.address}</strong></div>` : ''}
+          </div>
+        </div>
+
+        <!-- ประวัติเบิก (ตารางเดิม) -->
         <div class="card">
+          <div class="card-header" style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border,#e8e3d4);">
+            <span style="font-size:16px;">📦</span>
+            <h3 style="font-size:14px;font-weight:700;margin:0;letter-spacing:-0.2px;">ประวัติการเบิก</h3>
+            <span style="font-size:12px;color:var(--text2);margin-left:auto;">${totalReqs} ครั้ง · ${totalLines} รายการ · ${totalQty} หน่วย</span>
+          </div>
           <div class="table-wrap">
             <table>
               <thead><tr><th>วันที่</th><th>รายการ</th><th>จำนวน</th><th>หน่วย</th><th>ผู้เบิก</th><th></th></tr></thead>
@@ -168,7 +200,12 @@ async function openPatientProfile(id, activeTab) {
         </div>
       </div>
       <div id="patprofile-tab-medical" style="display:none;" data-patid="${p.id}">
-        
+        <!-- [R4 P3] Section header -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 4px;">
+          <span style="font-size:20px;">🩺</span>
+          <h3 style="font-size:16px;font-weight:700;margin:0;letter-spacing:-0.3px;">ข้อมูลทางการแพทย์</h3>
+          <span style="font-size:12px;color:var(--text2);margin-left:auto;">โรคประจำตัว · ประวัติการรักษา</span>
+        </div>
         ${renderMedLogTab(p.id, 'medical')}
 
         <div id="med-files-section-${p.id}" style="margin-top:12px;"></div>
