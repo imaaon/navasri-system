@@ -29,8 +29,44 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js')
-          .then(function(reg) { console.log('[PWA] SW registered, scope:', reg.scope); })
+          .then(function(reg) {
+            console.log('[PWA] SW registered, scope:', reg.scope);
+
+            // ── R3 Cache Purge (one-time) ──
+            // เคลียร์ cache ทุกตัวที่มี 'navasri-static-v1' หรือ 'navasri-v1' หรือ 'v2'
+            // เพื่อบังคับ browser โหลด CSS R3 ใหม่
+            if ('caches' in window) {
+              caches.keys().then(function(keys) {
+                keys.forEach(function(k) {
+                  if (k.includes('navasri-static-v1') || k === 'navasri-v1' ||
+                      k.includes('navasri-static-v2') || k === 'navasri-v2') {
+                    caches.delete(k).then(function() {
+                      console.log('[PWA] Purged old cache:', k);
+                    });
+                  }
+                });
+              });
+            }
+
+            // ── Auto-reload เมื่อมี SW ใหม่ activate ──
+            reg.addEventListener('updatefound', function() {
+              var newSW = reg.installing;
+              if (newSW) {
+                newSW.addEventListener('statechange', function() {
+                  if (newSW.state === 'activated' && navigator.serviceWorker.controller) {
+                    console.log('[PWA] New SW activated, reloading...');
+                    window.location.reload();
+                  }
+                });
+              }
+            });
+          })
           .catch(function(err) { console.warn('[PWA] SW registration failed:', err); });
+
+        // Force check for SW update on every page load
+        navigator.serviceWorker.ready.then(function(reg) {
+          reg.update();
+        });
       });
     }
   </script>

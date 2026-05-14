@@ -1,6 +1,6 @@
 // Navasri Service Worker
-const CACHE_VERSION = 'navasri-v2';
-const STATIC_CACHE = 'navasri-static-v2';
+const CACHE_VERSION = 'navasri-v3';
+const STATIC_CACHE = 'navasri-static-v3';
 
 const STATIC_ASSETS = [
   '/manifest.json',
@@ -38,9 +38,9 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (!url.origin.startsWith(self.location.origin)) return;
 
-  // Cache-first สำหรับ icons + CSS
+  // Cache-first สำหรับ ICONS เท่านั้น (รูปไม่ค่อยเปลี่ยน)
   if (url.pathname.startsWith('/icons/') ||
-      url.pathname.match(/\.(png|jpg|jpeg|gif|svg|webp|ico|css)$/)) {
+      url.pathname.match(/\.(png|jpg|jpeg|gif|svg|webp|ico)$/)) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         return cached || fetch(event.request).then((response) => {
@@ -55,7 +55,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first สำหรับ JS/HTML/JSON
+  // Network-first สำหรับ CSS/JS/HTML/JSON
+  // (CSS เปลี่ยนบ่อย — network-first กัน cache hell)
   event.respondWith(
     fetch(event.request).then((response) => {
       if (response.ok) {
