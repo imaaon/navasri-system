@@ -109,10 +109,89 @@ function _doPrintBarcode(code, name) {
   win.document.close();
 }
 
+// ── [R8-A 14พค69] Stock KPI summary — 4 cards ตาม mockup PDF p.29 ──
+// คำนวณ: รายการทั้งหมด · มูลค่ารวม (qty × cost) · ใกล้หมด (qty ≤ reorder, qty > 0) · Lot ใกล้หมดอายุ
+function renderStockKPI() {
+  if (!db.items) return;
+  const items = db.items;
+
+  // 1. รายการทั้งหมด — นับเฉพาะ active (qty >= 0 = all valid items)
+  const totalSku = items.length;
+  // active = ใช้งานอยู่ (qty > 0 หรือเคยมี qty) · ปิด = qty=0 และ never received
+  // ใช้ simple count: ทั้งหมด vs qty > 0
+  const activeSku = items.filter(it => (it.qty || 0) > 0).length;
+
+  // 2. มูลค่ารวม = sum(qty × cost)
+  let totalValue = 0;
+  items.forEach(it => {
+    const qty = Number(it.qty) || 0;
+    const cost = Number(it.cost) || 0;
+    totalValue += qty * cost;
+  });
+
+  // 3. ใกล้หมด = qty > 0 และ qty ≤ reorder (ไม่นับ qty=0 — นั่นคือ "หมดแล้ว")
+  const lowCount = items.filter(it => {
+    const qty = Number(it.qty) || 0;
+    const reorder = Number(it.reorder) || 0;
+    return qty > 0 && qty <= reorder;
+  }).length;
+  const outCount = items.filter(it => (Number(it.qty) || 0) === 0).length;
+
+  // 4. Lot ใกล้หมดอายุ — ใช้ getLotStatus จาก db.js (รวม expiring + expired)
+  let nearExpiryCount = 0;
+  if (typeof getLotsForItem === 'function' && typeof getLotStatus === 'function') {
+    items.forEach(it => {
+      const lots = getLotsForItem(it.id) || [];
+      lots.forEach(l => {
+        const status = getLotStatus(l.expiryDate);
+        if (status === 'expiring' || status === 'expired') nearExpiryCount++;
+      });
+    });
+  }
+
+  // เขียนค่าไปยัง DOM (use document.getElementById — fail-safe ถ้า element ยังไม่โหลด)
+  const $ = (id) => document.getElementById(id);
+  const formatBaht = (v) => {
+    if (v >= 1000000) return '฿' + (v / 1000000).toFixed(2) + 'M';
+    if (v >= 1000) return '฿' + (v / 1000).toFixed(1) + 'k';
+    return '฿' + v.toLocaleString('th-TH', { maximumFractionDigits: 0 });
+  };
+
+  if ($('stock-kpi-total')) $('stock-kpi-total').textContent = totalSku.toLocaleString('th-TH');
+  if ($('stock-kpi-total-sub')) $('stock-kpi-total-sub').textContent = `SKU · ใช้งาน ${activeSku}`;
+
+  if ($('stock-kpi-value')) $('stock-kpi-value').textContent = formatBaht(totalValue);
+  if ($('stock-kpi-value-sub')) $('stock-kpi-value-sub').textContent = 'ราคาทุนรวม';
+
+  if ($('stock-kpi-low')) $('stock-kpi-low').textContent = lowCount.toLocaleString('th-TH');
+  if ($('stock-kpi-low-sub')) {
+    const txt = outCount > 0 ? `รายการ · หมดแล้ว ${outCount}` : 'รายการต่ำกว่าจุดสั่งซื้อ';
+    $('stock-kpi-low-sub').textContent = txt;
+  }
+
+  if ($('stock-kpi-expiry')) $('stock-kpi-expiry').textContent = nearExpiryCount.toLocaleString('th-TH');
+  if ($('stock-kpi-expiry-sub')) {
+    const days = (db.billingSettings && db.billingSettings.expiryWarnDays) || 30;
+    $('stock-kpi-expiry-sub').textContent = `Lot · ภายใน ${days} วัน`;
+  }
+
+  // Update header subtitle
+  if ($('stock-header-subtitle')) {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    $('stock-header-subtitle').textContent = `${totalSku} รายการ · มูลค่ารวม ${formatBaht(totalValue)} · อัปเดต ${hh}:${mm} น.`;
+  }
+}
+window.renderStockKPI = renderStockKPI;
+
 function renderStock() {
   // Bug C fix: load expiry warn days setting (idempotent, fast)
   loadExpiryWarnDaysUI();
-  
+
+  // [R8-A] Refresh KPI cards every time stock list re-renders
+  try { renderStockKPI(); } catch(e) { console.warn('[renderStockKPI]', e); }
+
   const search = (document.getElementById('stockSearch')?.value || '').toLowerCase();
   const catFilter = document.getElementById('stockCatFilter')?.value || '';
   const statusFilter = document.getElementById('stockStatusFilter')?.value || '';

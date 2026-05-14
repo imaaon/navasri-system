@@ -4164,3 +4164,54 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R7-B
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R8-A · Stock List — Header + KPI cards + Filter bar
+   Added 14 พ.ค. 69 · Mockup: PDF Desktop p.29
+   Pattern: ตาม R7-A Billing — เพิ่มเฉพาะ hover/focus polish
+   ════════════════════════════════════════════════════════════════ */
+
+/* Stock page header — same pattern as billing-page-header */
+.stock-page-header h2 {
+  color: var(--text);
+}
+
+/* KPI cards — hover lift effect (matches R7) */
+.stock-kpi-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.stock-kpi-card[style*="cursor:pointer"]:hover,
+.stock-kpi-card[style*="cursor: pointer"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* KPI value text — slight emphasis on hover (clickable cards only) */
+.stock-kpi-card[style*="cursor:pointer"]:hover [id^="stock-kpi-"] {
+  filter: brightness(0.92);
+}
+
+/* Filter bar polish — focus state */
+.stock-filter-bar input[type="text"]:focus,
+.stock-filter-bar input#stockSearch:focus,
+.stock-filter-bar select:focus {
+  outline: none;
+  border-color: var(--brand, #2e6b4f);
+  box-shadow: 0 0 0 2px var(--sage-100, #e6efe7);
+}
+
+/* Filter bar dropdowns — cursor on hover */
+.stock-filter-bar select {
+  cursor: pointer;
+}
+
+/* Expiry warn input — mono font + accent on focus */
+#stk-expiry-warn:focus {
+  outline: none;
+  border-color: var(--brand, #2e6b4f);
+  box-shadow: 0 0 0 2px var(--sage-100, #e6efe7);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R8-A
+   ════════════════════════════════════════════════════════════════ */
