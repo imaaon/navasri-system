@@ -3376,3 +3376,161 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END OF R3 PER-PAGE CSS REFRESH
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R3 MOBILE MODAL CSS — Full-screen Pattern (Session D · 14พค69)
+   ════════════════════════════════════════════════════════════════
+   แปลง .modal-overlay > .modal (center popup) เป็น full-screen
+   บน mobile (≤768px) — CSS only, ไม่แตะ HTML/JS
+
+   Modal ขนาดเล็ก (confirm/alert) override ผ่าน attribute
+   data-modal-size="small" ใน HTML — ยังเป็น centered popup
+
+   Strategy:
+   - ลำดับ CSS: append ท้ายไฟล์ = ชนะ Universal Modal Mobile rules
+   - ใช้ z-index 300 (modal) > 200 (bottom-tab-bar)
+   - รองรับ iOS safe area
+   - ไม่กระทบ openModal()/closeModal() ใน JS
+   ════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* ──────────── Overlay: stretch ทั้งจอ ──────────── */
+  .modal-overlay.open {
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0;
+    backdrop-filter: none;          /* ประหยัด GPU บน mobile */
+    background: var(--bg);
+  }
+
+  /* ──────────── Modal: full-screen + slide-up ──────────── */
+  .modal-overlay.open .modal,
+  .modal-overlay.open .modal-box {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    height: 100dvh !important;      /* รองรับ iOS Safari (URL bar) */
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    animation: r3-mobile-modal-slide-up 0.25s ease-out;
+  }
+
+  @keyframes r3-mobile-modal-slide-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  /* ──────────── Modal Header: brand top bar ──────────── */
+  .modal-overlay.open .modal-header {
+    background: var(--brand) !important;
+    color: var(--ink-on-brand) !important;
+    padding: 14px 16px !important;
+    border-bottom: none !important;
+    flex-shrink: 0;
+    min-height: 56px;
+    padding-top: max(14px, env(safe-area-inset-top)) !important;
+  }
+
+  .modal-overlay.open .modal-title {
+    color: var(--ink-on-brand) !important;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .modal-overlay.open .modal-close {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: var(--ink-on-brand) !important;
+    border-radius: 8px !important;
+    font-size: 16px;
+  }
+  .modal-overlay.open .modal-close:hover {
+    background: rgba(255, 255, 255, 0.28) !important;
+  }
+
+  /* ──────────── Modal Body: scroll inside ──────────── */
+  .modal-overlay.open .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px !important;
+    background: var(--bg);
+  }
+
+  /* ──────────── Modal Footer: sticky bottom, safe-area aware ──────────── */
+  .modal-overlay.open .modal-footer {
+    flex-shrink: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border) !important;
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    /* keep existing grid layout from Universal Modal Mobile */
+  }
+
+  /* ──────────── Form inputs: 16px ป้องกัน iOS zoom ──────────── */
+  .modal-overlay.open .form-control {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  /* ──────────── Body scroll lock ตอน modal open ──────────── */
+  body:has(.modal-overlay.open) {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SMALL MODAL OVERRIDE (Confirm/Alert) — Center popup เหมือนเดิม
+   ════════════════════════════════════════════════════════════════
+   HTML: <div class="modal-overlay" data-modal-size="small">
+   ใช้กับ modal-customConfirm + modal-customAlert
+   ════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .modal-overlay[data-modal-size="small"].open {
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(20, 30, 15, 0.42);
+  }
+  .modal-overlay[data-modal-size="small"].open .modal,
+  .modal-overlay[data-modal-size="small"].open .modal-box {
+    width: 90vw !important;
+    max-width: 380px !important;
+    height: auto !important;
+    max-height: 85vh !important;
+    border-radius: var(--r-xl) !important;
+    margin: auto !important;
+    animation: none !important;
+    box-shadow: var(--shadow-lg) !important;
+  }
+  .modal-overlay[data-modal-size="small"].open .modal-header {
+    background: var(--surface) !important;
+    color: var(--ink) !important;
+    padding: 18px 22px 0 !important;
+    min-height: auto;
+    padding-top: 18px !important;
+  }
+  .modal-overlay[data-modal-size="small"].open .modal-title,
+  .modal-overlay[data-modal-size="small"].open h3 {
+    color: var(--ink) !important;
+  }
+  .modal-overlay[data-modal-size="small"].open .modal-body {
+    background: var(--surface);
+    padding: 8px 22px 16px !important;
+  }
+  .modal-overlay[data-modal-size="small"].open .modal-footer {
+    padding-bottom: 14px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END OF R3 MOBILE MODAL CSS
+   ════════════════════════════════════════════════════════════════ */

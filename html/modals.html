@@ -3,7 +3,7 @@
 <!-- ════════════════════════════════════════════════ -->
 <!-- Modal: Custom Confirm (แทน native confirm())   -->
 <!-- ════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-customConfirm" style="display:none;" onclick="if(event.target===this)_customConfirmResolve(false)">
+<div class="modal-overlay" id="modal-customConfirm" data-modal-size="small" style="display:none;" onclick="if(event.target===this)_customConfirmResolve(false)">
   <div class="modal-box" style="max-width:420px;width:95%;">
     <div class="modal-header" style="border-bottom:none;padding-bottom:0;">
       <h3 id="customConfirmTitle" style="margin:0;font-size:16px;display:flex;align-items:center;gap:8px;">
@@ -24,7 +24,7 @@
 <!-- ════════════════════════════════════════════════ -->
 <!-- Modal: Custom Alert (แทน native alert())       -->
 <!-- ════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-customAlert" style="display:none;" onclick="if(event.target===this)_customAlertResolve()">
+<div class="modal-overlay" id="modal-customAlert" data-modal-size="small" style="display:none;" onclick="if(event.target===this)_customAlertResolve()">
   <div class="modal-box" style="max-width:420px;width:95%;">
     <div class="modal-header" style="border-bottom:none;padding-bottom:0;">
       <h3 id="customAlertTitle" style="margin:0;font-size:16px;display:flex;align-items:center;gap:8px;">
