@@ -4007,3 +4007,109 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R6-D
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R7 · BILLING PAGE — Header + KPI cards + Table redesign
+   14 พ.ค. 2569
+   ════════════════════════════════════════════════════════════════ */
+
+/* KPI cards hover lift */
+.billing-kpi-card {
+  transition: all 0.15s;
+}
+.billing-kpi-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transform: translateY(-1px);
+}
+
+/* Billing table — Plex Mono on numbers, hover row */
+.billing-table-r7 {
+  width: 100%;
+  border-collapse: collapse;
+}
+.billing-table-r7 thead th {
+  background: var(--sage-50, #f4f8f5);
+  color: var(--text2, #5e5e5e);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #e8e3d4);
+  white-space: nowrap;
+}
+.billing-table-r7 tbody td {
+  padding: 10px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border, #e8e3d4);
+}
+.billing-table-r7 tbody tr {
+  transition: background 0.1s;
+}
+.billing-table-r7 tbody tr:hover {
+  background: var(--sage-50, #f4f8f5);
+}
+.billing-table-r7 tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Status pills in billing table */
+.billing-table-r7 .badge,
+.billing-table-r7 .status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Filter bar */
+.billing-filter-bar select:focus,
+.billing-filter-bar input:focus {
+  outline: 2px solid var(--sage-100, #eaf1eb);
+  border-color: var(--brand, #2e6b4f);
+}
+
+/* Page header section */
+.billing-page-header h2 {
+  color: var(--text);
+}
+
+/* Tab pills */
+#billing-tabs .billing-tab {
+  transition: all 0.15s;
+  border-radius: 8px 8px 0 0;
+}
+#billing-tabs .billing-tab:not(.active):hover {
+  background: var(--sage-50, #f4f8f5);
+  color: var(--brand, #2e6b4f) !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .billing-page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  .billing-kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .billing-kpi-card {
+    padding: 10px 12px !important;
+  }
+  .billing-kpi-card div[style*="font-size:22px"] {
+    font-size: 18px !important;
+  }
+  .billing-filter-bar {
+    padding: 10px !important;
+  }
+  .billing-filter-bar select,
+  .billing-filter-bar input {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R7
+   ════════════════════════════════════════════════════════════════ */
