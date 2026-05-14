@@ -12,38 +12,52 @@ function renderMedLogTab(patId, type) {
   const p = db.patients.find(x => x.id == patId);
   if (!p) return '';
   const isM = type === 'medical';
-  const icon   = isM ? '🏥' : '💊';
+  const icon   = isM ? '🩺' : '💊';
   const title  = isM ? 'ประวัติการรักษา' : 'ยาประจำ';
   const key    = isM ? 'medicalLog' : 'medsLog';
   const logs   = (p[key] || []).slice().sort((a,b) => b.date.localeCompare(a.date));
   const _ = patId; // used below
 
+  // [R6-B 14พค69] Rich card-style entry rendering
+  // แต่ละ entry เป็น card แยก พร้อม icon + date pill + content + actions
   const rows = logs.length === 0
-    ? `<div style="padding:32px;text-align:center;color:var(--text3);font-size:13px;">ยังไม่มีรายการ — กดปุ่ม + เพื่อเพิ่ม</div>`
-    : logs.map((entry, i) => `
-      <div style="display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);">
-        <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:${isM ? 'var(--sage-light)' : '#eef4ff'};border:2px solid ${isM ? 'var(--sage)' : '#a0bde8'};display:flex;align-items:center;justify-content:center;font-size:16px;margin-top:2px;">${icon}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px;">📅 ${thDateShort(entry.date)}</div>
-          <div style="font-size:13px;line-height:1.7;white-space:pre-wrap;color:var(--text1);">${entry.detail}</div>
-          ${entry.by ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">บันทึกโดย: ${entry.by}</div>` : ''}
-        </div>
-        <div style="flex-shrink:0;display:flex;flex-direction:column;gap:4px;">
-          <button class="btn btn-ghost btn-sm" onclick="editMedLog('${patId}','${type}','${entry._supaId}')" title="แก้ไข">✏️</button>
-          <button class="btn btn-ghost btn-sm" onclick="deleteMedLog('${patId}','${type}','${entry._supaId}')" title="ลบ" style="color:#e74c3c;">🗑️</button>
-        </div>
-      </div>`).join('');
+    ? `<div style="padding:36px 24px;text-align:center;">
+         <div style="font-size:42px;opacity:0.25;margin-bottom:8px;">${icon}</div>
+         <div style="color:var(--text3);font-size:13px;">ยังไม่มี${title} — กดปุ่ม + เพื่อเพิ่ม</div>
+       </div>`
+    : `<div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+        ${logs.map((entry, i) => `
+          <div class="medlog-entry-card" style="border:1px solid var(--border,#e8e3d4);border-left:3px solid ${isM ? '#3498db' : 'var(--brand,#2e6b4f)'};border-radius:10px;padding:12px 16px;background:${isM ? '#f4f9fd' : 'var(--sage-50,#f4f8f5)'};transition:all 0.15s;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+                  <span style="background:${isM ? '#dbeafe' : 'var(--sage-100,#eaf1eb)'};color:${isM ? '#1e5fa0' : 'var(--brand,#2e6b4f)'};border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:600;">📅 ${thDateShort(entry.date)}</span>
+                  ${entry.by ? `<span style="font-size:11px;color:var(--text3);">โดย ${entry.by}</span>` : ''}
+                </div>
+                <div style="font-size:13.5px;line-height:1.65;white-space:pre-wrap;color:var(--text);">${entry.detail}</div>
+              </div>
+              <div style="display:flex;gap:4px;flex-shrink:0;">
+                <button class="btn btn-ghost btn-sm" onclick="editMedLog('${patId}','${type}','${entry._supaId}')" title="แก้ไข">✏️</button>
+                <button class="btn btn-ghost btn-sm" onclick="deleteMedLog('${patId}','${type}','${entry._supaId}')" title="ลบ" style="color:#c0392b;">🗑️</button>
+              </div>
+            </div>
+          </div>`).join('')}
+       </div>`;
 
-  return `<div class="card">
-    <div class="card-header">
-      <div class="card-title" style="font-size:13px;">${icon} ${title} (${logs.length} รายการ)</div>
+  return `<div class="card medlog-card-r6">
+    <div class="card-header" style="background:linear-gradient(to right, ${isM ? '#f4f9fd' : 'var(--sage-50,#f4f8f5)'}, transparent);">
+      <div class="card-title" style="font-size:14px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">${icon}</span>
+        <span>${title}</span>
+        ${logs.length > 0 ? `<span style="background:${isM ? '#dbeafe' : 'var(--sage-100,#eaf1eb)'};color:${isM ? '#1e5fa0' : 'var(--brand,#2e6b4f)'};border-radius:999px;padding:1px 8px;font-size:11px;font-weight:600;">${logs.length}</span>` : ''}
+      </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm" onclick="exportPatMedExcel('${patId}','${type}')" title="Export Excel" ${logs.length===0?'disabled':''}>📊 Excel</button>
         <button class="btn btn-ghost btn-sm" onclick="exportPatMedPDF('${patId}','${type}')" title="Export PDF" ${logs.length===0?'disabled':''}>📄 PDF</button>
         <button class="btn btn-primary btn-sm" onclick="openAddMedLog('${patId}','${type}')">+ เพิ่มรายการ</button>
       </div>
     </div>
-    <div style="padding:0 20px;">${rows}</div>
+    ${rows}
   </div>`;
 }
 

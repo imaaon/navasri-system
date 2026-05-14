@@ -298,6 +298,12 @@ async function openPatientProfile(id, activeTab) {
       </div>
       <!-- MAR TAB -->
       <div id="patprofile-tab-mar" style="display:none;">
+        <!-- [R6-A] Section header -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 4px;">
+          <span style="font-size:20px;">💊</span>
+          <h3 style="font-size:16px;font-weight:700;margin:0;letter-spacing:-0.3px;">MAR — ใบบันทึกการให้ยา</h3>
+          <span style="font-size:12px;color:var(--text2);margin-left:auto;">Medication Administration Record · บันทึกการให้ยาทุกครั้ง</span>
+        </div>
         ${renderMARTab(pid, p.id)}
       </div>
       <!-- VITAL SIGNS TAB -->
