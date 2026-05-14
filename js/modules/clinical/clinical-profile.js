@@ -1048,41 +1048,60 @@ async function deleteLabResult(labId, patientId) {
 
 // ─── Patient Profile Tab Bar (role-aware) ────────────────────
 function renderPatientTabBar(p, totalReqs) {
+  // [R4 P2 14พค69] Refactor: แยก icon/label/count + ใช้ data structure เดียวสำหรับทั้ง desktop + mobile
+  // ตามเดิม onclick='switchPatTab' ไม่ broken
   const allTabs = [
-    { k:'vitals',     perm:'vitals',        label:'📊 Vital Signs' },
-    { k:'excretion', perm:'excretion',  label:'🚽 ขับถ่าย / น้ำเข้าออก' },
-    { k:'medical',    perm:'nursing',       label:'📋 ประวัติการรักษา' },
-    { k:'meds',       perm:'mar',           label:'💊 ยาประจำ' },
-    { k:'allergy',    perm:'allergy',       label:'🚨 แพ้ยา/อาหาร' + (p.allergies?.length ? '<span style="background:#c0392b;color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">' + p.allergies.length + '</span>' : '') },
-    { k:'nursing',    perm:'nursing',       label:'📋 บันทึกพยาบาล' },
-    { k:'mar',        perm:'mar',           label:'💊 MAR ยาประจำวัน' },
-    { k:'physio',     perm:'physio',        label:'🧘 กายภาพบำบัด' },
-    { k:'lab',        perm:'lab',           label:'🧪 ผลแล็บ' },
-    { k:'appts',      perm:'appts',         label:'🚐 นัดหมายแพทย์' },
-    { k:'incident',   perm:'incident',      label:'🚨 อุบัติเหตุ' },
-    { k:'dietary',    perm:'dietary',       label:'🥦 โภชนาการ' },
-    { k:'contacts',   perm:'contacts',      label:'👥 ผู้ติดต่อ' + (p.contacts?.length ? '<span style="background:var(--accent);color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">' + p.contacts.length + '</span>' : '') },
-    { k:'notes',      perm:'nursing',       label:'📝 หมายเหตุ' },
-    { k:'belongings', perm:'belongings',    label:'🧳 ทรัพย์สิน' },
-    { k:'deposits',   perm:'deposits',      label:'💰 มัดจำ' },
-    { k:'dnr',        perm:'dnr',           label:'⚖️ DNR & Consent' },
-    { k:'dispense',   perm:'dispense',      label:'💊 เบิกสินค้า' },
-    { k:'history',    perm:'history',       label:'📦 ประวัติเบิก (' + totalReqs + ')' },
+    { k:'vitals',     perm:'vitals',     icon:'📊', label:'Vital Signs' },
+    { k:'excretion',  perm:'excretion',  icon:'🚽', label:'ขับถ่าย / น้ำเข้าออก' },
+    { k:'medical',    perm:'nursing',    icon:'📋', label:'ประวัติการรักษา' },
+    { k:'meds',       perm:'mar',        icon:'💊', label:'ยาประจำ' },
+    { k:'allergy',    perm:'allergy',    icon:'⚠️', label:'แพ้ยา/อาหาร', count: p.allergies?.length || 0, countTone:'danger' },
+    { k:'nursing',    perm:'nursing',    icon:'📝', label:'บันทึกพยาบาล' },
+    { k:'mar',        perm:'mar',        icon:'💊', label:'MAR ยาประจำวัน' },
+    { k:'physio',     perm:'physio',     icon:'🧘', label:'กายภาพบำบัด' },
+    { k:'lab',        perm:'lab',        icon:'🧪', label:'ผลแล็บ' },
+    { k:'appts',      perm:'appts',      icon:'🚐', label:'นัดหมายแพทย์' },
+    { k:'incident',   perm:'incident',   icon:'🚨', label:'อุบัติเหตุ' },
+    { k:'dietary',    perm:'dietary',    icon:'🥦', label:'โภชนาการ' },
+    { k:'contacts',   perm:'contacts',   icon:'📞', label:'ผู้ติดต่อ', count: p.contacts?.length || 0, countTone:'brand' },
+    { k:'notes',      perm:'nursing',    icon:'📌', label:'หมายเหตุ' },
+    { k:'belongings', perm:'belongings', icon:'🧳', label:'ทรัพย์สิน' },
+    { k:'deposits',   perm:'deposits',   icon:'💰', label:'มัดจำ' },
+    { k:'dnr',        perm:'dnr',        icon:'⚖️', label:'DNR & Consent' },
+    { k:'dispense',   perm:'dispense',   icon:'📦', label:'เบิกสินค้า' },
+    { k:'history',    perm:'history',    icon:'🕐', label:'ประวัติเบิก', count: totalReqs, countTone:'neutral' },
   ];
   const visibleTabs = allTabs.filter(t => canSeePatientTab(t.perm));
+
+  // [R4 P2] Build count badge HTML (3 tones: danger/brand/neutral)
+  function _countBadge(c, tone) {
+    if (!c) return '';
+    const palette = {
+      danger:  { bg:'#fdf0ee', color:'#c0392b', border:'rgba(192,57,43,0.25)' },
+      brand:   { bg:'var(--sage-100,#eaf1eb)', color:'var(--brand,#2e6b4f)', border:'var(--sage-200,#dbe5dc)' },
+      neutral: { bg:'var(--surface2,#f5f1e3)', color:'var(--text2,#5e5e5e)', border:'var(--border,#e8e3d4)' }
+    }[tone] || { bg:'#eaf1eb', color:'#2e6b4f', border:'#dbe5dc' };
+    return `<span class="patprofile-tab-count" style="background:${palette.bg};color:${palette.color};border:1px solid ${palette.border};border-radius:999px;padding:1px 7px;font-size:11px;font-weight:600;margin-left:6px;line-height:1.4;min-width:18px;display:inline-block;text-align:center;">${c}</span>`;
+  }
+
+  // Desktop: tabs (horizontal scroll) — pill underline style + count badge
   const tabsHtml = visibleTabs.map(t =>
-    '<div class="tab" onclick="switchPatTab(\'' + t.k + '\')">' + t.label + '</div>'
+    `<div class="tab" data-tab-key="${t.k}" onclick="switchPatTab('${t.k}')"><span class="patprofile-tab-icon">${t.icon}</span> <span class="patprofile-tab-label">${t.label}</span>${_countBadge(t.count, t.countTone)}</div>`
   ).join('\n        ');
-  // Grid view (mobile) — แสดงเป็นปุ่มแอพ
-  const gridHtml = visibleTabs.map(t =>
-    '<div class="pat-app-btn" onclick="switchPatTab(\'' + t.k + '\');document.getElementById(\'patAppGrid\').style.display=\'none\';document.getElementById(\'patAppGridBackBtn\').style.display=\'\';">' +
-    '<div class="pat-app-icon">' + t.label.split(' ')[0] + '</div>' +
-    '<div class="pat-app-label">' + t.label.split(' ').slice(1).join(' ').replace(/<[^>]*>/g,'') + '</div>' +
-    '</div>'
-  ).join('\n        ');
+
+  // Mobile: grid view (3 cols)
+  const gridHtml = visibleTabs.map(t => {
+    const badge = t.count ? `<span class="pat-app-badge" style="position:absolute;top:6px;right:6px;background:${t.countTone==='danger'?'#c0392b':'var(--brand,#2e6b4f)'};color:white;border-radius:999px;font-size:10px;font-weight:700;padding:1px 6px;min-width:18px;text-align:center;">${t.count}</span>` : '';
+    return `<div class="pat-app-btn" style="position:relative;" onclick="switchPatTab('${t.k}');document.getElementById('patAppGrid').style.display='none';document.getElementById('patAppGridBackBtn').style.display='';">
+        ${badge}
+        <div class="pat-app-icon">${t.icon}</div>
+        <div class="pat-app-label">${t.label}</div>
+      </div>`;
+  }).join('\n        ');
+
   return (
     // Desktop: tabs (horizontal scroll)
-    '<div class="tabs" id="patprofileTabs" style="margin-bottom:16px;">\n        ' + tabsHtml + '\n      </div>\n' +
+    '<div class="tabs patprofile-tabs" id="patprofileTabs" style="margin-bottom:16px;">\n        ' + tabsHtml + '\n      </div>\n' +
     // Mobile: grid (3 cols) + back button
     '<button class="btn btn-ghost pat-app-back" id="patAppGridBackBtn" style="display:none;margin-bottom:10px;" onclick="document.getElementById(\'patAppGrid\').style.display=\'\';document.getElementById(\'patAppGridBackBtn\').style.display=\'none\';">← กลับไปเลือกแท็บ</button>\n' +
     '<div class="pat-app-grid" id="patAppGrid">\n        ' + gridHtml + '\n      </div>'

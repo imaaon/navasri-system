@@ -3604,3 +3604,90 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R4 P1 PATIENT PROFILE
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R4 P2 · PATIENT PROFILE — Tabs Pills + Count Badges
+   ════════════════════════════════════════════════════════════════ */
+
+/* Patient profile tabs container — clean underline style */
+.patprofile-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border, #e8e3d4);
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 0;
+  margin-bottom: 16px;
+  scrollbar-width: thin;
+}
+.patprofile-tabs::-webkit-scrollbar {
+  height: 6px;
+}
+.patprofile-tabs::-webkit-scrollbar-thumb {
+  background: var(--sage-200, #dbe5dc);
+  border-radius: 3px;
+}
+
+/* Each tab — pill style with bottom underline on active */
+.patprofile-tabs .tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text2, #5e5e5e);
+  cursor: pointer;
+  white-space: nowrap;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+  position: relative;
+}
+.patprofile-tabs .tab:hover {
+  color: var(--brand, #2e6b4f);
+  background: var(--sage-50, #f4f8f5);
+}
+.patprofile-tabs .tab.active {
+  color: var(--brand, #2e6b4f);
+  font-weight: 600;
+  border-bottom-color: var(--brand, #2e6b4f);
+  background: transparent;
+}
+.patprofile-tab-icon {
+  font-size: 15px;
+  margin-right: 6px;
+}
+.patprofile-tab-label {
+  display: inline;
+}
+
+/* Active tab — count badge gets brand color */
+.patprofile-tabs .tab.active .patprofile-tab-count {
+  filter: brightness(0.98);
+}
+
+/* Mobile grid badge — already in inline styles, just position fine-tune */
+.pat-app-btn .pat-app-badge {
+  z-index: 1;
+}
+
+/* === Mobile responsive === */
+@media (max-width: 900px) {
+  .patprofile-tabs {
+    display: none; /* mobile ใช้ grid แทน */
+  }
+  .patprofile-tabs .tab {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+  .patprofile-tab-label {
+    font-size: 12px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R4 P2
+   ════════════════════════════════════════════════════════════════ */
