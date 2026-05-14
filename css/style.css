@@ -3494,14 +3494,20 @@ tr:hover td {
    ════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-  .modal-overlay[data-modal-size="small"].open {
+  .modal-overlay[data-modal-size="small"].open,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"],
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] {
     align-items: center;
     justify-content: center;
     padding: 16px;
     background: rgba(20, 30, 15, 0.42);
   }
   .modal-overlay[data-modal-size="small"].open .modal,
-  .modal-overlay[data-modal-size="small"].open .modal-box {
+  .modal-overlay[data-modal-size="small"].open .modal-box,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] .modal,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] .modal-box,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] .modal,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] .modal-box {
     width: 90vw !important;
     max-width: 380px !important;
     height: auto !important;
@@ -3511,7 +3517,9 @@ tr:hover td {
     animation: none !important;
     box-shadow: var(--shadow-lg) !important;
   }
-  .modal-overlay[data-modal-size="small"].open .modal-header {
+  .modal-overlay[data-modal-size="small"].open .modal-header,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] .modal-header,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] .modal-header {
     background: var(--surface) !important;
     color: var(--ink) !important;
     padding: 18px 22px 0 !important;
@@ -3519,14 +3527,22 @@ tr:hover td {
     padding-top: 18px !important;
   }
   .modal-overlay[data-modal-size="small"].open .modal-title,
-  .modal-overlay[data-modal-size="small"].open h3 {
+  .modal-overlay[data-modal-size="small"].open h3,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] .modal-title,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] h3,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] .modal-title,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] h3 {
     color: var(--ink) !important;
   }
-  .modal-overlay[data-modal-size="small"].open .modal-body {
+  .modal-overlay[data-modal-size="small"].open .modal-body,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] .modal-body,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] .modal-body {
     background: var(--surface);
     padding: 8px 22px 16px !important;
   }
-  .modal-overlay[data-modal-size="small"].open .modal-footer {
+  .modal-overlay[data-modal-size="small"].open .modal-footer,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] .modal-footer,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] .modal-footer {
     padding-bottom: 14px;
   }
 }
