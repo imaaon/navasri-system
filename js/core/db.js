@@ -520,16 +520,35 @@ function getBedLabel(bed) {
 // render allergy banner HTML
 function renderAllergyBanner(patient, compact=false) {
   if (!patient?.allergies?.length) return '';
-  const items = patient.allergies.map(a => {
-    const sevText = a.severity ? ` — ${a.severity}` : '';
-    return `<span style="background:rgba(255,255,255,.2);border-radius:4px;padding:2px 9px;font-size:${compact?'11px':'12px'};margin:2px;white-space:nowrap;">${a.allergen}<span style="opacity:.8;font-size:10px;">${sevText}</span></span>`;
+  // [R4 14พค69] ปรับสีตาม severity สูงสุด + เพิ่มปุ่ม "จัดการ →"
+  // severity precedence: severe > moderate > mild/default
+  const hasSevere   = patient.allergies.some(a => a.severity === 'severe');
+  const hasModerate = patient.allergies.some(a => a.severity === 'moderate');
+  const tone = hasSevere ? 'severe' : hasModerate ? 'moderate' : 'mild';
+  // สีพื้น/ขอบ/ข้อความ ตาม tone
+  const palette = {
+    severe:   { bg:'#fdf0ee', border:'#c0392b', text:'#7a1f12', icon:'#c0392b', label:'⚠️ แพ้ยา / แพ้อาหาร — เฝ้าระวัง', chipBg:'rgba(192,57,43,0.08)', chipText:'#7a1f12' },
+    moderate: { bg:'#fdf3e8', border:'#e67e22', text:'#7a4310', icon:'#d35400', label:'⚠️ แพ้ยา / แพ้อาหาร — เฝ้าระวัง', chipBg:'rgba(230,126,34,0.10)', chipText:'#7a4310' },
+    mild:     { bg:'#fdf6e0', border:'#d4a64a', text:'#6b4a0e', icon:'#b8862a', label:'⚠️ แพ้ยา / แพ้อาหาร — โปรดทราบ',  chipBg:'rgba(184,134,42,0.10)', chipText:'#6b4a0e' }
+  }[tone];
+  // chips แสดง allergen + อาการในวงเล็บ
+  const items = patient.allergies.slice(0, 6).map(a => {
+    const reaction = a.symptoms || a.reaction || '';
+    const rxText = reaction ? ` (${reaction})` : '';
+    return `<span style="background:${palette.chipBg};color:${palette.chipText};border-radius:999px;padding:3px 12px;font-size:${compact?'11px':'13px'};font-weight:500;white-space:nowrap;">${a.allergen}${rxText}</span>`;
   }).join('');
-  return `<div style="background:#c0392b;color:white;border-radius:8px;padding:${compact?'8px 12px':'10px 16px'};display:flex;align-items:flex-start;gap:10px;margin-bottom:${compact?'8px':'12px'};">
-    <span style="font-size:${compact?'18px':'22px'};flex-shrink:0;">🚨</span>
-    <div>
-      <div style="font-weight:700;font-size:${compact?'12px':'14px'};">แพ้ยา/อาหาร — ต้องระวัง!</div>
-      <div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;">${items}</div>
+  const more = patient.allergies.length > 6 ? `<span style="font-size:12px;color:${palette.text};opacity:0.7;">+${patient.allergies.length - 6} เพิ่มเติม</span>` : '';
+  // ปุ่มจัดการ — ลิงก์ไป tab "แพ้ยา" ถ้าอยู่ในหน้า profile
+  const manageBtn = (typeof switchPatTab === 'function')
+    ? `<button onclick="switchPatTab('allergy')" style="background:transparent;color:${palette.text};border:1px solid ${palette.border};border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">จัดการ →</button>`
+    : '';
+  return `<div class="patprofile-allergy-banner" style="background:${palette.bg};border:1px solid ${palette.border};border-left:4px solid ${palette.border};border-radius:10px;padding:${compact?'10px 14px':'14px 18px'};display:flex;align-items:center;gap:14px;margin-bottom:${compact?'10px':'14px'};">
+    <span style="font-size:${compact?'22px':'26px'};color:${palette.icon};flex-shrink:0;">⚠️</span>
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:700;font-size:${compact?'13px':'14px'};color:${palette.text};margin-bottom:6px;">${palette.label}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">${items}${more}</div>
     </div>
+    ${compact ? '' : manageBtn}
   </div>`;
 }
 function mapStaff(r) {

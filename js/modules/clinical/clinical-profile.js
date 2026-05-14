@@ -24,6 +24,50 @@ async function openPatientProfile(id, activeTab) {
   const pid = String(id);
 
   document.getElementById('patprofile-content').innerHTML = `
+  <!-- [R4 P1 14พค69] Breadcrumb -->
+  <div class="patprofile-breadcrumb" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:13px;color:var(--text2);">
+    <button onclick="showPage('patients')" style="background:transparent;border:none;color:var(--brand);font-size:13px;font-weight:500;cursor:pointer;padding:4px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;">← กลับ</button>
+    <span style="opacity:0.5;">ผู้รับบริการ</span>
+    <span style="opacity:0.5;">/</span>
+    <span style="font-weight:600;color:var(--text);">${p.name}</span>
+  </div>
+
+  <!-- [R4 P1 14พค69] Horizontal Header Card -->
+  <div class="patprofile-header-card" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:14px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+    <!-- Avatar -->
+    <div class="patprofile-header-avatar" style="flex-shrink:0;">
+      ${(p.photo||"") ? `<img src="${p.photo}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:2px solid var(--sage-200,#dbe5dc);">` : `<div style="width:88px;height:88px;border-radius:50%;background:var(--sage-100,#eaf1eb);color:var(--brand,#2e6b4f);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;letter-spacing:-1px;border:2px solid var(--sage-200,#dbe5dc);">${(p.name||'?').trim().split(/\s+/).slice(0,2).map(s=>s.charAt(0)).join('')}</div>`}
+    </div>
+
+    <!-- Name + status + info grid -->
+    <div class="patprofile-header-info" style="flex:1;min-width:240px;">
+      <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+        <h2 style="font-size:22px;font-weight:700;letter-spacing:-0.5px;margin:0;">${p.name}</h2>
+        <span class="badge ${isActive ? 'badge-green' : p.status==='hospital' ? 'badge-blue' : 'badge-gray'}" style="font-size:12px;padding:3px 12px;border-radius:999px;font-weight:600;">${isActive ? '🏠 พักอยู่' : p.status==='hospital' ? '🏥 อยู่ รพ.' : '🚪 ออกแล้ว'}</span>
+        ${(() => { const bed = getPatientBed(p); const room = getPatientRoom(p); if (!bed) return ''; return `<span style="font-size:13px;color:var(--text2);">${room?.name||''}${bed.bedCode?' · เตียง '+bed.bedCode:''}</span>`; })()}
+        <span style="font-size:13px;color:var(--text2);font-family:var(--mono,monospace);">HN ${p.hn||p.id||'-'}</span>
+      </div>
+      <div class="patprofile-header-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 24px;font-size:13px;color:var(--text2);">
+        ${p.gender ? `<div><span style="opacity:0.75;">เพศ </span><strong style="color:var(--text);">${p.gender}</strong></div>` : ''}
+        ${p.dob ? `<div><span style="opacity:0.75;">อายุ </span><strong style="color:var(--text);">${age} ปี</strong></div>` : ''}
+        ${idcard !== '-' ? `<div><span style="opacity:0.75;">เลขบัตร </span><strong style="color:var(--text);font-family:var(--mono,monospace);font-size:12px;">${idcard}</strong></div>` : ''}
+        ${p.admitDate ? `<div><span style="opacity:0.75;">เข้าเมื่อ </span><strong style="color:var(--text);">${p.admitDate}</strong></div>` : ''}
+        ${p.endDate ? `<div><span style="opacity:0.75;">สัญญา </span><strong style="color:var(--text);">${p.endDate}</strong></div>` : ''}
+        ${dur !== '-' ? `<div><span style="opacity:0.75;">ระยะเวลา </span><strong style="color:var(--text);">${dur}</strong></div>` : ''}
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="patprofile-header-actions" style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="openHealthReportModal('${p.id}')" style="white-space:nowrap;">🖨️ พิมพ์</button>
+      <button class="btn btn-ghost btn-sm" onclick="openPatientContractsModal('${p.id}','${(p.name||'').replace(/'/g, "\\'")}')" style="white-space:nowrap;">📋 แพ็กเกจ</button>
+      <button class="btn btn-primary btn-sm" onclick="editPatient('${p.id}')" style="white-space:nowrap;">✏️ แก้ไข</button>
+    </div>
+  </div>
+
+  <!-- [R4 P1 14พค69] Allergy banner ใต้ header (ถ้ามี) -->
+  ${renderAllergyBanner(p)}
+
   <!-- Mobile-only compact header (ซ่อนบน desktop) -->
   <div class="patprofile-mobile-header" id="patprofile-mobile-header" style="display:none;">
     ${(p.photo||"") ? `<img src="${p.photo}" class="pmh-photo">` : `<div class="pmh-photo-placeholder">👤</div>`}
@@ -98,7 +142,6 @@ async function openPatientProfile(id, activeTab) {
     </div>
     <!-- RIGHT: Tabs -->
     <div>
-      ${renderAllergyBanner(p)}
       ${renderPatientTabBar(p, totalReqs)}
       <div id="patprofile-tab-history">
         <div class="card">
