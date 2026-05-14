@@ -3896,3 +3896,41 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R5-B
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R5-C · DASHBOARD — Executive Alert + Section Headers
+   14 พ.ค. 2569
+   ════════════════════════════════════════════════════════════════ */
+
+/* Executive alert banner — animation + display setup */
+.dashboard-exec-alert {
+  animation: r5c-alert-slide 0.3s ease-out;
+}
+.dashboard-exec-alert[style*="display:flex"],
+.dashboard-exec-alert[style*="display: flex"] {
+  display: flex !important;
+}
+
+@keyframes r5c-alert-slide {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Section headers */
+.dashboard-section-header {
+  user-select: none;
+}
+
+@media (max-width: 600px) {
+  .dashboard-exec-alert {
+    padding: 12px 14px !important;
+    gap: 10px !important;
+  }
+  .dashboard-section-header h3 {
+    font-size: 13px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R5-C
+   ════════════════════════════════════════════════════════════════ */
