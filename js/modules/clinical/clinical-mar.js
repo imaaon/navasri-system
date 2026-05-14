@@ -34,32 +34,40 @@ function renderMARTab(pid, patientId) {
   const todayMar = mar.filter(r => r.date === today);
 
   const medRows = meds.length === 0 ? '' : `
-    <div class="card" style="margin-bottom:14px;">
-      <div class="card-header">
+    <div class="card mar-medlist-card-r6" style="margin-bottom:14px;">
+      <div class="card-header" style="background:linear-gradient(to right, var(--sage-50,#f4f8f5), transparent);">
         <div>
-          <div class="card-title" style="font-size:13px;">💊 รายการยาประจำของผู้รับบริการ</div>
-          <div style="font-size:12px;color:var(--text3);">คลิก "บันทึกการให้" เพื่อกรอกข้อมูลการให้ยาแต่ละครั้ง</div>
+          <div class="card-title" style="font-size:14px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:18px;">💊</span>
+            <span>รายการยาประจำของผู้รับบริการ</span>
+            <span style="background:var(--sage-100,#eaf1eb);color:var(--brand,#2e6b4f);border-radius:999px;padding:1px 8px;font-size:11px;font-weight:600;">${meds.length}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px;">คลิก "บันทึกการให้" เพื่อกรอกข้อมูลการให้ยาแต่ละครั้ง</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openAddMedModal('${patientId}')">+ เพิ่มยา</button>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>ชื่อยา</th><th>ขนาด / วิธีใช้</th><th>กำหนดให้</th><th>ให้วันนี้ล่าสุด</th><th>ครั้งรวมวันนี้</th><th>หมายเหตุ</th><th></th></tr></thead>
+          <thead><tr><th>ชื่อยา</th><th>ขนาด / วิธีใช้</th><th>กำหนดให้</th><th>ให้วันนี้ล่าสุด</th><th style="text-align:center;">ครั้งวันนี้</th><th>หมายเหตุ</th><th></th></tr></thead>
           <tbody>
             ${meds.map(med => {
               const todayForMed = todayMar.filter(r => r.medicationId == med.id);
               const lastGiven   = todayForMed.length ? todayForMed.sort((a,b)=>b.givenAt?.localeCompare(a.givenAt||'')||0)[0] : null;
+              // [R6-C] Status pill — count badge with tone
+              const countTone = todayForMed.length === 0
+                ? { bg: 'var(--surface2,#f5f1e3)', color: 'var(--text3,#8a8a8a)', border: 'var(--border,#e8e3d4)' }
+                : { bg: 'var(--sage-100,#eaf1eb)', color: 'var(--brand,#2e6b4f)', border: 'var(--sage-200,#dbe5dc)' };
               return `<tr>
-                <td style="font-weight:600;">${med.name}</td>
-                <td style="font-size:12px;color:var(--text2);">${med.dose||''} ${med.unit||''} ${med.route ? '· '+med.route : ''}</td>
-                <td style="font-size:12px;">${(med.timings||[]).join(', ')||'-'}</td>
-                <td style="font-size:12px;">${lastGiven ? `<span style="color:#27ae60;font-weight:600;">${(lastGiven.givenAt ? new Date(lastGiven.givenAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '')}</span> โดย ${lastGiven.givenBy||'-'}` : '<span style="color:var(--text3);">ยังไม่ได้ให้วันนี้</span>'}</td>
-                <td style="text-align:center;"><span style="background:${todayForMed.length?'#27ae60':'var(--surface2)'};color:${todayForMed.length?'white':'var(--text3)'};border-radius:10px;padding:2px 10px;font-size:12px;">${todayForMed.length} ครั้ง</span></td>
+                <td style="font-weight:600;color:var(--text);">${med.name}</td>
+                <td style="font-size:12.5px;color:var(--text2);font-family:var(--mono,monospace);">${med.dose||''} ${med.unit||''}${med.route ? ' · '+med.route : ''}</td>
+                <td style="font-size:12px;"><span style="background:var(--surface2,#f5f1e3);color:var(--text2);border-radius:6px;padding:2px 8px;display:inline-block;">${(med.timings||[]).join(', ')||'-'}</span></td>
+                <td style="font-size:12.5px;">${lastGiven ? `<span style="color:#27ae60;font-weight:700;font-family:var(--mono,monospace);">${(lastGiven.givenAt ? new Date(lastGiven.givenAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '')}</span><span style="color:var(--text3);"> · ${lastGiven.givenBy||'-'}</span>` : '<span style="color:var(--text3);font-style:italic;">ยังไม่ได้ให้วันนี้</span>'}</td>
+                <td style="text-align:center;"><span style="background:${countTone.bg};color:${countTone.color};border:1px solid ${countTone.border};border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;display:inline-block;min-width:50px;">${todayForMed.length} ครั้ง</span></td>
                 <td style="font-size:12px;color:var(--text3);">${med.note||'-'}</td>
-                <td style="display:flex;gap:4px;">
-                  <button class="btn btn-primary btn-sm" onclick="openMAREntryModal('${patientId}','${pid}','${med.id}')">+ บันทึกการให้</button>
+                <td style="display:flex;gap:4px;flex-wrap:nowrap;">
+                  <button class="btn btn-primary btn-sm" onclick="openMAREntryModal('${patientId}','${pid}','${med.id}')" style="white-space:nowrap;">+ บันทึกให้</button>
                   <button class="btn btn-ghost btn-sm" onclick="openEditMedModal('${patientId}','${pid}','${med.id}')" title="แก้ไข">✏️</button>
-                  <button class="btn btn-ghost btn-sm" onclick="deleteMedication('${patientId}','${med.id}')">🗑️</button>
+                  <button class="btn btn-ghost btn-sm" onclick="deleteMedication('${patientId}','${med.id}')" title="ลบ" style="color:#c0392b;">🗑️</button>
                 </td>
               </tr>`;
             }).join('')}

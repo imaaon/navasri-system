@@ -3934,3 +3934,48 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R5-C
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R6 · MEDICATIONS + MAR — Rich cards + status pills
+   14 พ.ค. 2569
+   ════════════════════════════════════════════════════════════════ */
+
+/* Med log entry cards (R6-B) */
+.medlog-entry-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transform: translateY(-1px);
+}
+
+/* Med log card container */
+.medlog-card-r6 {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* MAR med list card */
+.mar-medlist-card-r6 {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* MAR table — softer hover */
+.mar-medlist-card-r6 table tbody tr {
+  transition: background 0.1s;
+}
+.mar-medlist-card-r6 table tbody tr:hover {
+  background: var(--sage-50, #f4f8f5);
+}
+
+@media (max-width: 900px) {
+  .medlog-entry-card {
+    padding: 10px 12px !important;
+  }
+  .medlog-entry-card .btn-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R6
+   ════════════════════════════════════════════════════════════════ */
