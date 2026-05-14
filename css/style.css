@@ -1,43 +1,296 @@
+/* ════════════════════════════════════════════════════════════════
+   Navasri · Token Compatibility Layer (Path B — Hybrid)
+   Iteration R3 · 14 พ.ค. 2569
+   ════════════════════════════════════════════════════════════════
+   PURPOSE:
+   Drop-in CSS variable layer ที่ map ทั้ง new tokens (sage + cream)
+   และ legacy aliases — รองรับ CSS rules 2,500+ บรรทัดของเดิม
+   โดยไม่ต้องแก้ทันที
+
+   ENHANCED จาก Claude Design v2 ด้วย Codebase Analyst audit:
+   - Blocker #1 fix: เพิ่ม 8 legacy vars (text1, accent-dark, bg2,
+     background, border-color, muted, primary, surface3) ที่ HTML/JS
+     ใน codebase อ้างอิงอยู่
+   - Caution #3 fix: badge dual naming (red↔danger, green↔success, ฯลฯ)
+   ════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ════════════════════════════════════════
+     NEW DESIGN TOKENS (canonical names)
+     ════════════════════════════════════════ */
+
+  /* Brand */
+  --brand:       #2e6b4f;
+  --brand-dark:  #1f4d38;
+  --brand-light: #5e9479;
+
+  /* Sage scale */
+  --sage-50:  #f4f8f5;
+  --sage-100: #e8f2ec;
+  --sage-200: #d1e3d8;
+  --sage-300: #a8c8b8;
+  --sage-400: #7eab94;
+  --sage-500: #4a8b6e;
+  --sage-600: #2e6b4f;     /* = brand */
+  --sage-700: #1f4d38;
+  --sage-800: #14352a;
+  --sage-900: #0a201a;
+
+  /* Warm neutrals */
+  --bg:            #faf8f3;
+  --surface:       #ffffff;
+  --surface-2:     #f4f1ea;
+  --surface-3:     #ebe7da;
+  --border:        #e5e0d1;
+  --border-strong: #d2cab5;
+  --divider:       #ede9dc;
+
+  /* Ink */
+  --ink:        #1a221c;
+  --ink-2:      #3d4640;
+  --ink-3:      #6f7770;
+  --ink-4:      #9ca29c;
+  --ink-on-brand: #e8f2ec;
+
+  /* Semantic — 4 tones */
+  --success:      #3d8862;
+  --success-bg:   #e6efe8;
+  --success-text: #1f4d38;
+  --warning:      #b88240;
+  --warning-bg:   #f5e9d4;
+  --warning-text: #6e4715;
+  --danger:       #a8554d;
+  --danger-bg:    #f3e1dc;
+  --danger-text:  #6b2820;
+  --info:         #5a7d9e;
+  --info-bg:      #e2eaf2;
+  --info-text:    #2a3f57;
+
+  /* Extra semantic (รองรับ legacy purple/tan/yellow ใน 8 stat cards) */
+  --purple:      #7c6da4;
+  --purple-bg:   #e9e4f0;
+  --purple-text: #3e3360;
+  --amber:       #c89e3a;
+  --amber-bg:    #f5e9c4;
+  --amber-text:  #6b4d10;
+
+  /* Radius */
+  --r-xs:   4px;
+  --r-sm:   6px;
+  --r-md:   8px;
+  --r-lg:  12px;
+  --r-xl:  16px;
+  --r-pill: 999px;
+  --radius:  var(--r-lg);     /* legacy alias */
+
+  /* Shadow */
+  --shadow-xs: 0 1px 2px rgba(40,50,30,0.04);
+  --shadow-sm: 0 1px 2px rgba(40,50,30,0.05), 0 2px 4px rgba(40,50,30,0.04);
+  --shadow-md: 0 2px 4px rgba(40,50,30,0.05), 0 6px 16px rgba(40,50,30,0.06);
+  --shadow-lg: 0 4px 8px rgba(40,50,30,0.06), 0 12px 28px rgba(40,50,30,0.10);
+  --shadow:    var(--shadow-sm);   /* legacy */
+
+  /* Type */
+  --font: 'IBM Plex Sans Thai', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* ════════════════════════════════════════
+     LEGACY ALIASES — ห้ามลบจนกว่าจะ migrate หมด
+     ════════════════════════════════════════
+     ค่าใหม่ผ่าน var() — ถ้าเปลี่ยน token ค่าเก่าจะอัปเดตด้วย */
+
+  /* Text (legacy --text/--text2/--text3) */
+  --text:           var(--ink);
+  --text2:          var(--ink-2);
+  --text3:          var(--ink-3);
+
+  /* Accent — เดิมเป็น teal #2ec4b6 / #26a89c
+     map เป็น brand sage ใหม่ */
+  --accent:         var(--brand);
+  --accent2:        var(--brand-dark);
+  --accent-light:   var(--sage-100);
+
+  /* Surface */
+  --surface2:       var(--surface-2);
+
+  /* Semantic — green */
+  --green:          var(--success);
+  --green-dark:     var(--success-text);
+  --green-light:    var(--success-bg);
+
+  /* Semantic — red (เดิม #e05a6a → ใหม่ danger #a8554d) */
+  --red:            var(--danger);
+  --red-light:      var(--danger-bg);
+
+  /* Semantic — orange (เดิม #f5a453 → ใหม่ warning #b88240) */
+  --orange:         var(--warning);
+  --orange-light:   var(--warning-bg);
+
+  /* Semantic — blue (เดิม #7ab8d4 → ใหม่ info #5a7d9e) */
+  --blue:           var(--info);
+  --blue-light:    var(--info-bg);
+
+  /* Semantic — tan/yellow (เก็บไว้สำหรับ stat-card.yellow) */
+  --tan:            var(--amber);
+  --tan-light:      var(--amber-bg);
+
+  /* Cream — เดิม #f8f5ee → ใหม่ surface-2 (cream-toned แล้ว) */
+  --cream:          var(--surface-2);
+
+  /* Gold — เดิมใช้ใน sidebar-logo .logo-icon
+     map เป็น warning amber (โทนใกล้เคียง gold) */
+  --gold:           var(--amber);
+
+  /* Sage (legacy alias) */
+  --sage:           var(--brand);
+  --sage-light:     var(--sage-100);
+
+  /* ════════════════════════════════════════
+     ADDITIONAL LEGACY ALIASES (Blocker #1 — codebase audit 14พค69)
+     ════════════════════════════════════════
+     vars ที่ HTML inline styles + JS template strings อ้างอิง
+     ที่ไม่อยู่ใน TOKEN_LAYER v2 เดิม — เพิ่มเพื่อกัน text/visual หาย */
+
+  --text1:          var(--ink);          /* 25 ครั้ง (typo-style legacy) */
+  --accent-dark:    var(--brand-dark);   /* 9 ครั้ง (HTML+JS) */
+  --bg2:            var(--surface-2);    /* 8 ครั้ง */
+  --background:     var(--bg);           /* 1 ครั้ง */
+  --border-color:   var(--border);       /* 2 ครั้ง */
+  --muted:          var(--ink-3);        /* 2 ครั้ง */
+  --primary:        var(--brand);        /* 2 ครั้ง */
+  --surface3:       var(--surface-3);    /* 2 ครั้ง */
+
+  /* ════════════════════════════════════════
+     OC-* (8 stat-card colors) — keep as legacy
+     ════════════════════════════════════════
+     ค่าเหล่านี้ถูก hardcode ใน HTML ผ่าน class
+     stat-card.teal/red/green/blue/purple/yellow/turquoise/...
+     map เข้า semantic tone ใหม่ + เก็บโทนที่ใกล้เคียงเดิม */
+
+  --oc-ice:        var(--info-bg);     --oc-ice-text:       var(--info-text);
+  --oc-mint:       var(--success-bg);  --oc-mint-text:      var(--success-text);
+  --oc-carnation:  var(--danger-bg);   --oc-carnation-text: var(--danger-text);
+  --oc-lavender:   var(--purple-bg);   --oc-lavender-text:  var(--purple-text);
+  --oc-yellow:     var(--amber-bg);    --oc-yellow-text:    var(--amber-text);
+  --oc-turquoise:  var(--sage-200);    --oc-turquoise-text: var(--sage-700);
+  --oc-celadon:    var(--sage-100);    --oc-celadon-text:   var(--sage-800);
+  --oc-powder:     var(--info-bg);     --oc-powder-text:    var(--info-text);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STAT-CARD COLOR REMAP (8 → 4 semantic, R3)
+   ════════════════════════════════════════════════════════════════
+   HTML ใน pages.html ใช้ hardcoded class — เขียน CSS ใหม่ที่ map
+   แต่ละ legacy class เป็น token ใหม่ + keep visual distinction
+   ════════════════════════════════════════════════════════════════ */
+
+.stat-card {
+  border-radius: var(--r-lg);
+  padding: 18px 16px;
+  position: relative;
+  overflow: hidden;
+  border: none;
+  box-shadow: none;
+}
+.stat-card .stat-label,
+.stat-card .stat-sub  { opacity: 0.8; font-weight: 500; }
+.stat-card .stat-value { font-family: var(--mono); font-weight: 600; }
+.stat-card .stat-icon { opacity: 0.85; }
+
+.stat-card.teal { background: var(--sage-100); }
+.stat-card.teal .stat-label,
+.stat-card.teal .stat-sub,
+.stat-card.teal .stat-value,
+.stat-card.teal .stat-icon { color: var(--sage-800); }
+
+.stat-card.red { background: var(--danger-bg); }
+.stat-card.red .stat-label,
+.stat-card.red .stat-sub,
+.stat-card.red .stat-value,
+.stat-card.red .stat-icon { color: var(--danger-text); }
+
+.stat-card.green { background: var(--success-bg); }
+.stat-card.green .stat-label,
+.stat-card.green .stat-sub,
+.stat-card.green .stat-value,
+.stat-card.green .stat-icon { color: var(--success-text); }
+
+.stat-card.orange { background: var(--warning-bg); }
+.stat-card.orange .stat-label,
+.stat-card.orange .stat-sub,
+.stat-card.orange .stat-value,
+.stat-card.orange .stat-icon { color: var(--warning-text); }
+
+.stat-card.yellow { background: var(--amber-bg); }
+.stat-card.yellow .stat-label,
+.stat-card.yellow .stat-sub,
+.stat-card.yellow .stat-value,
+.stat-card.yellow .stat-icon { color: var(--amber-text); }
+
+.stat-card.purple { background: var(--purple-bg); }
+.stat-card.purple .stat-label,
+.stat-card.purple .stat-sub,
+.stat-card.purple .stat-value,
+.stat-card.purple .stat-icon { color: var(--purple-text); }
+
+.stat-card.blue { background: var(--info-bg); }
+.stat-card.blue .stat-label,
+.stat-card.blue .stat-sub,
+.stat-card.blue .stat-value,
+.stat-card.blue .stat-icon { color: var(--info-text); }
+
+.stat-card.powder {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.stat-card.powder .stat-label,
+.stat-card.powder .stat-sub,
+.stat-card.powder .stat-value,
+.stat-card.powder .stat-icon { color: var(--ink-2); }
+
+/* ════════════════════════════════════════════════════════════════
+   BADGE DUAL NAMING (Caution #3 — codebase audit 14พค69)
+   ════════════════════════════════════════════════════════════════
+   JS ใช้: badge-red / badge-green / badge-orange / badge-blue / badge-gray
+   Mockup ใช้: badge-danger / badge-success / badge-warning / badge-info / badge-neutral
+   รองรับทั้ง 2 naming ใน CSS rule เดียวกัน
+   ════════════════════════════════════════════════════════════════ */
+
+.badge-red,    .badge-danger   { background: var(--danger-bg);  color: var(--danger-text); }
+.badge-green,  .badge-success  { background: var(--success-bg); color: var(--success-text); }
+.badge-orange, .badge-warning  { background: var(--warning-bg); color: var(--warning-text); }
+.badge-blue,   .badge-info     { background: var(--info-bg);    color: var(--info-text); }
+.badge-gray,   .badge-neutral  { background: var(--surface-2);  color: var(--ink-3); }
+.badge-purple                  { background: var(--purple-bg);  color: var(--purple-text); }
+
+/* ════════════════════════════════════════════════════════════════
+   PRINT MODE — force white bg, ink black, remove tints
+   ════════════════════════════════════════════════════════════════ */
+@media print {
   :root {
-    --bg: #eef0f5;
+    --bg: #ffffff;
     --surface: #ffffff;
-    --surface2: #e8edf2;
-    --border: #d0d8e4;
-    --text: #1e2533;
-    --text2: #4a5568;
-    --text3: #8a96aa;
-    --accent: #2ec4b6;
-    --accent2: #26a89c;
-    --accent-light: #e0f7f5;
-    --green: #5ecba1;
-    --green-dark: #3a9e78;
-    --green-light: #e0f7ec;
-    --sage: #5ecba1;
-    --sage-light: #e0f7ec;
-    --orange: #f5a453;
-    --orange-light: #fff0e0;
-    --red: #e05a6a;
-    --red-light: #fde8ec;
-    --blue: #7ab8d4;
-    --blue-light: #e0f0fa;
-    --purple: #b39ddb;
-    --tan: #f5c842;
-    --tan-light: #fff8d6;
-    --cream: #f8f5ee;
-    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.06);
-    --shadow-lg: 0 4px 16px rgba(0,0,0,0.10);
-    --radius: 10px;
-    --font: 'IBM Plex Sans Thai', sans-serif;
-    --mono: 'IBM Plex Mono', monospace;
-    --oc-ice: #7ab8d4;       --oc-ice-text: #0d2e3f;
-    --oc-mint: #5ecba1;      --oc-mint-text: #0a3626;
-    --oc-carnation: #f4a7b9; --oc-carnation-text: #5c0f22;
-    --oc-lavender: #b39ddb;  --oc-lavender-text: #2d1b5e;
-    --oc-yellow: #f5c842;    --oc-yellow-text: #3d2800;
-    --oc-turquoise: #2ec4b6; --oc-turquoise-text: #032e2c;
-    --oc-celadon: #a8c5a0;   --oc-celadon-text: #1a3318;
-    --oc-powder: #a8c8e8;    --oc-powder-text: #0c2840;
+    --surface-2: #ffffff;
+    --border: #cccccc;
+    --ink: #000000;
+    --ink-2: #222222;
+    --ink-3: #444444;
   }
+  .stat-card,
+  .card,
+  .modal {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: 1px solid #cccccc !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END OF TOKEN COMPATIBILITY LAYER
+   ════════════════════════════════════════════════════════════════ */
+
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; }
 
@@ -2068,14 +2321,8 @@
 
 /* === Universal Modal Mobile (12พค69 ค่ำ) === */
 @media (max-width: 768px) {
-  /* Modal frame: balanced margins, no outer padding */
-  .modal-overlay > .modal {
-    max-width: calc(100% - 16px) !important;
-    width: calc(100% - 16px) !important;
-    margin: 20px auto !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
-  }
+  /* [R3 14พค69] Modal frame rule ลบออก — Mobile Modal CSS ใหม่จะ
+     ทำ full-screen pattern แทน (จะเพิ่มใน Session D) */
   /* form-grid rows: align inputs by their bottom (label heights vary) */
   .modal .form-grid {
     align-items: end !important;
@@ -2520,3 +2767,786 @@ html {
 .user-chip #userAvatar {
   display: none !important;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   R3 COMPONENT CSS REFRESH (Session B · 14พค69)
+   ════════════════════════════════════════════════════════════════
+   Refresh component visual ให้เข้ากับ sage+cream design tokens
+   Strategy: Override rules เดิมด้วย selector เดียวกัน + รวมท้ายไฟล์
+              (specificity เท่า, ลำดับชนะ — no !important spam)
+
+   ตามลำดับ MIGRATION_MAP sections:
+   1. Sidebar  2. Topbar  3. Buttons  4. Cards  5. Tables
+   6. Forms    7. Tabs    8. Modals   9. Bottom tab bar
+
+   Rollback: ลบทั้ง block นี้ → กลับสู่ Session A baseline
+   ════════════════════════════════════════════════════════════════ */
+
+/* ──────────── 1. SIDEBAR ──────────── */
+.sidebar {
+  background: var(--sage-50);
+  border-right: 1px solid var(--sage-200);
+  color: var(--sage-800);
+}
+.sidebar-logo {
+  background: var(--brand);
+  color: var(--ink-on-brand);
+}
+.sidebar-logo .logo-icon {
+  background: var(--amber);
+  color: var(--brand-dark);
+}
+.sidebar-logo .logo-name {
+  color: var(--ink-on-brand);
+}
+.sidebar-logo .logo-sub {
+  color: rgba(232, 242, 236, 0.7);
+}
+.nav-section {
+  color: var(--brand);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  opacity: 0.85;
+}
+.nav-item {
+  color: var(--sage-800);
+  border-left: 3px solid transparent;
+}
+.nav-item:hover {
+  background: rgba(46, 107, 79, 0.08);
+  color: var(--sage-900);
+}
+.nav-item.active {
+  background: var(--brand);
+  color: var(--ink-on-brand);
+  border-left-color: var(--sage-300);
+}
+.sidebar-footer {
+  border-top: 1px solid var(--sage-200);
+  color: var(--sage-700);
+}
+
+/* ──────────── 2. TOPBAR ──────────── */
+.topbar {
+  background: var(--brand);
+  border-bottom: 1px solid var(--brand-dark);
+  color: var(--ink-on-brand);
+}
+.page-title {
+  color: var(--ink-on-brand);
+}
+.topbar-right {
+  color: var(--ink-on-brand);
+}
+.topbar-date {
+  color: rgba(232, 242, 236, 0.7);
+}
+#notif-bell-btn {
+  color: var(--ink-on-brand);
+}
+.user-chip {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ink-on-brand);
+}
+.user-chip:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ──────────── 3. BUTTONS ──────────── */
+.btn {
+  border-radius: var(--r-md);
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.btn-primary {
+  background: var(--brand);
+  color: white;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover {
+  background: var(--brand-dark);
+  transform: none;            /* remove lift effect ที่ไม่เข้ากับ professional tone */
+  box-shadow: var(--shadow-md);
+}
+.btn-secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+}
+.btn-secondary:hover {
+  background: var(--surface-2);
+  border-color: var(--ink-4);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+.btn-danger:hover {
+  background: var(--danger-text);
+}
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+.btn-success:hover {
+  background: var(--success-text);
+}
+.btn-soft {
+  background: var(--sage-100);
+  color: var(--sage-700);
+}
+.btn-soft:hover {
+  background: var(--sage-200);
+}
+
+/* ──────────── 4. CARDS ──────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+.card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--divider);
+}
+.card-title {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ──────────── 5. TABLES ──────────── */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+th {
+  background: var(--surface-2);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--border);
+}
+td {
+  border-bottom: 1px solid var(--divider);
+  color: var(--ink-2);
+}
+tr:last-child td {
+  border-bottom: none;
+}
+tr:hover td {
+  background: var(--sage-50);
+}
+/* Zebra striping สำหรับ responsive-card-table บน desktop เท่านั้น
+   (mobile transform อยู่ใน @media block อื่น — ไม่กระทบ) */
+@media (min-width: 769px) {
+  .responsive-card-table tbody tr:nth-child(even) td {
+    background: rgba(244, 241, 234, 0.4);
+  }
+  .responsive-card-table tbody tr:nth-child(even):hover td {
+    background: var(--sage-50);
+  }
+}
+
+/* ──────────── 6. FORMS ──────────── */
+.form-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.form-label .required {
+  color: var(--danger);
+}
+.form-control {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-control:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--sage-100);
+}
+.form-control::placeholder {
+  color: var(--ink-4);
+}
+
+/* ──────────── 7. TABS (Unified 6 variants) ──────────── */
+.tabs {
+  background: transparent;
+  padding: 0;
+  border-bottom: 1px solid var(--divider);
+  border-radius: 0;
+  gap: 0;
+  margin-bottom: 16px;
+}
+.tab,
+.bi-tab,
+.sr-tab,
+.history-tab,
+.billing-tab {
+  padding: 10px 18px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--ink-3);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  margin-bottom: -1px;
+  box-shadow: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab.active,
+.bi-tab.active,
+.sr-tab.active,
+.history-tab.active,
+.history-tab.active-htab,
+.billing-tab.active {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+  font-weight: 600;
+  background: transparent;
+  box-shadow: none;
+}
+.tab:hover:not(.active),
+.bi-tab:hover:not(.active),
+.sr-tab:hover:not(.active),
+.history-tab:hover:not(.active-htab),
+.billing-tab:hover:not(.active) {
+  color: var(--ink);
+}
+.tab.tab-alert {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* ──────────── 8. MODALS ──────────── */
+.modal-overlay {
+  background: rgba(20, 30, 15, 0.42);
+  backdrop-filter: blur(3px);
+}
+.modal,
+.modal-box {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
+}
+.modal-header {
+  border-bottom: 1px solid var(--divider);
+}
+.modal-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.modal-close {
+  color: var(--ink-3);
+  border-radius: var(--r-sm);
+}
+.modal-close:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.modal-footer {
+  border-top: 1px solid var(--divider);
+  background: var(--surface-2);
+}
+
+/* ──────────── 9. BOTTOM TAB BAR (mobile) ──────────── */
+@media (max-width: 768px) {
+  .bottom-tab-bar {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 16px rgba(40, 50, 30, 0.06);
+  }
+  .bottom-tab-item {
+    color: var(--ink-4);
+    min-height: 44px;
+  }
+  .bottom-tab-item.active {
+    color: var(--brand);
+    font-weight: 600;
+  }
+}
+
+/* ──────────── 10. SEARCH WRAP + ICON ──────────── */
+.search-icon {
+  color: var(--ink-4);
+}
+.search-wrap input.form-control {
+  padding-left: 36px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END OF R3 COMPONENT CSS REFRESH
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R3 PER-PAGE CSS REFRESH (Session C · 14พค69)
+   ════════════════════════════════════════════════════════════════
+   Refresh per-page visual ให้เข้ากับ design system ใหม่
+   Strategy: Append ท้ายไฟล์ — specificity เท่า, ลำดับชนะ rule เดิม
+              ไม่แก้ template literals ใน JS modules
+
+   ขอบเขต:
+   1. Patient Profile (mobile header gradient, app grid, generic table refresh)
+   2. Page filter bars (Dashboard, Patient list, Stock, Billing)
+   3. Cat-dot indicators (category colors)
+   4. Card variations + alerts
+   5. Inline-style tab overrides (BI, History, Billing tabs)
+
+   Rollback: ลบทั้ง block นี้ → กลับ Session B baseline
+   ════════════════════════════════════════════════════════════════ */
+
+/* ──────────── 1. PATIENT PROFILE — Mobile Header Gradient ──────────── */
+/* เดิม: gradient teal/accent → ใหม่: brand sage gradient */
+@media (max-width: 768px) {
+  .patprofile-mobile-header {
+    background: linear-gradient(135deg, var(--brand), var(--brand-dark)) !important;
+    box-shadow: 0 2px 8px rgba(46, 107, 79, 0.25) !important;
+  }
+  .pmh-info-btn {
+    background: rgba(255, 255, 255, 0.22) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  }
+}
+
+/* ──────────── 2. PATIENT APP GRID (Mobile) ──────────── */
+@media (max-width: 768px) {
+  .pat-app-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-xs);
+  }
+  .pat-app-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0 0 0 2px var(--brand);
+  }
+  .pat-app-label {
+    color: var(--ink);
+  }
+}
+
+/* ──────────── 3. CAT-DOT (Category Indicators) ──────────── */
+/* Map color hex เก่าเข้ากับ semantic ใหม่ */
+.cat-red    { background: var(--danger); }
+.cat-orange { background: var(--warning); }
+.cat-blue   { background: var(--info); }
+.cat-green  { background: var(--success); }
+.cat-purple { background: var(--purple); }
+.cat-yellow { background: var(--amber); }
+.cat-gray   { background: var(--ink-4); }
+
+/* ──────────── 4. STATS-GRID Layout (Dashboard + Patient list) ──────────── */
+.stats-grid {
+  gap: 14px;
+}
+@media (min-width: 769px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ──────────── 5. INLINE-STYLE TAB OVERRIDES ──────────── */
+/* HTML มี inline style: border-bottom:2px solid var(--accent); color:var(--accent)
+   ที่ apply เฉพาะ active state ของ bi-tab, history-tab, billing-tab
+   → ใช้ Session B rules ทำงานได้แล้ว เพราะ var(--accent) → var(--brand)
+   แต่บาง inline ใช้ color:var(--text2) สำหรับ non-active — เรา override ด้วย ink-3
+   เพื่อให้ค่าใหม่ถูก */
+
+/* ──────────── 6. CARD VARIATIONS (Dashboard widgets) ──────────── */
+/* Dashboard card-header ที่มี inline bg color #eef4ff, #fff8f0 ฯลฯ
+   ปล่อยไว้ — compat layer จัดการให้แล้ว (Strategy Y)
+   ถ้าจะ override ทั้งหมดต้องใช้ !important ซึ่ง hacky */
+
+/* Card hover lift effect ลดลง */
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: none;
+}
+
+/* ──────────── 7. SEARCH WRAP (Patient/Staff/Stock filter bars) ──────────── */
+.search-wrap {
+  position: relative;
+}
+.search-wrap > input.form-control {
+  padding-left: 36px !important;
+}
+
+/* ──────────── 8. SETTINGS PAGE GENERIC ──────────── */
+/* No mockup — generic component styles take effect */
+
+/* ──────────── 9. BI PAGE — KPI Cards + Section Cards ──────────── */
+#page-bi .card {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+#page-bi .stat-card {
+  /* ใช้ Token Layer rules — visual ตรงกับ Dashboard */
+}
+
+/* ──────────── 10. AUDIT TRAIL TABLE ──────────── */
+#page-audit table th {
+  font-size: 10.5px;
+}
+#page-audit table td {
+  font-size: 12.5px;
+  font-family: var(--mono);
+}
+
+/* ──────────── 11. STAFF PROFILE — Profile Head Gradient ──────────── */
+/* Generic application ถ้า JS render มี .profile-head class */
+.profile-head {
+  background: linear-gradient(135deg, var(--sage-50) 0%, var(--surface) 100%);
+  border: 1px solid var(--sage-200);
+  border-radius: var(--r-lg);
+}
+.profile-photo {
+  background: var(--brand);
+  color: white;
+  border-radius: var(--r-lg);
+}
+
+/* ──────────── 12. EMPTY/LOADING/ERROR STATES ──────────── */
+.empty-state {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--ink-3);
+}
+.empty-state .ico {
+  font-size: 40px;
+  opacity: 0.4;
+  display: block;
+  margin-bottom: 8px;
+}
+.empty-state .h {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: 4px;
+}
+.empty-state .body {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.skeleton-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  animation: skel-pulse 1.5s infinite ease-in-out;
+}
+@keyframes skel-pulse {
+  0%, 100% { background: var(--surface); }
+  50% { background: var(--surface-2); }
+}
+
+/* ──────────── 13. PATIENT PROFILE — Generic Card Refresh ──────────── */
+/* clinical-profile.js render .card หลายตัวใน patprofile-content
+   ใช้ Component refresh ของ .card อยู่แล้ว — ไม่ต้อง override เพิ่ม */
+
+/* แก้ #patprofileTabs ให้เข้ากับ unified tab style */
+#patprofileTabs {
+  background: transparent;
+  padding: 0;
+  border-bottom: 1px solid var(--divider);
+  border-radius: 0;
+  margin-bottom: 16px;
+  gap: 0;
+}
+#patprofileTabs .tab {
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+/* ──────────── 14. BADGES IN PATIENT/STAFF LISTS ──────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--r-pill);
+  letter-spacing: 0.01em;
+}
+
+/* ──────────── 15. NOTIFICATION PANEL ──────────── */
+#notif-panel {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+#notif-badge {
+  background: var(--danger) !important;
+}
+
+/* ──────────── 16. TOAST CONTAINER ──────────── */
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  box-shadow: var(--shadow-md);
+}
+.toast.success { border-left-color: var(--success); }
+.toast.warning { border-left-color: var(--warning); }
+.toast.error,
+.toast.danger  { border-left-color: var(--danger); }
+.toast.info    { border-left-color: var(--info); }
+
+/* ──────────── 17. STOCK BAR (Inventory progress) ──────────── */
+.stock-bar {
+  background: var(--surface-2);
+  border-radius: var(--r-pill);
+}
+.stock-fill {
+  border-radius: var(--r-pill);
+}
+
+/* ──────────── 18. TYPEAHEAD DROPDOWN ──────────── */
+.ta-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+}
+.ta-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--divider);
+}
+.ta-item:last-child {
+  border-bottom: none;
+}
+.ta-item:hover,
+.ta-item.active {
+  background: var(--sage-50);
+}
+
+/* ──────────── 19. REQUISITION LINE ITEMS (siline-*) ──────────── */
+/* JS query: .siline-item, .siline-name, .siline-qty, .siline-price, etc.
+   ใช้ class เดิม + เพิ่ม visual refinement */
+.siline-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.siline-badge {
+  border-radius: var(--r-pill);
+  font-weight: 600;
+}
+
+/* ──────────── 20. PRINT AREA RESET ──────────── */
+@media print {
+  .sidebar, .topbar, .bottom-tab-bar, #notif-bell-wrap {
+    display: none !important;
+  }
+  .main {
+    margin-left: 0 !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END OF R3 PER-PAGE CSS REFRESH
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R3 MOBILE MODAL CSS — Full-screen Pattern (Session D · 14พค69)
+   ════════════════════════════════════════════════════════════════
+   แปลง .modal-overlay > .modal (center popup) เป็น full-screen
+   บน mobile (≤768px) — CSS only, ไม่แตะ HTML/JS
+
+   Modal ขนาดเล็ก (confirm/alert) override ผ่าน attribute
+   data-modal-size="small" ใน HTML — ยังเป็น centered popup
+
+   Strategy:
+   - ลำดับ CSS: append ท้ายไฟล์ = ชนะ Universal Modal Mobile rules
+   - ใช้ z-index 300 (modal) > 200 (bottom-tab-bar)
+   - รองรับ iOS safe area
+   - ไม่กระทบ openModal()/closeModal() ใน JS
+   ════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* ──────────── Overlay: stretch ทั้งจอ ──────────── */
+  .modal-overlay.open {
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0;
+    backdrop-filter: none;          /* ประหยัด GPU บน mobile */
+    background: var(--bg);
+  }
+
+  /* ──────────── Modal: full-screen + slide-up ──────────── */
+  .modal-overlay.open .modal,
+  .modal-overlay.open .modal-box {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    height: 100dvh !important;      /* รองรับ iOS Safari (URL bar) */
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    animation: r3-mobile-modal-slide-up 0.25s ease-out;
+  }
+
+  @keyframes r3-mobile-modal-slide-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  /* ──────────── Modal Header: brand top bar ──────────── */
+  .modal-overlay.open .modal-header {
+    background: var(--brand) !important;
+    color: var(--ink-on-brand) !important;
+    padding: 14px 16px !important;
+    border-bottom: none !important;
+    flex-shrink: 0;
+    min-height: 56px;
+    padding-top: max(14px, env(safe-area-inset-top)) !important;
+  }
+
+  .modal-overlay.open .modal-title {
+    color: var(--ink-on-brand) !important;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .modal-overlay.open .modal-close {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: var(--ink-on-brand) !important;
+    border-radius: 8px !important;
+    font-size: 16px;
+  }
+  .modal-overlay.open .modal-close:hover {
+    background: rgba(255, 255, 255, 0.28) !important;
+  }
+
+  /* ──────────── Modal Body: scroll inside ──────────── */
+  .modal-overlay.open .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px !important;
+    background: var(--bg);
+  }
+
+  /* ──────────── Modal Footer: sticky bottom, safe-area aware ──────────── */
+  .modal-overlay.open .modal-footer {
+    flex-shrink: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border) !important;
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    /* keep existing grid layout from Universal Modal Mobile */
+  }
+
+  /* ──────────── Form inputs: 16px ป้องกัน iOS zoom ──────────── */
+  .modal-overlay.open .form-control {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  /* ──────────── Body scroll lock ตอน modal open ──────────── */
+  body:has(.modal-overlay.open) {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SMALL MODAL OVERRIDE (Confirm/Alert) — Center popup เหมือนเดิม
+   ════════════════════════════════════════════════════════════════
+   HTML: <div class="modal-overlay" data-modal-size="small">
+   ใช้กับ modal-customConfirm + modal-customAlert
+   ════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .modal-overlay[data-modal-size="small"].open,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"],
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] {
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(20, 30, 15, 0.42);
+  }
+  .modal-overlay[data-modal-size="small"].open .modal,
+  .modal-overlay[data-modal-size="small"].open .modal-box,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] .modal,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] .modal-box,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] .modal,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] .modal-box {
+    width: 90vw !important;
+    max-width: 380px !important;
+    height: auto !important;
+    max-height: 85vh !important;
+    border-radius: var(--r-xl) !important;
+    margin: auto !important;
+    animation: none !important;
+    box-shadow: var(--shadow-lg) !important;
+  }
+  .modal-overlay[data-modal-size="small"].open .modal-header,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] .modal-header,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] .modal-header {
+    background: var(--surface) !important;
+    color: var(--ink) !important;
+    padding: 18px 22px 0 !important;
+    min-height: auto;
+    padding-top: 18px !important;
+  }
+  .modal-overlay[data-modal-size="small"].open .modal-title,
+  .modal-overlay[data-modal-size="small"].open h3,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] .modal-title,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] h3,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] .modal-title,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] h3 {
+    color: var(--ink) !important;
+  }
+  .modal-overlay[data-modal-size="small"].open .modal-body,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] .modal-body,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] .modal-body {
+    background: var(--surface);
+    padding: 8px 22px 16px !important;
+  }
+  .modal-overlay[data-modal-size="small"].open .modal-footer,
+  .modal-overlay[data-modal-size="small"][style*="display: flex"] .modal-footer,
+  .modal-overlay[data-modal-size="small"][style*="display:flex"] .modal-footer {
+    padding-bottom: 14px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END OF R3 MOBILE MODAL CSS
+   ════════════════════════════════════════════════════════════════ */
