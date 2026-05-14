@@ -803,43 +803,84 @@
       </div>
 
       <div id="page-patients" style="display:none;">
-        <!-- Filter bar -->
-        <div class="card" style="margin-bottom:16px;">
-          <div class="card-body" style="padding:14px 20px;">
-            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
-              <div class="form-group" style="margin:0;flex:2;min-width:180px;">
-                <label class="form-label" style="font-size:11px;">🔍 ค้นหา</label>
-                <div class="search-wrap">
-                  <span class="search-icon">🔍</span>
-                  <input class="form-control" id="patSearch" placeholder="ชื่อ / เลขบัตร..." oninput="renderPatients()">
-                </div>
-              </div>
-              <div class="form-group" style="margin:0;min-width:140px;">
-                <label class="form-label" style="font-size:11px;">สถานะ</label>
-                <select class="form-control" id="patStatusFilter" onchange="renderPatients()">
-                  <option value="">ทั้งหมด</option>
-                  <option value="active">พักอยู่</option>
-                  <option value="hospital">🏥 อยู่โรงพยาบาล</option>
-                  <option value="inactive">ออกแล้ว</option>
-                </select>
-              </div>
-              <div style="margin-left:auto;display:flex;gap:8px;">
-                <button class="btn btn-ghost btn-sm" onclick="exportPatientsExcel()" title="ส่งออก Excel">📥 Excel</button>
-                <button class="btn btn-ghost" onclick="showPage('rooms')">🛏️ จัดการห้องพัก</button>
-                <button class="btn btn-primary" onclick="openAddPatientModal()">+ เพิ่มผู้รับบริการ</button>
-              </div>
-            </div>
+        <!-- [R9-A 14พค69] Section header — ตาม mockup PDF p.12 -->
+        <div class="patient-page-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">👥</span> ผู้รับบริการ
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="pat-header-subtitle">รายชื่อผู้รับบริการ · กำลังโหลด...</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openAddPatientModal()" style="white-space:nowrap;">+ เพิ่มผู้รับบริการ</button>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('rooms')" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">🛏️ จัดการห้องพัก</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportPatientsExcel()" style="white-space:nowrap;" title="ส่งออก Excel">📥 Excel</button>
           </div>
         </div>
-        <!-- Summary -->
-        <div id="patSummary" style="margin-bottom:12px;"></div>
+
+        <!-- [R9-A] KPI Cards — 4 cards (clickable to filter) -->
+        <div class="patient-kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px;">
+          <!-- 1. ทั้งหมด -->
+          <div class="patient-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--brand,#2e6b4f);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='';renderPatients()" title="แสดงทั้งหมด">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="font-size:12px;color:var(--text2);font-weight:500;">👥 ทั้งหมด</div>
+              <span style="font-size:18px;opacity:0.4;">👥</span>
+            </div>
+            <div id="pat-kpi-total" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--brand,#2e6b4f);">0</div>
+            <div id="pat-kpi-total-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">ราย</div>
+          </div>
+          <!-- 2. พักอยู่ -->
+          <div class="patient-kpi-card" style="background:#e0f7ec;border:1px solid #5ecba1;border-left:3px solid #1f8a52;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='active';renderPatients()" title="กรองเฉพาะที่พักอยู่">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="font-size:12px;color:#0a3626;font-weight:500;">🏠 พักอยู่</div>
+              <span style="font-size:18px;opacity:0.4;">🏠</span>
+            </div>
+            <div id="pat-kpi-active" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#1f5132;">0</div>
+            <div id="pat-kpi-active-sub" style="font-size:11px;color:#1f5132;margin-top:3px;">รายในศูนย์</div>
+          </div>
+          <!-- 3. อยู่โรงพยาบาล -->
+          <div class="patient-kpi-card" style="background:#eaf3fc;border:1px solid #8ec1ea;border-left:3px solid #2980b9;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='hospital';renderPatients()" title="กรองเฉพาะที่อยู่โรงพยาบาล">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="font-size:12px;color:#1a3a5a;font-weight:500;">🏥 อยู่โรงพยาบาล</div>
+              <span style="font-size:18px;opacity:0.4;">🏥</span>
+            </div>
+            <div id="pat-kpi-hospital" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#1f4e7a;">0</div>
+            <div id="pat-kpi-hospital-sub" style="font-size:11px;color:#1f4e7a;margin-top:3px;">รายเข้ารับการรักษา</div>
+          </div>
+          <!-- 4. ออกแล้ว -->
+          <div class="patient-kpi-card" style="background:var(--surface2,#f8f7f3);border:1px solid var(--border);border-left:3px solid #95a5a6;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='inactive';renderPatients()" title="กรองเฉพาะที่ออกแล้ว">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="font-size:12px;color:var(--text2);font-weight:500;">📤 ออกแล้ว</div>
+              <span style="font-size:18px;opacity:0.4;">📤</span>
+            </div>
+            <div id="pat-kpi-inactive" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#5d6d7e;">0</div>
+            <div id="pat-kpi-inactive-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">จำหน่ายแล้ว</div>
+          </div>
+        </div>
+
+        <!-- [R9-A] Filter bar — refreshed (card-style with prefix label) -->
+        <div class="patient-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+          <input class="form-control" id="patSearch" placeholder="ค้นหาชื่อ / เลขบัตรประชาชน / HN..." oninput="renderPatients()" style="flex:1;min-width:240px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select class="form-control" id="patStatusFilter" onchange="renderPatients()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">สถานะ: ทั้งหมด</option>
+            <option value="active">🏠 พักอยู่</option>
+            <option value="hospital">🏥 อยู่โรงพยาบาล</option>
+            <option value="inactive">📤 ออกแล้ว</option>
+          </select>
+        </div>
+
+        <!-- Legacy patSummary container — kept empty (renderPatients now uses KPI cards above) -->
+        <div id="patSummary" style="display:none;"></div>
+
         <div class="card">
           <div class="card-header">
             <div class="card-title" id="patTableTitle">รายชื่อผู้รับบริการ</div>
+            <div style="font-size:12px;color:var(--text2);" id="patCount">0 ราย · กดที่แถวเพื่อดูโปรไฟล์</div>
           </div>
           <div class="table-wrap">
-            <table class="responsive-card-table">
-              <thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>เลขบัตรประชาชน</th><th>วันเกิด</th><th>อายุ</th><th>วันเข้ารับบริการ</th><th>วันสิ้นสุดสัญญา</th><th>ระยะเวลา</th><th>สถานะ</th><th></th></tr></thead>
+            <table class="patient-table-r9">
+              <thead><tr><th style="text-align:center;width:48px;">#</th><th>ชื่อ-นามสกุล</th><th>เลขบัตรประชาชน</th><th>วันเกิด</th><th>อายุ</th><th>วันเข้ารับบริการ</th><th>วันสิ้นสุดสัญญา</th><th>ระยะเวลา</th><th>สถานะ</th><th></th></tr></thead>
               <tbody id="patTable"></tbody>
             </table>
           </div>

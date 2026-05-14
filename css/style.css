@@ -4289,3 +4289,68 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R8-B
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R9-A · Patient List — Header + KPI cards + Filter bar
+   Added 14 พ.ค. 69 · Mockup: PDF Desktop p.12
+   Pattern: ตาม R8-A Stock — เพิ่มเฉพาะ hover/focus polish
+   ════════════════════════════════════════════════════════════════ */
+
+/* Patient page header */
+.patient-page-header h2 {
+  color: var(--text);
+}
+
+/* KPI cards — hover lift effect (matches R8) */
+.patient-kpi-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.patient-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.patient-kpi-card:hover [id^="pat-kpi-"] {
+  filter: brightness(0.92);
+}
+
+/* Filter bar — focus state with sage ring */
+.patient-filter-bar input[type="text"]:focus,
+.patient-filter-bar input#patSearch:focus,
+.patient-filter-bar select:focus {
+  outline: none;
+  border-color: var(--brand, #2e6b4f);
+  box-shadow: 0 0 0 2px var(--sage-100, #e6efe7);
+}
+
+.patient-filter-bar select {
+  cursor: pointer;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .patient-page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  .patient-kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .patient-kpi-card {
+    padding: 10px 12px !important;
+  }
+  .patient-kpi-card div[style*="font-size:22px"] {
+    font-size: 18px !important;
+  }
+  .patient-filter-bar {
+    padding: 10px !important;
+  }
+  .patient-filter-bar input,
+  .patient-filter-bar select {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R9-A
+   ════════════════════════════════════════════════════════════════ */

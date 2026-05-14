@@ -32,6 +32,7 @@ function _translatePatientError(error) {
 }
 
 // ===== PATIENTS =====
+// [R9-A 14พค69] renderPatients — uses KPI cards (pat-kpi-*) instead of inline patSummary
 function renderPatients() {
   const search = (document.getElementById('patSearch')?.value || '').toLowerCase();
   const statusF = document.getElementById('patStatusFilter')?.value || '';
@@ -44,17 +45,36 @@ function renderPatients() {
   );
   if (statusF) pats = pats.filter(p => p.status === statusF);
 
-  const active   = pats.filter(p => p.status === 'active').length;
-  const hospital = pats.filter(p => p.status === 'hospital').length;
-  const total    = pats.length;
+  // ── KPI counts (based on UNFILTERED full set — like dashboard) ──
+  const all = db.patients || [];
+  const totalAll    = all.length;
+  const activeAll   = all.filter(p => p.status === 'active').length;
+  const hospitalAll = all.filter(p => p.status === 'hospital').length;
+  const inactiveAll = all.filter(p => p.status === 'inactive').length;
 
+  // ── Update KPI cards ──
+  const $ = (id) => document.getElementById(id);
+  if ($('pat-kpi-total'))    $('pat-kpi-total').textContent    = totalAll.toLocaleString('th-TH');
+  if ($('pat-kpi-active'))   $('pat-kpi-active').textContent   = activeAll.toLocaleString('th-TH');
+  if ($('pat-kpi-hospital')) $('pat-kpi-hospital').textContent = hospitalAll.toLocaleString('th-TH');
+  if ($('pat-kpi-inactive')) $('pat-kpi-inactive').textContent = inactiveAll.toLocaleString('th-TH');
+
+  // ── Header subtitle (live count of filtered + filter status) ──
+  if ($('pat-header-subtitle')) {
+    const filterLabel = statusF === 'active' ? ' · กรอง: พักอยู่'
+      : statusF === 'hospital' ? ' · กรอง: อยู่โรงพยาบาล'
+      : statusF === 'inactive' ? ' · กรอง: ออกแล้ว'
+      : '';
+    const searchLabel = search ? ` · ค้นหา: "${search}"` : '';
+    $('pat-header-subtitle').textContent = `${totalAll} รายในระบบ · พักอยู่ ${activeAll} · ออกแล้ว ${inactiveAll}${filterLabel}${searchLabel}`;
+  }
+
+  // ── Table count subtitle ──
+  if ($('patCount')) $('patCount').textContent = `${pats.length} ราย · กดที่แถวเพื่อดูโปรไฟล์`;
+
+  // ── Legacy patSummary kept empty (was inline chips, replaced by KPI cards) ──
   const sumEl = document.getElementById('patSummary');
-  if (sumEl) sumEl.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
-    <div style="background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">👥 ทั้งหมด <strong>${total}</strong> คน</div>
-    <div style="background:var(--green-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">✅ พักอยู่ <strong>${active}</strong> คน</div>
-    ${hospital ? `<div style="background:#EBF5FB;border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">🏥 อยู่โรงพยาบาล <strong>${hospital}</strong> คน</div>` : ''}
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">🚪 ออกแล้ว <strong>${total-active-hospital}</strong> คน</div>
-  </div>`;
+  if (sumEl) sumEl.innerHTML = '';
 
   const tb = document.getElementById('patTable');
   if (pats.length === 0) {
