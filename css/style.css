@@ -3100,3 +3100,279 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END OF R3 COMPONENT CSS REFRESH
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R3 PER-PAGE CSS REFRESH (Session C · 14พค69)
+   ════════════════════════════════════════════════════════════════
+   Refresh per-page visual ให้เข้ากับ design system ใหม่
+   Strategy: Append ท้ายไฟล์ — specificity เท่า, ลำดับชนะ rule เดิม
+              ไม่แก้ template literals ใน JS modules
+
+   ขอบเขต:
+   1. Patient Profile (mobile header gradient, app grid, generic table refresh)
+   2. Page filter bars (Dashboard, Patient list, Stock, Billing)
+   3. Cat-dot indicators (category colors)
+   4. Card variations + alerts
+   5. Inline-style tab overrides (BI, History, Billing tabs)
+
+   Rollback: ลบทั้ง block นี้ → กลับ Session B baseline
+   ════════════════════════════════════════════════════════════════ */
+
+/* ──────────── 1. PATIENT PROFILE — Mobile Header Gradient ──────────── */
+/* เดิม: gradient teal/accent → ใหม่: brand sage gradient */
+@media (max-width: 768px) {
+  .patprofile-mobile-header {
+    background: linear-gradient(135deg, var(--brand), var(--brand-dark)) !important;
+    box-shadow: 0 2px 8px rgba(46, 107, 79, 0.25) !important;
+  }
+  .pmh-info-btn {
+    background: rgba(255, 255, 255, 0.22) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  }
+}
+
+/* ──────────── 2. PATIENT APP GRID (Mobile) ──────────── */
+@media (max-width: 768px) {
+  .pat-app-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-xs);
+  }
+  .pat-app-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0 0 0 2px var(--brand);
+  }
+  .pat-app-label {
+    color: var(--ink);
+  }
+}
+
+/* ──────────── 3. CAT-DOT (Category Indicators) ──────────── */
+/* Map color hex เก่าเข้ากับ semantic ใหม่ */
+.cat-red    { background: var(--danger); }
+.cat-orange { background: var(--warning); }
+.cat-blue   { background: var(--info); }
+.cat-green  { background: var(--success); }
+.cat-purple { background: var(--purple); }
+.cat-yellow { background: var(--amber); }
+.cat-gray   { background: var(--ink-4); }
+
+/* ──────────── 4. STATS-GRID Layout (Dashboard + Patient list) ──────────── */
+.stats-grid {
+  gap: 14px;
+}
+@media (min-width: 769px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ──────────── 5. INLINE-STYLE TAB OVERRIDES ──────────── */
+/* HTML มี inline style: border-bottom:2px solid var(--accent); color:var(--accent)
+   ที่ apply เฉพาะ active state ของ bi-tab, history-tab, billing-tab
+   → ใช้ Session B rules ทำงานได้แล้ว เพราะ var(--accent) → var(--brand)
+   แต่บาง inline ใช้ color:var(--text2) สำหรับ non-active — เรา override ด้วย ink-3
+   เพื่อให้ค่าใหม่ถูก */
+
+/* ──────────── 6. CARD VARIATIONS (Dashboard widgets) ──────────── */
+/* Dashboard card-header ที่มี inline bg color #eef4ff, #fff8f0 ฯลฯ
+   ปล่อยไว้ — compat layer จัดการให้แล้ว (Strategy Y)
+   ถ้าจะ override ทั้งหมดต้องใช้ !important ซึ่ง hacky */
+
+/* Card hover lift effect ลดลง */
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: none;
+}
+
+/* ──────────── 7. SEARCH WRAP (Patient/Staff/Stock filter bars) ──────────── */
+.search-wrap {
+  position: relative;
+}
+.search-wrap > input.form-control {
+  padding-left: 36px !important;
+}
+
+/* ──────────── 8. SETTINGS PAGE GENERIC ──────────── */
+/* No mockup — generic component styles take effect */
+
+/* ──────────── 9. BI PAGE — KPI Cards + Section Cards ──────────── */
+#page-bi .card {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+#page-bi .stat-card {
+  /* ใช้ Token Layer rules — visual ตรงกับ Dashboard */
+}
+
+/* ──────────── 10. AUDIT TRAIL TABLE ──────────── */
+#page-audit table th {
+  font-size: 10.5px;
+}
+#page-audit table td {
+  font-size: 12.5px;
+  font-family: var(--mono);
+}
+
+/* ──────────── 11. STAFF PROFILE — Profile Head Gradient ──────────── */
+/* Generic application ถ้า JS render มี .profile-head class */
+.profile-head {
+  background: linear-gradient(135deg, var(--sage-50) 0%, var(--surface) 100%);
+  border: 1px solid var(--sage-200);
+  border-radius: var(--r-lg);
+}
+.profile-photo {
+  background: var(--brand);
+  color: white;
+  border-radius: var(--r-lg);
+}
+
+/* ──────────── 12. EMPTY/LOADING/ERROR STATES ──────────── */
+.empty-state {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--ink-3);
+}
+.empty-state .ico {
+  font-size: 40px;
+  opacity: 0.4;
+  display: block;
+  margin-bottom: 8px;
+}
+.empty-state .h {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: 4px;
+}
+.empty-state .body {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.skeleton-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  animation: skel-pulse 1.5s infinite ease-in-out;
+}
+@keyframes skel-pulse {
+  0%, 100% { background: var(--surface); }
+  50% { background: var(--surface-2); }
+}
+
+/* ──────────── 13. PATIENT PROFILE — Generic Card Refresh ──────────── */
+/* clinical-profile.js render .card หลายตัวใน patprofile-content
+   ใช้ Component refresh ของ .card อยู่แล้ว — ไม่ต้อง override เพิ่ม */
+
+/* แก้ #patprofileTabs ให้เข้ากับ unified tab style */
+#patprofileTabs {
+  background: transparent;
+  padding: 0;
+  border-bottom: 1px solid var(--divider);
+  border-radius: 0;
+  margin-bottom: 16px;
+  gap: 0;
+}
+#patprofileTabs .tab {
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+/* ──────────── 14. BADGES IN PATIENT/STAFF LISTS ──────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--r-pill);
+  letter-spacing: 0.01em;
+}
+
+/* ──────────── 15. NOTIFICATION PANEL ──────────── */
+#notif-panel {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+#notif-badge {
+  background: var(--danger) !important;
+}
+
+/* ──────────── 16. TOAST CONTAINER ──────────── */
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  box-shadow: var(--shadow-md);
+}
+.toast.success { border-left-color: var(--success); }
+.toast.warning { border-left-color: var(--warning); }
+.toast.error,
+.toast.danger  { border-left-color: var(--danger); }
+.toast.info    { border-left-color: var(--info); }
+
+/* ──────────── 17. STOCK BAR (Inventory progress) ──────────── */
+.stock-bar {
+  background: var(--surface-2);
+  border-radius: var(--r-pill);
+}
+.stock-fill {
+  border-radius: var(--r-pill);
+}
+
+/* ──────────── 18. TYPEAHEAD DROPDOWN ──────────── */
+.ta-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+}
+.ta-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--divider);
+}
+.ta-item:last-child {
+  border-bottom: none;
+}
+.ta-item:hover,
+.ta-item.active {
+  background: var(--sage-50);
+}
+
+/* ──────────── 19. REQUISITION LINE ITEMS (siline-*) ──────────── */
+/* JS query: .siline-item, .siline-name, .siline-qty, .siline-price, etc.
+   ใช้ class เดิม + เพิ่ม visual refinement */
+.siline-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.siline-badge {
+  border-radius: var(--r-pill);
+  font-weight: 600;
+}
+
+/* ──────────── 20. PRINT AREA RESET ──────────── */
+@media print {
+  .sidebar, .topbar, .bottom-tab-bar, #notif-bell-wrap {
+    display: none !important;
+  }
+  .main {
+    margin-left: 0 !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END OF R3 PER-PAGE CSS REFRESH
+   ════════════════════════════════════════════════════════════════ */
