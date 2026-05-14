@@ -556,6 +556,15 @@
 
       <!-- REQUISITION -->
       <div id="page-requisition" style="display:none;">
+        <!-- [R15-REQ 14พค69] Section header -->
+        <div class="page-r15-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">📋</span> เบิกสินค้า
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">บันทึกการเบิกของออกจากคลัง · ระบบจะหักจำนวนทันทีหลังบันทึก</div>
+          </div>
+        </div>
         <div class="card" style="max-width:680px;">
           <div class="card-header">
             <div class="card-title">📋 ฟอร์มเบิกสินค้า</div>
@@ -619,6 +628,15 @@
 
       <!-- HISTORY -->
       <div id="page-history" style="display:none;">
+        <!-- [R15-HIST 14พค69] Section header -->
+        <div class="page-r15-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">🕐</span> รายละเอียดการเบิก
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ประวัติเบิก · อนุมัติใบเบิก · คืนสินค้า</div>
+          </div>
+        </div>
         <!-- Tabs -->
         <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;" id="history-tabs">
           <div class="history-tab active-htab" onclick="switchHistoryTab('list')" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:2px solid var(--accent);margin-bottom:-2px;color:var(--accent);">📋 ประวัติการเบิก</div>
@@ -709,29 +727,26 @@
 
       <!-- REPORT -->
       <div id="page-report" style="display:none;">
-        <!-- Filter bar -->
-        <div class="card" style="margin-bottom:16px;">
-          <div class="card-body" style="padding:16px 20px;">
-            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
-              <div class="form-group" style="margin:0;min-width:150px;">
-                <label class="form-label" style="font-size:11px;">📅 เดือน-ปี</label>
-                <input class="form-control" type="month" id="reportMonth" onchange="renderReport()">
-              </div>
-              <div class="form-group" style="margin:0;min-width:170px;">
-                <label class="form-label" style="font-size:11px;">🏥 ผู้รับบริการ</label>
-                <select class="form-control" id="reportPatient" onchange="renderReport()">
-                  <option value="">ทั้งหมด</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin:0;min-width:170px;">
-                <label class="form-label" style="font-size:11px;">👤 พนักงาน</label>
-                <select class="form-control" id="reportStaff" onchange="renderReport()">
-                  <option value="">ทั้งหมด</option>
-                </select>
-              </div>
-              <button class="btn btn-ghost" onclick="resetReportFilters()" style="margin-bottom:1px;">รีเซ็ต</button>
-            </div>
+        <!-- [R15-RPT 14พค69] Section header -->
+        <div class="page-r15-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">📈</span> สรุปวิเคราะห์การเบิก
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">รายงานยอดเบิกรายเดือน · แยกตามผู้รับบริการ/สินค้า/พนักงาน · ต้นทุน</div>
           </div>
+        </div>
+        <!-- [R15-RPT] Filter bar -->
+        <div class="page-r15-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+          <input class="form-control" type="month" id="reportMonth" onchange="renderReport()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select class="form-control" id="reportPatient" onchange="renderReport()" style="width:auto;min-width:160px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">ผู้รับบริการ: ทั้งหมด</option>
+          </select>
+          <select class="form-control" id="reportStaff" onchange="renderReport()" style="width:auto;min-width:140px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">พนักงาน: ทั้งหมด</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="resetReportFilters()" style="white-space:nowrap;">↺ รีเซ็ต</button>
         </div>
         <!-- Summary strip -->
         <div id="reportSummaryStrip" style="margin-bottom:12px;"></div>
@@ -958,39 +973,36 @@
 
       <!-- HEALTH REPORT PAGE -->
       <div id="page-healthreport" style="display:none;">
-        <!-- Filter bar -->
-        <div class="card" style="margin-bottom:16px;">
-          <div style="padding:14px 20px;">
-            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
-              <div class="form-group" style="margin:0;min-width:160px;">
-                <label class="form-label" style="font-size:11px;">📅 เดือน</label>
-                <input class="form-control" type="month" id="hr-month" onchange="renderHealthReport()">
-              </div>
-              <div class="form-group" style="margin:0;flex:1;min-width:180px;">
-                <label class="form-label" style="font-size:11px;">🏥 ผู้รับบริการ</label>
-                <div style="position:relative;">
-                  <input type="text" id="ta-hrp-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
-                  <div id="ta-hrp-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
-                  <input type="hidden" id="ta-hrp-id">
-                </div>
-              </div>
-              <div class="form-group" style="margin:0;min-width:140px;">
-                <label class="form-label" style="font-size:11px;">ประเภท</label>
-                <select class="form-control" id="hr-type" onchange="renderHealthReport()">
-                  <option value="both">ทั้งหมด</option>
-                  <option value="medical">ประวัติการรักษา</option>
-                  <option value="meds">ยาประจำ</option>
-                </select>
-              </div>
-              <div style="display:flex;gap:8px;margin-bottom:2px;">
-                <button class="btn btn-ghost btn-sm" onclick="resetHealthFilters()">↺ ล้าง</button>
-                <button class="btn btn-primary btn-sm" onclick="exportHealthExcel()">📊 Excel</button>
-                <button class="btn btn-ghost btn-sm" onclick="exportHealthPDF()">📄 PDF</button>
-                <button class="btn btn-ghost btn-sm" onclick="printHealthReport()">🖨️ Print</button>
-                <button class="btn btn-primary btn-sm" onclick="openHealthReportModal('')">📋 สร้างรายงาน</button>
-              </div>
-            </div>
+        <!-- [R14-HR 14พค69] Section header -->
+        <div class="page-r14-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">📋</span> รายงานสุขภาพ
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ประวัติการรักษา · ยาประจำ · สรุปสัญญาณชีพ · ส่งออก PDF/Excel</div>
           </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openHealthReportModal('')" style="white-space:nowrap;">📋 สร้างรายงาน</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportHealthExcel()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">📊 Excel</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportHealthPDF()" style="white-space:nowrap;">📄 PDF</button>
+            <button class="btn btn-ghost btn-sm" onclick="printHealthReport()" style="white-space:nowrap;">🖨️ Print</button>
+          </div>
+        </div>
+        <!-- [R14-HR] Filter bar — card-style -->
+        <div class="page-r14-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+          <input class="form-control" type="month" id="hr-month" onchange="renderHealthReport()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <div style="position:relative;flex:1;min-width:200px;">
+            <input type="text" id="ta-hrp-inp" class="form-control" style="font-size:13px;width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);height:auto;" placeholder="🏥 ผู้รับบริการ — พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div id="ta-hrp-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+            <input type="hidden" id="ta-hrp-id">
+          </div>
+          <select class="form-control" id="hr-type" onchange="renderHealthReport()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="both">ประเภท: ทั้งหมด</option>
+            <option value="medical">🩺 ประวัติการรักษา</option>
+            <option value="meds">💊 ยาประจำ</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="resetHealthFilters()" style="white-space:nowrap;">↺ ล้าง</button>
         </div>
         <!-- Summary strip -->
         <div id="hr-summary" style="margin-bottom:14px;"></div>
@@ -1000,6 +1012,15 @@
 
       <!-- PURCHASE HISTORY -->
       <div id="page-purchasehistory" style="display:none;">
+        <!-- [R15-PH 14พค69] Section header -->
+        <div class="page-r15-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">📦</span> ประวัติรับสินค้า
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">รายการสั่งซื้อและรับสินค้าเข้าคลัง · ความเคลื่อนไหวสต็อก · Lot tracking</div>
+          </div>
+        </div>
         <!-- Tabs -->
         <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
           <div id="ph-tab-purchase" onclick="switchPhTab('purchase')" style="padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid var(--accent);margin-bottom:-2px;color:var(--accent);">📦 ประวัติรับสินค้า</div>
@@ -1496,19 +1517,28 @@
 
       <!-- ===== PAGE: INCIDENT & WOUND CARE ===== -->
       <div id="page-incident" style="display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-          <div style="display:flex;gap:8px;">
-            <button class="btn btn-primary" onclick="openIncidentModal()">⚠️ + บันทึกอุบัติเหตุ</button>
-            <button class="btn btn-secondary" onclick="openWoundModal()">🩹 + บันทึกการทำแผล</button>
+        <!-- [R14-INC 14พค69] Section header -->
+        <div class="page-r14-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">⚠️</span> อุบัติเหตุ & แผลกดทับ
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">บันทึกเหตุการณ์และการดูแลแผล · ติดตามความรุนแรง · การปฐมพยาบาล</div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <select class="form-control" id="incident-filter-type" onchange="renderIncidentPage()" style="width:160px;">
-              <option value="">ทุกประเภท</option>
-              <option value="incident">อุบัติเหตุ</option>
-              <option value="wound">แผลกดทับ</option>
-            </select>
-            <input class="form-control" type="month" id="incident-filter-month" onchange="renderIncidentPage()" style="width:150px;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openIncidentModal()" style="white-space:nowrap;">⚠️ + บันทึกอุบัติเหตุ</button>
+            <button class="btn btn-ghost btn-sm" onclick="openWoundModal()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">🩹 + บันทึกการทำแผล</button>
           </div>
+        </div>
+        <!-- [R14-INC] Filter bar -->
+        <div class="page-r14-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+          <select class="form-control" id="incident-filter-type" onchange="renderIncidentPage()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">ประเภท: ทั้งหมด</option>
+            <option value="incident">⚠️ อุบัติเหตุ</option>
+            <option value="wound">🩹 แผลกดทับ</option>
+          </select>
+          <input class="form-control" type="month" id="incident-filter-month" onchange="renderIncidentPage()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
         </div>
         <div class="tabs" id="incident-tabs">
           <div class="tab active" onclick="switchIncidentTab('incidents')">⚠️ รายงานอุบัติเหตุ</div>
@@ -1544,12 +1574,19 @@
 
       <!-- ===== PAGE: DIETARY & TUBE FEEDING ===== -->
       <div id="page-dietary" style="display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-          <div style="display:flex;gap:8px;">
-            <button class="btn btn-primary" onclick="openDietModal()">🍽️ + กำหนดอาหารผู้ป่วย</button>
-            <button class="btn btn-secondary" onclick="openTubeFeedModal()">🧪 + บันทึกการให้อาหารทางสาย</button>
+        <!-- [R14-DIET 14พค69] Section header -->
+        <div class="page-r14-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">🍽️</span> โภชนาการ & สายให้อาหาร
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">แผนอาหาร · การให้อาหารทางสาย · แคลอรี · ข้อจำกัด/แพ้</div>
           </div>
-          <button class="btn btn-ghost" onclick="printDietaryReport()">🖨️ พิมพ์ใบจัดอาหาร</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openDietModal()" style="white-space:nowrap;">🍽️ + กำหนดแผนอาหาร</button>
+            <button class="btn btn-ghost btn-sm" onclick="openTubeFeedModal()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">🧪 + สายให้อาหาร</button>
+            <button class="btn btn-ghost btn-sm" onclick="printDietaryReport()" style="white-space:nowrap;">🖨️ พิมพ์ใบจัดอาหาร</button>
+          </div>
         </div>
         <div class="tabs">
           <div class="tab active" onclick="switchDietTab('diets')">🍽️ แผนอาหารผู้ป่วย</div>
