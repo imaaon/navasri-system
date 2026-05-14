@@ -9,15 +9,73 @@
 // ═══════════════════════════════════════════════════════════════
 
 var _VITAL_CHIPS = [
-  { key: 'bp',     icon: '🩸', label: 'ความดัน',  color: '#e74c3c', unit: 'mmHg', double: true, locked: true,  fields: ['bp_sys','bp_dia'] },
-  { key: 'hr',     icon: '💓', label: 'ชีพจร',    color: '#3498db', unit: 'bpm',  locked: true,  fields: ['hr'] },
-  { key: 'temp',   icon: '🌡️', label: 'อุณหภูมิ', color: '#e67e22', unit: '°C',   locked: true,  fields: ['temp'], step: '0.1' },
-  { key: 'spo2',   icon: '🫁', label: 'SpO₂',     color: '#27ae60', unit: '%',    locked: true,  fields: ['spo2'] },
-  { key: 'rr',     icon: '🫀', label: 'RR',       color: '#16a085', unit: '/min', locked: true,  fields: ['rr'] },
-  { key: 'dtx',    icon: '🍬', label: 'DTX',      color: '#8e44ad', unit: 'mg/dL',locked: false, fields: ['dtx'] },
+  // [R5-A 14พค69] เพิ่ม normal/warning ranges สำหรับ real-time alert ตาม mockup
+  // normal: ค่าปกติ (อ้างอิงสำหรับผู้สูงอายุ)
+  // warning: ค่าที่ผิดเกณฑ์เล็กน้อย (สีส้ม)
+  // critical: ค่าวิกฤต (สีแดง)
+  { key: 'bp',     icon: '🩸', label: 'ความดัน',  color: '#e74c3c', unit: 'mmHg', double: true, locked: true,  fields: ['bp_sys','bp_dia'],
+    ranges: { bp_sys: { normal: [90, 139], warning: [140, 159], critical: [160, 999], low_warning: [80, 89], low_critical: [0, 79] },
+              bp_dia: { normal: [60, 89],  warning: [90, 99],   critical: [100, 999], low_warning: [55, 59], low_critical: [0, 54] },
+              hint: 'ปกติ 90–139 / 60–89' } },
+  { key: 'hr',     icon: '💓', label: 'ชีพจร',    color: '#3498db', unit: 'bpm',  locked: true,  fields: ['hr'],
+    ranges: { hr: { normal: [60, 100], warning: [101, 120], critical: [121, 999], low_warning: [50, 59], low_critical: [0, 49] }, hint: 'ปกติ 60–100 bpm' } },
+  { key: 'temp',   icon: '🌡️', label: 'อุณหภูมิ', color: '#e67e22', unit: '°C',   locked: true,  fields: ['temp'], step: '0.1',
+    ranges: { temp: { normal: [36.1, 37.2], warning: [37.3, 37.9], critical: [38, 999], low_warning: [35.5, 36.0], low_critical: [0, 35.4] }, hint: 'ปกติ 36.1–37.2°C' } },
+  { key: 'spo2',   icon: '🫁', label: 'SpO₂',     color: '#27ae60', unit: '%',    locked: true,  fields: ['spo2'],
+    ranges: { spo2: { normal: [95, 100], warning: [90, 94], critical: [0, 89] }, hint: 'ปกติ ≥ 95%' } },
+  { key: 'rr',     icon: '🫀', label: 'RR',       color: '#16a085', unit: '/min', locked: true,  fields: ['rr'],
+    ranges: { rr: { normal: [12, 20], warning: [21, 24], critical: [25, 999], low_warning: [10, 11], low_critical: [0, 9] }, hint: 'ปกติ 12–20 /min' } },
+  { key: 'dtx',    icon: '🍬', label: 'DTX',      color: '#8e44ad', unit: 'mg/dL',locked: false, fields: ['dtx'],
+    ranges: { dtx: { normal: [70, 140], warning: [141, 180], critical: [181, 999], low_warning: [54, 69], low_critical: [0, 53] }, hint: 'ปกติ 70–140 mg/dL' } },
   { key: 'weight', icon: '⚖️', label: 'น้ำหนัก',  color: '#7f8c8d', unit: 'กก.',  locked: false, fields: ['weight'], step: '0.1' },
   { key: 'height', icon: '📏', label: 'ส่วนสูง',  color: '#7f8c8d', unit: 'ซม.',  locked: false, fields: ['height'], step: '0.1' }
 ];
+
+// [R5-A 14พค69] Real-time validation function
+// Returns: { tone: 'normal'|'warning'|'critical'|'low-warning'|'low-critical', msg: string }
+function _vitalCheckRange(field, value, chipConfig) {
+  if (!chipConfig || !chipConfig.ranges || !chipConfig.ranges[field]) return null;
+  if (value === null || value === undefined || value === '' || isNaN(value)) return null;
+  var v = parseFloat(value);
+  var r = chipConfig.ranges[field];
+  if (r.critical && v >= r.critical[0] && v <= r.critical[1]) return { tone: 'critical', msg: '🚨 ค่าวิกฤต — ต้องแจ้งแพทย์ทันที' };
+  if (r.low_critical && v >= r.low_critical[0] && v <= r.low_critical[1]) return { tone: 'critical', msg: '🚨 ค่าต่ำวิกฤต — ต้องแจ้งแพทย์ทันที' };
+  if (r.warning && v >= r.warning[0] && v <= r.warning[1]) return { tone: 'warning', msg: '⚠️ ค่าสูงกว่าเกณฑ์ปกติ' };
+  if (r.low_warning && v >= r.low_warning[0] && v <= r.low_warning[1]) return { tone: 'warning', msg: '⚠️ ค่าต่ำกว่าเกณฑ์ปกติ' };
+  if (r.normal && v >= r.normal[0] && v <= r.normal[1]) return { tone: 'normal', msg: '✓ ปกติ' };
+  return null;
+}
+
+// [R5-A 14พค69] Update inline alert message for a vital input wrap
+function _vitalUpdateAlert(chipConfig, wrap) {
+  if (!chipConfig || !wrap || !wrap._alertEl) return;
+  var alertEl = wrap._alertEl;
+  // ใช้ field สุดสำคัญ (worst tone) จากทุก fields ของ chip นี้
+  var worstResult = null;
+  var toneRank = { 'normal': 1, 'warning': 2, 'critical': 3 };
+  chipConfig.fields.forEach(function(f) {
+    var inp = wrap._valueInputs && wrap._valueInputs[f];
+    if (!inp) return;
+    var result = _vitalCheckRange(f, inp.value, chipConfig);
+    if (result && (!worstResult || toneRank[result.tone] > toneRank[worstResult.tone])) {
+      worstResult = result;
+    }
+  });
+  if (!worstResult) {
+    alertEl.style.display = 'none';
+    return;
+  }
+  // Style by tone
+  var palette = {
+    normal:   { bg: '#dcf0e2', color: '#1f5132' },
+    warning:  { bg: '#fdf3e8', color: '#7a4310' },
+    critical: { bg: '#fdf0ee', color: '#7a1f12' }
+  }[worstResult.tone] || { bg: '#f0f0f0', color: '#666' };
+  alertEl.style.display = '';
+  alertEl.style.background = palette.bg;
+  alertEl.style.color = palette.color;
+  alertEl.textContent = worstResult.msg;
+}
 
 function _openVitalModal(rec, patientId, pid) {
   var isEdit = !!rec;
@@ -26,17 +84,56 @@ function _openVitalModal(rec, patientId, pid) {
   var sharedDate = isEdit && rec.recordedAt ? rec.recordedAt.slice(0,10) : todayStr;
   var initTime = isEdit && rec.recordedAt ? rec.recordedAt.slice(11,16) : nowStr;
 
+  // [R5-A 14พค69] ดึงข้อมูล patient เพื่อแสดง pill ที่หัว modal
+  var _patient = (typeof db !== 'undefined' && db.patients) ? db.patients.find(function(x){ return x.id == patientId; }) : null;
+  var _patName = _patient ? _patient.name : '';
+  var _patHN = _patient ? (_patient.hn || _patient.id || '-') : '';
+  var _patAge = (_patient && _patient.dob && typeof calcAge === 'function') ? calcAge(_patient.dob) : '';
+  var _patGender = _patient ? (_patient.gender || '') : '';
+  var _patBed = '';
+  if (_patient && typeof getPatientBed === 'function' && typeof getPatientRoom === 'function') {
+    var _b = getPatientBed(_patient); var _r = getPatientRoom(_patient);
+    if (_r && _r.name) _patBed = _r.name + (_b && _b.bedCode ? '/' + _b.bedCode : '');
+  }
+  var _patInitials = _patName ? _patName.trim().split(/\s+/).slice(0,2).map(function(s){ return s.charAt(0); }).join('') : '?';
+  var _patStatus = _patient ? (_patient.status === 'active' ? 'อยู่ในศูนย์' : _patient.status === 'hospital' ? '🏥 อยู่ รพ.' : 'ออกแล้ว') : '';
+
   var overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;';
   var modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.cssText = 'background:#fff;border-radius:12px;padding:18px;width:520px;max-width:95vw;max-height:92vh;overflow-y:auto;';
+  modal.className = 'modal vital-modal-r5';
+  modal.style.cssText = 'background:#fff;border-radius:14px;padding:20px;width:560px;max-width:95vw;max-height:92vh;overflow-y:auto;';
 
   var h3 = document.createElement('div');
-  h3.style.cssText = 'font-size:16px;font-weight:700;color:var(--accent2);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);';
-  h3.textContent = isEdit ? '📊 แก้ไขสัญญาณชีพ' : '📊 บันทึกสัญญาณชีพ';
+  h3.className = 'vital-modal-title';
+  h3.style.cssText = 'font-size:17px;font-weight:700;color:var(--text,#1a1a1a);margin-bottom:6px;display:flex;align-items:center;gap:8px;';
+  h3.innerHTML = '<span style="font-size:22px;">📊</span> ' + (isEdit ? 'แก้ไขสัญญาณชีพ' : 'บันทึกสัญญาณชีพ');
   modal.appendChild(h3);
+
+  // [R5-A 14พค69] Subtitle
+  var subtitle = document.createElement('div');
+  subtitle.style.cssText = 'font-size:13px;color:var(--text2,#5e5e5e);margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border,#e8e3d4);';
+  subtitle.textContent = 'เลือกค่าที่ต้องการบันทึก แล้วกรอก — ไม่ต้องครบทุกช่อง';
+  modal.appendChild(subtitle);
+
+  // [R5-A 14พค69] Patient pill (ตาม mockup)
+  if (_patient) {
+    var pPill = document.createElement('div');
+    pPill.className = 'vital-patient-pill';
+    pPill.style.cssText = 'background:var(--sage-50,#f4f8f5);border:1px solid var(--sage-200,#dbe5dc);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;';
+    pPill.innerHTML =
+      '<div style="width:40px;height:40px;border-radius:50%;background:var(--sage-100,#eaf1eb);color:var(--brand,#2e6b4f);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">' + _patInitials + '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-weight:700;font-size:14px;letter-spacing:-0.2px;">' + _patName + '</div>' +
+        '<div style="font-size:11.5px;color:var(--text2,#5e5e5e);margin-top:2px;">HN <span style="font-family:var(--mono,monospace);">' + _patHN + '</span>' +
+          (_patBed ? ' · ห้อง ' + _patBed : '') +
+          (_patGender || _patAge ? ' · ' + _patGender + (_patAge ? ' ' + _patAge + ' ปี' : '') : '') +
+        '</div>' +
+      '</div>' +
+      '<span style="background:var(--brand,#2e6b4f);color:white;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;flex-shrink:0;">' + _patStatus + '</span>';
+    modal.appendChild(pPill);
+  }
 
   // Shared header (วันที่)
   var sharedSec = document.createElement('div');
@@ -195,7 +292,7 @@ function _openVitalModal(rec, patientId, pid) {
         c.fields.forEach(function(fn, idx) {
           var fwrap = document.createElement('div');
           var fl = document.createElement('div');
-          fl.style.cssText = 'font-size:10px;color:var(--text3);margin-bottom:3px;';
+          fl.style.cssText = 'font-size:10px;color:var(--text3);margin-bottom:3px;font-weight:600;letter-spacing:0.3px;';
           fl.textContent = (idx === 0 ? 'SYS' : 'DIA');
           fwrap.appendChild(fl);
           var iwrap = document.createElement('div');
@@ -203,18 +300,21 @@ function _openVitalModal(rec, patientId, pid) {
           var inp = document.createElement('input');
           inp.type = 'number';
           inp.setAttribute('inputmode','numeric');
-          inp.className = 'form-control';
-          inp.style.cssText = 'height:44px;padding:0 10px;font-size:16px;font-weight:600;';
+          inp.className = 'form-control vital-value-input';
+          // [R5-A] Plex Mono + ใหญ่ 22px ตาม mockup
+          inp.style.cssText = 'height:48px;padding:0 12px;font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;';
           inp.placeholder = (idx === 0 ? '120' : '80');
           if (initValues[fn] !== undefined) inp.value = initValues[fn];
           var unit = document.createElement('span');
-          unit.style.cssText = 'font-size:11px;color:var(--text3);padding-left:2px;';
+          unit.style.cssText = 'font-size:11px;color:var(--text3);padding-left:2px;font-weight:500;';
           unit.textContent = c.unit;
           iwrap.appendChild(inp);
           iwrap.appendChild(unit);
           fwrap.appendChild(iwrap);
           grid.appendChild(fwrap);
           valueInputs[fn] = inp;
+          // [R5-A] Real-time validation message
+          inp.addEventListener('input', function() { _vitalUpdateAlert(c, wrap); });
         });
         wrap.appendChild(grid);
       } else {
@@ -225,17 +325,40 @@ function _openVitalModal(rec, patientId, pid) {
         inp2.type = 'number';
         inp2.setAttribute('inputmode', c.step ? 'decimal' : 'numeric');
         if (c.step) inp2.step = c.step;
-        inp2.className = 'form-control';
-        inp2.style.cssText = 'height:44px;padding:0 10px;font-size:16px;font-weight:600;';
+        inp2.className = 'form-control vital-value-input';
+        // [R5-A] Plex Mono + ใหญ่ 22px ตาม mockup
+        inp2.style.cssText = 'height:48px;padding:0 12px;font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;';
         if (initValues[c.fields[0]] !== undefined) inp2.value = initValues[c.fields[0]];
         var unit2 = document.createElement('span');
-        unit2.style.cssText = 'font-size:11px;color:var(--text3);padding-left:2px;';
+        unit2.style.cssText = 'font-size:11px;color:var(--text3);padding-left:2px;font-weight:500;';
         unit2.textContent = c.unit;
         iwrap2.appendChild(inp2);
         iwrap2.appendChild(unit2);
         wrap.appendChild(iwrap2);
         valueInputs[c.fields[0]] = inp2;
+        // [R5-A] Real-time validation message
+        inp2.addEventListener('input', function() { _vitalUpdateAlert(c, wrap); });
       }
+
+      // [R5-A 14พค69] Alert message container (เริ่มซ่อน — แสดงเมื่อมีค่าผิดเกณฑ์)
+      var alertEl = document.createElement('div');
+      alertEl.className = 'vital-alert-msg';
+      alertEl.style.cssText = 'display:none;font-size:12px;font-weight:500;margin-top:6px;padding:6px 10px;border-radius:6px;';
+      wrap.appendChild(alertEl);
+
+      // [R5-A] Range hint (subtle, gray)
+      if (c.ranges && c.ranges.hint) {
+        var hintEl = document.createElement('div');
+        hintEl.className = 'vital-range-hint';
+        hintEl.style.cssText = 'font-size:11px;color:var(--text3,#8a8a8a);margin-top:4px;font-style:italic;';
+        hintEl.textContent = 'ปกติ: ' + c.ranges.hint.replace('ปกติ', '').replace('ปกติ ', '').trim();
+        wrap.appendChild(hintEl);
+      }
+
+      // Store chip config for later validation
+      wrap._chipConfig = c;
+      wrap._valueInputs = valueInputs;
+      wrap._alertEl = alertEl;
 
       valueFieldsContainer.appendChild(wrap);
       valueWrappers[c.key] = wrap;

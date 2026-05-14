@@ -3734,3 +3734,203 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R4 P4
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R5-A · VITAL SIGNS MODAL — Patient pill + Plex Mono + Real-time alert
+   14 พ.ค. 2569
+   ════════════════════════════════════════════════════════════════ */
+
+/* Modal title */
+.vital-modal-r5 .vital-modal-title { letter-spacing: -0.4px; }
+
+/* Patient pill — already styled inline, just enhance hover */
+.vital-patient-pill { transition: all 0.15s; }
+
+/* Vital chip selector — enhance type-chip in vital modal context */
+.vital-modal-r5 .type-chip {
+  border: 1.5px solid var(--border, #e8e3d4);
+  background: var(--surface, #fdfcf8);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vital-modal-r5 .type-chip:hover {
+  border-color: var(--brand, #2e6b4f);
+  background: var(--sage-50, #f4f8f5);
+}
+.vital-modal-r5 .type-chip.active {
+  border-color: var(--brand, #2e6b4f);
+  background: var(--sage-100, #eaf1eb);
+  color: var(--brand, #2e6b4f);
+  font-weight: 600;
+}
+.vital-modal-r5 .type-chip .icon { font-size: 18px; }
+
+/* Vital value inputs — Plex Mono large */
+.vital-modal-r5 .vital-value-input {
+  border-radius: 8px;
+  border: 1.5px solid var(--border, #e8e3d4);
+  background: white;
+  transition: all 0.15s;
+}
+.vital-modal-r5 .vital-value-input:focus {
+  border-color: var(--brand, #2e6b4f);
+  outline: 2px solid var(--sage-100, #eaf1eb);
+  outline-offset: -1px;
+}
+
+/* Alert message animation */
+.vital-modal-r5 .vital-alert-msg {
+  animation: r5-alert-slide 0.2s ease-out;
+}
+@keyframes r5-alert-slide {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Range hint — subtle */
+.vital-modal-r5 .vital-range-hint {
+  opacity: 0.75;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .vital-modal-r5 .type-chip {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .vital-modal-r5 .vital-value-input {
+    height: 52px !important;
+    font-size: 24px !important;
+  }
+  .vital-patient-pill {
+    padding: 10px 12px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R5-A
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R5-B · I/O MULTI-ROW MODAL — Patient pill + type-coded sections
+   14 พ.ค. 2569
+   ════════════════════════════════════════════════════════════════ */
+
+.io-modal-r5 .io-patient-pill { transition: all 0.15s; }
+
+/* Type chips ใน I/O modal — สีตามประเภท */
+.io-modal-r5 .type-chip {
+  border: 1.5px solid var(--border, #e8e3d4);
+  background: var(--surface, #fdfcf8);
+  padding: 12px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.io-modal-r5 .type-chip:hover {
+  border-color: var(--brand, #2e6b4f);
+  background: var(--sage-50, #f4f8f5);
+}
+.io-modal-r5 .type-chip.active {
+  border-color: var(--brand, #2e6b4f);
+  background: var(--sage-100, #eaf1eb);
+  color: var(--brand, #2e6b4f);
+  font-weight: 600;
+}
+.io-modal-r5 .type-chip .icon { font-size: 22px; line-height: 1; }
+
+/* Volume input ใหญ่ — Plex Mono */
+.io-modal-r5 input[type="number"].volume-input {
+  height: 48px !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  font-family: var(--mono, monospace) !important;
+  letter-spacing: -0.5px;
+  text-align: center;
+  border-radius: 8px;
+  border: 1.5px solid var(--border, #e8e3d4);
+}
+
+/* Char chips — multi-select pills */
+.io-modal-r5 .char-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 12px;
+  border: 1.5px solid var(--border, #e8e3d4);
+  background: white;
+  font-size: 12px;
+  cursor: pointer;
+  margin: 2px;
+  transition: all 0.15s;
+}
+.io-modal-r5 .char-chip:hover {
+  border-color: var(--brand, #2e6b4f);
+}
+.io-modal-r5 .char-chip.active {
+  background: var(--sage-100, #eaf1eb);
+  border-color: var(--brand, #2e6b4f);
+  color: var(--brand, #2e6b4f);
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .io-modal-r5 .type-chip { padding: 10px 6px; font-size: 11px; }
+  .io-modal-r5 .type-chip .icon { font-size: 18px; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R5-B
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R5-C · DASHBOARD — Executive Alert + Section Headers
+   14 พ.ค. 2569
+   ════════════════════════════════════════════════════════════════ */
+
+/* Executive alert banner — animation + display setup */
+.dashboard-exec-alert {
+  animation: r5c-alert-slide 0.3s ease-out;
+}
+.dashboard-exec-alert[style*="display:flex"],
+.dashboard-exec-alert[style*="display: flex"] {
+  display: flex !important;
+}
+
+@keyframes r5c-alert-slide {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Section headers */
+.dashboard-section-header {
+  user-select: none;
+}
+
+@media (max-width: 600px) {
+  .dashboard-exec-alert {
+    padding: 12px 14px !important;
+    gap: 10px !important;
+  }
+  .dashboard-section-header h3 {
+    font-size: 13px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R5-C
+   ════════════════════════════════════════════════════════════════ */

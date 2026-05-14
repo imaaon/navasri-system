@@ -90,6 +90,15 @@ function renderAdminDashboard() {
   const todayStr = new Date().toISOString().split('T')[0];
   const todayReqs = db.requisitions.filter(r => r.date === todayStr);
 
+  // [R5-C 14พค69] Date label (e.g. "พฤหัส 14 พ.ค. 2569")
+  const _dateLabelEl = document.getElementById('dashboard-date-label');
+  if (_dateLabelEl) {
+    const _d = new Date();
+    const _days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+    const _months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    _dateLabelEl.textContent = _days[_d.getDay()] + ' ' + _d.getDate() + ' ' + _months[_d.getMonth()] + ' ' + (_d.getFullYear()+543);
+  }
+
   const _st=document.getElementById('stat-total'); if(_st) _st.textContent = db.items.length;
   const _sl=document.getElementById('stat-low'); if(_sl) _sl.textContent = lowItems.length;
   const _sd=document.getElementById('stat-today'); if(_sd) _sd.textContent = todayReqs.length;
@@ -234,6 +243,20 @@ function renderAdminDashboard() {
       alertBody.innerHTML = alerts.map(a=>`<div style="padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px;">${a}</div>`).join('');
     } else {
       alertSection.style.display = 'none';
+    }
+
+    // [R5-C 14พค69] อัปเดต Executive Alert banner ที่บนสุด (ใหม่)
+    const _execBanner = document.getElementById('dashboard-exec-alert');
+    const _execDetail = document.getElementById('dashboard-exec-alert-detail');
+    if (_execBanner && _execDetail) {
+      if (alerts.length > 0) {
+        _execBanner.style.display = 'flex';
+        // สรุปย่อ: นับจำนวน + แสดงข้อความรวม
+        const _summary = 'มีรายการเร่งด่วน ' + alerts.length + ' หมวด · ตรวจสอบรายละเอียดด้านล่าง';
+        _execDetail.innerHTML = _summary;
+      } else {
+        _execBanner.style.display = 'none';
+      }
     }
   }
 

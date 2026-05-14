@@ -1652,19 +1652,57 @@ function _openOutputModal(row, patId, today) {
   var sharedTime = isEdit && row.recorded_at ? row.recorded_at.slice(11,16) : nowStr;
   var sharedShift = isEdit && row.shift ? row.shift : _shiftFromTime(sharedTime);
 
+  // [R5-B 14พค69] ดึงข้อมูล patient
+  var _patient = (typeof db !== 'undefined' && db.patients) ? db.patients.find(function(x){ return x.id == patId; }) : null;
+  var _patName = _patient ? _patient.name : '';
+  var _patHN = _patient ? (_patient.hn || _patient.id || '-') : '';
+  var _patAge = (_patient && _patient.dob && typeof calcAge === 'function') ? calcAge(_patient.dob) : '';
+  var _patGender = _patient ? (_patient.gender || '') : '';
+  var _patBed = '';
+  if (_patient && typeof getPatientBed === 'function' && typeof getPatientRoom === 'function') {
+    var _b = getPatientBed(_patient); var _r = getPatientRoom(_patient);
+    if (_r && _r.name) _patBed = _r.name + (_b && _b.bedCode ? '/' + _b.bedCode : '');
+  }
+  var _patInitials = _patName ? _patName.trim().split(/\s+/).slice(0,2).map(function(s){ return s.charAt(0); }).join('') : '?';
+  var _patStatus = _patient ? (_patient.status === 'active' ? 'อยู่ในศูนย์' : _patient.status === 'hospital' ? '🏥 อยู่ รพ.' : 'ออกแล้ว') : '';
+
   // ── สร้าง overlay + modal ──
   var overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;';
   var modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.style.cssText = 'background:#fff;border-radius:12px;padding:18px;width:480px;max-width:95vw;max-height:92vh;overflow-y:auto;';
+  modal.className = 'modal io-modal-r5';
+  modal.style.cssText = 'background:#fff;border-radius:14px;padding:20px;width:560px;max-width:95vw;max-height:92vh;overflow-y:auto;';
 
   // Title
   var h3 = document.createElement('div');
-  h3.style.cssText = 'font-size:16px;font-weight:700;color:var(--accent2);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);';
-  h3.textContent = isEdit ? '🚽 แก้ไขน้ำออก' : '🚽 เพิ่มน้ำออก';
+  h3.style.cssText = 'font-size:17px;font-weight:700;color:var(--text,#1a1a1a);margin-bottom:6px;display:flex;align-items:center;gap:8px;';
+  h3.innerHTML = '<span style="font-size:22px;">🚿</span> ' + (isEdit ? 'แก้ไขน้ำเข้า-ออก / ขับถ่าย' : 'บันทึกน้ำเข้า-ออก / ขับถ่าย');
   modal.appendChild(h3);
+
+  // [R5-B] Subtitle
+  var subtitle = document.createElement('div');
+  subtitle.style.cssText = 'font-size:13px;color:var(--text2,#5e5e5e);margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border,#e8e3d4);';
+  subtitle.textContent = isEdit ? 'แก้ไขรายการเดิม' : 'รายการที่จะบันทึกครั้งนี้ — เพิ่มได้หลายรายการ';
+  modal.appendChild(subtitle);
+
+  // [R5-B] Patient pill (ตาม mockup)
+  if (_patient) {
+    var pPill = document.createElement('div');
+    pPill.className = 'io-patient-pill';
+    pPill.style.cssText = 'background:var(--sage-50,#f4f8f5);border:1px solid var(--sage-200,#dbe5dc);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;';
+    pPill.innerHTML =
+      '<div style="width:40px;height:40px;border-radius:50%;background:var(--sage-100,#eaf1eb);color:var(--brand,#2e6b4f);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">' + _patInitials + '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-weight:700;font-size:14px;letter-spacing:-0.2px;">' + _patName + '</div>' +
+        '<div style="font-size:11.5px;color:var(--text2,#5e5e5e);margin-top:2px;">HN <span style="font-family:var(--mono,monospace);">' + _patHN + '</span>' +
+          (_patBed ? ' · ห้อง ' + _patBed : '') +
+          (_patGender || _patAge ? ' · ' + _patGender + (_patAge ? ' ' + _patAge + ' ปี' : '') : '') +
+        '</div>' +
+      '</div>' +
+      '<span style="background:var(--brand,#2e6b4f);color:white;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;flex-shrink:0;">' + _patStatus + '</span>';
+    modal.appendChild(pPill);
+  }
 
   // ── Shared section (วันที่/เวลา/เวร) ──
   var sharedSec = document.createElement('div');
