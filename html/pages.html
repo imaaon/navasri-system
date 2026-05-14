@@ -1563,17 +1563,28 @@
 
       <!-- ===== PAGE: DEPOSITS ===== -->
       <div id="page-deposits" style="display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-          <button class="btn btn-primary" onclick="openDepositModal()">🏦 + บันทึกเงินมัดจำ</button>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <input class="form-control" id="deposit-search" placeholder="🔍 ค้นหาผู้ป่วย..." oninput="renderDeposits()" style="width:220px;">
-            <select class="form-control" id="deposit-filter-status" onchange="renderDeposits()" style="width:160px;">
-              <option value="">ทุกสถานะ</option>
-              <option value="active">ถือครองอยู่</option>
-              <option value="refunded">คืนแล้ว</option>
-              <option value="deducted">หักชำระแล้ว</option>
-            </select>
+        <!-- [R11-DEP 14พค69] Section header — ตาม R8/R9 pattern -->
+        <div class="page-r11-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">🏦</span> เงินมัดจำ & เงินประกัน
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">เงินที่ถือไว้ก่อน · คืนเมื่อจำหน่ายผู้รับบริการ</div>
           </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openDepositModal()" style="white-space:nowrap;">🏦 + บันทึกมัดจำใหม่</button>
+          </div>
+        </div>
+        <!-- [R11-DEP] Filter bar — card-style with prefix -->
+        <div class="page-r11-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+          <input class="form-control" id="deposit-search" placeholder="ค้นหาชื่อผู้รับบริการ / HN..." oninput="renderDeposits()" style="flex:1;min-width:220px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select class="form-control" id="deposit-filter-status" onchange="renderDeposits()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">สถานะ: ทั้งหมด</option>
+            <option value="active">💰 ถือครองอยู่</option>
+            <option value="refunded">↩️ คืนแล้ว</option>
+            <option value="deducted">✓ หักชำระแล้ว</option>
+          </select>
         </div>
         <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
           <div class="stat-card green">
@@ -1610,14 +1621,27 @@
       
       <!-- SUPPLIERS PAGE -->
       <div id="page-suppliers" style="display:none;">
-        <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
-          <input class="form-control" id="supplierSearch" placeholder="ค้นหาชื่อ / รหัส / เบอร์..." style="flex:1;min-width:200px;" oninput="renderSuppliers()">
-          <select class="form-control" id="supplierStatusFilter" style="width:140px;" onchange="renderSuppliers()">
-            <option value="">ทุกสถานะ</option>
-            <option value="active">ใช้งาน</option>
-            <option value="inactive">ปิด</option>
+        <!-- [R10-SUP 14พค69] Section header -->
+        <div class="page-r10-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">🏭</span> ผู้จำหน่าย
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="supplier-subtitle">รายชื่อผู้จำหน่าย · เครดิต · ข้อมูลติดต่อ</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openAddSupplierModal()" style="white-space:nowrap;">+ เพิ่มผู้จำหน่าย</button>
+          </div>
+        </div>
+        <!-- [R10-SUP] Filter bar -->
+        <div class="page-r10-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+          <input class="form-control" id="supplierSearch" placeholder="ค้นหาชื่อ / รหัส / เบอร์โทร / เลขภาษี..." oninput="renderSuppliers()" style="flex:1;min-width:240px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select class="form-control" id="supplierStatusFilter" onchange="renderSuppliers()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">สถานะ: ทั้งหมด</option>
+            <option value="active">✓ ใช้งาน</option>
+            <option value="inactive">⛔ ปิด</option>
           </select>
-          <button class="btn btn-primary" onclick="openAddSupplierModal()">+ เพิ่มรายการผู้จำหน่าย</button>
         </div>
         <div class="card">
           <div class="card-header">
@@ -1635,20 +1659,33 @@
 
       <!-- SUPPLIER INVOICES PAGE -->
       <div id="page-supplierinvoices" style="display:none;">
-        <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
-          <select class="form-control" id="supInvStatusFilter" style="width:150px;" onchange="renderSupplierInvoices()">
-            <option value="">ทุกสถานะ</option>
-            <option value="draft">ร่าง (ยังไม่รับสต็อก)</option>
-            <option value="confirmed">รับสต็อกแล้ว</option>
-            <option value="pending">รอจ่าย</option>
-            <option value="paid">จ่ายแล้ว</option>
-            <option value="overdue">เกินกำหนด</option>
-            <option value="cancelled">ยกเลิก</option>
+        <!-- [R10-SUPINV 14พค69] Section header -->
+        <div class="page-r10-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">🧾</span> ใบแจ้งหนี้จากผู้จำหน่าย
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="supinv-subtitle">บันทึกใบแจ้งหนี้ · ติดตามวันครบกำหนด · จ่ายเงิน</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openAddSupplierInvoiceModal()" style="white-space:nowrap;">+ เพิ่มใบแจ้งหนี้</button>
+          </div>
+        </div>
+        <!-- [R10-SUPINV] Filter bar -->
+        <div class="page-r10-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+          <select class="form-control" id="supInvStatusFilter" onchange="renderSupplierInvoices()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">สถานะ: ทั้งหมด</option>
+            <option value="draft">📝 ร่าง (ยังไม่รับสต็อก)</option>
+            <option value="confirmed">📦 รับสต็อกแล้ว</option>
+            <option value="pending">⏳ รอจ่าย</option>
+            <option value="paid">✓ จ่ายแล้ว</option>
+            <option value="overdue">🚨 เกินกำหนด</option>
+            <option value="cancelled">⛔ ยกเลิก</option>
           </select>
-          <select class="form-control" id="supInvSupplierFilter" style="width:180px;" onchange="renderSupplierInvoices()">
-            <option value="">ทุกผู้จำหน่าย</option>
+          <select class="form-control" id="supInvSupplierFilter" onchange="renderSupplierInvoices()" style="width:auto;min-width:160px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">ผู้จำหน่าย: ทั้งหมด</option>
           </select>
-          <button class="btn btn-primary" onclick="openAddSupplierInvoiceModal()">+ เพิ่มรายการใบแจ้งหนี้ผู้จำหน่าย</button>
         </div>
         <div class="card">
           <div class="card-header">
@@ -1674,18 +1711,31 @@
 
       <!-- PURCHASE REQUESTS PAGE -->
       <div id="page-purchaserequests" style="display:none;">
-        <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
-          <select class="form-control" id="prStatusFilter" style="width:160px;" onchange="renderPurchaseRequests()">
-            <option value="">ทุกสถานะ</option>
-            <option value="draft">ร่าง</option>
-            <option value="submitted">ส่งแล้ว</option>
-            <option value="approved">อนุมัติ</option>
-            <option value="rejected">ไม่อนุมัติ</option>
-            <option value="ordered">สั่งซื้อแล้ว</option>
-            <option value="received">รับแล้ว</option>
-            <option value="closed">ปิด</option>
+        <!-- [R10-PR 14พค69] Section header -->
+        <div class="page-r10-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">📋</span> คำขอซื้อ (PR)
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="pr-subtitle">บันทึกคำขอซื้อสินค้า · อนุมัติ · สั่งซื้อ · รับเข้า</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openAddPRModal()" style="white-space:nowrap;">+ สร้างคำขอใหม่</button>
+          </div>
+        </div>
+        <!-- [R10-PR] Filter bar -->
+        <div class="page-r10-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+          <select class="form-control" id="prStatusFilter" onchange="renderPurchaseRequests()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">สถานะ: ทั้งหมด</option>
+            <option value="draft">📝 ร่าง</option>
+            <option value="submitted">📤 ส่งแล้ว</option>
+            <option value="approved">✓ อนุมัติ</option>
+            <option value="rejected">⛔ ไม่อนุมัติ</option>
+            <option value="ordered">🛒 สั่งซื้อแล้ว</option>
+            <option value="received">📦 รับแล้ว</option>
+            <option value="closed">🔒 ปิด</option>
           </select>
-          <button class="btn btn-primary" onclick="openAddPRModal()">+ เพิ่มรายการคำขอซื้อ</button>
         </div>
         <div class="card">
           <div class="card-header"><div class="card-title">📋 คำขอซื้อสินค้า</div></div>
@@ -1700,6 +1750,15 @@
 
       <!-- STOCK REPORT PAGE -->
       <div id="page-stockreport" style="display:none;">
+        <!-- [R10-SR 14พค69] Section header -->
+        <div class="page-r10-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">📊</span> รายงานสต็อก
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ใกล้หมด · ใกล้หมดอายุ · ความเคลื่อนไหว · ตามผู้จำหน่าย · Traceability</div>
+          </div>
+        </div>
         <!-- Tab bar -->
         <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
           <div class="sr-tab" data-tab="lowstock" onclick="switchStockReportTab('lowstock')" style="padding:8px 16px;font-size:13px;cursor:pointer;border-bottom:2px solid var(--accent);margin-bottom:-2px;color:var(--accent);font-weight:600;">⚠️ ใกล้หมด</div>
@@ -1731,13 +1790,18 @@
 
       <!-- ===== PAGE: EXPENSES ===== -->
       <div id="page-expenses" style="display:none;">
-        <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
-          <div style="flex:1;">
-            <h2 style="margin:0;font-size:20px;">💸 ค่าใช้จ่าย</h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ค่าน้ำ · ค่าไฟ · ซ่อมแซม · เงินเดือน · และอื่นๆ</div>
+        <!-- [R11-EXP 14พค69] Section header -->
+        <div class="page-r11-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">💸</span> ค่าใช้จ่าย
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ค่าน้ำ · ค่าไฟ · ซ่อมแซม · เงินเดือน · บริการวิชาชีพ · และอื่นๆ</div>
           </div>
-          <button class="btn btn-primary" onclick="openAddExpenseModal()">+ บันทึกค่าใช้จ่าย</button>
-          <button class="btn btn-ghost" onclick="exportExpensesExcel()" style="color:#0a3626;border-color:#5ecba1;">📥 Export ค่าใช้จ่าย</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()" style="white-space:nowrap;">+ บันทึกค่าใช้จ่าย</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportExpensesExcel()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">📥 Excel</button>
+          </div>
         </div>
         <!-- Summary Cards -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;">
@@ -1754,10 +1818,12 @@
             <div id="exp-stat-paid" style="font-size:20px;font-weight:700;color:#0a3626;">0 ฿</div>
           </div>
         </div>
-        <!-- Filters -->
-        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
-          <select id="exp-filter-category" class="form-control" style="width:160px;" onchange="renderExpenses()">
-            <option value="">ทุกประเภท</option>
+        <!-- [R11-EXP] Filter bar — card-style -->
+        <div class="page-r11-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+          <input id="exp-search" class="form-control" placeholder="ค้นหารายการ / ผู้รับเงิน..." oninput="renderExpenses()" style="flex:1;min-width:200px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select id="exp-filter-category" class="form-control" onchange="renderExpenses()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">หมวด: ทั้งหมด</option>
             <option value="utilities">สาธารณูปโภค</option>
             <option value="maintenance">ซ่อมแซม</option>
             <option value="salary">เงินเดือน/บุคลากร</option>
@@ -1772,17 +1838,16 @@
             <option value="transport">เดินทาง/น้ำมัน</option>
             <option value="other">อื่นๆ</option>
           </select>
-          <select id="exp-filter-status" class="form-control" style="width:130px;" onchange="renderExpenses()">
-            <option value="">ทุกสถานะ</option>
-            <option value="unpaid">ค้างชำระ</option>
-            <option value="paid">จ่ายแล้ว</option>
-            <option value="overdue">เกินกำหนด</option>
+          <select id="exp-filter-status" class="form-control" onchange="renderExpenses()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">สถานะ: ทั้งหมด</option>
+            <option value="unpaid">⏳ ค้างชำระ</option>
+            <option value="paid">✓ จ่ายแล้ว</option>
+            <option value="overdue">🚨 เกินกำหนด</option>
           </select>
-          <select id="exp-filter-month" class="form-control" style="width:120px;" onchange="renderExpenses()">
-            <option value="">ทุกเดือน</option>
+          <select id="exp-filter-month" class="form-control" onchange="renderExpenses()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">เดือน: ทั้งหมด</option>
           </select>
-          <input id="exp-search" class="form-control" placeholder="ค้นหา..." oninput="renderExpenses()" style="width:180px;">
-          <span id="exp-count" style="font-size:13px;color:var(--text3);margin-left:auto;"></span>
+          <span id="exp-count" style="font-size:12px;color:var(--text3);margin-left:auto;"></span>
         </div>
         <!-- Table -->
         <div class="card" style="padding:0;overflow:hidden;">
@@ -1800,39 +1865,45 @@
 
       <!-- ===== PAGE: ASSETS ===== -->
       <div id="page-assets" style="display:none;">
-        <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
-          <div style="flex:1;">
-            <h2 style="margin:0;font-size:20px;">🔧 ครุภัณฑ์ & ซ่อมบำรุง</h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ทะเบียนอุปกรณ์ · ประวัติซ่อม · แจ้งเตือนบำรุงรักษา</div>
+        <!-- [R11-AST 14พค69] Section header -->
+        <div class="page-r11-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">🔧</span> ครุภัณฑ์ & ซ่อมบำรุง
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ทะเบียนอุปกรณ์ · ประวัติซ่อม · แจ้งเตือนบำรุงรักษา · ประกัน</div>
           </div>
-          <button class="btn btn-primary" onclick="openAddAssetModal()" id="btn-add-asset">+ เพิ่มครุภัณฑ์</button>
-<button class="btn btn-ghost" onclick="exportAssetsExcel()" style="color:#0a3626;border-color:#5ecba1;">📥 Export ครุภัณฑ์</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openAddAssetModal()" id="btn-add-asset" style="white-space:nowrap;">+ เพิ่มครุภัณฑ์</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportAssetsExcel()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">📥 Excel</button>
+          </div>
         </div>
         <!-- Alert: ใกล้ถึงรอบซ่อม -->
         <div id="asset-alert-card" style="display:none;background:#fff3e0;border:1px solid #f5c842;border-radius:10px;padding:14px;margin-bottom:16px;">
           <div style="font-weight:600;color:#f5a453;margin-bottom:8px;">⚠️ อุปกรณ์ถึงรอบซ่อมบำรุง / ใกล้หมดประกัน</div>
           <div id="asset-alert-list" style="font-size:13px;"></div>
         </div>
-        <!-- Filters -->
-        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
-          <select id="asset-filter-category" class="form-control" style="width:160px;" onchange="renderAssets()">
-            <option value="">ทุกประเภท</option>
-            <option value="medical_equipment">เครื่องมือแพทย์</option>
-            <option value="furniture">เฟอร์นิเจอร์/เตียง</option>
-            <option value="building_system">ระบบอาคาร</option>
-            <option value="kitchen_laundry">ครัว/ซักล้าง</option>
-            <option value="vehicle">ยานพาหนะ</option>
-            <option value="it_telecom">IT/สื่อสาร</option>
-            <option value="other">อื่นๆ</option>
+        <!-- [R11-AST] Filter bar -->
+        <div class="page-r11-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+          <input id="asset-search" class="form-control" placeholder="ค้นหาชื่อ / รหัส / ตำแหน่ง..." oninput="renderAssets()" style="flex:1;min-width:220px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select id="asset-filter-category" class="form-control" onchange="renderAssets()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">หมวด: ทั้งหมด</option>
+            <option value="medical_equipment">🩺 เครื่องมือแพทย์</option>
+            <option value="furniture">🛏 เฟอร์นิเจอร์/เตียง</option>
+            <option value="building_system">🏢 ระบบอาคาร</option>
+            <option value="kitchen_laundry">🍳 ครัว/ซักล้าง</option>
+            <option value="vehicle">🚐 ยานพาหนะ</option>
+            <option value="it_telecom">💻 IT/สื่อสาร</option>
+            <option value="other">📦 อื่นๆ</option>
           </select>
-          <select id="asset-filter-status" class="form-control" style="width:130px;" onchange="renderAssets()">
-            <option value="">ทุกสถานะ</option>
-            <option value="active">ใช้งานปกติ</option>
-            <option value="under_repair">ส่งซ่อม</option>
-            <option value="retired">เลิกใช้</option>
+          <select id="asset-filter-status" class="form-control" onchange="renderAssets()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">สถานะ: ทั้งหมด</option>
+            <option value="active">✓ ใช้งานปกติ</option>
+            <option value="under_repair">🔧 ส่งซ่อม</option>
+            <option value="retired">⛔ เลิกใช้</option>
           </select>
-          <input id="asset-search" class="form-control" placeholder="ค้นหาชื่อ/รหัส..." oninput="renderAssets()" style="width:200px;">
-          <span id="asset-count" style="font-size:13px;color:var(--text3);margin-left:auto;"></span>
+          <span id="asset-count" style="font-size:12px;color:var(--text3);margin-left:auto;"></span>
         </div>
         <!-- Table -->
         <div class="card" style="padding:0;overflow:hidden;">
