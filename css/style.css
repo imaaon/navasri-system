@@ -4523,3 +4523,55 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R9-B
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R10 + R11 · Stock companions + Billing extras — shared polish
+   Added 14 พ.ค. 69 · 7 pages: suppliers, supinv, PR, stockreport,
+   deposits, expenses, assets
+   Pattern: ตาม R8/R9 — header + filter bar card-style focus polish
+   ════════════════════════════════════════════════════════════════ */
+
+/* Section headers (shared between R10 + R11) */
+.page-r10-header h2,
+.page-r11-header h2 {
+  color: var(--text);
+}
+
+/* Filter bars (shared) — focus state with sage ring */
+.page-r10-filter-bar input:focus,
+.page-r10-filter-bar select:focus,
+.page-r11-filter-bar input:focus,
+.page-r11-filter-bar select:focus {
+  outline: none;
+  border-color: var(--brand, #2e6b4f);
+  box-shadow: 0 0 0 2px var(--sage-100, #e6efe7);
+}
+
+.page-r10-filter-bar select,
+.page-r11-filter-bar select {
+  cursor: pointer;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .page-r10-header,
+  .page-r11-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  .page-r10-filter-bar,
+  .page-r11-filter-bar {
+    padding: 10px !important;
+  }
+  .page-r10-filter-bar input,
+  .page-r10-filter-bar select,
+  .page-r11-filter-bar input,
+  .page-r11-filter-bar select {
+    width: 100% !important;
+    flex: 1 1 100%;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R10 + R11
+   ════════════════════════════════════════════════════════════════ */
