@@ -128,7 +128,12 @@ function renderStock() {
     return true;
   });
 
-  document.getElementById('stockCount').textContent = `รายการทั้งหมด: ${items.length}`;
+  // [R8-A 14พค69] Legacy stockCount support (now optional — removed from HTML)
+  const sc = document.getElementById('stockCount');
+  if (sc) sc.textContent = `รายการทั้งหมด: ${items.length}`;
+
+  // [R8-A] Compute & render KPI cards (from ALL items, not filtered list)
+  try { renderStockKpiCards(); } catch (e) { console.warn('[R8-A] KPI render failed:', e); }
 
   const catBadges = { ยา:'badge-red', เวชภัณฑ์:'badge-orange', ของใช้:'badge-blue', บริการ:'badge-purple' };
   const tb = document.getElementById('stockTable');
@@ -241,6 +246,106 @@ function showLotDetail(itemId) {
   document.getElementById('lot-detail-body').innerHTML = rows;
   openModal('modal-lot-detail');
 }
+
+// ===== [R8-A 14พค69] STOCK KPI CARDS =====
+function renderStockKpiCards() {
+  const items = db.items || [];
+  const activeItems = items.filter(it => it.qty !== undefined);
+
+  // KPI 1: รายการทั้งหมด (active SKUs)
+  const total = activeItems.length;
+  const elTotal = document.getElementById('stock-kpi-total');
+  const elTotalSub = document.getElementById('stock-kpi-total-sub');
+  if (elTotal) elTotal.textContent = total.toLocaleString('th-TH');
+
+  // KPI 2: มูลค่ารวม (qty * cost)
+  let totalValue = 0;
+  activeItems.forEach(it => {
+    const cost = parseFloat(it.cost) || 0;
+    const qty = parseFloat(it.qty) || 0;
+    totalValue += cost * qty;
+  });
+  const elValue = document.getElementById('stock-kpi-value');
+  if (elValue) {
+    if (totalValue >= 1000000) elValue.textContent = '฿' + (totalValue/1000000).toFixed(2) + 'M';
+    else if (totalValue >= 1000) elValue.textContent = '฿' + Math.round(totalValue/1000) + 'k';
+    else elValue.textContent = '฿' + Math.round(totalValue).toLocaleString('th-TH');
+  }
+  const elValueSub = document.getElementById('stock-kpi-value-sub');
+  if (elValueSub) elValueSub.textContent = `ราคาทุนรวม · ${activeItems.length} SKU`;
+
+  // KPI 3: ใกล้หมด (qty <= reorder, ไม่นับ qty=0)
+  const lowCount = activeItems.filter(it => {
+    const qty = parseFloat(it.qty) || 0;
+    const reorder = parseFloat(it.reorder) || 0;
+    return qty > 0 && qty <= reorder;
+  }).length;
+  const outCount = activeItems.filter(it => (parseFloat(it.qty) || 0) === 0).length;
+  const elLow = document.getElementById('stock-kpi-low');
+  if (elLow) elLow.textContent = lowCount.toLocaleString('th-TH');
+  const elLowSub = document.getElementById('stock-kpi-low-sub');
+  if (elLowSub) {
+    if (outCount > 0) elLowSub.textContent = `ต่ำกว่าจุดสั่ง · หมดแล้ว ${outCount}`;
+    else elLowSub.textContent = 'รายการต่ำกว่าจุดสั่งซื้อ';
+  }
+
+  // KPI 4: ใกล้หมดอายุ (lots with status !== 'ok')
+  let expiringCount = 0;
+  let expiredCount = 0;
+  const lots = db.itemLots || [];
+  lots.forEach(l => {
+    if (!l.expiryDate) return;
+    if (typeof getLotStatus === 'function') {
+      const st = getLotStatus(l.expiryDate);
+      if (st === 'expired') expiredCount++;
+      else if (st === 'expiring') expiringCount++;
+    }
+  });
+  const elExp = document.getElementById('stock-kpi-expiry');
+  if (elExp) elExp.textContent = (expiringCount + expiredCount).toLocaleString('th-TH');
+  const elExpSub = document.getElementById('stock-kpi-expiry-sub');
+  if (elExpSub) {
+    if (expiredCount > 0) elExpSub.textContent = `Lot ระวัง · หมดแล้ว ${expiredCount}`;
+    else elExpSub.textContent = `Lot ที่ต้องระวัง · ${getExpiryWarnDays?.() || 30} วัน`;
+  }
+
+  // Update subtitle
+  const sub = document.getElementById('stock-header-subtitle');
+  if (sub) {
+    const updatedTime = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+    let valueStr;
+    if (totalValue >= 1000000) valueStr = '฿' + (totalValue/1000000).toFixed(2) + 'M';
+    else if (totalValue >= 1000) valueStr = '฿' + Math.round(totalValue/1000).toLocaleString('th-TH') + 'k';
+    else valueStr = '฿' + Math.round(totalValue).toLocaleString('th-TH');
+    sub.textContent = `${total} SKU · มูลค่ารวม ${valueStr} · อัปเดต ${updatedTime}`;
+  }
+}
+
+// [R8-A] Show expiring lots modal — กรองตาราง stock เป็นรายการที่มี lot ใกล้/หมดอายุ
+function showExpiringLots() {
+  const lots = db.itemLots || [];
+  const warningItemIds = new Set();
+  lots.forEach(l => {
+    if (!l.expiryDate) return;
+    if (typeof getLotStatus === 'function') {
+      const st = getLotStatus(l.expiryDate);
+      if (st === 'expired' || st === 'expiring') warningItemIds.add(l.itemId);
+    }
+  });
+
+  if (warningItemIds.size === 0) {
+    if (typeof toast === 'function') toast('ไม่มี Lot ที่ใกล้หมดอายุหรือหมดอายุ', 'success');
+    else alert('ไม่มี Lot ที่ใกล้หมดอายุหรือหมดอายุ');
+    return;
+  }
+
+  // ใช้ search box เพื่อกรอง (ใช้ technique เดียวกับ filter)
+  // เปิด lot detail ของ item แรกที่มี lot ใกล้หมด
+  const firstItemId = [...warningItemIds][0];
+  if (typeof showLotDetail === 'function') showLotDetail(firstItemId);
+}
+window.renderStockKpiCards = renderStockKpiCards;
+window.showExpiringLots = showExpiringLots;
 
 // ===== ITEM CRUD =====
 function openAddItemModal() {
