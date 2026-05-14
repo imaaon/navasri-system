@@ -4289,3 +4289,237 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R8-B
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R9-A · Patient List — Header + KPI cards + Filter bar
+   Added 14 พ.ค. 69 · Mockup: PDF Desktop p.12
+   Pattern: ตาม R8-A Stock — เพิ่มเฉพาะ hover/focus polish
+   ════════════════════════════════════════════════════════════════ */
+
+/* Patient page header */
+.patient-page-header h2 {
+  color: var(--text);
+}
+
+/* KPI cards — hover lift effect (matches R8) */
+.patient-kpi-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.patient-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.patient-kpi-card:hover [id^="pat-kpi-"] {
+  filter: brightness(0.92);
+}
+
+/* Filter bar — focus state with sage ring */
+.patient-filter-bar input[type="text"]:focus,
+.patient-filter-bar input#patSearch:focus,
+.patient-filter-bar select:focus {
+  outline: none;
+  border-color: var(--brand, #2e6b4f);
+  box-shadow: 0 0 0 2px var(--sage-100, #e6efe7);
+}
+
+.patient-filter-bar select {
+  cursor: pointer;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .patient-page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  .patient-kpi-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .patient-kpi-card {
+    padding: 10px 12px !important;
+  }
+  .patient-kpi-card div[style*="font-size:22px"] {
+    font-size: 18px !important;
+  }
+  .patient-filter-bar {
+    padding: 10px !important;
+  }
+  .patient-filter-bar input,
+  .patient-filter-bar select {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R9-A
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R9-B · Patient Table — Plex Mono columns + Avatar + Status pills
+   Added 14 พ.ค. 69 · Mockup: PDF Desktop p.13 (Patient List Table)
+   Pattern: ตาม R8-B Stock — CSS polish + JS avatar fallback
+   Columns: 1#  2Name(+Avatar)  3IDcard  4DOB  5Age  6AdmitDate  7EndDate  8Duration  9Status  10Actions
+   ════════════════════════════════════════════════════════════════ */
+
+/* Base table */
+.patient-table-r9 {
+  width: 100%;
+  border-collapse: collapse;
+}
+.patient-table-r9 thead th {
+  background: var(--sage-50, #f4f8f5);
+  color: var(--text2, #5e5e5e);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #e8e3d4);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.patient-table-r9 tbody td {
+  padding: 12px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border, #e8e3d4);
+  vertical-align: middle;
+}
+.patient-table-r9 tbody tr {
+  transition: background 0.1s;
+}
+.patient-table-r9 tbody tr:hover {
+  background: var(--sage-50, #f4f8f5);
+}
+.patient-table-r9 tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Column 1: # — mono center, gray */
+.patient-table-r9 tbody td:nth-child(1) {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 11.5px;
+  color: var(--text3, #888);
+  text-align: center;
+  width: 48px;
+}
+
+/* Column 3: เลขบัตรประชาชน — mono */
+.patient-table-r9 tbody td:nth-child(3) {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 12px;
+  color: var(--text2);
+  letter-spacing: -0.1px;
+}
+
+/* Column 4: วันเกิด — mono */
+.patient-table-r9 tbody td:nth-child(4) {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+/* Column 5: อายุ — mono right */
+.patient-table-r9 tbody td:nth-child(5) {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Column 6, 7: dates — mono */
+.patient-table-r9 tbody td:nth-child(6),
+.patient-table-r9 tbody td:nth-child(7) {
+  font-family: var(--mono, 'IBM Plex Mono', monospace);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+/* Column 8: ระยะเวลา — slight emphasis */
+.patient-table-r9 tbody td:nth-child(8) {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+/* Column 9: สถานะ — pill polish */
+.patient-table-r9 tbody td:nth-child(9) .badge,
+.patient-table-r9 tbody td:nth-child(9) .status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px !important;
+  padding: 3px 12px !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+}
+
+/* Status-based row left border indicators */
+.patient-table-r9 tbody tr.pat-status-hospital {
+  border-left: 3px solid #2980b9;
+}
+.patient-table-r9 tbody tr.pat-status-inactive {
+  border-left: 3px solid #95a5a6;
+  opacity: 0.85;
+}
+.patient-table-r9 tbody tr.pat-status-active {
+  border-left: 3px solid transparent;
+}
+
+/* Avatar fallback (initials) — Thai 2 chars, sized to match photo */
+.patient-table-r9 .pat-avatar-initials {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 2px solid;
+  user-select: none;
+}
+.patient-table-r9 .pat-avatar-active {
+  background: var(--sage-100, #e6efe7);
+  border-color: var(--brand, #2e6b4f);
+  color: var(--brand, #2e6b4f);
+}
+.patient-table-r9 .pat-avatar-hospital {
+  background: #eaf3fc;
+  border-color: #2980b9;
+  color: #1f4e7a;
+}
+.patient-table-r9 .pat-avatar-inactive {
+  background: var(--surface2, #f8f7f3);
+  border-color: #95a5a6;
+  color: #5d6d7e;
+}
+
+/* Action buttons (column 10) — tighter */
+.patient-table-r9 tbody td:last-child .btn {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.patient-table-r9 tbody td:last-child {
+  white-space: nowrap;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .patient-table-r9 thead th,
+  .patient-table-r9 tbody td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .patient-table-r9 .pat-avatar-initials {
+    width: 40px;
+    height: 40px;
+    font-size: 13px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R9-B
+   ════════════════════════════════════════════════════════════════ */

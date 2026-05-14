@@ -32,6 +32,7 @@ function _translatePatientError(error) {
 }
 
 // ===== PATIENTS =====
+// [R9-A 14พค69] renderPatients — uses KPI cards (pat-kpi-*) instead of inline patSummary
 function renderPatients() {
   const search = (document.getElementById('patSearch')?.value || '').toLowerCase();
   const statusF = document.getElementById('patStatusFilter')?.value || '';
@@ -44,17 +45,36 @@ function renderPatients() {
   );
   if (statusF) pats = pats.filter(p => p.status === statusF);
 
-  const active   = pats.filter(p => p.status === 'active').length;
-  const hospital = pats.filter(p => p.status === 'hospital').length;
-  const total    = pats.length;
+  // ── KPI counts (based on UNFILTERED full set — like dashboard) ──
+  const all = db.patients || [];
+  const totalAll    = all.length;
+  const activeAll   = all.filter(p => p.status === 'active').length;
+  const hospitalAll = all.filter(p => p.status === 'hospital').length;
+  const inactiveAll = all.filter(p => p.status === 'inactive').length;
 
+  // ── Update KPI cards ──
+  const $ = (id) => document.getElementById(id);
+  if ($('pat-kpi-total'))    $('pat-kpi-total').textContent    = totalAll.toLocaleString('th-TH');
+  if ($('pat-kpi-active'))   $('pat-kpi-active').textContent   = activeAll.toLocaleString('th-TH');
+  if ($('pat-kpi-hospital')) $('pat-kpi-hospital').textContent = hospitalAll.toLocaleString('th-TH');
+  if ($('pat-kpi-inactive')) $('pat-kpi-inactive').textContent = inactiveAll.toLocaleString('th-TH');
+
+  // ── Header subtitle (live count of filtered + filter status) ──
+  if ($('pat-header-subtitle')) {
+    const filterLabel = statusF === 'active' ? ' · กรอง: พักอยู่'
+      : statusF === 'hospital' ? ' · กรอง: อยู่โรงพยาบาล'
+      : statusF === 'inactive' ? ' · กรอง: ออกแล้ว'
+      : '';
+    const searchLabel = search ? ` · ค้นหา: "${search}"` : '';
+    $('pat-header-subtitle').textContent = `${totalAll} รายในระบบ · พักอยู่ ${activeAll} · ออกแล้ว ${inactiveAll}${filterLabel}${searchLabel}`;
+  }
+
+  // ── Table count subtitle ──
+  if ($('patCount')) $('patCount').textContent = `${pats.length} ราย · กดที่แถวเพื่อดูโปรไฟล์`;
+
+  // ── Legacy patSummary kept empty (was inline chips, replaced by KPI cards) ──
   const sumEl = document.getElementById('patSummary');
-  if (sumEl) sumEl.innerHTML = `<div style="display:flex;gap:10px;flex-wrap:wrap;">
-    <div style="background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">👥 ทั้งหมด <strong>${total}</strong> คน</div>
-    <div style="background:var(--green-light);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">✅ พักอยู่ <strong>${active}</strong> คน</div>
-    ${hospital ? `<div style="background:#EBF5FB;border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">🏥 อยู่โรงพยาบาล <strong>${hospital}</strong> คน</div>` : ''}
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;">🚪 ออกแล้ว <strong>${total-active-hospital}</strong> คน</div>
-  </div>`;
+  if (sumEl) sumEl.innerHTML = '';
 
   const tb = document.getElementById('patTable');
   if (pats.length === 0) {
@@ -63,28 +83,52 @@ function renderPatients() {
   }
   tb.innerHTML = pats.map((p, i) => {
     const idcard = p.idcard || p.idCard || '-';
+    // [R9-B] Format เลขบัตรประชาชน: 1234567890123 → 1-2345-67890-12-3
+    const idcardFmt = (idcard && idcard !== '-' && idcard.replace(/\D/g, '').length === 13)
+      ? idcard.replace(/\D/g, '').replace(/(\d{1})(\d{4})(\d{5})(\d{2})(\d{1})/, '$1-$2-$3-$4-$5')
+      : idcard;
     const age    = p.dob ? calcAge(p.dob) : '-';
     const dur    = p.admitDate ? calcDuration(p.admitDate, p.endDate) : '-';
     const isActive = p.status === 'active';
-    return `<tr>
-      <td data-label="#" class="number" style="color:var(--text3);">${i+1}</td>
+
+    // [R9-B] Avatar initials — Thai 2 chars from name (e.g. "สมหญิง พิทักษ์" → "สห")
+    const nameTrim = (p.name || '').trim();
+    const nameParts = nameTrim.split(/\s+/);
+    const initials = nameParts.length >= 2
+      ? (nameParts[0].charAt(0) + nameParts[1].charAt(0))
+      : nameTrim.substring(0, 2);
+
+    // [R9-B] Row class + avatar tone based on status
+    const rowClass = p.status === 'hospital' ? 'pat-status-hospital'
+      : p.status === 'inactive' ? 'pat-status-inactive'
+      : 'pat-status-active';
+    const avatarToneClass = p.status === 'hospital' ? 'pat-avatar-hospital'
+      : p.status === 'inactive' ? 'pat-avatar-inactive'
+      : 'pat-avatar-active';
+
+    // [R9-B] HN line (under name)
+    const hn = p.hn || '';
+    const subLine = hn ? `HN ${hn}` : (p.position || '');
+
+    return `<tr class="${rowClass}">
+      <td data-label="#">${i+1}</td>
       <td data-label="ชื่อ-นามสกุล">
         <div style="display:flex;align-items:center;gap:10px;">
           ${p.photo
             ? `<img src="${p.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--sage);cursor:zoom-in;flex-shrink:0;" onclick=\"showPatientPhoto('${p.id}')\" title="คลิกเพื่อขยาย">`
-            : `<div style="width:52px;height:52px;border-radius:50%;background:var(--sage-light);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;cursor:pointer;" onclick=\"editPatient('${p.id}')\" title="เพิ่มรูปภาพ">👤</div>`}
+            : `<div class="pat-avatar-initials ${avatarToneClass}" onclick=\"editPatient('${p.id}')\" title="เพิ่มรูปภาพ">${initials}</div>`}
           <div>
             <div style="font-weight:600;cursor:pointer;color:var(--accent);line-height:1.3;" onclick=\"openPatientProfile('${p.id}')\">${p.name}</div>
-            <div style="font-size:11px;color:var(--text3);">${p.position||''}</div>
+            <div style="font-size:11px;color:var(--text3);">${subLine}</div>
           </div>
         </div>
       </td>
-      <td data-label="เลขบัตรประชาชน" class="number" style="font-size:12px;color:var(--text2);">${idcard}</td>
-      <td data-label="วันเกิด" class="number" style="font-size:12px;">${p.dob||'-'}</td>
-      <td data-label="อายุ" style="font-size:12px;">${age}</td>
-      <td data-label="วันเข้ารับบริการ" class="number" style="font-size:12px;">${p.admitDate||p.admit_date||'-'}</td>
-      <td data-label="วันสิ้นสุดสัญญา" class="number" style="font-size:12px;">${p.endDate||p.end_date||'-'}</td>
-      <td data-label="ระยะเวลา" style="font-size:12px;color:var(--text2);">${dur}</td>
+      <td data-label="เลขบัตรประชาชน">${idcardFmt}</td>
+      <td data-label="วันเกิด">${p.dob||'—'}</td>
+      <td data-label="อายุ">${age}</td>
+      <td data-label="วันเข้ารับบริการ">${p.admitDate||p.admit_date||'—'}</td>
+      <td data-label="วันสิ้นสุดสัญญา">${p.endDate||p.end_date||'—'}</td>
+      <td data-label="ระยะเวลา">${dur}</td>
       <td data-label="สถานะ"><span class="badge ${p.status==='active' ? 'badge-green' : p.status==='hospital' ? 'badge-blue' : 'badge-gray'}">${p.status==='active' ? 'พักอยู่' : p.status==='hospital' ? '🏥 อยู่ รพ.' : 'ออกแล้ว'}</span></td>
       <td data-label="" style="white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" onclick=\"openPatientProfile('${p.id}')\" title="ดูโปรไฟล์">🔍</button>
