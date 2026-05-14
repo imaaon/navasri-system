@@ -4164,3 +4164,128 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R7-B
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R8-A · Stock List — Header + KPI cards + Filter bar
+   Added 14 พ.ค. 69 · Mockup: PDF Desktop p.29
+   Pattern: ตาม R7-A Billing — เพิ่มเฉพาะ hover/focus polish
+   ════════════════════════════════════════════════════════════════ */
+
+/* Stock page header — same pattern as billing-page-header */
+.stock-page-header h2 {
+  color: var(--text);
+}
+
+/* KPI cards — hover lift effect (matches R7) */
+.stock-kpi-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.stock-kpi-card[style*="cursor:pointer"]:hover,
+.stock-kpi-card[style*="cursor: pointer"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* KPI value text — slight emphasis on hover (clickable cards only) */
+.stock-kpi-card[style*="cursor:pointer"]:hover [id^="stock-kpi-"] {
+  filter: brightness(0.92);
+}
+
+/* Filter bar polish — focus state */
+.stock-filter-bar input[type="text"]:focus,
+.stock-filter-bar input#stockSearch:focus,
+.stock-filter-bar select:focus {
+  outline: none;
+  border-color: var(--brand, #2e6b4f);
+  box-shadow: 0 0 0 2px var(--sage-100, #e6efe7);
+}
+
+/* Filter bar dropdowns — cursor on hover */
+.stock-filter-bar select {
+  cursor: pointer;
+}
+
+/* Expiry warn input — mono font + accent on focus */
+#stk-expiry-warn:focus {
+  outline: none;
+  border-color: var(--brand, #2e6b4f);
+  box-shadow: 0 0 0 2px var(--sage-100, #e6efe7);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R8-A
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R8-B · Stock Table polish
+   Added 14 พ.ค. 69 · Mockup: PDF Desktop p.29-30
+   Pattern: ตาม R7-B Billing table — Plex Mono + status pill + indicator
+   ════════════════════════════════════════════════════════════════ */
+
+/* Cleaner header — small caps tone */
+.stock-table-r8 thead th {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: var(--text2);
+  background: var(--surface2, #f8f9fa);
+  border-bottom: 2px solid var(--border);
+  padding: 10px 12px;
+  white-space: nowrap;
+}
+
+/* Cell baseline — taller rows for readability */
+.stock-table-r8 tbody td {
+  padding: 12px 12px;
+  vertical-align: middle;
+}
+
+/* Row name (col 3) — slight emphasis */
+.stock-table-r8 tbody tr.stock-row-r8 td:nth-child(3) {
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
+
+/* Status pill (col 11) — bullet-proof rounded pill via existing badge */
+.stock-table-r8 tbody tr.stock-row-r8 td:nth-child(11) > span.badge {
+  border-radius: 999px !important;
+  padding: 3px 12px !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Critical (qty=0) row — left border indicator + subtle bg */
+.stock-table-r8 tbody tr.stock-row-r8.critical-stock {
+  border-left: 3px solid #c0392b;
+  background: #fff8f8;
+}
+
+/* Low stock row — gentle amber tint + left border */
+.stock-table-r8 tbody tr.stock-row-r8.low-stock {
+  border-left: 3px solid #e67e22;
+  background: #fffdf6;
+}
+
+/* Action buttons (last col) — slightly tighter */
+.stock-table-r8 tbody td:last-child .btn {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* Smooth row hover */
+.stock-table-r8 tbody tr.stock-row-r8:hover {
+  background: var(--sage-50, #f4f8f5) !important;
+}
+.stock-table-r8 tbody tr.stock-row-r8.critical-stock:hover {
+  background: #fff0f0 !important;
+}
+.stock-table-r8 tbody tr.stock-row-r8.low-stock:hover {
+  background: #fff8e8 !important;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R8-B
+   ════════════════════════════════════════════════════════════════ */

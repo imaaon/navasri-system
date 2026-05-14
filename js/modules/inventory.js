@@ -109,10 +109,89 @@ function _doPrintBarcode(code, name) {
   win.document.close();
 }
 
+// ── [R8-A 14พค69] Stock KPI summary — 4 cards ตาม mockup PDF p.29 ──
+// คำนวณ: รายการทั้งหมด · มูลค่ารวม (qty × cost) · ใกล้หมด (qty ≤ reorder, qty > 0) · Lot ใกล้หมดอายุ
+function renderStockKPI() {
+  if (!db.items) return;
+  const items = db.items;
+
+  // 1. รายการทั้งหมด — นับเฉพาะ active (qty >= 0 = all valid items)
+  const totalSku = items.length;
+  // active = ใช้งานอยู่ (qty > 0 หรือเคยมี qty) · ปิด = qty=0 และ never received
+  // ใช้ simple count: ทั้งหมด vs qty > 0
+  const activeSku = items.filter(it => (it.qty || 0) > 0).length;
+
+  // 2. มูลค่ารวม = sum(qty × cost)
+  let totalValue = 0;
+  items.forEach(it => {
+    const qty = Number(it.qty) || 0;
+    const cost = Number(it.cost) || 0;
+    totalValue += qty * cost;
+  });
+
+  // 3. ใกล้หมด = qty > 0 และ qty ≤ reorder (ไม่นับ qty=0 — นั่นคือ "หมดแล้ว")
+  const lowCount = items.filter(it => {
+    const qty = Number(it.qty) || 0;
+    const reorder = Number(it.reorder) || 0;
+    return qty > 0 && qty <= reorder;
+  }).length;
+  const outCount = items.filter(it => (Number(it.qty) || 0) === 0).length;
+
+  // 4. Lot ใกล้หมดอายุ — ใช้ getLotStatus จาก db.js (รวม expiring + expired)
+  let nearExpiryCount = 0;
+  if (typeof getLotsForItem === 'function' && typeof getLotStatus === 'function') {
+    items.forEach(it => {
+      const lots = getLotsForItem(it.id) || [];
+      lots.forEach(l => {
+        const status = getLotStatus(l.expiryDate);
+        if (status === 'expiring' || status === 'expired') nearExpiryCount++;
+      });
+    });
+  }
+
+  // เขียนค่าไปยัง DOM (use document.getElementById — fail-safe ถ้า element ยังไม่โหลด)
+  const $ = (id) => document.getElementById(id);
+  const formatBaht = (v) => {
+    if (v >= 1000000) return '฿' + (v / 1000000).toFixed(2) + 'M';
+    if (v >= 1000) return '฿' + (v / 1000).toFixed(1) + 'k';
+    return '฿' + v.toLocaleString('th-TH', { maximumFractionDigits: 0 });
+  };
+
+  if ($('stock-kpi-total')) $('stock-kpi-total').textContent = totalSku.toLocaleString('th-TH');
+  if ($('stock-kpi-total-sub')) $('stock-kpi-total-sub').textContent = `SKU · ใช้งาน ${activeSku}`;
+
+  if ($('stock-kpi-value')) $('stock-kpi-value').textContent = formatBaht(totalValue);
+  if ($('stock-kpi-value-sub')) $('stock-kpi-value-sub').textContent = 'ราคาทุนรวม';
+
+  if ($('stock-kpi-low')) $('stock-kpi-low').textContent = lowCount.toLocaleString('th-TH');
+  if ($('stock-kpi-low-sub')) {
+    const txt = outCount > 0 ? `รายการ · หมดแล้ว ${outCount}` : 'รายการต่ำกว่าจุดสั่งซื้อ';
+    $('stock-kpi-low-sub').textContent = txt;
+  }
+
+  if ($('stock-kpi-expiry')) $('stock-kpi-expiry').textContent = nearExpiryCount.toLocaleString('th-TH');
+  if ($('stock-kpi-expiry-sub')) {
+    const days = (db.billingSettings && db.billingSettings.expiryWarnDays) || 30;
+    $('stock-kpi-expiry-sub').textContent = `Lot · ภายใน ${days} วัน`;
+  }
+
+  // Update header subtitle
+  if ($('stock-header-subtitle')) {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    $('stock-header-subtitle').textContent = `${totalSku} รายการ · มูลค่ารวม ${formatBaht(totalValue)} · อัปเดต ${hh}:${mm} น.`;
+  }
+}
+window.renderStockKPI = renderStockKPI;
+
 function renderStock() {
   // Bug C fix: load expiry warn days setting (idempotent, fast)
   loadExpiryWarnDaysUI();
-  
+
+  // [R8-A] Refresh KPI cards every time stock list re-renders
+  try { renderStockKPI(); } catch(e) { console.warn('[renderStockKPI]', e); }
+
   const search = (document.getElementById('stockSearch')?.value || '').toLowerCase();
   const catFilter = document.getElementById('stockCatFilter')?.value || '';
   const statusFilter = document.getElementById('stockStatusFilter')?.value || '';
@@ -128,7 +207,9 @@ function renderStock() {
     return true;
   });
 
-  document.getElementById('stockCount').textContent = `รายการทั้งหมด: ${items.length}`;
+  // [R8-A 14พค69] Legacy stockCount support (now optional — removed from HTML)
+  const sc = document.getElementById('stockCount');
+  if (sc) sc.textContent = `รายการทั้งหมด: ${items.length}`;
 
   const catBadges = { ยา:'badge-red', เวชภัณฑ์:'badge-orange', ของใช้:'badge-blue', บริการ:'badge-purple' };
   const tb = document.getElementById('stockTable');
@@ -182,24 +263,24 @@ function renderStock() {
       } catch(e) { barcodeSvg = ''; }
     }
 
-    return `<tr class="${rowClass}">
-      <td style="color:var(--text3);font-size:12px;" class="number">${i+1}</td>
+    return `<tr class="${rowClass} stock-row-r8">
+      <td style="color:var(--text3);font-size:12px;font-family:var(--mono,monospace);text-align:center;">${i+1}</td>
       <td style="padding:6px 8px;">${photoEl}</td>
       <td style="font-weight:600;">${item.name}<br>${billableBadge}</td>
       <td>
         ${barcodeSvg ? `<div style="line-height:0;">${barcodeSvg}</div>` : ''}
-        <span style="font-family:monospace;font-size:10px;color:var(--text3);">${item.barcode||'—'}</span>
+        <span style="font-family:var(--mono,monospace);font-size:10px;color:var(--text3);">${item.barcode||'—'}</span>
       </td>
       <td><span class="badge ${catBadges[item.category]||'badge-gray'}">${item.category}</span></td>
       <td>
-        <div class="number" style="font-weight:600;">${item.qty}</div>
-        <div class="stock-bar" style="width:80px;"><div class="stock-fill" style="width:${pct}%;background:${fillColor};"></div></div>
+        <div style="font-weight:700;font-family:var(--mono,monospace);font-size:14px;letter-spacing:-0.3px;">${item.qty}</div>
+        <div class="stock-bar" style="width:80px;margin-top:3px;"><div class="stock-fill" style="width:${pct}%;background:${fillColor};"></div></div>
       </td>
       <td>${unitTxt}</td>
-      <td class="number" style="color:var(--text2);">${item.reorder}</td>
-      <td class="number" style="font-size:12px;color:var(--text2);">${item.cost > 0 ? item.cost.toLocaleString('th-TH',{minimumFractionDigits:2}) : '-'}</td>
-      <td class="number" style="font-size:12px;color:var(--text2);">${item.price > 0 ? item.price.toLocaleString('th-TH',{minimumFractionDigits:2}) : '-'}</td>
-      <td>${statusBadge}${lotBadge ? '<br>'+lotBadge : ''}</td>
+      <td style="font-family:var(--mono,monospace);font-size:13px;color:var(--text2);text-align:right;">${item.reorder}</td>
+      <td style="font-family:var(--mono,monospace);font-size:13px;color:var(--text2);text-align:right;">${item.cost > 0 ? item.cost.toLocaleString('th-TH',{minimumFractionDigits:2}) : '—'}</td>
+      <td style="font-family:var(--mono,monospace);font-size:13px;color:var(--text2);text-align:right;">${item.price > 0 ? item.price.toLocaleString('th-TH',{minimumFractionDigits:2}) : '—'}</td>
+      <td style="white-space:nowrap;">${statusBadge}${lotBadge ? '<br><span style="display:inline-block;margin-top:3px;">'+lotBadge+'</span>' : ''}</td>
       <td style="white-space:nowrap;">
         <button class="btn btn-sm" onclick="openReceiveForItem('${item.id}')" style="background:var(--sage);color:#fff;margin-right:4px;" title="รับสินค้าเข้า">➕ รับ</button>
         <button class="btn btn-ghost btn-sm" onclick="editItem('${item.id}')" style="margin-right:4px;" title="แก้ไข">✏️</button>
@@ -241,6 +322,32 @@ function showLotDetail(itemId) {
   document.getElementById('lot-detail-body').innerHTML = rows;
   openModal('modal-lot-detail');
 }
+
+// ===== [R8-A] Show expiring lots modal — กรองตาราง stock เป็นรายการที่มี lot ใกล้/หมดอายุ =====
+// Note: renderStockKpiCards (เก่า) ลบออกแล้ว — ใช้ renderStockKPI() ที่บรรทัด ~114 แทน
+function showExpiringLots() {
+  const lots = db.itemLots || [];
+  const warningItemIds = new Set();
+  lots.forEach(l => {
+    if (!l.expiryDate) return;
+    if (typeof getLotStatus === 'function') {
+      const st = getLotStatus(l.expiryDate);
+      if (st === 'expired' || st === 'expiring') warningItemIds.add(l.itemId);
+    }
+  });
+
+  if (warningItemIds.size === 0) {
+    if (typeof toast === 'function') toast('ไม่มี Lot ที่ใกล้หมดอายุหรือหมดอายุ', 'success');
+    else alert('ไม่มี Lot ที่ใกล้หมดอายุหรือหมดอายุ');
+    return;
+  }
+
+  // ใช้ search box เพื่อกรอง (ใช้ technique เดียวกับ filter)
+  // เปิด lot detail ของ item แรกที่มี lot ใกล้หมด
+  const firstItemId = [...warningItemIds][0];
+  if (typeof showLotDetail === 'function') showLotDetail(firstItemId);
+}
+window.showExpiringLots = showExpiringLots;
 
 // ===== ITEM CRUD =====
 function openAddItemModal() {

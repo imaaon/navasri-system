@@ -421,62 +421,119 @@
 
       <!-- STOCK -->
       <div id="page-stock" style="display:none;">
-        <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center;flex-wrap:wrap;">
-          <div class="search-wrap" style="flex:1;min-width:200px;">
-            <span class="search-icon">🔍</span>
-            <input class="form-control" id="stockSearch" placeholder="ค้นหารายการสินค้า..." oninput="renderStock()">
+        <!-- [R8-A 14พค69] Section header — ตาม R7 style -->
+        <div class="stock-page-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:24px;">📦</span> คลังสต็อก
+            </h2>
+            <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="stock-header-subtitle">รายการสินค้าทั้งหมด · มูลค่ารวม · อัปเดตล่าสุด</div>
           </div>
-          <select class="form-control" id="stockCatFilter" style="width:160px;" onchange="renderStock()">
-            <option value="">ทุกประเภท</option>
-            <option value="ยา">ยา</option>
-            <option value="เวชภัณฑ์">เวชภัณฑ์</option>
-            <option value="ของใช้">ของใช้</option>
-            <option value="บริการ">บริการ</option>
-          </select>
-          <select class="form-control" id="stockStatusFilter" style="width:150px;" onchange="renderStock()">
-            <option value="">ทุกสถานะ</option>
-            <option value="low">ใกล้หมด</option>
-            <option value="out">หมดแล้ว</option>
-            <option value="ok">ปกติ</option>
-          </select>
-          <button class="btn btn-primary" onclick="openAddItemModal()">+ เพิ่มรายการ</button>
-          <button class="btn btn-secondary" onclick="openReceiveModal()">📥 รับสินค้าเข้า</button>
-          <button class="btn btn-ghost" onclick="showPage('requisition')">+ เบิกสินค้า</button>
-          <button class="btn btn-ghost" onclick="exportInventoryExcel()" title="ส่งออก Excel">📥 Excel</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="openAddItemModal()" style="white-space:nowrap;">+ เพิ่มสินค้าใหม่</button>
+            <button class="btn btn-ghost btn-sm" onclick="openReceiveModal()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">📥 รับเข้าสินค้า</button>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('requisition')" style="white-space:nowrap;">📋 เบิกสินค้า</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportInventoryExcel()" style="white-space:nowrap;" title="ส่งออก Excel">📥 Excel</button>
+          </div>
         </div>
 
-        <!-- Expiry warn setting (Bug C fix — moved from billing settings) -->
-        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:16px;background:rgba(46,196,182,0.08);border:0.5px solid rgba(46,196,182,0.4);border-radius:8px;width:fit-content;">
-          <span style="font-size:14px;color:var(--accent);">⏰</span>
-          <span style="font-size:13px;color:var(--accent);font-weight:600;">แจ้งเตือนยาใกล้หมดอายุล่วงหน้า:</span>
-          <input id="stk-expiry-warn" type="number" min="1" max="365" value="30" class="form-control" 
-                 style="width:70px;height:28px;padding:4px 8px;font-size:13px;"
-                 onblur="saveExpiryWarnDays()" 
+        <!-- [R8-A] Section: ภาพรวมคลัง -->
+        <div style="display:flex;align-items:center;gap:8px;margin:4px 4px 10px 4px;">
+          <span style="font-size:16px;">📊</span>
+          <h3 style="font-size:13px;font-weight:700;margin:0;letter-spacing:-0.2px;color:var(--text);">ภาพรวมคลัง</h3>
+        </div>
+
+        <!-- [R8-A] KPI Cards — 4 cards ตาม mockup page 29 -->
+        <div class="stock-kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px;">
+          <!-- 1. รายการทั้งหมด -->
+          <div class="stock-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--brand,#2e6b4f);border-radius:12px;padding:14px 16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="font-size:12px;color:var(--text2);font-weight:500;">📦 รายการทั้งหมด</div>
+              <span style="font-size:18px;opacity:0.4;">📦</span>
+            </div>
+            <div id="stock-kpi-total" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--brand,#2e6b4f);">0</div>
+            <div id="stock-kpi-total-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">SKU</div>
+          </div>
+          <!-- 2. มูลค่ารวม -->
+          <div class="stock-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid #5e60ce;border-radius:12px;padding:14px 16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="font-size:12px;color:var(--text2);font-weight:500;">💰 มูลค่ารวม</div>
+              <span style="font-size:18px;opacity:0.4;">💰</span>
+            </div>
+            <div id="stock-kpi-value" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#3d3d9e;">฿0</div>
+            <div id="stock-kpi-value-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">ราคาทุนรวม</div>
+          </div>
+          <!-- 3. ใกล้หมด ต้องสั่ง -->
+          <div class="stock-kpi-card" style="background:#fdf3e8;border:1px solid #f5c842;border-left:3px solid #e67e22;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('stockStatusFilter').value='low';renderStock()" title="กรองดูเฉพาะรายการที่ใกล้หมด">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="font-size:12px;color:#7a4310;font-weight:500;">⚠️ ใกล้หมด · ต้องสั่ง</div>
+              <span style="font-size:18px;opacity:0.4;">⚠️</span>
+            </div>
+            <div id="stock-kpi-low" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#d35400;">0</div>
+            <div id="stock-kpi-low-sub" style="font-size:11px;color:#7a4310;margin-top:3px;">รายการต่ำกว่าจุดสั่งซื้อ</div>
+          </div>
+          <!-- 4. ใกล้หมดอายุ -->
+          <div class="stock-kpi-card" style="background:#fde8e8;border:1px solid #f5a3a3;border-left:3px solid #c0392b;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="showExpiringLots()" title="ดูรายการ Lot ที่ใกล้หมดอายุ">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="font-size:12px;color:#7a1a10;font-weight:500;">📅 ใกล้หมดอายุ</div>
+              <span style="font-size:18px;opacity:0.4;">📅</span>
+            </div>
+            <div id="stock-kpi-expiry" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#c0392b;">0</div>
+            <div id="stock-kpi-expiry-sub" style="font-size:11px;color:#7a1a10;margin-top:3px;">Lot ที่ต้องระวัง</div>
+          </div>
+        </div>
+
+        <!-- [R8-A] Filter bar — refreshed -->
+        <div class="stock-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+          <input class="form-control" id="stockSearch" placeholder="ค้นหารหัส / ชื่อสินค้า / barcode..." oninput="renderStock()" style="flex:1;min-width:220px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select class="form-control" id="stockCatFilter" onchange="renderStock()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">หมวด: ทั้งหมด</option>
+            <option value="ยา">💊 ยา</option>
+            <option value="เวชภัณฑ์">🩹 เวชภัณฑ์</option>
+            <option value="ของใช้">🧴 ของใช้</option>
+            <option value="บริการ">🛎 บริการ</option>
+          </select>
+          <select class="form-control" id="stockStatusFilter" onchange="renderStock()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+            <option value="">สถานะ: ทั้งหมด</option>
+            <option value="low">⚠️ ใกล้หมด</option>
+            <option value="out">🚫 หมดแล้ว</option>
+            <option value="ok">✅ ปกติ</option>
+          </select>
+        </div>
+
+        <!-- [R8-A] Expiry warn setting — compact strip ใต้ filter bar (kept Bug C fix logic) -->
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;margin-bottom:14px;background:var(--sage-50,#f4f8f5);border:1px solid var(--sage-200,#dbe5dc);border-radius:8px;width:fit-content;">
+          <span style="font-size:13px;">⏰</span>
+          <span style="font-size:12px;color:var(--brand,#2e6b4f);font-weight:600;">แจ้งเตือนยาใกล้หมดอายุล่วงหน้า:</span>
+          <input id="stk-expiry-warn" type="number" min="1" max="365" value="30"
+                 style="width:60px;height:24px;padding:2px 6px;font-size:12px;border:1px solid var(--sage-200,#dbe5dc);border-radius:4px;background:white;font-family:var(--mono,monospace);"
+                 onblur="saveExpiryWarnDays()"
                  onkeydown="if(event.key==='Enter') this.blur();"
                  title="แจ้งเตือนยาใกล้หมดอายุล่วงหน้า (วัน)">
-          <span style="font-size:13px;color:var(--accent);">วัน</span>
-          <span style="font-size:11px;color:var(--text3);margin-left:8px;">(แก้ค่าแล้วคลิกออก = บันทึกอัตโนมัติ)</span>
+          <span style="font-size:12px;color:var(--brand,#2e6b4f);">วัน</span>
+          <span style="font-size:11px;color:var(--text3);margin-left:4px;">· บันทึกอัตโนมัติเมื่อคลิกออก</span>
         </div>
 
         <div class="card">
           <div class="card-header">
-            <div class="card-title">คลังสต็อกสินค้า</div>
+            <div class="card-title">รายการสินค้า</div>
             <div style="font-size:12px;color:var(--text2);" id="stockCount">รายการทั้งหมด: 0</div>
           </div>
           <div class="table-wrap">
-            <table>
+            <table class="stock-table-r8">
               <thead>
                 <tr>
-                  <th>#</th>
+                  <th style="text-align:center;width:48px;">#</th>
                   <th style="width:56px;">รูป</th>
                   <th>ชื่อรายการ</th>
                   <th>รหัสบาร์โค้ด</th>
                   <th>ประเภท</th>
                   <th>คงเหลือ</th>
                   <th>หน่วย</th>
-                  <th>จุดสั่งซื้อ</th>
-                  <th style="white-space:nowrap;">ราคาซื้อ (฿)</th>
-                  <th style="white-space:nowrap;">ราคาขาย (฿)</th>
+                  <th style="text-align:right;">จุดสั่งซื้อ</th>
+                  <th style="white-space:nowrap;text-align:right;">ราคาซื้อ (฿)</th>
+                  <th style="white-space:nowrap;text-align:right;">ราคาขาย (฿)</th>
                   <th>สถานะ</th>
                   <th>จัดการ</th>
                 </tr>
