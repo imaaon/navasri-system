@@ -3520,3 +3520,217 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END OF R3 MOBILE MODAL CSS
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R4 P1 · PATIENT PROFILE — Header Card + Breadcrumb + Allergy Banner
+   14 พ.ค. 2569
+   ════════════════════════════════════════════════════════════════ */
+
+/* Breadcrumb */
+.patprofile-breadcrumb button:hover {
+  background: var(--sage-50, #f0f5f1) !important;
+}
+
+/* Header card hover effect on action buttons handled by .btn rules */
+.patprofile-header-card .btn-ghost:hover {
+  background: var(--sage-50, #f0f5f1);
+}
+
+/* Allergy banner — animation on appearance + hover feedback */
+.patprofile-allergy-banner {
+  animation: r4-allergy-fade-in 0.3s ease-out;
+}
+@keyframes r4-allergy-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* === Desktop: ซ่อน left column เดิม (info จะอยู่บน header card) === */
+@media (min-width: 901px) {
+  .patprofile-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .patprofile-left-col {
+    display: none !important;
+  }
+}
+
+/* === Mobile (≤900px) === */
+@media (max-width: 900px) {
+  .patprofile-breadcrumb {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  .patprofile-header-card {
+    padding: 16px 16px !important;
+    gap: 12px !important;
+  }
+  .patprofile-header-card .patprofile-header-avatar > * {
+    width: 64px !important;
+    height: 64px !important;
+    font-size: 22px !important;
+  }
+  .patprofile-header-info h2 {
+    font-size: 18px !important;
+  }
+  .patprofile-header-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+    font-size: 12px !important;
+    gap: 6px 14px !important;
+  }
+  .patprofile-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .patprofile-header-actions .btn {
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  /* บน mobile ใช้ legacy left-col + ซ่อน new header (mobile-header เดิมยังใช้ได้) */
+  .patprofile-header-card {
+    display: none;
+  }
+  .patprofile-breadcrumb {
+    display: none;
+  }
+  .patprofile-allergy-banner {
+    padding: 10px 12px !important;
+    font-size: 12px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R4 P1 PATIENT PROFILE
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R4 P2 · PATIENT PROFILE — Tabs Pills + Count Badges
+   ════════════════════════════════════════════════════════════════ */
+
+/* Patient profile tabs container — clean underline style */
+.patprofile-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border, #e8e3d4);
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 0;
+  margin-bottom: 16px;
+  scrollbar-width: thin;
+}
+.patprofile-tabs::-webkit-scrollbar {
+  height: 6px;
+}
+.patprofile-tabs::-webkit-scrollbar-thumb {
+  background: var(--sage-200, #dbe5dc);
+  border-radius: 3px;
+}
+
+/* Each tab — pill style with bottom underline on active */
+.patprofile-tabs .tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text2, #5e5e5e);
+  cursor: pointer;
+  white-space: nowrap;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+  position: relative;
+}
+.patprofile-tabs .tab:hover {
+  color: var(--brand, #2e6b4f);
+  background: var(--sage-50, #f4f8f5);
+}
+.patprofile-tabs .tab.active {
+  color: var(--brand, #2e6b4f);
+  font-weight: 600;
+  border-bottom-color: var(--brand, #2e6b4f);
+  background: transparent;
+}
+.patprofile-tab-icon {
+  font-size: 15px;
+  margin-right: 6px;
+}
+.patprofile-tab-label {
+  display: inline;
+}
+
+/* Active tab — count badge gets brand color */
+.patprofile-tabs .tab.active .patprofile-tab-count {
+  filter: brightness(0.98);
+}
+
+/* Mobile grid badge — already in inline styles, just position fine-tune */
+.pat-app-btn .pat-app-badge {
+  z-index: 1;
+}
+
+/* === Mobile responsive === */
+@media (max-width: 900px) {
+  .patprofile-tabs {
+    display: none; /* mobile ใช้ grid แทน */
+  }
+  .patprofile-tabs .tab {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+  .patprofile-tab-label {
+    font-size: 12px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R4 P2
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R4 P3 · PATIENT PROFILE — Tab Content (History + Medical)
+   ════════════════════════════════════════════════════════════════ */
+
+.patprofile-info-card {
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+@media (max-width: 900px) {
+  .patprofile-info-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    font-size: 13px !important;
+  }
+  .patprofile-info-card {
+    padding: 14px 16px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R4 P3
+   ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R4 P4 · PATIENT PROFILE — Meds + Allergy + Contacts
+   ════════════════════════════════════════════════════════════════ */
+
+.patprofile-contact-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+  .patprofile-contact-card {
+    padding: 12px 14px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R4 P4
+   ════════════════════════════════════════════════════════════════ */

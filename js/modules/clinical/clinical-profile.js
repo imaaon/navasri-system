@@ -24,6 +24,50 @@ async function openPatientProfile(id, activeTab) {
   const pid = String(id);
 
   document.getElementById('patprofile-content').innerHTML = `
+  <!-- [R4 P1 14พค69] Breadcrumb -->
+  <div class="patprofile-breadcrumb" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:13px;color:var(--text2);">
+    <button onclick="showPage('patients')" style="background:transparent;border:none;color:var(--brand);font-size:13px;font-weight:500;cursor:pointer;padding:4px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;">← กลับ</button>
+    <span style="opacity:0.5;">ผู้รับบริการ</span>
+    <span style="opacity:0.5;">/</span>
+    <span style="font-weight:600;color:var(--text);">${p.name}</span>
+  </div>
+
+  <!-- [R4 P1 14พค69] Horizontal Header Card -->
+  <div class="patprofile-header-card" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:14px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+    <!-- Avatar -->
+    <div class="patprofile-header-avatar" style="flex-shrink:0;">
+      ${(p.photo||"") ? `<img src="${p.photo}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:2px solid var(--sage-200,#dbe5dc);">` : `<div style="width:88px;height:88px;border-radius:50%;background:var(--sage-100,#eaf1eb);color:var(--brand,#2e6b4f);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;letter-spacing:-1px;border:2px solid var(--sage-200,#dbe5dc);">${(p.name||'?').trim().split(/\s+/).slice(0,2).map(s=>s.charAt(0)).join('')}</div>`}
+    </div>
+
+    <!-- Name + status + info grid -->
+    <div class="patprofile-header-info" style="flex:1;min-width:240px;">
+      <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+        <h2 style="font-size:22px;font-weight:700;letter-spacing:-0.5px;margin:0;">${p.name}</h2>
+        <span class="badge ${isActive ? 'badge-green' : p.status==='hospital' ? 'badge-blue' : 'badge-gray'}" style="font-size:12px;padding:3px 12px;border-radius:999px;font-weight:600;">${isActive ? '🏠 พักอยู่' : p.status==='hospital' ? '🏥 อยู่ รพ.' : '🚪 ออกแล้ว'}</span>
+        ${(() => { const bed = getPatientBed(p); const room = getPatientRoom(p); if (!bed) return ''; return `<span style="font-size:13px;color:var(--text2);">${room?.name||''}${bed.bedCode?' · เตียง '+bed.bedCode:''}</span>`; })()}
+        <span style="font-size:13px;color:var(--text2);font-family:var(--mono,monospace);">HN ${p.hn||p.id||'-'}</span>
+      </div>
+      <div class="patprofile-header-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 24px;font-size:13px;color:var(--text2);">
+        ${p.gender ? `<div><span style="opacity:0.75;">เพศ </span><strong style="color:var(--text);">${p.gender}</strong></div>` : ''}
+        ${p.dob ? `<div><span style="opacity:0.75;">อายุ </span><strong style="color:var(--text);">${age} ปี</strong></div>` : ''}
+        ${idcard !== '-' ? `<div><span style="opacity:0.75;">เลขบัตร </span><strong style="color:var(--text);font-family:var(--mono,monospace);font-size:12px;">${idcard}</strong></div>` : ''}
+        ${p.admitDate ? `<div><span style="opacity:0.75;">เข้าเมื่อ </span><strong style="color:var(--text);">${p.admitDate}</strong></div>` : ''}
+        ${p.endDate ? `<div><span style="opacity:0.75;">สัญญา </span><strong style="color:var(--text);">${p.endDate}</strong></div>` : ''}
+        ${dur !== '-' ? `<div><span style="opacity:0.75;">ระยะเวลา </span><strong style="color:var(--text);">${dur}</strong></div>` : ''}
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="patprofile-header-actions" style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="openHealthReportModal('${p.id}')" style="white-space:nowrap;">🖨️ พิมพ์</button>
+      <button class="btn btn-ghost btn-sm" onclick="openPatientContractsModal('${p.id}','${(p.name||'').replace(/'/g, "\\'")}')" style="white-space:nowrap;">📋 แพ็กเกจ</button>
+      <button class="btn btn-primary btn-sm" onclick="editPatient('${p.id}')" style="white-space:nowrap;">✏️ แก้ไข</button>
+    </div>
+  </div>
+
+  <!-- [R4 P1 14พค69] Allergy banner ใต้ header (ถ้ามี) -->
+  ${renderAllergyBanner(p)}
+
   <!-- Mobile-only compact header (ซ่อนบน desktop) -->
   <div class="patprofile-mobile-header" id="patprofile-mobile-header" style="display:none;">
     ${(p.photo||"") ? `<img src="${p.photo}" class="pmh-photo">` : `<div class="pmh-photo-placeholder">👤</div>`}
@@ -98,10 +142,41 @@ async function openPatientProfile(id, activeTab) {
     </div>
     <!-- RIGHT: Tabs -->
     <div>
-      ${renderAllergyBanner(p)}
       ${renderPatientTabBar(p, totalReqs)}
       <div id="patprofile-tab-history">
+        <!-- [R4 P3 14พค69] Patient general info section (ตาม mockup page 14: ข้อมูลทั่วไป → ข้อมูลส่วนตัว) -->
+        <div class="card patprofile-info-card" style="margin-bottom:14px;padding:18px 22px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border,#e8e3d4);">
+            <span style="font-size:18px;">👤</span>
+            <h3 style="font-size:15px;font-weight:700;margin:0;letter-spacing:-0.3px;">ข้อมูลส่วนตัว</h3>
+          </div>
+          <div class="patprofile-info-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 32px;font-size:13.5px;">
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);">
+              <span style="color:var(--text2);">ชื่อ-นามสกุล</span>
+              <strong style="text-align:right;">${p.name||'-'}</strong>
+            </div>
+            ${p.nickname ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">ชื่อเล่น</span><strong style="text-align:right;">${p.nickname}</strong></div>` : ''}
+            ${p.gender ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">เพศ</span><strong style="text-align:right;">${p.gender}</strong></div>` : ''}
+            ${p.dob ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">วันเกิด</span><strong style="text-align:right;">${p.dob}</strong></div>` : ''}
+            ${age !== '-' ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">อายุ</span><strong style="text-align:right;">${age} ปี</strong></div>` : ''}
+            ${idcard !== '-' ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">เลขบัตรประชาชน</span><strong style="text-align:right;font-family:var(--mono,monospace);">${idcard}</strong></div>` : ''}
+            ${p.bloodType ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">หมู่เลือด</span><strong style="text-align:right;color:#c0392b;">${p.bloodType}</strong></div>` : ''}
+            ${p.insurance ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">สิทธิ์การรักษา</span><strong style="text-align:right;">${p.insurance}</strong></div>` : ''}
+            ${p.phone ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">โทรศัพท์</span><strong style="text-align:right;font-family:var(--mono,monospace);">${p.phone}</strong></div>` : ''}
+            ${p.admitDate ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">วันแรกรับ</span><strong style="text-align:right;">${p.admitDate}</strong></div>` : ''}
+            ${p.endDate ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">วันสิ้นสัญญา</span><strong style="text-align:right;">${p.endDate}</strong></div>` : ''}
+            ${dur !== '-' ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">ระยะเวลาพัก</span><strong style="text-align:right;color:var(--brand,#2e6b4f);">${dur}</strong></div>` : ''}
+            ${p.address ? `<div style="grid-column:1/-1;padding:8px 0;border-top:1px solid var(--border,#e8e3d4);margin-top:4px;"><div style="color:var(--text2);font-size:12px;margin-bottom:4px;">ที่อยู่</div><strong>${p.address}</strong></div>` : ''}
+          </div>
+        </div>
+
+        <!-- ประวัติเบิก (ตารางเดิม) -->
         <div class="card">
+          <div class="card-header" style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border,#e8e3d4);">
+            <span style="font-size:16px;">📦</span>
+            <h3 style="font-size:14px;font-weight:700;margin:0;letter-spacing:-0.2px;">ประวัติการเบิก</h3>
+            <span style="font-size:12px;color:var(--text2);margin-left:auto;">${totalReqs} ครั้ง · ${totalLines} รายการ · ${totalQty} หน่วย</span>
+          </div>
           <div class="table-wrap">
             <table>
               <thead><tr><th>วันที่</th><th>รายการ</th><th>จำนวน</th><th>หน่วย</th><th>ผู้เบิก</th><th></th></tr></thead>
@@ -125,19 +200,36 @@ async function openPatientProfile(id, activeTab) {
         </div>
       </div>
       <div id="patprofile-tab-medical" style="display:none;" data-patid="${p.id}">
-        
+        <!-- [R4 P3] Section header -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 4px;">
+          <span style="font-size:20px;">🩺</span>
+          <h3 style="font-size:16px;font-weight:700;margin:0;letter-spacing:-0.3px;">ข้อมูลทางการแพทย์</h3>
+          <span style="font-size:12px;color:var(--text2);margin-left:auto;">โรคประจำตัว · ประวัติการรักษา</span>
+        </div>
         ${renderMedLogTab(p.id, 'medical')}
 
         <div id="med-files-section-${p.id}" style="margin-top:12px;"></div>
       </div>
       <div id="patprofile-tab-meds" style="display:none;">
+        <!-- [R4 P4] Section header -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 4px;">
+          <span style="font-size:20px;">💊</span>
+          <h3 style="font-size:16px;font-weight:700;margin:0;letter-spacing:-0.3px;">ยาประจำตัว</h3>
+          <span style="font-size:12px;color:var(--text2);margin-left:auto;">รายการยาที่ทานเป็นประจำ + ขนาด + วิธีใช้</span>
+        </div>
         ${renderMedLogTab(p.id, 'meds')}
       </div>
       <!-- ALLERGY TAB -->
       <div id="patprofile-tab-allergy" style="display:none;" data-patid="${p.id}">
+        <!-- [R4 P4] Section header + summary banner -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 4px;">
+          <span style="font-size:20px;">⚠️</span>
+          <h3 style="font-size:16px;font-weight:700;margin:0;letter-spacing:-0.3px;">แพ้ยา / แพ้อาหาร</h3>
+          <span style="font-size:12px;color:var(--text2);margin-left:auto;">${p.allergies?.length || 0} รายการ · ระวังก่อนจ่ายยาทุกครั้ง</span>
+        </div>
         <div class="card">
-          <div class="card-header">
-            <div class="card-title" style="font-size:13px;">🚨 ประวัติการแพ้ยา / อาหาร</div>
+          <div class="card-header" style="background:linear-gradient(to right, #fdf0ee, transparent);">
+            <div class="card-title" style="font-size:14px;color:#7a1f12;display:flex;align-items:center;gap:8px;"><span>🚨</span> ประวัติการแพ้</div>
             <button class="btn btn-primary btn-sm" onclick="openAddAllergyModal('${p.id}')">+ เพิ่ม</button>
           </div>
           ${(()=>{ var _d=document.createElement('div'); _d.id='pat-allergy-list-'+p.id; _d.style.padding='16px'; _d.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">⏳ กำลังโหลด...</div>'; return _d.outerHTML; })()}
@@ -145,29 +237,53 @@ async function openPatientProfile(id, activeTab) {
       </div>
       <!-- CONTACTS TAB -->
       <div id="patprofile-tab-contacts" style="display:none;">
+        <!-- [R4 P4] Section header -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 4px;">
+          <span style="font-size:20px;">📞</span>
+          <h3 style="font-size:16px;font-weight:700;margin:0;letter-spacing:-0.3px;">ผู้ติดต่อ</h3>
+          <span style="font-size:12px;color:var(--text2);margin-left:auto;">${p.contacts?.length || 0} คน · ครอบครัว · ผู้รับผิดชอบ · ผู้ตัดสินใจ</span>
+        </div>
         <div class="card">
           <div class="card-header">
-            <div class="card-title" style="font-size:13px;">👥 ผู้ติดต่อ / ผู้รับผิดชอบค่าใช้จ่าย</div>
-            <button class="btn btn-primary btn-sm" onclick="openAddContactModal('${p.id}')">+ เพิ่ม</button>
+            <div class="card-title" style="font-size:14px;">รายชื่อผู้ติดต่อ</div>
+            <button class="btn btn-primary btn-sm" onclick="openAddContactModal('${p.id}')">+ เพิ่มผู้ติดต่อ</button>
           </div>
-          ${p.contacts?.length === 0 ? `<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีข้อมูลผู้ติดต่อ</div>` :
+          ${p.contacts?.length === 0 ? `<div style="padding:36px 24px;text-align:center;">
+              <div style="font-size:40px;opacity:0.3;margin-bottom:8px;">📞</div>
+              <div style="color:var(--text3);font-size:13px;">ยังไม่มีข้อมูลผู้ติดต่อ</div>
+              <button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="openAddContactModal('${p.id}')">+ เพิ่มคนแรก</button>
+            </div>` :
           `<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
-            ${(p.contacts||[]).map(c => `
-              <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;background:${c.isPayer?'#f0faf5':c.isDecisionMaker?'#f0f0fa':'var(--surface2)'};">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                  <div>
-                    <div style="font-weight:700;font-size:14px;">${c.name} <span style="font-size:12px;font-weight:400;color:var(--text3);">(${c.relation})</span></div>
-                    <div style="font-size:12px;color:var(--text2);margin-top:4px;">📞 ${c.phone||'-'} ${c.email ? '· ✉️ '+c.email : ''}</div>
-                    <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
-                      ${c.isPayer ? '<span class="badge badge-green">💰 ผู้รับผิดชอบค่าใช้จ่าย</span>' : ''}
-                      ${c.isDecisionMaker ? '<span class="badge" style="background:#e8e8f8;color:#3d3d9e;">🧠 ผู้มีอำนาจตัดสินใจ</span>' : ''}
-                      ${!c.isPayer && !c.isDecisionMaker ? '<span class="badge badge-gray">📞 ผู้ติดต่อฉุกเฉิน</span>' : ''}
+            ${(p.contacts||[]).map(c => {
+              const tone = c.isPayer ? 'payer' : c.isDecisionMaker ? 'decision' : 'emergency';
+              const accent = { payer: '#27ae60', decision: '#5e60ce', emergency: '#7a8a9a' }[tone];
+              const tint = { payer: '#f0faf5', decision: '#f1f1fb', emergency: '#f7f8fa' }[tone];
+              return `
+              <div class="patprofile-contact-card" style="border:1px solid var(--border,#e8e3d4);border-left:3px solid ${accent};border-radius:10px;padding:14px 18px;background:${tint};transition:all 0.15s;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                  <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                      <div style="font-weight:700;font-size:15px;letter-spacing:-0.2px;">${c.name}</div>
+                      <span style="font-size:12px;color:var(--text2);">(${c.relation||'-'})</span>
                     </div>
-                    ${c.note ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">📝 ${c.note}</div>` : ''}
+                    <div style="font-size:13px;color:var(--text2);margin-top:6px;display:flex;gap:14px;flex-wrap:wrap;">
+                      ${c.phone ? `<span>📞 <span style="font-family:var(--mono,monospace);color:var(--text);">${c.phone}</span></span>` : ''}
+                      ${c.email ? `<span>✉️ <span style="color:var(--text);">${c.email}</span></span>` : ''}
+                    </div>
+                    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                      ${c.isPayer ? '<span style="background:#dcf0e2;color:#1f5132;border-radius:999px;font-size:11px;padding:2px 10px;font-weight:600;">💰 รับผิดชอบค่าใช้จ่าย</span>' : ''}
+                      ${c.isDecisionMaker ? '<span style="background:#e8e8f8;color:#3d3d9e;border-radius:999px;font-size:11px;padding:2px 10px;font-weight:600;">🧠 ผู้ตัดสินใจ</span>' : ''}
+                      ${!c.isPayer && !c.isDecisionMaker ? '<span style="background:#eef0f3;color:#56657a;border-radius:999px;font-size:11px;padding:2px 10px;font-weight:600;">📞 ผู้ติดต่อฉุกเฉิน</span>' : ''}
+                    </div>
+                    ${c.note ? `<div style="font-size:12px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border,#e8e3d4);">📝 ${c.note}</div>` : ''}
                   </div>
-                  <button class="btn btn-ghost btn-sm" onclick="openEditContactModal('${p.id}','${c.id}')" style="margin-right:4px;">✏️</button><button class="btn btn-ghost btn-sm" onclick="deleteContact('${p.id}','${c.id}')">🗑️</button>
+                  <div style="display:flex;gap:4px;flex-shrink:0;">
+                    <button class="btn btn-ghost btn-sm" onclick="openEditContactModal('${p.id}','${c.id}')" title="แก้ไข">✏️</button>
+                    <button class="btn btn-ghost btn-sm" style="color:#c0392b;" onclick="deleteContact('${p.id}','${c.id}')" title="ลบ">🗑️</button>
+                  </div>
                 </div>
-              </div>`).join('')}
+              </div>`;
+            }).join('')}
           </div>`}
         </div>
       </div>
@@ -1005,41 +1121,60 @@ async function deleteLabResult(labId, patientId) {
 
 // ─── Patient Profile Tab Bar (role-aware) ────────────────────
 function renderPatientTabBar(p, totalReqs) {
+  // [R4 P2 14พค69] Refactor: แยก icon/label/count + ใช้ data structure เดียวสำหรับทั้ง desktop + mobile
+  // ตามเดิม onclick='switchPatTab' ไม่ broken
   const allTabs = [
-    { k:'vitals',     perm:'vitals',        label:'📊 Vital Signs' },
-    { k:'excretion', perm:'excretion',  label:'🚽 ขับถ่าย / น้ำเข้าออก' },
-    { k:'medical',    perm:'nursing',       label:'📋 ประวัติการรักษา' },
-    { k:'meds',       perm:'mar',           label:'💊 ยาประจำ' },
-    { k:'allergy',    perm:'allergy',       label:'🚨 แพ้ยา/อาหาร' + (p.allergies?.length ? '<span style="background:#c0392b;color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">' + p.allergies.length + '</span>' : '') },
-    { k:'nursing',    perm:'nursing',       label:'📋 บันทึกพยาบาล' },
-    { k:'mar',        perm:'mar',           label:'💊 MAR ยาประจำวัน' },
-    { k:'physio',     perm:'physio',        label:'🧘 กายภาพบำบัด' },
-    { k:'lab',        perm:'lab',           label:'🧪 ผลแล็บ' },
-    { k:'appts',      perm:'appts',         label:'🚐 นัดหมายแพทย์' },
-    { k:'incident',   perm:'incident',      label:'🚨 อุบัติเหตุ' },
-    { k:'dietary',    perm:'dietary',       label:'🥦 โภชนาการ' },
-    { k:'contacts',   perm:'contacts',      label:'👥 ผู้ติดต่อ' + (p.contacts?.length ? '<span style="background:var(--accent);color:white;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px;">' + p.contacts.length + '</span>' : '') },
-    { k:'notes',      perm:'nursing',       label:'📝 หมายเหตุ' },
-    { k:'belongings', perm:'belongings',    label:'🧳 ทรัพย์สิน' },
-    { k:'deposits',   perm:'deposits',      label:'💰 มัดจำ' },
-    { k:'dnr',        perm:'dnr',           label:'⚖️ DNR & Consent' },
-    { k:'dispense',   perm:'dispense',      label:'💊 เบิกสินค้า' },
-    { k:'history',    perm:'history',       label:'📦 ประวัติเบิก (' + totalReqs + ')' },
+    { k:'vitals',     perm:'vitals',     icon:'📊', label:'Vital Signs' },
+    { k:'excretion',  perm:'excretion',  icon:'🚽', label:'ขับถ่าย / น้ำเข้าออก' },
+    { k:'medical',    perm:'nursing',    icon:'📋', label:'ประวัติการรักษา' },
+    { k:'meds',       perm:'mar',        icon:'💊', label:'ยาประจำ' },
+    { k:'allergy',    perm:'allergy',    icon:'⚠️', label:'แพ้ยา/อาหาร', count: p.allergies?.length || 0, countTone:'danger' },
+    { k:'nursing',    perm:'nursing',    icon:'📝', label:'บันทึกพยาบาล' },
+    { k:'mar',        perm:'mar',        icon:'💊', label:'MAR ยาประจำวัน' },
+    { k:'physio',     perm:'physio',     icon:'🧘', label:'กายภาพบำบัด' },
+    { k:'lab',        perm:'lab',        icon:'🧪', label:'ผลแล็บ' },
+    { k:'appts',      perm:'appts',      icon:'🚐', label:'นัดหมายแพทย์' },
+    { k:'incident',   perm:'incident',   icon:'🚨', label:'อุบัติเหตุ' },
+    { k:'dietary',    perm:'dietary',    icon:'🥦', label:'โภชนาการ' },
+    { k:'contacts',   perm:'contacts',   icon:'📞', label:'ผู้ติดต่อ', count: p.contacts?.length || 0, countTone:'brand' },
+    { k:'notes',      perm:'nursing',    icon:'📌', label:'หมายเหตุ' },
+    { k:'belongings', perm:'belongings', icon:'🧳', label:'ทรัพย์สิน' },
+    { k:'deposits',   perm:'deposits',   icon:'💰', label:'มัดจำ' },
+    { k:'dnr',        perm:'dnr',        icon:'⚖️', label:'DNR & Consent' },
+    { k:'dispense',   perm:'dispense',   icon:'📦', label:'เบิกสินค้า' },
+    { k:'history',    perm:'history',    icon:'🕐', label:'ประวัติเบิก', count: totalReqs, countTone:'neutral' },
   ];
   const visibleTabs = allTabs.filter(t => canSeePatientTab(t.perm));
+
+  // [R4 P2] Build count badge HTML (3 tones: danger/brand/neutral)
+  function _countBadge(c, tone) {
+    if (!c) return '';
+    const palette = {
+      danger:  { bg:'#fdf0ee', color:'#c0392b', border:'rgba(192,57,43,0.25)' },
+      brand:   { bg:'var(--sage-100,#eaf1eb)', color:'var(--brand,#2e6b4f)', border:'var(--sage-200,#dbe5dc)' },
+      neutral: { bg:'var(--surface2,#f5f1e3)', color:'var(--text2,#5e5e5e)', border:'var(--border,#e8e3d4)' }
+    }[tone] || { bg:'#eaf1eb', color:'#2e6b4f', border:'#dbe5dc' };
+    return `<span class="patprofile-tab-count" style="background:${palette.bg};color:${palette.color};border:1px solid ${palette.border};border-radius:999px;padding:1px 7px;font-size:11px;font-weight:600;margin-left:6px;line-height:1.4;min-width:18px;display:inline-block;text-align:center;">${c}</span>`;
+  }
+
+  // Desktop: tabs (horizontal scroll) — pill underline style + count badge
   const tabsHtml = visibleTabs.map(t =>
-    '<div class="tab" onclick="switchPatTab(\'' + t.k + '\')">' + t.label + '</div>'
+    `<div class="tab" data-tab-key="${t.k}" onclick="switchPatTab('${t.k}')"><span class="patprofile-tab-icon">${t.icon}</span> <span class="patprofile-tab-label">${t.label}</span>${_countBadge(t.count, t.countTone)}</div>`
   ).join('\n        ');
-  // Grid view (mobile) — แสดงเป็นปุ่มแอพ
-  const gridHtml = visibleTabs.map(t =>
-    '<div class="pat-app-btn" onclick="switchPatTab(\'' + t.k + '\');document.getElementById(\'patAppGrid\').style.display=\'none\';document.getElementById(\'patAppGridBackBtn\').style.display=\'\';">' +
-    '<div class="pat-app-icon">' + t.label.split(' ')[0] + '</div>' +
-    '<div class="pat-app-label">' + t.label.split(' ').slice(1).join(' ').replace(/<[^>]*>/g,'') + '</div>' +
-    '</div>'
-  ).join('\n        ');
+
+  // Mobile: grid view (3 cols)
+  const gridHtml = visibleTabs.map(t => {
+    const badge = t.count ? `<span class="pat-app-badge" style="position:absolute;top:6px;right:6px;background:${t.countTone==='danger'?'#c0392b':'var(--brand,#2e6b4f)'};color:white;border-radius:999px;font-size:10px;font-weight:700;padding:1px 6px;min-width:18px;text-align:center;">${t.count}</span>` : '';
+    return `<div class="pat-app-btn" style="position:relative;" onclick="switchPatTab('${t.k}');document.getElementById('patAppGrid').style.display='none';document.getElementById('patAppGridBackBtn').style.display='';">
+        ${badge}
+        <div class="pat-app-icon">${t.icon}</div>
+        <div class="pat-app-label">${t.label}</div>
+      </div>`;
+  }).join('\n        ');
+
   return (
     // Desktop: tabs (horizontal scroll)
-    '<div class="tabs" id="patprofileTabs" style="margin-bottom:16px;">\n        ' + tabsHtml + '\n      </div>\n' +
+    '<div class="tabs patprofile-tabs" id="patprofileTabs" style="margin-bottom:16px;">\n        ' + tabsHtml + '\n      </div>\n' +
     // Mobile: grid (3 cols) + back button
     '<button class="btn btn-ghost pat-app-back" id="patAppGridBackBtn" style="display:none;margin-bottom:10px;" onclick="document.getElementById(\'patAppGrid\').style.display=\'\';document.getElementById(\'patAppGridBackBtn\').style.display=\'none\';">← กลับไปเลือกแท็บ</button>\n' +
     '<div class="pat-app-grid" id="patAppGrid">\n        ' + gridHtml + '\n      </div>'
