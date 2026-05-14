@@ -1,43 +1,296 @@
+/* ════════════════════════════════════════════════════════════════
+   Navasri · Token Compatibility Layer (Path B — Hybrid)
+   Iteration R3 · 14 พ.ค. 2569
+   ════════════════════════════════════════════════════════════════
+   PURPOSE:
+   Drop-in CSS variable layer ที่ map ทั้ง new tokens (sage + cream)
+   และ legacy aliases — รองรับ CSS rules 2,500+ บรรทัดของเดิม
+   โดยไม่ต้องแก้ทันที
+
+   ENHANCED จาก Claude Design v2 ด้วย Codebase Analyst audit:
+   - Blocker #1 fix: เพิ่ม 8 legacy vars (text1, accent-dark, bg2,
+     background, border-color, muted, primary, surface3) ที่ HTML/JS
+     ใน codebase อ้างอิงอยู่
+   - Caution #3 fix: badge dual naming (red↔danger, green↔success, ฯลฯ)
+   ════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ════════════════════════════════════════
+     NEW DESIGN TOKENS (canonical names)
+     ════════════════════════════════════════ */
+
+  /* Brand */
+  --brand:       #2e6b4f;
+  --brand-dark:  #1f4d38;
+  --brand-light: #5e9479;
+
+  /* Sage scale */
+  --sage-50:  #f4f8f5;
+  --sage-100: #e8f2ec;
+  --sage-200: #d1e3d8;
+  --sage-300: #a8c8b8;
+  --sage-400: #7eab94;
+  --sage-500: #4a8b6e;
+  --sage-600: #2e6b4f;     /* = brand */
+  --sage-700: #1f4d38;
+  --sage-800: #14352a;
+  --sage-900: #0a201a;
+
+  /* Warm neutrals */
+  --bg:            #faf8f3;
+  --surface:       #ffffff;
+  --surface-2:     #f4f1ea;
+  --surface-3:     #ebe7da;
+  --border:        #e5e0d1;
+  --border-strong: #d2cab5;
+  --divider:       #ede9dc;
+
+  /* Ink */
+  --ink:        #1a221c;
+  --ink-2:      #3d4640;
+  --ink-3:      #6f7770;
+  --ink-4:      #9ca29c;
+  --ink-on-brand: #e8f2ec;
+
+  /* Semantic — 4 tones */
+  --success:      #3d8862;
+  --success-bg:   #e6efe8;
+  --success-text: #1f4d38;
+  --warning:      #b88240;
+  --warning-bg:   #f5e9d4;
+  --warning-text: #6e4715;
+  --danger:       #a8554d;
+  --danger-bg:    #f3e1dc;
+  --danger-text:  #6b2820;
+  --info:         #5a7d9e;
+  --info-bg:      #e2eaf2;
+  --info-text:    #2a3f57;
+
+  /* Extra semantic (รองรับ legacy purple/tan/yellow ใน 8 stat cards) */
+  --purple:      #7c6da4;
+  --purple-bg:   #e9e4f0;
+  --purple-text: #3e3360;
+  --amber:       #c89e3a;
+  --amber-bg:    #f5e9c4;
+  --amber-text:  #6b4d10;
+
+  /* Radius */
+  --r-xs:   4px;
+  --r-sm:   6px;
+  --r-md:   8px;
+  --r-lg:  12px;
+  --r-xl:  16px;
+  --r-pill: 999px;
+  --radius:  var(--r-lg);     /* legacy alias */
+
+  /* Shadow */
+  --shadow-xs: 0 1px 2px rgba(40,50,30,0.04);
+  --shadow-sm: 0 1px 2px rgba(40,50,30,0.05), 0 2px 4px rgba(40,50,30,0.04);
+  --shadow-md: 0 2px 4px rgba(40,50,30,0.05), 0 6px 16px rgba(40,50,30,0.06);
+  --shadow-lg: 0 4px 8px rgba(40,50,30,0.06), 0 12px 28px rgba(40,50,30,0.10);
+  --shadow:    var(--shadow-sm);   /* legacy */
+
+  /* Type */
+  --font: 'IBM Plex Sans Thai', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* ════════════════════════════════════════
+     LEGACY ALIASES — ห้ามลบจนกว่าจะ migrate หมด
+     ════════════════════════════════════════
+     ค่าใหม่ผ่าน var() — ถ้าเปลี่ยน token ค่าเก่าจะอัปเดตด้วย */
+
+  /* Text (legacy --text/--text2/--text3) */
+  --text:           var(--ink);
+  --text2:          var(--ink-2);
+  --text3:          var(--ink-3);
+
+  /* Accent — เดิมเป็น teal #2ec4b6 / #26a89c
+     map เป็น brand sage ใหม่ */
+  --accent:         var(--brand);
+  --accent2:        var(--brand-dark);
+  --accent-light:   var(--sage-100);
+
+  /* Surface */
+  --surface2:       var(--surface-2);
+
+  /* Semantic — green */
+  --green:          var(--success);
+  --green-dark:     var(--success-text);
+  --green-light:    var(--success-bg);
+
+  /* Semantic — red (เดิม #e05a6a → ใหม่ danger #a8554d) */
+  --red:            var(--danger);
+  --red-light:      var(--danger-bg);
+
+  /* Semantic — orange (เดิม #f5a453 → ใหม่ warning #b88240) */
+  --orange:         var(--warning);
+  --orange-light:   var(--warning-bg);
+
+  /* Semantic — blue (เดิม #7ab8d4 → ใหม่ info #5a7d9e) */
+  --blue:           var(--info);
+  --blue-light:    var(--info-bg);
+
+  /* Semantic — tan/yellow (เก็บไว้สำหรับ stat-card.yellow) */
+  --tan:            var(--amber);
+  --tan-light:      var(--amber-bg);
+
+  /* Cream — เดิม #f8f5ee → ใหม่ surface-2 (cream-toned แล้ว) */
+  --cream:          var(--surface-2);
+
+  /* Gold — เดิมใช้ใน sidebar-logo .logo-icon
+     map เป็น warning amber (โทนใกล้เคียง gold) */
+  --gold:           var(--amber);
+
+  /* Sage (legacy alias) */
+  --sage:           var(--brand);
+  --sage-light:     var(--sage-100);
+
+  /* ════════════════════════════════════════
+     ADDITIONAL LEGACY ALIASES (Blocker #1 — codebase audit 14พค69)
+     ════════════════════════════════════════
+     vars ที่ HTML inline styles + JS template strings อ้างอิง
+     ที่ไม่อยู่ใน TOKEN_LAYER v2 เดิม — เพิ่มเพื่อกัน text/visual หาย */
+
+  --text1:          var(--ink);          /* 25 ครั้ง (typo-style legacy) */
+  --accent-dark:    var(--brand-dark);   /* 9 ครั้ง (HTML+JS) */
+  --bg2:            var(--surface-2);    /* 8 ครั้ง */
+  --background:     var(--bg);           /* 1 ครั้ง */
+  --border-color:   var(--border);       /* 2 ครั้ง */
+  --muted:          var(--ink-3);        /* 2 ครั้ง */
+  --primary:        var(--brand);        /* 2 ครั้ง */
+  --surface3:       var(--surface-3);    /* 2 ครั้ง */
+
+  /* ════════════════════════════════════════
+     OC-* (8 stat-card colors) — keep as legacy
+     ════════════════════════════════════════
+     ค่าเหล่านี้ถูก hardcode ใน HTML ผ่าน class
+     stat-card.teal/red/green/blue/purple/yellow/turquoise/...
+     map เข้า semantic tone ใหม่ + เก็บโทนที่ใกล้เคียงเดิม */
+
+  --oc-ice:        var(--info-bg);     --oc-ice-text:       var(--info-text);
+  --oc-mint:       var(--success-bg);  --oc-mint-text:      var(--success-text);
+  --oc-carnation:  var(--danger-bg);   --oc-carnation-text: var(--danger-text);
+  --oc-lavender:   var(--purple-bg);   --oc-lavender-text:  var(--purple-text);
+  --oc-yellow:     var(--amber-bg);    --oc-yellow-text:    var(--amber-text);
+  --oc-turquoise:  var(--sage-200);    --oc-turquoise-text: var(--sage-700);
+  --oc-celadon:    var(--sage-100);    --oc-celadon-text:   var(--sage-800);
+  --oc-powder:     var(--info-bg);     --oc-powder-text:    var(--info-text);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STAT-CARD COLOR REMAP (8 → 4 semantic, R3)
+   ════════════════════════════════════════════════════════════════
+   HTML ใน pages.html ใช้ hardcoded class — เขียน CSS ใหม่ที่ map
+   แต่ละ legacy class เป็น token ใหม่ + keep visual distinction
+   ════════════════════════════════════════════════════════════════ */
+
+.stat-card {
+  border-radius: var(--r-lg);
+  padding: 18px 16px;
+  position: relative;
+  overflow: hidden;
+  border: none;
+  box-shadow: none;
+}
+.stat-card .stat-label,
+.stat-card .stat-sub  { opacity: 0.8; font-weight: 500; }
+.stat-card .stat-value { font-family: var(--mono); font-weight: 600; }
+.stat-card .stat-icon { opacity: 0.85; }
+
+.stat-card.teal { background: var(--sage-100); }
+.stat-card.teal .stat-label,
+.stat-card.teal .stat-sub,
+.stat-card.teal .stat-value,
+.stat-card.teal .stat-icon { color: var(--sage-800); }
+
+.stat-card.red { background: var(--danger-bg); }
+.stat-card.red .stat-label,
+.stat-card.red .stat-sub,
+.stat-card.red .stat-value,
+.stat-card.red .stat-icon { color: var(--danger-text); }
+
+.stat-card.green { background: var(--success-bg); }
+.stat-card.green .stat-label,
+.stat-card.green .stat-sub,
+.stat-card.green .stat-value,
+.stat-card.green .stat-icon { color: var(--success-text); }
+
+.stat-card.orange { background: var(--warning-bg); }
+.stat-card.orange .stat-label,
+.stat-card.orange .stat-sub,
+.stat-card.orange .stat-value,
+.stat-card.orange .stat-icon { color: var(--warning-text); }
+
+.stat-card.yellow { background: var(--amber-bg); }
+.stat-card.yellow .stat-label,
+.stat-card.yellow .stat-sub,
+.stat-card.yellow .stat-value,
+.stat-card.yellow .stat-icon { color: var(--amber-text); }
+
+.stat-card.purple { background: var(--purple-bg); }
+.stat-card.purple .stat-label,
+.stat-card.purple .stat-sub,
+.stat-card.purple .stat-value,
+.stat-card.purple .stat-icon { color: var(--purple-text); }
+
+.stat-card.blue { background: var(--info-bg); }
+.stat-card.blue .stat-label,
+.stat-card.blue .stat-sub,
+.stat-card.blue .stat-value,
+.stat-card.blue .stat-icon { color: var(--info-text); }
+
+.stat-card.powder {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.stat-card.powder .stat-label,
+.stat-card.powder .stat-sub,
+.stat-card.powder .stat-value,
+.stat-card.powder .stat-icon { color: var(--ink-2); }
+
+/* ════════════════════════════════════════════════════════════════
+   BADGE DUAL NAMING (Caution #3 — codebase audit 14พค69)
+   ════════════════════════════════════════════════════════════════
+   JS ใช้: badge-red / badge-green / badge-orange / badge-blue / badge-gray
+   Mockup ใช้: badge-danger / badge-success / badge-warning / badge-info / badge-neutral
+   รองรับทั้ง 2 naming ใน CSS rule เดียวกัน
+   ════════════════════════════════════════════════════════════════ */
+
+.badge-red,    .badge-danger   { background: var(--danger-bg);  color: var(--danger-text); }
+.badge-green,  .badge-success  { background: var(--success-bg); color: var(--success-text); }
+.badge-orange, .badge-warning  { background: var(--warning-bg); color: var(--warning-text); }
+.badge-blue,   .badge-info     { background: var(--info-bg);    color: var(--info-text); }
+.badge-gray,   .badge-neutral  { background: var(--surface-2);  color: var(--ink-3); }
+.badge-purple                  { background: var(--purple-bg);  color: var(--purple-text); }
+
+/* ════════════════════════════════════════════════════════════════
+   PRINT MODE — force white bg, ink black, remove tints
+   ════════════════════════════════════════════════════════════════ */
+@media print {
   :root {
-    --bg: #eef0f5;
+    --bg: #ffffff;
     --surface: #ffffff;
-    --surface2: #e8edf2;
-    --border: #d0d8e4;
-    --text: #1e2533;
-    --text2: #4a5568;
-    --text3: #8a96aa;
-    --accent: #2ec4b6;
-    --accent2: #26a89c;
-    --accent-light: #e0f7f5;
-    --green: #5ecba1;
-    --green-dark: #3a9e78;
-    --green-light: #e0f7ec;
-    --sage: #5ecba1;
-    --sage-light: #e0f7ec;
-    --orange: #f5a453;
-    --orange-light: #fff0e0;
-    --red: #e05a6a;
-    --red-light: #fde8ec;
-    --blue: #7ab8d4;
-    --blue-light: #e0f0fa;
-    --purple: #b39ddb;
-    --tan: #f5c842;
-    --tan-light: #fff8d6;
-    --cream: #f8f5ee;
-    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.06);
-    --shadow-lg: 0 4px 16px rgba(0,0,0,0.10);
-    --radius: 10px;
-    --font: 'IBM Plex Sans Thai', sans-serif;
-    --mono: 'IBM Plex Mono', monospace;
-    --oc-ice: #7ab8d4;       --oc-ice-text: #0d2e3f;
-    --oc-mint: #5ecba1;      --oc-mint-text: #0a3626;
-    --oc-carnation: #f4a7b9; --oc-carnation-text: #5c0f22;
-    --oc-lavender: #b39ddb;  --oc-lavender-text: #2d1b5e;
-    --oc-yellow: #f5c842;    --oc-yellow-text: #3d2800;
-    --oc-turquoise: #2ec4b6; --oc-turquoise-text: #032e2c;
-    --oc-celadon: #a8c5a0;   --oc-celadon-text: #1a3318;
-    --oc-powder: #a8c8e8;    --oc-powder-text: #0c2840;
+    --surface-2: #ffffff;
+    --border: #cccccc;
+    --ink: #000000;
+    --ink-2: #222222;
+    --ink-3: #444444;
   }
+  .stat-card,
+  .card,
+  .modal {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: 1px solid #cccccc !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END OF TOKEN COMPATIBILITY LAYER
+   ════════════════════════════════════════════════════════════════ */
+
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; }
 
@@ -2068,14 +2321,8 @@
 
 /* === Universal Modal Mobile (12พค69 ค่ำ) === */
 @media (max-width: 768px) {
-  /* Modal frame: balanced margins, no outer padding */
-  .modal-overlay > .modal {
-    max-width: calc(100% - 16px) !important;
-    width: calc(100% - 16px) !important;
-    margin: 20px auto !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
-  }
+  /* [R3 14พค69] Modal frame rule ลบออก — Mobile Modal CSS ใหม่จะ
+     ทำ full-screen pattern แทน (จะเพิ่มใน Session D) */
   /* form-grid rows: align inputs by their bottom (label heights vary) */
   .modal .form-grid {
     align-items: end !important;
