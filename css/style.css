@@ -296,11 +296,10 @@
 
   /* Layout */
   .app { display: flex; min-height: 100vh; }
+  /* [R3 14พค69 hotfix] R2 .sidebar ลบ — ดู R3 rules ที่ Session B */
   .sidebar {
     width: 240px; height: 100vh;
-    background: #eef4ee;
-    border-right: 1px solid #c8dcc8;
-    color: #1e4a32; display: flex; flex-direction: column;
+    display: flex; flex-direction: column;
     position: fixed; top: 0; left: 0; z-index: 100;
     transition: transform 0.3s; overflow: hidden;
   }
@@ -324,8 +323,7 @@
     font-size: 13px; font-weight: 500; color: #1e4a32;
     transition: all 0.15s; border-left: 3px solid transparent;
   }
-  .nav-item:hover { background: rgba(46,107,79,0.12); color: #14532d; }
-  .nav-item.active { background: #2e6b4f; color: #d4eede; border-left-color: #a3d9a5; font-weight: 600; }
+  /* [R3 14พค69 hotfix] R2 nav-item color states ลบ — ดู R3 Session B */
   .nav-item .icon { width: 18px; text-align: center; font-size: 15px; }
   .sidebar-footer { padding: 16px 20px; border-top: 1px solid #c8dcc8; font-size: 12px; color: #3a6b4f; font-weight: 500; }
 
@@ -343,8 +341,7 @@
     font-family: var(--font); font-size: 13px; font-weight: 500; transition: all 0.15s;
     display: inline-flex; align-items: center; gap: 6px;
   }
-  .btn-primary { background: #2ec4b6; color: #032e2c; font-weight: 600; }
-  .btn-primary:hover { background: #26a89c; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(46,196,182,0.35); }
+  /* [R3 14พค69 hotfix] R2 btn-primary ลบ — ดู R3 rules ที่ Session B (line ~2830) */
   .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
   .btn-secondary:hover { background: var(--border); }
   .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
@@ -390,35 +387,8 @@
 
   /* Stats Grid */
   .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-  .stat-card {
-    border-radius: var(--radius); padding: 18px 16px; position: relative; overflow: hidden;
-    border: none; box-shadow: none;
-  }
-  .stat-card::before { display: none; }
-  .stat-card.orange { background: #a8c5a0; }
-  .stat-card.orange .stat-label, .stat-card.orange .stat-sub { color: #1a3318; opacity: 0.8; }
-  .stat-card.orange .stat-value, .stat-card.orange .stat-icon { color: #1a3318; }
-  .stat-card.red { background: #f4a7b9; }
-  .stat-card.red .stat-label, .stat-card.red .stat-sub { color: #5c0f22; opacity: 0.8; }
-  .stat-card.red .stat-value, .stat-card.red .stat-icon { color: #5c0f22; }
-  .stat-card.green { background: #5ecba1; }
-  .stat-card.green .stat-label, .stat-card.green .stat-sub { color: #0a3626; opacity: 0.8; }
-  .stat-card.green .stat-value, .stat-card.green .stat-icon { color: #0a3626; }
-  .stat-card.blue { background: #7ab8d4; }
-  .stat-card.blue .stat-label, .stat-card.blue .stat-sub { color: #0d2e3f; opacity: 0.8; }
-  .stat-card.blue .stat-value, .stat-card.blue .stat-icon { color: #0d2e3f; }
-  .stat-card.purple { background: #b39ddb; }
-  .stat-card.purple .stat-label, .stat-card.purple .stat-sub { color: #2d1b5e; opacity: 0.8; }
-  .stat-card.purple .stat-value, .stat-card.purple .stat-icon { color: #2d1b5e; }
-  .stat-card.yellow { background: #f5c842; }
-  .stat-card.yellow .stat-label, .stat-card.yellow .stat-sub { color: #3d2800; opacity: 0.85; }
-  .stat-card.yellow .stat-value, .stat-card.yellow .stat-icon { color: #3d2800; }
-  .stat-card.teal { background: #2ec4b6; }
-  .stat-card.teal .stat-label, .stat-card.teal .stat-sub { color: #032e2c; opacity: 0.85; }
-  .stat-card.teal .stat-value, .stat-card.teal .stat-icon { color: #032e2c; }
-  .stat-card.powder { background: #a8c8e8; }
-  .stat-card.powder .stat-label, .stat-card.powder .stat-sub { color: #0c2840; opacity: 0.85; }
-  .stat-card.powder .stat-value, .stat-card.powder .stat-icon { color: #0c2840; }
+  /* [R3 14พค69 hotfix] ลบ stat-card .{teal,red,green,orange,blue,purple,yellow,powder}
+     rules ที่ override R3 TOKEN_LAYER — ดู rules ใหม่ที่ line ~200 */
   .stat-value { font-size: 26px; font-weight: 700; font-family: var(--mono); line-height: 1; }
   .stat-sub { font-size: 10px; margin-top: 4px; opacity: 0.7; }
   .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
