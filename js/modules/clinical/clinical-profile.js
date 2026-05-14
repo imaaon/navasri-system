@@ -211,13 +211,25 @@ async function openPatientProfile(id, activeTab) {
         <div id="med-files-section-${p.id}" style="margin-top:12px;"></div>
       </div>
       <div id="patprofile-tab-meds" style="display:none;">
+        <!-- [R4 P4] Section header -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 4px;">
+          <span style="font-size:20px;">💊</span>
+          <h3 style="font-size:16px;font-weight:700;margin:0;letter-spacing:-0.3px;">ยาประจำตัว</h3>
+          <span style="font-size:12px;color:var(--text2);margin-left:auto;">รายการยาที่ทานเป็นประจำ + ขนาด + วิธีใช้</span>
+        </div>
         ${renderMedLogTab(p.id, 'meds')}
       </div>
       <!-- ALLERGY TAB -->
       <div id="patprofile-tab-allergy" style="display:none;" data-patid="${p.id}">
+        <!-- [R4 P4] Section header + summary banner -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 4px;">
+          <span style="font-size:20px;">⚠️</span>
+          <h3 style="font-size:16px;font-weight:700;margin:0;letter-spacing:-0.3px;">แพ้ยา / แพ้อาหาร</h3>
+          <span style="font-size:12px;color:var(--text2);margin-left:auto;">${p.allergies?.length || 0} รายการ · ระวังก่อนจ่ายยาทุกครั้ง</span>
+        </div>
         <div class="card">
-          <div class="card-header">
-            <div class="card-title" style="font-size:13px;">🚨 ประวัติการแพ้ยา / อาหาร</div>
+          <div class="card-header" style="background:linear-gradient(to right, #fdf0ee, transparent);">
+            <div class="card-title" style="font-size:14px;color:#7a1f12;display:flex;align-items:center;gap:8px;"><span>🚨</span> ประวัติการแพ้</div>
             <button class="btn btn-primary btn-sm" onclick="openAddAllergyModal('${p.id}')">+ เพิ่ม</button>
           </div>
           ${(()=>{ var _d=document.createElement('div'); _d.id='pat-allergy-list-'+p.id; _d.style.padding='16px'; _d.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">⏳ กำลังโหลด...</div>'; return _d.outerHTML; })()}
@@ -225,29 +237,53 @@ async function openPatientProfile(id, activeTab) {
       </div>
       <!-- CONTACTS TAB -->
       <div id="patprofile-tab-contacts" style="display:none;">
+        <!-- [R4 P4] Section header -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 4px;">
+          <span style="font-size:20px;">📞</span>
+          <h3 style="font-size:16px;font-weight:700;margin:0;letter-spacing:-0.3px;">ผู้ติดต่อ</h3>
+          <span style="font-size:12px;color:var(--text2);margin-left:auto;">${p.contacts?.length || 0} คน · ครอบครัว · ผู้รับผิดชอบ · ผู้ตัดสินใจ</span>
+        </div>
         <div class="card">
           <div class="card-header">
-            <div class="card-title" style="font-size:13px;">👥 ผู้ติดต่อ / ผู้รับผิดชอบค่าใช้จ่าย</div>
-            <button class="btn btn-primary btn-sm" onclick="openAddContactModal('${p.id}')">+ เพิ่ม</button>
+            <div class="card-title" style="font-size:14px;">รายชื่อผู้ติดต่อ</div>
+            <button class="btn btn-primary btn-sm" onclick="openAddContactModal('${p.id}')">+ เพิ่มผู้ติดต่อ</button>
           </div>
-          ${p.contacts?.length === 0 ? `<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีข้อมูลผู้ติดต่อ</div>` :
+          ${p.contacts?.length === 0 ? `<div style="padding:36px 24px;text-align:center;">
+              <div style="font-size:40px;opacity:0.3;margin-bottom:8px;">📞</div>
+              <div style="color:var(--text3);font-size:13px;">ยังไม่มีข้อมูลผู้ติดต่อ</div>
+              <button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="openAddContactModal('${p.id}')">+ เพิ่มคนแรก</button>
+            </div>` :
           `<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
-            ${(p.contacts||[]).map(c => `
-              <div style="border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;background:${c.isPayer?'#f0faf5':c.isDecisionMaker?'#f0f0fa':'var(--surface2)'};">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                  <div>
-                    <div style="font-weight:700;font-size:14px;">${c.name} <span style="font-size:12px;font-weight:400;color:var(--text3);">(${c.relation})</span></div>
-                    <div style="font-size:12px;color:var(--text2);margin-top:4px;">📞 ${c.phone||'-'} ${c.email ? '· ✉️ '+c.email : ''}</div>
-                    <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
-                      ${c.isPayer ? '<span class="badge badge-green">💰 ผู้รับผิดชอบค่าใช้จ่าย</span>' : ''}
-                      ${c.isDecisionMaker ? '<span class="badge" style="background:#e8e8f8;color:#3d3d9e;">🧠 ผู้มีอำนาจตัดสินใจ</span>' : ''}
-                      ${!c.isPayer && !c.isDecisionMaker ? '<span class="badge badge-gray">📞 ผู้ติดต่อฉุกเฉิน</span>' : ''}
+            ${(p.contacts||[]).map(c => {
+              const tone = c.isPayer ? 'payer' : c.isDecisionMaker ? 'decision' : 'emergency';
+              const accent = { payer: '#27ae60', decision: '#5e60ce', emergency: '#7a8a9a' }[tone];
+              const tint = { payer: '#f0faf5', decision: '#f1f1fb', emergency: '#f7f8fa' }[tone];
+              return `
+              <div class="patprofile-contact-card" style="border:1px solid var(--border,#e8e3d4);border-left:3px solid ${accent};border-radius:10px;padding:14px 18px;background:${tint};transition:all 0.15s;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                  <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                      <div style="font-weight:700;font-size:15px;letter-spacing:-0.2px;">${c.name}</div>
+                      <span style="font-size:12px;color:var(--text2);">(${c.relation||'-'})</span>
                     </div>
-                    ${c.note ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">📝 ${c.note}</div>` : ''}
+                    <div style="font-size:13px;color:var(--text2);margin-top:6px;display:flex;gap:14px;flex-wrap:wrap;">
+                      ${c.phone ? `<span>📞 <span style="font-family:var(--mono,monospace);color:var(--text);">${c.phone}</span></span>` : ''}
+                      ${c.email ? `<span>✉️ <span style="color:var(--text);">${c.email}</span></span>` : ''}
+                    </div>
+                    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                      ${c.isPayer ? '<span style="background:#dcf0e2;color:#1f5132;border-radius:999px;font-size:11px;padding:2px 10px;font-weight:600;">💰 รับผิดชอบค่าใช้จ่าย</span>' : ''}
+                      ${c.isDecisionMaker ? '<span style="background:#e8e8f8;color:#3d3d9e;border-radius:999px;font-size:11px;padding:2px 10px;font-weight:600;">🧠 ผู้ตัดสินใจ</span>' : ''}
+                      ${!c.isPayer && !c.isDecisionMaker ? '<span style="background:#eef0f3;color:#56657a;border-radius:999px;font-size:11px;padding:2px 10px;font-weight:600;">📞 ผู้ติดต่อฉุกเฉิน</span>' : ''}
+                    </div>
+                    ${c.note ? `<div style="font-size:12px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border,#e8e3d4);">📝 ${c.note}</div>` : ''}
                   </div>
-                  <button class="btn btn-ghost btn-sm" onclick="openEditContactModal('${p.id}','${c.id}')" style="margin-right:4px;">✏️</button><button class="btn btn-ghost btn-sm" onclick="deleteContact('${p.id}','${c.id}')">🗑️</button>
+                  <div style="display:flex;gap:4px;flex-shrink:0;">
+                    <button class="btn btn-ghost btn-sm" onclick="openEditContactModal('${p.id}','${c.id}')" title="แก้ไข">✏️</button>
+                    <button class="btn btn-ghost btn-sm" style="color:#c0392b;" onclick="deleteContact('${p.id}','${c.id}')" title="ลบ">🗑️</button>
+                  </div>
                 </div>
-              </div>`).join('')}
+              </div>`;
+            }).join('')}
           </div>`}
         </div>
       </div>
