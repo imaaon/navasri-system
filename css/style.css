@@ -478,7 +478,7 @@
     letter-spacing: 0.05em;
   }
   .mr-item {
-    background: #fafafa;
+    background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 14px 12px 12px 12px;
@@ -487,7 +487,7 @@
   }
   .mr-item.urine { background: #fffef0; border-color: #f0e0a0; }
   .mr-item.stool { background: #f9f3eb; border-color: #d4a574; }
-  .mr-item.vomit { background: #fff0f0; border-color: #f0a0a0; }
+  .mr-item.vomit { background: var(--danger-bg); border-color: var(--danger); }
   .mr-item.other { background: #f0f0ff; border-color: #a0a0e0; }
   .mr-item.intake { background: #f0f8ff; border-color: #a0c8e0; }
   .mr-item.editing { border-width: 2px; border-color: var(--green-dark); box-shadow: 0 0 0 3px var(--green-light); }
@@ -669,7 +669,7 @@
   /* Alert */
   .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; display: flex; gap: 10px; align-items: flex-start; margin-bottom: 16px; }
   .alert-warning { background: var(--orange-light); border: 1px solid #f5c97a; color: #8a4d00; }
-  .alert-danger { background: var(--red-light); border: 1px solid #f5a0a0; color: var(--red); }
+  .alert-danger { background: var(--red-light); border: 1px solid var(--danger); color: var(--red); }
   .alert-success { background: var(--green-light); border: 1px solid #7dd4a0; color: var(--green); }
 
   /* Search */
@@ -766,7 +766,7 @@
   .login-logo h1 { font-size: 17px; font-weight: 700; }
   .login-logo p { font-size: 12.5px; color: var(--text2); margin-top: 2px; }
   .login-error {
-    background: var(--red-light); border: 1px solid #f5a0a0;
+    background: var(--red-light); border: 1px solid var(--danger);
     color: var(--red); border-radius: 7px; padding: 9px 13px;
     font-size: 13px; margin-bottom: 14px; display: none;
   }
@@ -819,7 +819,7 @@
   }
   .rq-print-header {
     display: flex; align-items: flex-start; justify-content: space-between;
-    margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #b8860b;
+    margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--warning-text);
   }
   .rq-hospital-name { font-size: 16px; font-weight: 700; }
   .rq-hospital-sub { font-size: 11px; color: #444; margin-top: 2px; }
@@ -835,7 +835,7 @@
   .rq-doc-ref strong { font-weight: 600; }
   .rq-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12.5px; }
   .rq-table th {
-    background: #f0f0f0; border: 1px solid #bbb;
+    background: var(--surface-2); border: 1px solid #bbb;
     padding: 6px 10px; text-align: center; font-weight: 700;
   }
   .rq-table td { border: 1px solid #bbb; padding: 6px 10px; }
@@ -854,9 +854,9 @@
     display: inline-block; padding: 3px 12px; border-radius: 20px;
     font-size: 11.5px; font-weight: 700; border: 1.5px solid;
   }
-  .rq-status-pending { color: #d4760a; border-color: #d4760a; background: #fef3e0; }
-  .rq-status-approved { color: #2a7a4f; border-color: #2a7a4f; background: #e8f5ee; }
-  .rq-status-rejected { color: #c0392b; border-color: #c0392b; background: #fdecea; }
+  .rq-status-pending { color: var(--warning-text); border-color: var(--warning-text); background: var(--warning-bg); }
+  .rq-status-approved { color: var(--brand); border-color: var(--brand); background: var(--success-bg); }
+  .rq-status-rejected { color: var(--danger-text); border-color: var(--danger-text); background: var(--danger-bg); }
   .rq-note-box {
     border: 1px solid #ccc; border-radius: 4px;
     padding: 8px 10px; min-height: 36px; margin-top: 10px;
@@ -883,8 +883,8 @@
     font-size: 10px; font-weight: 700; position: relative; z-index: 1;
     margin-bottom: 4px;
   }
-  .rq-tl-circle.done { background: #2a7a4f; border-color: #2a7a4f; color: white; }
-  .rq-tl-circle.active { background: #d4760a; border-color: #d4760a; color: white; }
+  .rq-tl-circle.done { background: var(--brand); border-color: var(--brand); color: white; }
+  .rq-tl-circle.active { background: var(--warning-text); border-color: var(--warning-text); color: white; }
 
 /* ── MOBILE RESPONSIVE IMPROVEMENTS (max-width: 768px) ── */
 @media (max-width: 768px) {
@@ -1157,12 +1157,12 @@
     flex-direction: column;
     align-items: center;
     padding: 12px 6px;
-    background: #fafafa;
+    background: var(--bg);
     border-radius: 12px;
     text-align: center;
     gap: 6px;
     cursor: pointer;
-    border: 1px solid #f0f0f0;
+    border: 1px solid var(--surface-2);
     min-height: 76px;
   }
   .bottom-more-item:active {
@@ -4246,7 +4246,7 @@ tr:hover td {
 /* Overdue row — left border indicator */
 .billing-table-r7 tbody tr[style*="background:#fff8f8"],
 .billing-table-r7 tbody tr[style*="background: #fff8f8"] {
-  border-left: 3px solid #c0392b;
+  border-left: 3px solid var(--danger-text);
 }
 
 /* Action buttons — smaller padding */
@@ -4353,13 +4353,13 @@ tr:hover td {
 
 /* Critical (qty=0) row — left border indicator + subtle bg */
 .stock-table-r8 tbody tr.stock-row-r8.critical-stock {
-  border-left: 3px solid #c0392b;
-  background: #fff8f8;
+  border-left: 3px solid var(--danger-text);
+  background: var(--danger-bg);
 }
 
 /* Low stock row — gentle amber tint + left border */
 .stock-table-r8 tbody tr.stock-row-r8.low-stock {
-  border-left: 3px solid #e67e22;
+  border-left: 3px solid var(--warning);
   background: #fffdf6;
 }
 
@@ -4374,7 +4374,7 @@ tr:hover td {
   background: var(--sage-50, #f4f8f5) !important;
 }
 .stock-table-r8 tbody tr.stock-row-r8.critical-stock:hover {
-  background: #fff0f0 !important;
+  background: var(--danger-bg) !important;
 }
 .stock-table-r8 tbody tr.stock-row-r8.low-stock:hover {
   background: #fff8e8 !important;
@@ -4549,10 +4549,10 @@ tr:hover td {
 
 /* Status-based row left border indicators */
 .patient-table-r9 tbody tr.pat-status-hospital {
-  border-left: 3px solid #2980b9;
+  border-left: 3px solid var(--info-text);
 }
 .patient-table-r9 tbody tr.pat-status-inactive {
-  border-left: 3px solid #95a5a6;
+  border-left: 3px solid var(--ink-3);
   opacity: 0.85;
 }
 .patient-table-r9 tbody tr.pat-status-active {
@@ -4581,14 +4581,14 @@ tr:hover td {
   color: var(--brand, #2e6b4f);
 }
 .patient-table-r9 .pat-avatar-hospital {
-  background: #eaf3fc;
-  border-color: #2980b9;
-  color: #1f4e7a;
+  background: var(--info-bg);
+  border-color: var(--info-text);
+  color: var(--info-text);
 }
 .patient-table-r9 .pat-avatar-inactive {
   background: var(--surface2, #f8f7f3);
-  border-color: #95a5a6;
-  color: #5d6d7e;
+  border-color: var(--ink-3);
+  color: var(--ink-2);
 }
 
 /* Action buttons (column 10) — tighter */
