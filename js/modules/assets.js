@@ -60,8 +60,8 @@ function renderAssets() {
 
   const today2 = today.toISOString().slice(0,10);
   tb.innerHTML = list.map(a=>{
-    const nmCls = a.nextMaintenanceDate && a.nextMaintenanceDate <= today2 ? 'color:var(--red);font-weight:700' : (a.nextMaintenanceDate&&a.nextMaintenanceDate<=soon7.toISOString().slice(0,10)?'color:#f5a453;font-weight:600':'');
-    const weCls = a.warrantyExpiry && a.warrantyExpiry <= soon30.toISOString().slice(0,10) ? 'color:#f5a453' : '';
+    const nmCls = a.nextMaintenanceDate && a.nextMaintenanceDate <= today2 ? 'color:var(--red);font-weight:700' : (a.nextMaintenanceDate&&a.nextMaintenanceDate<=soon7.toISOString().slice(0,10)?'color:var(--warning);font-weight:600':'');
+    const weCls = a.warrantyExpiry && a.warrantyExpiry <= soon30.toISOString().slice(0,10) ? 'color:var(--warning)' : '';
     return `<tr>
       <td style="font-family:monospace;font-size:12px;">${a.assetNo||'-'}${a.isCritical?'<span style="color:var(--red);margin-left:4px;" title="อุปกรณ์สำคัญ">⚠️</span>':''}</td>
       <td style="font-weight:500;">${a.name}<br><span style="font-size:11px;color:var(--text3);">${a.brand||''} ${a.model||''}</span></td>

@@ -20,7 +20,7 @@ function renderRooms() {
   // Summary cards by type
   const types = [...new Set(rooms.map(r => r.roomType))];
   const summaryEl = document.getElementById('room-summary');
-  const typeColors = { 'ห้องเดี่ยว':'#2d4a38','ห้องคู่':'#1a5276','ห้องรวม':'#4a235a','ห้อง VIP':'#7d6608','อื่นๆ':'#555' };
+  const typeColors = { 'ห้องเดี่ยว':'#2d4a38','ห้องคู่':'var(--info-text)','ห้องรวม':'#4a235a','ห้อง VIP':'#7d6608','อื่นๆ':'#555' };
   summaryEl.innerHTML = types.map(t => {
     const tRooms = rooms.filter(r => r.roomType === t);
     const tBeds  = beds.filter(b => tRooms.some(r => r.id == b.roomId));
@@ -57,7 +57,7 @@ function renderRooms() {
           if (b.status === 'inactive') return ''; // ซ่อนเตียงที่ปิดใช้งาน
           const statusColor = b.status==='available'?'var(--success)':b.status==='occupied'?'var(--danger-text)':b.status==='maintenance'?'var(--warning)':'var(--ink-3)';
           const statusLabel = b.status==='available'?'ว่าง':b.status==='occupied'?'มีผู้พัก':b.status==='maintenance'?'ซ่อมบำรุง':b.status==='other'?(b.otherNote||'อื่นๆ'):'ปิดใช้งาน';
-          return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:${b.status==='available'?'#f9fff9':b.status==='occupied'?'#fff5f5':b.status==='maintenance'?'#fffbf0':'#f5f5f5'};">
+          return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:${b.status==='available'?'var(--success-bg)':b.status==='occupied'?'var(--danger-bg)':b.status==='maintenance'?'var(--warning-bg)':'var(--surface-2)'};">
             <span style="font-size:16px;">🛏️</span>
             <div style="flex:1;">
               <div style="font-weight:600;font-size:13px;">เตียง ${b.bedCode}</div>

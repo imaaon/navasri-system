@@ -350,9 +350,9 @@ function renderBIPredictiveStock() {
       const d = r.daysLeft;
       let badge, rowStyle = '';
       if (d === null)    { badge = '<span class="badge badge-gray">ไม่ทราบ</span>'; }
-      else if (d <= 0)   { badge = '<span class="badge badge-red">หมดแล้ว</span>'; rowStyle = 'background:#fff5f5;'; }
-      else if (d <= 7)   { badge = '<span class="badge badge-red">< 7 วัน</span>'; rowStyle = 'background:#fff5f5;'; }
-      else if (d <= 14)  { badge = '<span class="badge badge-orange">< 14 วัน</span>'; rowStyle = 'background:#fff8f0;'; }
+      else if (d <= 0)   { badge = '<span class="badge badge-red">หมดแล้ว</span>'; rowStyle = 'background:var(--danger-bg);'; }
+      else if (d <= 7)   { badge = '<span class="badge badge-red">< 7 วัน</span>'; rowStyle = 'background:var(--danger-bg);'; }
+      else if (d <= 14)  { badge = '<span class="badge badge-orange">< 14 วัน</span>'; rowStyle = 'background:var(--warning-bg);'; }
       else if (d <= 30)  { badge = '<span class="badge badge-orange">< 30 วัน</span>'; }
       else               { badge = '<span class="badge badge-green">ปกติ</span>'; }
 
@@ -532,8 +532,8 @@ function renderAdvancedForecast() {
       const d = r.daysLeft;
       let badge, rowStyle = '';
       if (d === null || d < 0) { badge = '<span class="badge badge-gray">ไม่ทราบ</span>'; }
-      else if (d <= 7)  { badge = '<span class="badge badge-red">⚠️ < 7 วัน</span>'; rowStyle = 'background:#fff5f5;'; }
-      else if (d <= 14) { badge = '<span class="badge badge-orange">< 14 วัน</span>'; rowStyle = 'background:#fff8f0;'; }
+      else if (d <= 7)  { badge = '<span class="badge badge-red">⚠️ < 7 วัน</span>'; rowStyle = 'background:var(--danger-bg);'; }
+      else if (d <= 14) { badge = '<span class="badge badge-orange">< 14 วัน</span>'; rowStyle = 'background:var(--warning-bg);'; }
       else if (d <= 30) { badge = '<span class="badge badge-orange">< 30 วัน</span>'; }
       else              { badge = '<span class="badge badge-green">ปกติ</span>'; }
 
@@ -602,11 +602,11 @@ function renderPricingAnalysis() {
 
   el.innerHTML =
     `<div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
-      <div style="background:${lossCount>0?'#fff5f5':'var(--surface2)'};border-radius:8px;padding:10px 16px;text-align:center;">
+      <div style="background:${lossCount>0?'var(--danger-bg)':'var(--surface2)'};border-radius:8px;padding:10px 16px;text-align:center;">
         <div style="font-size:11px;color:var(--text3);">สินค้า Loss</div>
         <div style="font-size:20px;font-weight:700;color:${lossCount>0?'var(--red)':'var(--green)'};">${lossCount}</div>
       </div>
-      <div style="background:${lowCount>0?'#fff8f0':'var(--surface2)'};border-radius:8px;padding:10px 16px;text-align:center;">
+      <div style="background:${lowCount>0?'var(--warning-bg)':'var(--surface2)'};border-radius:8px;padding:10px 16px;text-align:center;">
         <div style="font-size:11px;color:var(--text3);">Margin < 20%</div>
         <div style="font-size:20px;font-weight:700;color:var(--orange);">${lowCount}</div>
       </div>
@@ -626,7 +626,7 @@ function renderPricingAnalysis() {
     '</tr></thead><tbody>' +
     rows.map(r => {
       const marginColor = r.margin < 0 ? 'var(--red)' : r.margin < 20 ? 'var(--orange)' : 'var(--green)';
-      const rowStyle = r.margin < 0 ? 'background:#fff5f5;' : r.margin < 20 ? 'background:#fff8f0;' : '';
+      const rowStyle = r.margin < 0 ? 'background:var(--danger-bg);' : r.margin < 20 ? 'background:var(--warning-bg);' : '';
       let suggestion = '';
       if (r.margin < 0) suggestion = `<span class="badge badge-red">ปรับราคาเป็น ฿${r.suggestedPrice}</span>`;
       else if (r.margin < 20) suggestion = `<span class="badge badge-orange">แนะนำ ฿${r.suggestedPrice}</span>`;
@@ -766,7 +766,7 @@ function renderDecisionRecommendations() {
   }
 
   const colorMap = { danger:'var(--danger)', warning:'var(--warning)', info:'var(--info-text)' };
-  const bgMap    = { danger:'#fff5f5', warning:'#fff8f0', info:'#f0f7ff' };
+  const bgMap    = { danger:'var(--danger-bg)', warning:'var(--warning-bg)', info:'#f0f7ff' };
 
   el.innerHTML = recs.map(r => `
     <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border-radius:8px;background:${bgMap[r.type]};border-left:3px solid ${colorMap[r.type]};margin-bottom:8px;">
@@ -1090,7 +1090,7 @@ function runCaseAcceptance() {
           </div>
         </div>
         ${actions.length > 0 ? `
-          <div style="background:#fff8f0;border-radius:8px;padding:12px;border-left:3px solid var(--orange);">
+          <div style="background:var(--warning-bg);border-radius:8px;padding:12px;border-left:3px solid var(--orange);">
             <div style="font-size:12px;font-weight:600;color:var(--orange);margin-bottom:6px;">📋 คำแนะนำ</div>
             ${actions.map(a=>`<div style="font-size:13px;padding:2px 0;">• ${a}</div>`).join('')}
           </div>` : ''}
@@ -1259,7 +1259,7 @@ function renderInvestorDashboard() {
           {label:'ต้นทุนสินค้า',value:_thb(cogs),sub:`${reqs.length} รายการ`,color:'var(--warning)'},
           {label:'กำไรขั้นต้น',value:_thb(grossProfit),sub:`Margin ${Math.round(margin)}%`,color:grossProfit>=0?'var(--success)':'var(--danger)'},
           {label:'Rev/Patient',value:_thb(revPerPat),sub:'เฉลี่ยต่อคน',color:'var(--purple)'},
-          {label:'Cost/Patient',value:_thb(costPerPat),sub:'ต้นทุนต่อคน',color:'#16a085'},
+          {label:'Cost/Patient',value:_thb(costPerPat),sub:'ต้นทุนต่อคน',color:'var(--brand)'},
         ].map(k=>`
           <div style="background:#fff;border-radius:10px;padding:12px;border-bottom:3px solid ${k.color};box-shadow:0 1px 4px rgba(0,0,0,0.06);text-align:center;">
             <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">${k.label}</div>

@@ -23,7 +23,7 @@ var _VITAL_CHIPS = [
     ranges: { temp: { normal: [36.1, 37.2], warning: [37.3, 37.9], critical: [38, 999], low_warning: [35.5, 36.0], low_critical: [0, 35.4] }, hint: 'ปกติ 36.1–37.2°C' } },
   { key: 'spo2',   icon: '🫁', label: 'SpO₂',     color: 'var(--success)', unit: '%',    locked: true,  fields: ['spo2'],
     ranges: { spo2: { normal: [95, 100], warning: [90, 94], critical: [0, 89] }, hint: 'ปกติ ≥ 95%' } },
-  { key: 'rr',     icon: '🫀', label: 'RR',       color: '#16a085', unit: '/min', locked: true,  fields: ['rr'],
+  { key: 'rr',     icon: '🫀', label: 'RR',       color: 'var(--brand)', unit: '/min', locked: true,  fields: ['rr'],
     ranges: { rr: { normal: [12, 20], warning: [21, 24], critical: [25, 999], low_warning: [10, 11], low_critical: [0, 9] }, hint: 'ปกติ 12–20 /min' } },
   { key: 'dtx',    icon: '🍬', label: 'DTX',      color: 'var(--purple)', unit: 'mg/dL',locked: false, fields: ['dtx'],
     ranges: { dtx: { normal: [70, 140], warning: [141, 180], critical: [181, 999], low_warning: [54, 69], low_critical: [0, 53] }, hint: 'ปกติ 70–140 mg/dL' } },
@@ -67,9 +67,9 @@ function _vitalUpdateAlert(chipConfig, wrap) {
   }
   // Style by tone
   var palette = {
-    normal:   { bg: '#dcf0e2', color: '#1f5132' },
+    normal:   { bg: 'var(--success-bg)', color: 'var(--success-text)' },
     warning:  { bg: 'var(--warning-bg)', color: 'var(--warning-text)' },
-    critical: { bg: '#fdf0ee', color: '#7a1f12' }
+    critical: { bg: 'var(--danger-bg)', color: 'var(--danger-text)' }
   }[worstResult.tone] || { bg: '#f0f0f0', color: '#666' };
   alertEl.style.display = '';
   alertEl.style.background = palette.bg;
@@ -277,7 +277,7 @@ function _openVitalModal(rec, patientId, pid) {
     // Value field for each chip (showing only active ones)
     _VITAL_CHIPS.forEach(function(c) {
       var wrap = document.createElement('div');
-      wrap.style.cssText = 'background:#fafbfc;border-radius:8px;padding:10px;margin-bottom:6px;border-left:3px solid ' + c.color + ';';
+      wrap.style.cssText = 'background:var(--bg);border-radius:8px;padding:10px;margin-bottom:6px;border-left:3px solid ' + c.color + ';';
       wrap.style.display = activeChips[c.key] ? '' : 'none';
 
       var header = document.createElement('div');
@@ -645,7 +645,7 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
             <th style="text-align:center;color:var(--warning);">🌡️ Temp</th>
             <th style="text-align:center;color:var(--success);">🫁 SpO₂</th>
             <th style="text-align:center;color:var(--purple);">🍬 DTX</th>
-            <th style="text-align:center;color:#16a085;">🫀 RR</th>
+            <th style="text-align:center;color:var(--brand);">🫀 RR</th>
             <th style="text-align:center;">⚖️ น้ำหนัก</th>
             <th style="text-align:center;">📏 ส่วนสูง</th>
             <th>อื่นๆ</th>
@@ -666,7 +666,7 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
                 const tooMany = filteredAll.length > MAX_ROWS;
                 const filtered = tooMany ? filteredAll.slice(0, MAX_ROWS) : filteredAll;
                 const warning = tooMany 
-                  ? `<tr><td colspan="13" style="text-align:center;padding:10px;background:#fef3c7;color:#92400e;font-size:12px;">⚠️ พบ ${filteredAll.length} รายการ — แสดง ${MAX_ROWS} รายการล่าสุด กรุณาเลือกช่วงให้แคบลง</td></tr>` 
+                  ? `<tr><td colspan="13" style="text-align:center;padding:10px;background:var(--warning-bg);color:var(--warning-text);font-size:12px;">⚠️ พบ ${filteredAll.length} รายการ — แสดง ${MAX_ROWS} รายการล่าสุด กรุณาเลือกช่วงให้แคบลง</td></tr>` 
                   : '';
                 const rangeText = (fromDate === toDate) ? '' : ` (${fromDate} ถึง ${toDate})`;
                 if (!filtered.length) return `<tr><td colspan="13" style="text-align:center;padding:24px;color:var(--text3);">ไม่มีรายการในช่วงที่เลือก${rangeText}</td></tr>`;
@@ -679,7 +679,7 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
                   const rrAlert = v.rr && (v.rr<14 || v.rr>22);
                   const dtxAlert = v.dtx && (v.dtx<70 || v.dtx>150);
                   const anyAlert = bpAlert||spo2Alert||hrAlert||tempAlert||rrAlert||dtxAlert;
-                  return `<tr ${anyAlert ? 'style="background:#fff8f8;"' : ''}>
+                  return `<tr ${anyAlert ? 'style="background:var(--danger-bg);"' : ''}>
                     <td data-label="วัน/เวลา" class="number" style="font-size:12px;white-space:nowrap;">${(v.recordedAt ? new Date(v.recordedAt).toLocaleString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',',' ') : '-')}</td>
                     <td data-label="🩸 BP" style="text-align:center;font-weight:${bpAlert?'700':'400'};color:${bpAlert?'var(--danger)':'inherit'};">${v.bp_sys ? v.bp_sys+'/'+v.bp_dia : '-'}</td>
                     <td data-label="💓 HR" style="text-align:center;font-weight:${hrAlert?'700':'400'};color:${hrAlert?'var(--danger)':'inherit'};">${v.hr||'-'}</td>
@@ -1176,7 +1176,7 @@ async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
     if (manual[mk].reopen_requested) pendingReopens.push(manual[mk]);
   });
   if (pendingReopens.length > 0 && _ssCanApproveReopen()) {
-    html += '<div style="background:#fff8e8;border-left:4px solid var(--warning-text);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#8a4d00;">';
+    html += '<div style="background:var(--warning-bg);border-left:4px solid var(--warning-text);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#8a4d00;">';
     html += '<strong>⚠️ มีคำขอเปิดเวรใหม่ ' + pendingReopens.length + ' รายการ</strong> รออนุมัติ (ดูที่ card สีส้มด้านล่าง)';
     html += '</div>';
   }
@@ -1194,8 +1194,8 @@ async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
 
     // ── Card style ตาม state ──
     var cardStyle = 'background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;';
-    if (isClosed && !isReopenPending) cardStyle = 'background:#f0f9f4;border:1.5px solid #1d8c4f;border-radius:10px;padding:14px;margin-bottom:12px;';
-    if (isReopenPending) cardStyle = 'background:#fff8e8;border:1.5px solid var(--warning-text);border-radius:10px;padding:14px;margin-bottom:12px;';
+    if (isClosed && !isReopenPending) cardStyle = 'background:#f0f9f4;border:1.5px solid var(--success-text);border-radius:10px;padding:14px;margin-bottom:12px;';
+    if (isReopenPending) cardStyle = 'background:var(--warning-bg);border:1.5px solid var(--warning-text);border-radius:10px;padding:14px;margin-bottom:12px;';
 
     html += '<div class="ss-card" style="' + cardStyle + '">';
     html += '  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;">';
@@ -1206,11 +1206,11 @@ async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
       html += '    <span style="font-size:10px;background:#fff;color:var(--warning-text);border:1.5px solid var(--warning-text);padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">⏳ รออนุมัติเปิดเวร</span>';
     } else if (isClosed) {
       var closedAt = override.closed_at ? new Date(override.closed_at).toLocaleString('th-TH',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '';
-      html += '    <span style="font-size:10px;background:#1d8c4f;color:#fff;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">🔒 ปิดเวรแล้ว · ' + (override.closed_by || '—') + ' · ' + closedAt + '</span>';
+      html += '    <span style="font-size:10px;background:var(--success-text);color:#fff;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">🔒 ปิดเวรแล้ว · ' + (override.closed_by || '—') + ' · ' + closedAt + '</span>';
     } else if (isManual) {
-      html += '    <span style="font-size:10px;background:#fff8e8;color:var(--warning-text);padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">✏️ แก้ไขแล้ว</span>';
+      html += '    <span style="font-size:10px;background:var(--warning-bg);color:var(--warning-text);padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">✏️ แก้ไขแล้ว</span>';
     } else {
-      html += '    <span style="font-size:10px;background:#ecf9f0;color:#1d8c4f;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">🤖 สรุปอัตโนมัติ</span>';
+      html += '    <span style="font-size:10px;background:var(--success-bg);color:var(--success-text);padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">🤖 สรุปอัตโนมัติ</span>';
     }
     html += '  </div>';
 
@@ -1251,7 +1251,7 @@ async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
 
       // Approver — มี request pending → approve / deny
       if (isReopenPending && _ssCanApproveReopen()) {
-        html += '    <button class="btn btn-primary btn-sm" onclick="_ssApproveReopen(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\')" style="font-size:11px;background:#1d8c4f;border-color:#1d8c4f;">✅ อนุมัติ</button>';
+        html += '    <button class="btn btn-primary btn-sm" onclick="_ssApproveReopen(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\')" style="font-size:11px;background:var(--success-text);border-color:var(--success-text);">✅ อนุมัติ</button>';
         html += '    <button class="btn btn-ghost btn-sm" onclick="_ssDenyReopenAction(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\')" style="font-size:11px;color:var(--red);">❌ ปฏิเสธ</button>';
       }
     }
@@ -1382,7 +1382,7 @@ window._ssExportPDF = function(summaryId, shift, date) {
     '<style>body{font-family:"Sarabun",sans-serif;padding:30px;line-height:1.7;font-size:14px;}' +
     'h2{color:#2e6b4f;border-bottom:2px solid #2e6b4f;padding-bottom:8px;}' +
     '.meta{font-size:11px;color:#888;margin-top:20px;}' +
-    '.hint{background:#fff8e8;border-left:4px solid var(--warning-text);padding:10px 14px;margin:14px 0;font-size:12px;}</style></head><body>' +
+    '.hint{background:var(--warning-bg);border-left:4px solid var(--warning-text);padding:10px 14px;margin:14px 0;font-size:12px;}</style></head><body>' +
     '<div class="hint">💡 กด Ctrl+P (หรือ Cmd+P) → เลือก "Save as PDF" เพื่อบันทึกเป็น PDF</div>' +
     '<h2>📋 สรุปอาการ — เวร' + shift + ' ' + dateThai + '</h2>' +
     '<div>' + _escapeHtml(text).replace(/\n/g,'<br>') + '</div>' +
@@ -1422,12 +1422,12 @@ window._ssOpenCloseModal = function(patientId, pid, date, shift, summaryId) {
   modal.style.cssText = 'background:#fff;border-radius:12px;padding:20px;width:600px;max-width:95vw;max-height:92vh;overflow-y:auto;';
 
   modal.innerHTML =
-    '<div style="font-size:16px;font-weight:700;color:#1d8c4f;margin-bottom:6px;">🔒 ปิดเวร / สรุปส่งเวร</div>' +
+    '<div style="font-size:16px;font-weight:700;color:var(--success-text);margin-bottom:6px;">🔒 ปิดเวร / สรุปส่งเวร</div>' +
     '<div style="font-size:13px;color:var(--text2);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">เวร' + shift + ' · ' + dateThai + '</div>' +
-    '<div style="background:#fff8e8;border-left:4px solid var(--warning-text);padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a4d00;line-height:1.6;border-radius:4px;">⚠️ การปิดเวรเป็นการรับรองข้อมูลอย่างเป็นทางการ — หลังปิดแล้วจะแก้ไขไม่ได้ (ยกเว้น admin/manager/nurse)</div>' +
+    '<div style="background:var(--warning-bg);border-left:4px solid var(--warning-text);padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a4d00;line-height:1.6;border-radius:4px;">⚠️ การปิดเวรเป็นการรับรองข้อมูลอย่างเป็นทางการ — หลังปิดแล้วจะแก้ไขไม่ได้ (ยกเว้น admin/manager/nurse)</div>' +
     '<div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;">📋 สรุปสุดท้าย (แก้ไขได้):</div>' +
     '<textarea id="close-shift-text" style="width:100%;min-height:200px;padding:12px;font-size:13px;line-height:1.65;border:1.5px solid var(--accent);border-radius:6px;font-family:inherit;resize:vertical;">' + _escapeHtml(currentText) + '</textarea>' +
-    '<div style="margin-top:14px;padding:12px;background:#f5f6f8;border-radius:8px;">' +
+    '<div style="margin-top:14px;padding:12px;background:var(--surface-2);border-radius:8px;">' +
     '  <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:13px;line-height:1.5;">' +
     '    <input type="checkbox" id="close-shift-confirm" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;">' +
     '    <span><strong>ฉันตรวจสอบและรับรองข้อมูลแล้ว</strong><br><span style="font-size:11px;color:var(--text3);">ข้อมูลในสรุปนี้ถูกต้องและพร้อมส่งต่อ</span></span>' +
@@ -1502,7 +1502,7 @@ window._ssOpenReopenRequest = function(patientId, pid, date, shift) {
   modal.innerHTML =
     '<div style="font-size:16px;font-weight:700;color:var(--warning-text);margin-bottom:6px;">📨 ขอเปิดเวรใหม่</div>' +
     '<div style="font-size:13px;color:var(--text2);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">เวร' + shift + ' · ' + dateThai + '</div>' +
-    '<div style="background:#fff8e8;border-left:4px solid var(--warning-text);padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a4d00;line-height:1.6;border-radius:4px;">⚠️ คำขอจะถูกส่งไปยังหัวหน้าเวร (admin/manager/nurse) เพื่อพิจารณาอนุมัติ</div>' +
+    '<div style="background:var(--warning-bg);border-left:4px solid var(--warning-text);padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a4d00;line-height:1.6;border-radius:4px;">⚠️ คำขอจะถูกส่งไปยังหัวหน้าเวร (admin/manager/nurse) เพื่อพิจารณาอนุมัติ</div>' +
     '<div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;">เหตุผลที่ต้องการเปิดเวร <span style="color:var(--red);">*</span></div>' +
     '<textarea id="reopen-reason" placeholder="เช่น กรอกค่า BP ผิด, ลืมบันทึกการอาเจียน..." style="width:100%;min-height:100px;padding:10px;font-size:13px;line-height:1.5;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;resize:vertical;"></textarea>' +
     '<div style="display:flex;gap:8px;margin-top:16px;">' +

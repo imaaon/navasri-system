@@ -1252,7 +1252,7 @@ function renderReqForm({ reqs, first, group }) {
     <!-- == HEADER == -->
     <div class="rq-print-header">
       <div style="display:flex;align-items:center;gap:14px;">
-        <img src="img/logo.png" alt="Navasri Logo" style="width:70px;height:70px;object-fit:contain;border-radius:8px;background:#e8f4ee;padding:6px;flex-shrink:0;border:1px solid #cce8d8;">
+        <img src="img/logo.png" alt="Navasri Logo" style="width:70px;height:70px;object-fit:contain;border-radius:8px;background:var(--success-bg);padding:6px;flex-shrink:0;border:1px solid var(--success-bg);">
         <div>
           <div class="rq-hospital-name">นวศรี เนอร์สซิ่งโฮม</div>
           <div class="rq-hospital-sub">Navasri Nursing Home</div>
@@ -1284,7 +1284,7 @@ function renderReqForm({ reqs, first, group }) {
     </div>
 
     <!-- == WORKFLOW TIMELINE == -->
-    <div style="border:1px solid #e0e0e0;border-radius:4px;padding:10px 16px;margin:10px 0;background:#fafafa;">
+    <div style="border:1px solid var(--border);border-radius:4px;padding:10px 16px;margin:10px 0;background:#fafafa;">
       <div style="font-size:10px;color:#888;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;">สถานะ Workflow</div>
       <div class="rq-timeline">
         ${wfSteps.map((s,i) => {

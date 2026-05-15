@@ -42,7 +42,7 @@ function renderNurseDashboard() {
         <div style="font-size:12px;color:var(--text2);margin-top:4px;">👥 ผู้รับบริการปัจจุบัน</div>
       </div>
       <div class="card" style="padding:18px;text-align:center;">
-        <div style="font-size:28px;font-weight:800;color:#f5a453;">${upcomingAppts.length}</div>
+        <div style="font-size:28px;font-weight:800;color:var(--warning);">${upcomingAppts.length}</div>
         <div style="font-size:12px;color:var(--text2);margin-top:4px;">📅 นัดหมายสัปดาห์นี้</div>
       </div>
       <div class="card" style="padding:18px;text-align:center;">
@@ -81,7 +81,7 @@ function renderNurseDashboard() {
           <td style="padding:8px 12px;color:var(--red);">💊 ${m.med}</td>
         </tr>`).join('')}</tbody>
       </table>
-    </div>` : `<div class="card" style="padding:20px;text-align:center;color:#0a3626;">✅ บันทึกการให้ยาครบทุกรายการแล้ววันนี้</div>`}
+    </div>` : `<div class="card" style="padding:20px;text-align:center;color:var(--success-text);">✅ บันทึกการให้ยาครบทุกรายการแล้ววันนี้</div>`}
   `;
 }
 
@@ -137,7 +137,7 @@ function renderAdminDashboard() {
     tl.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">ยังไม่มีการเบิก</div></div>';
   } else {
     tl.innerHTML = recent.map(r => {
-      const catColors = { ยา:'#f4a7b9', เวชภัณฑ์:'#f5a453', ของใช้:'#7ab8d4', บริการ:'#b39ddb' };
+      const catColors = { ยา:'#f4a7b9', เวชภัณฑ์:'var(--warning)', ของใช้:'var(--info)', บริการ:'#b39ddb' };
       // รองรับทั้ง schema ใหม่ (lines[]) และเก่า (itemId/itemName)
       const displayLines = (r.lines && r.lines.length > 0) ? r.lines : [{ itemName: r.itemName, qty: r.qty, unit: r.unit, itemId: r.itemId }];
       const firstLine = displayLines[0] || {};
@@ -178,7 +178,7 @@ function renderAdminDashboard() {
         <td style="font-family:monospace;font-size:12px;">${lot.lotNumber||'-'}</td>
         <td class="number">${lot.qtyRemaining}</td>
         <td>${item?.dispenseUnit||item?.unit||''}</td>
-        <td style="font-family:monospace;">${lot.expiryDate} <span style="font-size:11px;color:${status==='expired'?'var(--red)':'#f5a453'};">(${diffTxt})</span></td>
+        <td style="font-family:monospace;">${lot.expiryDate} <span style="font-size:11px;color:${status==='expired'?'var(--red)':'var(--warning)'};">(${diffTxt})</span></td>
         <td>${badge}</td>
       </tr>`;
     }).join('');
@@ -188,7 +188,7 @@ function renderAdminDashboard() {
 
   // Category summary
   const catDiv = document.getElementById('catSummary');
-  const catColors2 = { ยา:{bg:'var(--danger-bg)',color:'var(--danger-text)',icon:'💊'}, เวชภัณฑ์:{bg:'var(--warning-bg)',color:'var(--warning-text)',icon:'🩺'}, ของใช้:{bg:'#e8f0fa',color:'#1e5fa0',icon:'🧴'}, บริการ:{bg:'#f0e8fa',color:'#6e3fa0',icon:'⚕️'} };
+  const catColors2 = { ยา:{bg:'var(--danger-bg)',color:'var(--danger-text)',icon:'💊'}, เวชภัณฑ์:{bg:'var(--warning-bg)',color:'var(--warning-text)',icon:'🩺'}, ของใช้:{bg:'#e8f0fa',color:'var(--info-text)',icon:'🧴'}, บริการ:{bg:'var(--purple-bg)',color:'#6e3fa0',icon:'⚕️'} };
   const cats = ['ยา','เวชภัณฑ์','ของใช้','บริการ'];
   catDiv.innerHTML = cats.map(cat => {
     const count = db.items.filter(i => i.category === cat).length;
@@ -309,7 +309,7 @@ function renderAdminDashboard() {
     } else {
       _maintEl.innerHTML = _due.slice(0,5).map(a=>{
         const d = Math.ceil((new Date(a.nextMaintenanceDate)-_today)/864e5);
-        const col = d<0?'var(--red)':d<=7?'#f5a453':'#f5c842';
+        const col = d<0?'var(--red)':d<=7?'var(--warning)':'var(--warning)';
         const lbl = d<0?'เลยกำหนด '+Math.abs(d)+' วัน':'อีก '+d+' วัน';
         return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:13px;cursor:pointer;" onclick="showPage(\'assets\')">'+
           '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+a.assetNo+' '+a.name+'</span>'+
@@ -341,20 +341,20 @@ function renderIncidentWidget() {
   const prevCount = incidents.filter(r => (r.date||'').startsWith(prevStr)).length;
   const diff = monthInc.length - prevCount;
   const diffTxt = diff === 0 ? 'เท่ากับเดือนก่อน' : (diff > 0 ? '▲ เพิ่มขึ้น '+diff : '▼ ลดลง '+Math.abs(diff));
-  const diffColor = diff > 0 ? 'var(--red)' : diff < 0 ? '#5ecba1' : '#888';
-  const numColor = monthInc.length === 0 ? '#5ecba1' : 'var(--red)';
+  const diffColor = diff > 0 ? 'var(--red)' : diff < 0 ? 'var(--success)' : '#888';
+  const numColor = monthInc.length === 0 ? 'var(--success)' : 'var(--red)';
 
   // --- Card 2: วันที่ไม่เกิดอุบัติเหตุ ---
   const sorted = [...incidents].filter(r=>r.date).sort((a,b)=>b.date.localeCompare(a.date));
   const lastInc = sorted[0];
-  let streakDays = 0, lastIncDate = '-', streakColor = '#5ecba1', streakBorder = '#5ecba1';
+  let streakDays = 0, lastIncDate = '-', streakColor = 'var(--success)', streakBorder = 'var(--success)';
   if (lastInc) {
     const last = new Date(lastInc.date + 'T00:00:00+07:00');
     const today = new Date(todayStr + 'T00:00:00+07:00');
     streakDays = Math.max(0, Math.floor((today - last) / 86400000));
     lastIncDate = lastInc.date;
     if (streakDays === 0) { streakColor = 'var(--red)'; streakBorder = 'var(--red)'; }
-    else if (streakDays < 7) { streakColor = '#f5a453'; streakBorder = '#f5a453'; }
+    else if (streakDays < 7) { streakColor = 'var(--warning)'; streakBorder = 'var(--warning)'; }
   } else {
     // ไม่เคยมีอุบัติเหตุ — นับตั้งแต่ admit แรกสุด หรือ 0
     streakDays = 0;
@@ -372,7 +372,7 @@ function renderIncidentWidget() {
   const barHtml = barData.map(b => {
     const pct = Math.round((b.count / maxBar) * 100);
     const color = b.count === 0 ? 'var(--surface2)' : 'var(--red)';
-    const numColor2 = b.count === 0 ? '#5ecba1' : 'var(--red)';
+    const numColor2 = b.count === 0 ? 'var(--success)' : 'var(--red)';
     return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;">'
       +'<span style="width:30px;color:var(--text3);">'+b.label+'</span>'
       +'<div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;">'
@@ -382,7 +382,7 @@ function renderIncidentWidget() {
       +'</div>';
   }).join('');
 
-  const streakBg = streakDays === 0 ? 'var(--red-light)' : streakDays < 7 ? 'var(--orange-light)' : '#e0f7ec';
+  const streakBg = streakDays === 0 ? 'var(--red-light)' : streakDays < 7 ? 'var(--orange-light)' : 'var(--success-bg)';
   el.innerHTML =
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">'
     // card รายเดือน
@@ -403,7 +403,7 @@ function renderIncidentWidget() {
     +'</div>'
     +'<div>'
     +'<div style="font-size:12px;color:var(--text2);">นับตั้งแต่ครั้งล่าสุด</div>'
-    +(lastIncDate !== '-' ? '<div style="font-size:11px;color:var(--text3);">'+lastIncDate+'</div>' : '<div style="font-size:11px;color:#5ecba1;">ยังไม่เคยมีบันทึก</div>')
+    +(lastIncDate !== '-' ? '<div style="font-size:11px;color:var(--text3);">'+lastIncDate+'</div>' : '<div style="font-size:11px;color:var(--success);">ยังไม่เคยมีบันทึก</div>')
     +'</div></div></div>'
     +'</div>'
     // bar chart

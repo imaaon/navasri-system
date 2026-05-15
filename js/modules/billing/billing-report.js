@@ -505,8 +505,8 @@ function printInvoice(id) {
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;color:#222;background:#fff;padding:28px;max-width:820px;margin:0 auto;}
-    .print-btn{position:fixed;top:12px;right:12px;background:#5a9e7a;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;z-index:99;}
-    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #5a9e7a;padding-bottom:16px;margin-bottom:18px;}
+    .print-btn{position:fixed;top:12px;right:12px;background:var(--brand);color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;z-index:99;}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid var(--brand);padding-bottom:16px;margin-bottom:18px;}
     .co-name{font-size:16px;font-weight:700;color:#2d4a38;margin-bottom:4px;}
     .co-sub{font-size:11px;color:#555;line-height:1.7;}
     .doc-box{text-align:right;}
@@ -516,7 +516,7 @@ function printInvoice(id) {
     .meta-table td{padding:2px 6px;}
     .meta-label{color:#777;white-space:nowrap;width:90px;}
     .meta-val{font-weight:600;}
-    .to-box{background:#f8f8f8;border:1px solid #e8e8e8;border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;}
+    .to-box{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:16px;font-size:13px;}
     .to-label{font-size:11px;color:#999;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
     .to-name{font-weight:700;font-size:15px;margin-bottom:3px;}
     .to-sub{font-size:11px;color:#666;}
@@ -628,8 +628,8 @@ function printExpense(id) {
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;color:#222;background:#fff;padding:28px;max-width:820px;margin:0 auto;}
-    .print-btn{position:fixed;top:12px;right:12px;background:#5a9e7a;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;}
-    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #5a9e7a;padding-bottom:16px;margin-bottom:18px;}
+    .print-btn{position:fixed;top:12px;right:12px;background:var(--brand);color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-size:14px;font-family:inherit;}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid var(--brand);padding-bottom:16px;margin-bottom:18px;}
     .co-name{font-size:16px;font-weight:700;color:#2d4a38;margin-bottom:4px;}
     .co-sub{font-size:11px;color:#555;line-height:1.7;}
     .doc-box{text-align:right;}
@@ -646,7 +646,7 @@ function printExpense(id) {
     .tot-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;}
     .tot-row.sep{border-top:1px solid #ddd;margin-top:4px;padding-top:8px;}
     .tot-row.net{font-weight:700;font-size:15px;background:#2d4a38;color:#fff;padding:8px 12px;border-radius:6px;margin-top:6px;}
-    .pay-section{background:#f8f8f8;border:1px solid #e8e8e8;border-radius:6px;padding:12px 16px;margin-top:16px;font-size:13px;}
+    .pay-section{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-top:16px;font-size:13px;}
     .sign-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:44px;}
     .sign-box{text-align:center;width:180px;}
     .sign-line{border-top:1.5px solid #444;margin-top:56px;padding-top:8px;}
@@ -678,7 +678,7 @@ function printExpense(id) {
     </div>
   </div>
 
-  ${exp.vendorName?`<div style="background:#f8f8f8;border:1px solid #e8e8e8;border-radius:6px;padding:12px 16px;margin-bottom:14px;">
+  ${exp.vendorName?`<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:14px;">
     <div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">ผู้จำหน่าย / Vendor</div>
     <div style="font-weight:700;font-size:14px;">${exp.vendorName}</div>
     ${exp.vendorAddr?`<div style="font-size:12px;color:#666;margin-top:2px;">${exp.vendorAddr}</div>`:''}

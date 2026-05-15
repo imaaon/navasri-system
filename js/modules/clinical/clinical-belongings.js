@@ -192,8 +192,8 @@ async function clearDnr(patientId, patientName) {
 function renderDnrPanel(p) {
   const consent = (db.patientConsents||[]).find(c=>String(c.patientId)===String(p.id));
   const DNR_STYLES = {
-    dnr:   { bg:'#fdf2f8', border:'var(--danger-text)', badge:'var(--danger-text)', icon:'🚫', label:'DNR — ไม่ต้องการการช่วยชีวิต' },
-    full:  { bg:'#f0fff4', border:'var(--success)', badge:'var(--success)', icon:'✅', label:'Full Code — ยินยอมให้ช่วยชีวิตเต็มที่' },
+    dnr:   { bg:'var(--danger-bg)', border:'var(--danger-text)', badge:'var(--danger-text)', icon:'🚫', label:'DNR — ไม่ต้องการการช่วยชีวิต' },
+    full:  { bg:'var(--success-bg)', border:'var(--success)', badge:'var(--success)', icon:'✅', label:'Full Code — ยินยอมให้ช่วยชีวิตเต็มที่' },
     limited:{ bg:'var(--warning-bg)', border:'var(--warning)', badge:'var(--warning)', icon:'⚠️', label:'Limited — ยินยอมบางส่วน (ดูรายละเอียด)' },
     not_set:{ bg:'var(--surface2)', border:'var(--border)', badge:'#888', icon:'❓', label:'ยังไม่ได้กำหนด' },
   };

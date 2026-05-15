@@ -228,8 +228,8 @@ async function openPatientProfile(id, activeTab) {
           <span style="font-size:12px;color:var(--text2);margin-left:auto;">${p.allergies?.length || 0} รายการ · ระวังก่อนจ่ายยาทุกครั้ง</span>
         </div>
         <div class="card">
-          <div class="card-header" style="background:linear-gradient(to right, #fdf0ee, transparent);">
-            <div class="card-title" style="font-size:14px;color:#7a1f12;display:flex;align-items:center;gap:8px;"><span>🚨</span> ประวัติการแพ้</div>
+          <div class="card-header" style="background:linear-gradient(to right, var(--danger-bg), transparent);">
+            <div class="card-title" style="font-size:14px;color:var(--danger-text);display:flex;align-items:center;gap:8px;"><span>🚨</span> ประวัติการแพ้</div>
             <button class="btn btn-primary btn-sm" onclick="openAddAllergyModal('${p.id}')">+ เพิ่ม</button>
           </div>
           ${(()=>{ var _d=document.createElement('div'); _d.id='pat-allergy-list-'+p.id; _d.style.padding='16px'; _d.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">⏳ กำลังโหลด...</div>'; return _d.outerHTML; })()}
@@ -256,8 +256,8 @@ async function openPatientProfile(id, activeTab) {
           `<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
             ${(p.contacts||[]).map(c => {
               const tone = c.isPayer ? 'payer' : c.isDecisionMaker ? 'decision' : 'emergency';
-              const accent = { payer: 'var(--success)', decision: '#5e60ce', emergency: '#7a8a9a' }[tone];
-              const tint = { payer: '#f0faf5', decision: '#f1f1fb', emergency: '#f7f8fa' }[tone];
+              const accent = { payer: 'var(--success)', decision: 'var(--info)', emergency: '#7a8a9a' }[tone];
+              const tint = { payer: 'var(--success-bg)', decision: '#f1f1fb', emergency: '#f7f8fa' }[tone];
               return `
               <div class="patprofile-contact-card" style="border:1px solid var(--border,#e8e3d4);border-left:3px solid ${accent};border-radius:10px;padding:14px 18px;background:${tint};transition:all 0.15s;">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
@@ -271,8 +271,8 @@ async function openPatientProfile(id, activeTab) {
                       ${c.email ? `<span>✉️ <span style="color:var(--text);">${c.email}</span></span>` : ''}
                     </div>
                     <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
-                      ${c.isPayer ? '<span style="background:#dcf0e2;color:#1f5132;border-radius:999px;font-size:11px;padding:2px 10px;font-weight:600;">💰 รับผิดชอบค่าใช้จ่าย</span>' : ''}
-                      ${c.isDecisionMaker ? '<span style="background:#e8e8f8;color:#3d3d9e;border-radius:999px;font-size:11px;padding:2px 10px;font-weight:600;">🧠 ผู้ตัดสินใจ</span>' : ''}
+                      ${c.isPayer ? '<span style="background:var(--success-bg);color:var(--success-text);border-radius:999px;font-size:11px;padding:2px 10px;font-weight:600;">💰 รับผิดชอบค่าใช้จ่าย</span>' : ''}
+                      ${c.isDecisionMaker ? '<span style="background:var(--purple-bg);color:var(--info-text);border-radius:999px;font-size:11px;padding:2px 10px;font-weight:600;">🧠 ผู้ตัดสินใจ</span>' : ''}
                       ${!c.isPayer && !c.isDecisionMaker ? '<span style="background:#eef0f3;color:#56657a;border-radius:999px;font-size:11px;padding:2px 10px;font-weight:600;">📞 ผู้ติดต่อฉุกเฉิน</span>' : ''}
                     </div>
                     ${c.note ? `<div style="font-size:12px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border,#e8e3d4);">📝 ${c.note}</div>` : ''}
@@ -959,8 +959,8 @@ function renderLabTab(patientId, overrideFrom, overrideTo) {
         // Option B: card layout — แสดงครบทุก field (date, hospital, doctor, summary, note)
         html += '<div style="border:1.5px solid var(--border);border-radius:10px;margin:12px 0;background:white;overflow:hidden;">' +
           // Header: date + actions
-          '<div style="background:#f0faf5;padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">' +
-          '<div style="font-weight:700;font-size:15px;color:#2d8f3f;">📅 ' + (r.test_date||'-') + '</div>' +
+          '<div style="background:var(--success-bg);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">' +
+          '<div style="font-weight:700;font-size:15px;color:var(--success-text);">📅 ' + (r.test_date||'-') + '</div>' +
           '<div>' +
           '<button class="btn btn-ghost btn-sm" onclick="openEditLabModal(\'' + r.id + '\',\'' + patientId + '\')">✏️</button>' +
           '<button class="btn btn-ghost btn-sm" onclick="deleteLabResult(\'' + r.id + '\',\'' + patientId + '\')" style="color:var(--danger);">🗑️</button>' +
@@ -975,12 +975,12 @@ function renderLabTab(patientId, overrideFrom, overrideTo) {
           '<div style="color:#888;font-weight:600;">📋 สรุปผล</div>' +
           '<div style="color:#222;line-height:1.5;">' + (r.summary ? r.summary : '<span style="color:#bbb;">-</span>') + '</div>' +
           '<div style="color:#888;font-weight:600;">📝 หมายเหตุ</div>' +
-          '<div style="color:#222;line-height:1.5;">' + (r.note ? '<div style="font-style:italic;background:#fffbea;padding:6px 10px;border-radius:6px;border-left:3px solid #f59e0b;">' + r.note + '</div>' : '<span style="color:#bbb;">-</span>') + '</div>' +
+          '<div style="color:#222;line-height:1.5;">' + (r.note ? '<div style="font-style:italic;background:var(--warning-bg);padding:6px 10px;border-radius:6px;border-left:3px solid var(--warning);">' + r.note + '</div>' : '<span style="color:#bbb;">-</span>') + '</div>' +
           '</div>' +
           // Abnormal badges
           (abn.length ? '<div style="margin-top:10px;">' + abn.map(function(x) {
             return '<span style="font-size:11px;padding:2px 6px;border-radius:10px;background:' +
-              (x.status==='high'?'#fde8e8':'#fff3e0') + ';color:' + (x.status==='high'?'var(--danger-text)':'var(--warning-text)') + ';margin-right:4px;">' +
+              (x.status==='high'?'var(--danger-bg)':'var(--warning-bg)') + ';color:' + (x.status==='high'?'var(--danger-text)':'var(--warning-text)') + ';margin-right:4px;">' +
               x.test_name + ': ' + x.value + '</span>';
           }).join(' ') + '</div>' : '') +
           // Detailed results (collapsible)
@@ -1156,7 +1156,7 @@ function renderPatientTabBar(p, totalReqs) {
   function _countBadge(c, tone) {
     if (!c) return '';
     const palette = {
-      danger:  { bg:'#fdf0ee', color:'var(--danger-text)', border:'rgba(192,57,43,0.25)' },
+      danger:  { bg:'var(--danger-bg)', color:'var(--danger-text)', border:'rgba(192,57,43,0.25)' },
       brand:   { bg:'var(--sage-100,#eaf1eb)', color:'var(--brand,#2e6b4f)', border:'var(--sage-200,#dbe5dc)' },
       neutral: { bg:'var(--surface2,#f5f1e3)', color:'var(--text2,#5e5e5e)', border:'var(--border,#e8e3d4)' }
     }[tone] || { bg:'#eaf1eb', color:'#2e6b4f', border:'#dbe5dc' };
@@ -1331,7 +1331,7 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFr
   // ===== SECTION 1: 💧 น้ำเข้า (Intake) — ขึ้นก่อนตามที่อ้นขอ =====
   var intakeFluids = fluids.filter(function(f){ return f.direction === 'intake'; });
   var sec1 = document.createElement('div');
-  sec1.style.cssText = 'background:#f0f8f0;border-radius:8px;padding:16px;margin-bottom:16px';
+  sec1.style.cssText = 'background:var(--success-bg);border-radius:8px;padding:16px;margin-bottom:16px';
   var s1hdr = document.createElement('div');
   s1hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px';
   var s1title = document.createElement('strong');
@@ -1354,7 +1354,7 @@ function _renderExcretionSections(el, patId, excretions, fluids, canEdit, dateFr
   var outputFluids = fluids.filter(function(f){ return f.direction === 'output'; });
   var combinedOutput = _buildCombinedOutputRows(excretions, outputFluids);
   var sec2 = document.createElement('div');
-  sec2.style.cssText = 'background:#fff0f0;border-radius:8px;padding:16px;margin-bottom:16px';
+  sec2.style.cssText = 'background:var(--danger-bg);border-radius:8px;padding:16px;margin-bottom:16px';
   var s2hdr = document.createElement('div');
   s2hdr.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:10px';
   var s2title = document.createElement('strong');
@@ -2245,7 +2245,7 @@ function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
   }
 
   var sec3 = document.createElement('div');
-  sec3.style.cssText = 'background:#fffbe6;border-radius:8px;padding:16px;margin-bottom:16px';
+  sec3.style.cssText = 'background:var(--warning-bg);border-radius:8px;padding:16px;margin-bottom:16px';
   var title3 = document.createElement('strong');
   // ── Issue 1 Fix: แสดง range ที่เลือก แทน "วันนี้" ──
   title3.textContent = String.fromCodePoint(0x1F4CA) + ' สรุป Balance' + (rangeLabel ? ' (' + rangeLabel + ')' : '');
@@ -2302,7 +2302,7 @@ function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
     totUrine += shUrine; totStool += shStool; totVomit += shVomit;
     var bal = shIn - shOut;
     var tr = document.createElement('tr');
-    tr.style.color = bal < 0 ? 'var(--danger-text)' : '#1a5276';
+    tr.style.color = bal < 0 ? 'var(--danger-text)' : 'var(--info-text)';
     tr.innerHTML =
       '<td>' + sh.label + '<br><span style="font-size:10px;color:var(--text3);font-weight:normal;">' + sh.sub + '</span></td>' +
       '<td>' + shIn + '</td>' +
@@ -2314,13 +2314,13 @@ function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
     tbody.appendChild(tr);
   });
   var trTot = document.createElement('tr');
-  trTot.style.cssText = 'background:#fef9c3;font-weight:bold';
+  trTot.style.cssText = 'background:var(--warning-bg);font-weight:bold';
   var totBal = totIn - totOut;
   trTot.innerHTML =
     '<td>รวม 24 ชม.</td>' +
     '<td>' + totIn + '</td>' +
     '<td>' + totOut + '</td>' +
-    '<td style="color:' + (totBal < 0 ? 'var(--danger-text)' : '#1a5276') + '">' + (totBal >= 0 ? '+' : '') + totBal + '</td>' +
+    '<td style="color:' + (totBal < 0 ? 'var(--danger-text)' : 'var(--info-text)') + '">' + (totBal >= 0 ? '+' : '') + totBal + '</td>' +
     '<td>' + totUrine + '</td>' +
     '<td>' + totStool + '</td>' +
     '<td>' + totVomit + '</td>';
@@ -2346,7 +2346,7 @@ function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
 // fluids: rows ของ patient_fluid_records ในช่วง filter
 function _buildClinicalAlerts(excretions, fluids) {
   var wrap = document.createElement('div');
-  wrap.style.cssText = 'background:#fff;border-radius:10px;padding:14px;margin-top:14px;border:1.5px solid #e5e7eb';
+  wrap.style.cssText = 'background:#fff;border-radius:10px;padding:14px;margin-top:14px;border:1.5px solid var(--border)';
 
   var title = document.createElement('div');
   title.style.cssText = 'font-size:13px;font-weight:700;color:#555;margin-bottom:10px';
@@ -2358,10 +2358,10 @@ function _buildClinicalAlerts(excretions, fluids) {
   // Helper สร้าง alert item
   function mkAlert(level, icon, titleText, detailText) {
     var styles = {
-      green:  { bg: '#ecf9f0', border: 'var(--success)', color: '#1d8c4f' },
-      orange: { bg: '#fff8e8', border: 'var(--warning-text)', color: '#8a4d00' },
-      red:    { bg: '#fff0f0', border: 'var(--danger-text)', color: '#8a1a0e' },
-      gray:   { bg: '#f5f5f5', border: '#b0b0b0', color: '#999' }
+      green:  { bg: 'var(--success-bg)', border: 'var(--success)', color: 'var(--success-text)' },
+      orange: { bg: 'var(--warning-bg)', border: 'var(--warning-text)', color: '#8a4d00' },
+      red:    { bg: 'var(--danger-bg)', border: 'var(--danger-text)', color: 'var(--danger-text)' },
+      gray:   { bg: 'var(--surface-2)', border: 'var(--ink-3)', color: '#999' }
     };
     var s = styles[level] || styles.gray;
     return {
@@ -2565,7 +2565,7 @@ function _buildClinicalAlerts(excretions, fluids) {
   // ถ้าไม่มี alert ผิดปกติ → แสดงข้อความ "ปกติ" สั้นๆ
   if (filtered.length === 0) {
     var okDiv = document.createElement('div');
-    okDiv.style.cssText = 'background:#ecf9f0;border-radius:8px;padding:12px 14px;border-left:5px solid var(--success);color:#1d8c4f;display:flex;gap:10px;font-size:13px;line-height:1.5';
+    okDiv.style.cssText = 'background:var(--success-bg);border-radius:8px;padding:12px 14px;border-left:5px solid var(--success);color:var(--success-text);display:flex;gap:10px;font-size:13px;line-height:1.5';
     okDiv.innerHTML = '<div style="font-size:22px;line-height:1">✓</div>' +
                       '<div style="flex:1"><div style="font-weight:700">ไม่พบอาการผิดปกติ</div>' +
                       '<div style="font-size:12px;opacity:0.85;margin-top:2px">ทุกอย่างอยู่ในเกณฑ์ปกติ</div></div>';
@@ -3330,18 +3330,18 @@ async function openContractFilesModal(patientId, patientName) {
   
   // Header
   const header = document.createElement('div');
-  header.style.cssText = 'padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
-  header.innerHTML = '<div><div style="font-weight:600;font-size:15px;">📄 ไฟล์สัญญา</div><div style="font-size:12px;color:#6b7280;margin-top:2px;">' + (patientName||'') + ' — PDF หรือรูปภาพ ไม่เกิน 20MB</div></div>';
+  header.style.cssText = 'padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
+  header.innerHTML = '<div><div style="font-weight:600;font-size:15px;">📄 ไฟล์สัญญา</div><div style="font-size:12px;color:var(--ink-2);margin-top:2px;">' + (patientName||'') + ' — PDF หรือรูปภาพ ไม่เกิน 20MB</div></div>';
   
   const closeBtn = document.createElement('button');
   closeBtn.innerHTML = '×';
-  closeBtn.style.cssText = 'background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;padding:0 4px;line-height:1;';
+  closeBtn.style.cssText = 'background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink-2);padding:0 4px;line-height:1;';
   closeBtn.onclick = () => document.body.removeChild(overlay);
   header.appendChild(closeBtn);
   
   // Upload bar
   const uploadBar = document.createElement('div');
-  uploadBar.style.cssText = 'padding:12px 20px;border-bottom:1px solid #e5e7eb;display:flex;gap:10px;align-items:center;flex-shrink:0;';
+  uploadBar.style.cssText = 'padding:12px 20px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;';
   
   const fileInput = document.createElement('input');
   fileInput.type = 'file';
@@ -3352,11 +3352,11 @@ async function openContractFilesModal(patientId, patientName) {
   const noteInput = document.createElement('input');
   noteInput.type = 'text';
   noteInput.placeholder = 'หมายเหตุ (ไม่จำเป็น)';
-  noteInput.style.cssText = 'width:140px;font-size:13px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;';
+  noteInput.style.cssText = 'width:140px;font-size:13px;padding:5px 8px;border:1px solid var(--border-strong);border-radius:6px;';
   
   const uploadBtn = document.createElement('button');
   uploadBtn.textContent = '↑ อัปโหลด';
-  uploadBtn.style.cssText = 'padding:6px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;';
+  uploadBtn.style.cssText = 'padding:6px 14px;background:var(--info);color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;';
   uploadBar.appendChild(fileInput); uploadBar.appendChild(noteInput); uploadBar.appendChild(uploadBtn);
   
   // File list area
@@ -3365,10 +3365,10 @@ async function openContractFilesModal(patientId, patientName) {
   
   // Footer
   const footer = document.createElement('div');
-  footer.style.cssText = 'padding:12px 20px;border-top:1px solid #e5e7eb;text-align:right;flex-shrink:0;';
+  footer.style.cssText = 'padding:12px 20px;border-top:1px solid var(--border);text-align:right;flex-shrink:0;';
   const doneBtn = document.createElement('button');
   doneBtn.textContent = 'ปิด';
-  doneBtn.style.cssText = 'padding:7px 20px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:6px;font-size:13px;cursor:pointer;';
+  doneBtn.style.cssText = 'padding:7px 20px;background:var(--surface-2);border:1px solid var(--border-strong);border-radius:6px;font-size:13px;cursor:pointer;';
   doneBtn.onclick = () => document.body.removeChild(overlay);
   footer.appendChild(doneBtn);
   
@@ -3378,32 +3378,32 @@ async function openContractFilesModal(patientId, patientName) {
   
   // ฟังก์ชันโหลดรายการไฟล์
   async function loadFiles() {
-    listArea.innerHTML = '<div style="color:#9ca3af;font-size:13px;padding:8px 0;">กำลังโหลด...</div>';
+    listArea.innerHTML = '<div style="color:var(--ink-3);font-size:13px;padding:8px 0;">กำลังโหลด...</div>';
     const { data, error } = await supa.from('patient_contract_files')
       .select('*').eq('patient_id', patientId).order('created_at', { ascending: false });
     if (error) { listArea.innerHTML = '<div style="color:red;font-size:13px;">โหลดไม่ได้: ' + error.message + '</div>'; return; }
     if (!data || data.length === 0) {
-      listArea.innerHTML = '<div style="color:#9ca3af;font-size:13px;padding:16px 0;text-align:center;">ยังไม่มีไฟล์สัญญา — กดอัปโหลดเพื่อเพิ่ม</div>'; return;
+      listArea.innerHTML = '<div style="color:var(--ink-3);font-size:13px;padding:16px 0;text-align:center;">ยังไม่มีไฟล์สัญญา — กดอัปโหลดเพื่อเพิ่ม</div>'; return;
     }
     listArea.innerHTML = '';
     data.forEach(async f => {
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#f9fafb;border-radius:8px;margin-bottom:6px;gap:10px;';
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg);border-radius:8px;margin-bottom:6px;gap:10px;';
       const isPdf = (f.file_type||'').includes('pdf') || f.file_name.endsWith('.pdf');
       const badge = document.createElement('div');
-      badge.style.cssText = 'width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;' + (isPdf ? 'background:#fee2e2;color:#b91c1c;' : 'background:#dcfce7;color:#15803d;');
+      badge.style.cssText = 'width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;' + (isPdf ? 'background:var(--danger-bg);color:var(--danger-text);' : 'background:var(--success-bg);color:var(--success-text);');
       badge.textContent = isPdf ? 'PDF' : 'IMG';
       const info = document.createElement('div');
       info.style.cssText = 'flex:1;min-width:0;';
       const kb = f.file_size ? (f.file_size > 1048576 ? (f.file_size/1048576).toFixed(1)+' MB' : Math.round(f.file_size/1024)+' KB') : '';
       const dt = f.created_at ? new Date(f.created_at).toLocaleDateString('th-TH') : '';
       info.innerHTML = '<div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+f.file_name+'">'+f.file_name+'</div>'
-        + '<div style="font-size:11px;color:#6b7280;">' + [kb, dt, f.note].filter(Boolean).join('  ·  ') + '</div>';
+        + '<div style="font-size:11px;color:var(--ink-2);">' + [kb, dt, f.note].filter(Boolean).join('  ·  ') + '</div>';
       const btns = document.createElement('div');
       btns.style.cssText = 'display:flex;gap:6px;flex-shrink:0;';
       const viewBtn = document.createElement('button');
       viewBtn.textContent = 'เปิดดู';
-      viewBtn.style.cssText = 'padding:4px 10px;font-size:11px;border:1px solid #d1d5db;border-radius:5px;background:#fff;cursor:pointer;';
+      viewBtn.style.cssText = 'padding:4px 10px;font-size:11px;border:1px solid var(--border-strong);border-radius:5px;background:#fff;cursor:pointer;';
       viewBtn.onclick = async () => {
         const { data: urlData } = await supa.storage.from('documents').createSignedUrl(f.file_url, 60);
         if (urlData?.signedUrl) window.open(urlData.signedUrl, '_blank');
@@ -3411,7 +3411,7 @@ async function openContractFilesModal(patientId, patientName) {
       };
       const delBtn = document.createElement('button');
       delBtn.textContent = 'ลบ';
-      delBtn.style.cssText = 'padding:4px 10px;font-size:11px;border:1px solid #fca5a5;border-radius:5px;background:#fee2e2;color:#b91c1c;cursor:pointer;';
+      delBtn.style.cssText = 'padding:4px 10px;font-size:11px;border:1px solid var(--danger);border-radius:5px;background:var(--danger-bg);color:var(--danger-text);cursor:pointer;';
       delBtn.onclick = async () => {
         if (!(await customConfirm('ลบไฟล์ "' + f.file_name + '" ?'))) return;
         await supa.storage.from('documents').remove([f.file_url]);
@@ -3471,19 +3471,19 @@ async function _renderMedicalFilesSection(patientId) {
       const kb = f.file_size ? (f.file_size > 1048576 ? (f.file_size/1048576).toFixed(1)+' MB' : Math.round(f.file_size/1024)+' KB') : '';
       const dt = f.created_at ? new Date(f.created_at).toLocaleDateString('th-TH') : '';
       const meta = [kb,dt,f.note].filter(Boolean).join(' · ');
-      const badgeStyle = isPdf ? 'background:#fee2e2;color:#b91c1c' : 'background:#dcfce7;color:#15803d';
-      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f3f4f6;">'
+      const badgeStyle = isPdf ? 'background:var(--danger-bg);color:var(--danger-text)' : 'background:var(--success-bg);color:var(--success-text)';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--surface-2);">'
         + '<span style="font-size:10px;font-weight:600;padding:2px 5px;border-radius:4px;flex-shrink:0;' + badgeStyle + ';">' + (isPdf?'PDF':'IMG') + '</span>'
         + '<div style="flex:1;min-width:0;"><div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + f.file_name + '</div>'
-        + '<div style="font-size:10px;color:#9ca3af;">' + meta + '</div></div>'
-        + '<button class="_med-view-btn" data-url="' + f.file_url + '" style="font-size:10px;padding:2px 7px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer;">เปิด</button>'
+        + '<div style="font-size:10px;color:var(--ink-3);">' + meta + '</div></div>'
+        + '<button class="_med-view-btn" data-url="' + f.file_url + '" style="font-size:10px;padding:2px 7px;border:1px solid var(--border-strong);border-radius:4px;background:#fff;cursor:pointer;">เปิด</button>'
         + '</div>';
     }).join('');
   }
-  const emptyMsg = (!error && data && data.length > 0) ? '' : '<div style="color:#9ca3af;font-size:12px;padding:4px 0;">ยังไม่มีไฟล์</div>';
-  sec.innerHTML = '<div style="border-top:1px solid #e5e7eb;padding-top:10px;margin-top:4px;">'
+  const emptyMsg = (!error && data && data.length > 0) ? '' : '<div style="color:var(--ink-3);font-size:12px;padding:4px 0;">ยังไม่มีไฟล์</div>';
+  sec.innerHTML = '<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-    + '<div style="font-size:12px;font-weight:600;color:#374151;">📂 ไฟล์ประวัติการรักษา</div>'
+    + '<div style="font-size:12px;font-weight:600;color:var(--ink-2);">📂 ไฟล์ประวัติการรักษา</div>'
     + '<button id="_med-files-open-' + patientId + '" class="_med-open-btn btn btn-sm btn-outline-primary" data-patid="' + patientId + '" style="font-size:11px;padding:3px 10px;">+ เพิ่ม / ดูไฟล์</button>'
     + '</div>' + emptyMsg + rows + '</div>';
   const openBtn = document.getElementById('_med-files-open-' + patientId);
@@ -3506,47 +3506,47 @@ async function openMedicalFilesModal(patientId, patientName) {
   const box = document.createElement('div');
   box.style.cssText = 'background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;';
   const header = document.createElement('div');
-  header.style.cssText = 'padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
+  header.style.cssText = 'padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
   const titleDiv = document.createElement('div');
   const t1 = document.createElement('div'); t1.style.cssText='font-weight:600;font-size:15px;'; t1.textContent='📂 ไฟล์ประวัติการรักษา';
-  const t2 = document.createElement('div'); t2.style.cssText='font-size:12px;color:#6b7280;margin-top:2px;'; t2.textContent=(patientName||'')+' — PDF หรือรูปภาพ ไม่เกิน 20MB';
+  const t2 = document.createElement('div'); t2.style.cssText='font-size:12px;color:var(--ink-2);margin-top:2px;'; t2.textContent=(patientName||'')+' — PDF หรือรูปภาพ ไม่เกิน 20MB';
   titleDiv.appendChild(t1); titleDiv.appendChild(t2);
   const closeBtn = document.createElement('button');
-  closeBtn.textContent='×'; closeBtn.style.cssText='background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;padding:0 4px;line-height:1;';
+  closeBtn.textContent='×'; closeBtn.style.cssText='background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink-2);padding:0 4px;line-height:1;';
   closeBtn.onclick=function(){ document.body.removeChild(overlay); _renderMedicalFilesSection(patientId); };
   header.appendChild(titleDiv); header.appendChild(closeBtn);
-  const uploadBar=document.createElement('div'); uploadBar.style.cssText='padding:12px 20px;border-bottom:1px solid #e5e7eb;display:flex;gap:10px;align-items:center;flex-shrink:0;';
+  const uploadBar=document.createElement('div'); uploadBar.style.cssText='padding:12px 20px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;';
   const fileInput=document.createElement('input'); fileInput.type='file'; fileInput.accept='.pdf,image/*'; fileInput.multiple=true; fileInput.style.cssText='flex:1;font-size:13px;';
-  const noteInput=document.createElement('input'); noteInput.type='text'; noteInput.placeholder='หมายเหตุ'; noteInput.style.cssText='width:130px;font-size:13px;padding:5px 8px;border:1px solid #d1d5db;border-radius:6px;';
-  const uploadBtn=document.createElement('button'); uploadBtn.textContent='↑ อัปโหลด'; uploadBtn.style.cssText='padding:6px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;';
+  const noteInput=document.createElement('input'); noteInput.type='text'; noteInput.placeholder='หมายเหตุ'; noteInput.style.cssText='width:130px;font-size:13px;padding:5px 8px;border:1px solid var(--border-strong);border-radius:6px;';
+  const uploadBtn=document.createElement('button'); uploadBtn.textContent='↑ อัปโหลด'; uploadBtn.style.cssText='padding:6px 14px;background:var(--info);color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;';
   uploadBar.appendChild(fileInput); uploadBar.appendChild(noteInput); uploadBar.appendChild(uploadBtn);
   const listArea=document.createElement('div'); listArea.style.cssText='flex:1;overflow-y:auto;padding:12px 20px;min-height:120px;';
-  const footer=document.createElement('div'); footer.style.cssText='padding:12px 20px;border-top:1px solid #e5e7eb;text-align:right;flex-shrink:0;';
-  const doneBtn=document.createElement('button'); doneBtn.textContent='ปิด'; doneBtn.style.cssText='padding:7px 20px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:6px;font-size:13px;cursor:pointer;';
+  const footer=document.createElement('div'); footer.style.cssText='padding:12px 20px;border-top:1px solid var(--border);text-align:right;flex-shrink:0;';
+  const doneBtn=document.createElement('button'); doneBtn.textContent='ปิด'; doneBtn.style.cssText='padding:7px 20px;background:var(--surface-2);border:1px solid var(--border-strong);border-radius:6px;font-size:13px;cursor:pointer;';
   doneBtn.onclick=function(){ document.body.removeChild(overlay); _renderMedicalFilesSection(patientId); };
   footer.appendChild(doneBtn);
   box.appendChild(header); box.appendChild(uploadBar); box.appendChild(listArea); box.appendChild(footer);
   overlay.appendChild(box); document.body.appendChild(overlay);
   async function loadFiles() {
-    listArea.innerHTML='<div style="color:#9ca3af;font-size:13px;padding:8px 0;">กำลังโหลด...</div>';
+    listArea.innerHTML='<div style="color:var(--ink-3);font-size:13px;padding:8px 0;">กำลังโหลด...</div>';
     const {data,error}=await supa.from('patient_medical_files').select('*').eq('patient_id',patientId).order('created_at',{ascending:false});
     if(error){listArea.innerHTML='<div style="color:red;font-size:13px;">โหลดไม่ได้: '+error.message+'</div>';return;}
-    if(!data||data.length===0){listArea.innerHTML='<div style="color:#9ca3af;font-size:13px;padding:16px 0;text-align:center;">ยังไม่มีไฟล์ — กดอัปโหลดเพื่อเพิ่ม</div>';return;}
+    if(!data||data.length===0){listArea.innerHTML='<div style="color:var(--ink-3);font-size:13px;padding:16px 0;text-align:center;">ยังไม่มีไฟล์ — กดอัปโหลดเพื่อเพิ่ม</div>';return;}
     listArea.innerHTML='';
     data.forEach(function(f){
-      const row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#f9fafb;border-radius:8px;margin-bottom:6px;gap:10px;';
+      const row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg);border-radius:8px;margin-bottom:6px;gap:10px;';
       const isPdf=(f.file_type||'').indexOf('pdf')>-1||f.file_name.slice(-4)==='.pdf';
-      const badge=document.createElement('div'); badge.style.cssText='width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;'+(isPdf?'background:#fee2e2;color:#b91c1c;':'background:#dcfce7;color:#15803d;'); badge.textContent=isPdf?'PDF':'IMG';
+      const badge=document.createElement('div'); badge.style.cssText='width:34px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;'+(isPdf?'background:var(--danger-bg);color:var(--danger-text);':'background:var(--success-bg);color:var(--success-text);'); badge.textContent=isPdf?'PDF':'IMG';
       const info=document.createElement('div'); info.style.cssText='flex:1;min-width:0;';
       const kb=f.file_size?(f.file_size>1048576?(f.file_size/1048576).toFixed(1)+' MB':Math.round(f.file_size/1024)+' KB'):'';
       const dt=f.created_at?new Date(f.created_at).toLocaleDateString('th-TH'):'';
       const nameEl=document.createElement('div'); nameEl.style.cssText='font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'; nameEl.title=f.file_name; nameEl.textContent=f.file_name;
-      const metaEl=document.createElement('div'); metaEl.style.cssText='font-size:11px;color:#6b7280;'; metaEl.textContent=[kb,dt,f.note].filter(Boolean).join('  ·  ');
+      const metaEl=document.createElement('div'); metaEl.style.cssText='font-size:11px;color:var(--ink-2);'; metaEl.textContent=[kb,dt,f.note].filter(Boolean).join('  ·  ');
       info.appendChild(nameEl); info.appendChild(metaEl);
       const btns=document.createElement('div'); btns.style.cssText='display:flex;gap:6px;flex-shrink:0;';
-      const viewBtn=document.createElement('button'); viewBtn.textContent='เปิดดู'; viewBtn.style.cssText='padding:4px 10px;font-size:11px;border:1px solid #d1d5db;border-radius:5px;background:#fff;cursor:pointer;';
+      const viewBtn=document.createElement('button'); viewBtn.textContent='เปิดดู'; viewBtn.style.cssText='padding:4px 10px;font-size:11px;border:1px solid var(--border-strong);border-radius:5px;background:#fff;cursor:pointer;';
       viewBtn.onclick=async function(){ const {data:u}=await supa.storage.from('documents').createSignedUrl(f.file_url,60); if(u&&u.signedUrl)window.open(u.signedUrl,'_blank'); else customAlert('ไม่สามารถเปิด'); };
-      const delBtn=document.createElement('button'); delBtn.textContent='ลบ'; delBtn.style.cssText='padding:4px 10px;font-size:11px;border:1px solid #fca5a5;border-radius:5px;background:#fee2e2;color:#b91c1c;cursor:pointer;';
+      const delBtn=document.createElement('button'); delBtn.textContent='ลบ'; delBtn.style.cssText='padding:4px 10px;font-size:11px;border:1px solid var(--danger);border-radius:5px;background:var(--danger-bg);color:var(--danger-text);cursor:pointer;';
       delBtn.onclick=async function(){ if(!(await customConfirm('ลบไฟล์ "'+f.file_name+'" ?')))return; await supa.storage.from('documents').remove([f.file_url]); await supa.from('patient_medical_files').delete().eq('id',f.id); loadFiles(); };
       btns.appendChild(viewBtn); btns.appendChild(delBtn);
       row.appendChild(badge); row.appendChild(info); row.appendChild(btns); listArea.appendChild(row);

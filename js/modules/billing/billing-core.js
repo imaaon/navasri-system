@@ -80,7 +80,7 @@ function renderBilling() {
     const dynStatus = getInvoicePaymentStatus(inv);
     const isOverdue = inv.dueDate && inv.dueDate < new Date().toISOString().split('T')[0] && dynStatus !== 'paid';
     return `
-    <tr style="${isOverdue?'background:#fff8f8;':''}">
+    <tr style="${isOverdue?'background:var(--danger-bg);':''}">
       <td style="font-family:monospace;font-size:12px;">${inv.docNo||'-'}${inv.contractId?'<span style="font-size:10px;color:var(--accent);margin-left:4px;">🤖</span>':''}</td>
       <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(90,158,122,.15);color:var(--accent);">${TYPE_LABELS[inv.type]||inv.type}</span></td>
       <td>${inv.patientName||'-'}</td>
@@ -452,12 +452,12 @@ function renderInvoiceItems() {
     _incDiv.id = 'inv-included-section';
     _incDiv.style.marginTop = '8px';
     if (_showInc) {
-      let _ih = '<div style="font-size:11px;font-weight:700;color:#3a6a3a;padding:4px 6px;background:#f0fff4;border-radius:4px;display:flex;justify-content:space-between;margin-bottom:4px;"><span>📦 สินค้ารวมใน package — ไม่คิดเงิน ('+_incItems.length+' รายการ)</span><span style="color:#888;">฿0.00</span></div><table style="width:100%;border-collapse:collapse;font-size:12px;color:var(--text2);"><tbody>';
+      let _ih = '<div style="font-size:11px;font-weight:700;color:var(--success-text);padding:4px 6px;background:var(--success-bg);border-radius:4px;display:flex;justify-content:space-between;margin-bottom:4px;"><span>📦 สินค้ารวมใน package — ไม่คิดเงิน ('+_incItems.length+' รายการ)</span><span style="color:#888;">฿0.00</span></div><table style="width:100%;border-collapse:collapse;font-size:12px;color:var(--text2);"><tbody>';
       _incItems.forEach(function(it){ _ih += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:3px 6px;">'+it.name+'</td><td style="padding:3px 6px;text-align:right;">'+(it.qty||0)+' '+(it.unit||'')+'</td><td style="padding:3px 6px;text-align:right;color:var(--success);">รวมใน package</td></tr>'; });
       _ih += '</tbody></table>';
       _incDiv.innerHTML = _ih;
     } else {
-      _incDiv.innerHTML = '<div style="font-size:12px;color:#3a6a3a;padding:4px 6px;background:#f0fff4;border-radius:4px;cursor:pointer;" onclick="document.getElementById(\'inv-show-included\').checked=true;renderInvoiceItems()">📦 มีสินค้ารวมใน package '+_incItems.length+' รายการ — <span style="text-decoration:underline;">คลิกเพื่อดู</span></div>';
+      _incDiv.innerHTML = '<div style="font-size:12px;color:var(--success-text);padding:4px 6px;background:var(--success-bg);border-radius:4px;cursor:pointer;" onclick="document.getElementById(\'inv-show-included\').checked=true;renderInvoiceItems()">📦 มีสินค้ารวมใน package '+_incItems.length+' รายการ — <span style="text-decoration:underline;">คลิกเพื่อดู</span></div>';
     }
     container.after(_incDiv);
   }
@@ -1263,7 +1263,7 @@ function renderPhysioBannerInInvoice(allocation) {
     } else if (s.billing_source === 'no_package') {
       label = '<span style="color:#7c3aed;">💰 ' + (s.charge_amount || 0).toLocaleString('th-TH') + ' ฿</span>';
     } else {
-      label = '<span style="color:#2563eb;">🔵 Add-on: ' + (s.charge_amount || 0).toLocaleString('th-TH') + ' ฿</span>';
+      label = '<span style="color:var(--info);">🔵 Add-on: ' + (s.charge_amount || 0).toLocaleString('th-TH') + ' ฿</span>';
     }
     listHtml += '<div style="font-size:11px;padding:2px 0;">📅 ' + dateStr +
                 ' — ' + dur + ' นาที (' + therapist + ') — ' + label + '</div>';
@@ -1278,7 +1278,7 @@ function renderPhysioBannerInInvoice(allocation) {
   if (noPackageArr.length > 0) parts.push('ไม่มี package ' + noPackageArr.length + ' ครั้ง');
   summary += ' ' + parts.join(', ');
   
-  var html = '<div style="font-size:12px;color:#3a6a3a;padding:6px 8px;background:#f0fff4;border-radius:4px;">' +
+  var html = '<div style="font-size:12px;color:var(--success-text);padding:6px 8px;background:var(--success-bg);border-radius:4px;">' +
              summary + ' — ' +
              '<span style="text-decoration:underline;cursor:pointer;" ' +
              'onclick="var l=this.parentElement.parentElement.querySelector(' + "'.pt-list'" +

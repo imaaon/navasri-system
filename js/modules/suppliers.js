@@ -38,7 +38,7 @@ function renderSuppliers() {
     <td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.note||''}">${s.note||'-'}</td>
     <td>${s.status==='active'?'<span class="badge badge-green">ใช้งาน</span>':'<span class="badge badge-gray">ปิด</span>'}</td>
     <td>
-            <button class="btn btn-ghost btn-sm" title="ดูรายละเอียด" onclick="viewSupplier('${s.id}')">&#128065;</button>
+            <button class="btn btn-ghost btn-sm" title="ดูรายละเอียด" onclick="viewSupplier('${s.id}')">&var(--success-text);</button>
       <button class="btn btn-ghost btn-sm" onclick="editSupplier('${s.id}')">✏️</button>
       <button class="btn btn-ghost btn-sm" onclick="deleteSupplier('${s.id}')">🗑️</button>
     </td>
@@ -182,7 +182,7 @@ function renderPurchaseRequests() {
     <td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.reason||''}">${r.reason||''-''}</td>
     <td>${statusBadge(r.status)}</td>
     <td style="white-space:nowrap;">
-      <button class="btn btn-ghost btn-sm" title="ดูรายละเอียด" onclick="viewPurchaseRequest('${r.id}')">&#128065;</button>
+      <button class="btn btn-ghost btn-sm" title="ดูรายละเอียด" onclick="viewPurchaseRequest('${r.id}')">&var(--success-text);</button>
       <button class="btn btn-ghost btn-sm" title="แก้ไข" onclick="editPR('${r.id}')">&#9999;&#65039;</button>
       ${['draft','submitted'].includes(r.status) ? `<button class="btn btn-ghost btn-sm" title="อนุมัติ" onclick="approvePR('${r.id}')">&#9989;</button>` : ''}
       ${['draft','submitted'].includes(r.status) ? `<button class="btn btn-ghost btn-sm" title="ปฏิเสธ" onclick="rejectPR('${r.id}')">&#10060;</button>` : ''}
@@ -416,7 +416,7 @@ function viewPurchaseRequest(id) {
       ${field('วันต้องการรับ',pr.requiredDate||'-')}${field('อนุมัติ/ปฏิเสธโดย',pr.approvedBy||'-')}
     </div>
     ${pr.reason?`<div style="margin-bottom:14px;"><div style="font-size:11px;color:var(--text3);margin-bottom:4px;">เหตุผล</div><div style="font-size:13px;background:var(--surface2);padding:10px 12px;border-radius:6px;line-height:1.6;">${pr.reason}</div></div>`:''}
-    ${pr.rejectReason?`<div style="margin-bottom:14px;"><div style="font-size:11px;color:var(--danger-text);margin-bottom:4px;">เหตุผลปฏิเสธ</div><div style="font-size:13px;background:#fdf2f2;padding:10px 12px;border-radius:6px;color:var(--danger-text);">${pr.rejectReason}</div></div>`:''}
+    ${pr.rejectReason?`<div style="margin-bottom:14px;"><div style="font-size:11px;color:var(--danger-text);margin-bottom:4px;">เหตุผลปฏิเสธ</div><div style="font-size:13px;background:var(--danger-bg);padding:10px 12px;border-radius:6px;color:var(--danger-text);">${pr.rejectReason}</div></div>`:''}
     ${items.length?`<hr style="margin:12px 0;border-color:var(--border);"><div style="font-size:12px;font-weight:500;margin-bottom:8px;">📦 รายการสินค้า</div>${itemsHtml}`:''}
   `;
   openModal('modal-view-pr');
@@ -747,7 +747,7 @@ function renderSupplierInvoices() {
 
   const statusBadge = s => ({
     draft:     '<span class="badge" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);">ร่าง</span>',
-    confirmed: '<span class="badge" style="background:#e3f0ff;color:#1a5fb4;">&#9989; รับแล้ว</span>',
+    confirmed: '<span class="badge" style="background:var(--info-bg);color:var(--info-text);">&#9989; รับแล้ว</span>',
     pending:   '<span class="badge badge-orange">รอจ่าย</span>',
     paid:      '<span class="badge badge-green">จ่ายแล้ว</span>',
     overdue:   '<span class="badge badge-red">เกินกำหนด</span>',
@@ -772,7 +772,7 @@ function renderSupplierInvoices() {
         '</tr>'
     }).join('') : ''
     const stockUpdatedBadge = r.isStockUpdated
-      ? '<span style="font-size:11px;color:#1a5fb4;">&#128230;สต็อกแล้ว</span>'
+      ? '<span style="font-size:11px;color:var(--info-text);">&#128230;สต็อกแล้ว</span>'
       : (r.status==='draft'?'<span style="font-size:11px;color:var(--text3);">ยังไม่รับ</span>':'')
     return '<tr>'+
       '<td style="font-size:12px;">'+(r.date||'-')+'</td>'+
@@ -783,7 +783,7 @@ function renderSupplierInvoices() {
       '<td style="text-align:right;font-weight:600;">&#3647;'+(r.total||0).toLocaleString()+'</td>'+
       '<td>'+statusBadge(r.status)+'<br>'+stockUpdatedBadge+'</td>'+
       '<td>'+
-        '<button class="btn btn-ghost btn-sm" title="ดูรายละเอียด" onclick="viewSupInv('+r.id+')">&#128065;</button>'+'<button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('+r.id+')">&#9998;</button>'+
+        '<button class="btn btn-ghost btn-sm" title="ดูรายละเอียด" onclick="viewSupInv('+r.id+')">&var(--success-text);</button>'+'<button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('+r.id+')">&#9998;</button>'+
         (r.status==='draft'?'<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="confirmInvoiceStock('+r.id+')">&#128230; ยืนยัน</button>':'')+
         (r.status==='pending'||r.status==='confirmed'?'<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('+r.id+')">&#9989; จ่าย</button>':'')+
         (r.status==='draft'&&(currentUser?.role==='admin'||currentUser?.role==='manager')?'<button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="deleteSupplierInvoice('+r.id+',\''+r.invoiceNo+'\')">&#128465;</button>':'')+
@@ -1210,7 +1210,7 @@ function addSupInvLine(itemId, itemName, qty, unit, unitPrice, lineType, lotNumb
     badge.style.background = 'var(--surface3)'; badge.style.color = 'var(--text2)';
   } else if (itemId) {
     badge.textContent = 'ตัดสต็อก';
-    badge.style.background = '#e8f5e9'; badge.style.color = '#2d7a4f';
+    badge.style.background = 'var(--success-bg)'; badge.style.color = 'var(--brand)';
   }
 
   // --- ปุ่มลบ ---
@@ -1286,8 +1286,8 @@ function onSupInvItemChange(sel) {
     if (manualWrap) manualWrap.style.display = 'none';
     if (badge) {
       badge.textContent = item ? 'ตัดสต็อก' : '';
-      badge.style.background = item ? '#e8f5e9' : 'transparent';
-      badge.style.color = item ? '#2d7a4f' : '';
+      badge.style.background = item ? 'var(--success-bg)' : 'transparent';
+      badge.style.color = item ? 'var(--brand)' : '';
     }
     if (item) {
       row.querySelector('.siline-unit').value  = item.dispenseUnit || item.unit || '';

@@ -305,7 +305,7 @@ function showLotDetail(itemId) {
           : l.expiryDate ? '<span class="badge badge-green">ปกติ</span>'
           : '<span class="badge badge-gray">ไม่ระบุ</span>';
         const dispUnit = item.dispenseUnit || item.unit;
-        return `<tr style="${status==='expired'?'background:#fff5f5':status==='expiring'?'background:#fff8f0':''}">
+        return `<tr style="${status==='expired'?'background:var(--danger-bg)':status==='expiring'?'background:var(--warning-bg)':''}">
           <td style="font-family:monospace;font-size:12px;">${l.lotNumber||'-'}</td>
           <td>${l.receivedDate||'-'}</td>
           <td style="font-family:monospace;color:${status==='expired'?'var(--danger-text)':status==='expiring'?'var(--warning)':'inherit'};">${l.expiryDate||'-'}</td>

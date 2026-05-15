@@ -27,11 +27,11 @@ function renderMedLogTab(patId, type) {
        </div>`
     : `<div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
         ${logs.map((entry, i) => `
-          <div class="medlog-entry-card" style="border:1px solid var(--border,#e8e3d4);border-left:3px solid ${isM ? 'var(--info)' : 'var(--brand,#2e6b4f)'};border-radius:10px;padding:12px 16px;background:${isM ? '#f4f9fd' : 'var(--sage-50,#f4f8f5)'};transition:all 0.15s;">
+          <div class="medlog-entry-card" style="border:1px solid var(--border,#e8e3d4);border-left:3px solid ${isM ? 'var(--info)' : 'var(--brand,#2e6b4f)'};border-radius:10px;padding:12px 16px;background:${isM ? 'var(--info-bg)' : 'var(--sage-50,#f4f8f5)'};transition:all 0.15s;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
               <div style="flex:1;min-width:0;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
-                  <span style="background:${isM ? '#dbeafe' : 'var(--sage-100,#eaf1eb)'};color:${isM ? '#1e5fa0' : 'var(--brand,#2e6b4f)'};border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:600;">📅 ${thDateShort(entry.date)}</span>
+                  <span style="background:${isM ? 'var(--info-bg)' : 'var(--sage-100,#eaf1eb)'};color:${isM ? 'var(--info-text)' : 'var(--brand,#2e6b4f)'};border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:600;">📅 ${thDateShort(entry.date)}</span>
                   ${entry.by ? `<span style="font-size:11px;color:var(--text3);">โดย ${entry.by}</span>` : ''}
                 </div>
                 <div style="font-size:13.5px;line-height:1.65;white-space:pre-wrap;color:var(--text);">${entry.detail}</div>
@@ -45,11 +45,11 @@ function renderMedLogTab(patId, type) {
        </div>`;
 
   return `<div class="card medlog-card-r6">
-    <div class="card-header" style="background:linear-gradient(to right, ${isM ? '#f4f9fd' : 'var(--sage-50,#f4f8f5)'}, transparent);">
+    <div class="card-header" style="background:linear-gradient(to right, ${isM ? 'var(--info-bg)' : 'var(--sage-50,#f4f8f5)'}, transparent);">
       <div class="card-title" style="font-size:14px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:18px;">${icon}</span>
         <span>${title}</span>
-        ${logs.length > 0 ? `<span style="background:${isM ? '#dbeafe' : 'var(--sage-100,#eaf1eb)'};color:${isM ? '#1e5fa0' : 'var(--brand,#2e6b4f)'};border-radius:999px;padding:1px 8px;font-size:11px;font-weight:600;">${logs.length}</span>` : ''}
+        ${logs.length > 0 ? `<span style="background:${isM ? 'var(--info-bg)' : 'var(--sage-100,#eaf1eb)'};color:${isM ? 'var(--info-text)' : 'var(--brand,#2e6b4f)'};border-radius:999px;padding:1px 8px;font-size:11px;font-weight:600;">${logs.length}</span>` : ''}
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm" onclick="exportPatMedExcel('${patId}','${type}')" title="Export Excel" ${logs.length===0?'disabled':''}>📊 Excel</button>
@@ -400,12 +400,12 @@ function exportHealthPDF() {
       .meta { color:#666; font-size:12px; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid var(--brand); }
       .patient-block { margin-bottom:24px; page-break-inside:avoid; }
       h3 { font-size:14px; font-weight:700; color:var(--brand); margin-bottom:8px; padding:6px 10px; background:#f2f8f4; border-radius:4px; }
-      .section-label { font-size:11px; font-weight:700; color:#5a9e7a; text-transform:uppercase; letter-spacing:.05em; margin:10px 0 4px; }
+      .section-label { font-size:11px; font-weight:700; color:var(--brand); text-transform:uppercase; letter-spacing:.05em; margin:10px 0 4px; }
       .section-label.meds { color:var(--info-text); }
       table { width:100%; border-collapse:collapse; margin-bottom:8px; }
       th { background:#f2f8f4; padding:6px 8px; text-align:left; font-size:11px; border-bottom:1px solid #cde4d4; }
       td { padding:6px 8px; border-bottom:1px solid #eee; vertical-align:top; line-height:1.5; }
-      .date { white-space:nowrap; color:#5a9e7a; font-weight:600; min-width:90px; }
+      .date { white-space:nowrap; color:var(--brand); font-weight:600; min-width:90px; }
       .by { white-space:nowrap; color:#999; font-size:11px; min-width:80px; }
       .footer { margin-top:20px; padding-top:8px; border-top:1px dashed #ccc; font-size:10px; color:#aaa; display:flex; justify-content:space-between; }
       @media print { body { padding:10mm 12mm; } }
@@ -483,9 +483,9 @@ function exportPatMedPDF(patId, type) {
       h1{font-size:17px;font-weight:700;color:${color};margin-bottom:4px}
       .meta{font-size:12px;color:#555;line-height:1.6}
       .month-block{margin-bottom:20px;page-break-inside:avoid}
-      .month-label{font-size:13px;font-weight:700;color:${color};background:${type==='medical'?'#f2f8f4':'#eef4ff'};padding:5px 10px;border-radius:4px;margin-bottom:6px}
+      .month-label{font-size:13px;font-weight:700;color:${color};background:${type==='medical'?'#f2f8f4':'var(--info-bg)'};padding:5px 10px;border-radius:4px;margin-bottom:6px}
       table{width:100%;border-collapse:collapse}
-      th{background:#f5f5f5;padding:6px 8px;text-align:left;font-size:11px;border-bottom:1px solid #ddd}
+      th{background:var(--surface-2);padding:6px 8px;text-align:left;font-size:11px;border-bottom:1px solid #ddd}
       td{padding:7px 8px;border-bottom:1px solid #f0f0f0;vertical-align:top;line-height:1.6}
       .date-col{white-space:nowrap;color:${color};font-weight:600;width:100px}
       .by-col{white-space:nowrap;color:#999;font-size:11px;width:90px}
@@ -681,20 +681,20 @@ function hrPrintReport(d){
     "<meta charset=\"utf-8\"><title>รายงานสุขภาพ - "+(p?.name||"")+"</title>"+
     "<link href=\"https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap\" rel=\"stylesheet\">"+
     "<style>*{box-sizing:border-box;}body{font-family:Sarabun,sans-serif;font-size:13px;color:#222;padding:20px 32px;max-width:960px;margin:0 auto;}"+
-    ".hrh{border-bottom:2px solid #1a5276;padding-bottom:12px;margin-bottom:20px;}"+
-    ".hrh h2{margin:0;font-size:18px;color:#1a5276;}.hrh p{margin:4px 0 0;font-size:12px;color:#555;}"+
-    ".hrs{margin-bottom:18px;}.hrst{font-size:14px;font-weight:700;color:#1a5276;background:#eaf2f8;padding:6px 12px;border-left:4px solid #1a5276;margin-bottom:8px;}"+
+    ".hrh{border-bottom:2px solid var(--info-text);padding-bottom:12px;margin-bottom:20px;}"+
+    ".hrh h2{margin:0;font-size:18px;color:var(--info-text);}.hrh p{margin:4px 0 0;font-size:12px;color:#555;}"+
+    ".hrs{margin-bottom:18px;}.hrst{font-size:14px;font-weight:700;color:var(--info-text);background:var(--info-bg);padding:6px 12px;border-left:4px solid var(--info-text);margin-bottom:8px;}"+
     "table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px;}"+
-    "th{background:#1a5276;color:#fff;padding:5px 8px;text-align:left;font-weight:600;}"+
-    "td{padding:4px 8px;border-bottom:1px solid #e8e8e8;vertical-align:top;}"+
-    "tr:nth-child(even)td{background:#f6fafd;}.empty{text-align:center;color:#aaa;padding:10px!important;}"+
+    "th{background:var(--info-text);color:#fff;padding:5px 8px;text-align:left;font-weight:600;}"+
+    "td{padding:4px 8px;border-bottom:1px solid var(--border);vertical-align:top;}"+
+    "tr:nth-child(even)td{background:var(--info-bg);}.empty{text-align:center;color:#aaa;padding:10px!important;}"+
     "@media print{.noprint{display:none!important;}body{padding:8px 16px;}}"+
     "</style></head><body>"+
     "<div class=\"hrh\"><div style=\"display:flex;justify-content:space-between;align-items:flex-start;\">"+
     "<div><h2>รายงานสุขภาพ — "+(p?.name||"ทุกคน")+"</h2>"+
     "<p>โรงพยาบาลนวศรี เนอร์สซิ่งโฮม &nbsp;|&nbsp; HN: "+(p?.hn||"-")+" &nbsp;|&nbsp; ช่วง: "+rangeLabel+"</p>"+
     "<p style=\"font-size:11px;color:#888;\">วันที่ออกรายงาน: "+today+"</p></div>"+
-    "<button class=\"noprint\" onclick=\"window.print()\" style=\"padding:7px 18px;background:#1a5276;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;\">🖨️ พิมพ์ / PDF</button>"+
+    "<button class=\"noprint\" onclick=\"window.print()\" style=\"padding:7px 18px;background:var(--info-text);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;\">🖨️ พิมพ์ / PDF</button>"+
     "</div></div>"+body+"</body></html>");
   win.document.close();
 }

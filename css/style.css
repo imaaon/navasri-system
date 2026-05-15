@@ -418,7 +418,7 @@
   .badge-orange { background: var(--tan-light); color: var(--tan); }
   .badge-green { background: var(--green-light); color: var(--green); }
   .badge-blue { background: var(--blue-light); color: var(--blue); }
-  .badge-purple { background: #f0e8fa; color: var(--purple); }
+  .badge-purple { background: var(--purple-bg); color: var(--purple); }
   .badge-gray { background: var(--surface2); color: var(--text2); }
 
   /* Stock level bar */
@@ -485,8 +485,8 @@
     margin-bottom: 10px;
     position: relative;
   }
-  .mr-item.urine { background: #fffef0; border-color: #f0e0a0; }
-  .mr-item.stool { background: #f9f3eb; border-color: #d4a574; }
+  .mr-item.urine { background: var(--warning-bg); border-color: #f0e0a0; }
+  .mr-item.stool { background: var(--warning-bg); border-color: #d4a574; }
   .mr-item.vomit { background: var(--danger-bg); border-color: var(--danger); }
   .mr-item.other { background: #f0f0ff; border-color: #a0a0e0; }
   .mr-item.intake { background: #f0f8ff; border-color: #a0c8e0; }
@@ -670,7 +670,7 @@
   .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; display: flex; gap: 10px; align-items: flex-start; margin-bottom: 16px; }
   .alert-warning { background: var(--orange-light); border: 1px solid #f5c97a; color: #8a4d00; }
   .alert-danger { background: var(--red-light); border: 1px solid var(--danger); color: var(--red); }
-  .alert-success { background: var(--green-light); border: 1px solid #7dd4a0; color: var(--green); }
+  .alert-success { background: var(--green-light); border: 1px solid var(--success); color: var(--green); }
 
   /* Search */
   /* [R20 15พค69] .search-wrap merged into R3 rule (only-legacy props moved) */
@@ -4360,7 +4360,7 @@ tr:hover td {
 /* Low stock row — gentle amber tint + left border */
 .stock-table-r8 tbody tr.stock-row-r8.low-stock {
   border-left: 3px solid var(--warning);
-  background: #fffdf6;
+  background: var(--bg);
 }
 
 /* Action buttons (last col) — slightly tighter */
@@ -4377,7 +4377,7 @@ tr:hover td {
   background: var(--danger-bg) !important;
 }
 .stock-table-r8 tbody tr.stock-row-r8.low-stock:hover {
-  background: #fff8e8 !important;
+  background: var(--warning-bg) !important;
 }
 
 /* ════════════════════════════════════════════════════════════════

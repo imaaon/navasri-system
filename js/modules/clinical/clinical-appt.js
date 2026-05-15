@@ -16,7 +16,7 @@ function renderApptList(patientId) {
     ${appts.map(a => {
       const daysLeft = a.apptDate >= today ? Math.ceil((new Date(a.apptDate)-new Date(today))/(86400000)) : -1;
       const urgent   = daysLeft >= 0 && daysLeft <= 2 && a.status==='upcoming';
-      return `<div style="border:1.5px solid ${urgent?'var(--danger)':a.status==='done'?'#ddd':'var(--border)'};border-radius:10px;padding:14px;background:${urgent?'#fff5f5':a.status==='done'?'#f9f9f9':'var(--surface2)'};position:relative;">
+      return `<div style="border:1.5px solid ${urgent?'var(--danger)':a.status==='done'?'#ddd':'var(--border)'};border-radius:10px;padding:14px;background:${urgent?'var(--danger-bg)':a.status==='done'?'#f9f9f9':'var(--surface2)'};position:relative;">
         ${urgent?`<div style="position:absolute;top:8px;right:8px;background:var(--danger);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;">⚠️ อีก ${daysLeft} วัน</div>`:''}
         <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
           <div style="min-width:100px;">
@@ -164,7 +164,7 @@ function renderUpcomingAppts() {
     const displayName = a.patientName && a.patientName.trim() ? a.patientName : fallbackName;
     const dateText = _uaFmtDate(a.apptDate) + (a.apptTime ? ' ' + _uaFmtTime(a.apptTime) : '');
     const isUrgent = daysLeft <= 2;
-    const badgeBg = isUrgent ? '#fef0ee' : '#eef4ff';
+    const badgeBg = isUrgent ? 'var(--danger-bg)' : 'var(--info-bg)';
     const badgeColor = isUrgent ? 'var(--danger)' : 'var(--accent)';
     return `<div onclick="navigateToAppt('${_uaEsc(a.patientId)}')" style="cursor:pointer;padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;white-space:nowrap;overflow:hidden;">
       <div style="background:${badgeBg};color:${badgeColor};border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;flex-shrink:0;white-space:nowrap;">${_uaDayLabel(daysLeft)}</div>
