@@ -416,7 +416,7 @@ function viewPurchaseRequest(id) {
       ${field('วันต้องการรับ',pr.requiredDate||'-')}${field('อนุมัติ/ปฏิเสธโดย',pr.approvedBy||'-')}
     </div>
     ${pr.reason?`<div style="margin-bottom:14px;"><div style="font-size:11px;color:var(--text3);margin-bottom:4px;">เหตุผล</div><div style="font-size:13px;background:var(--surface2);padding:10px 12px;border-radius:6px;line-height:1.6;">${pr.reason}</div></div>`:''}
-    ${pr.rejectReason?`<div style="margin-bottom:14px;"><div style="font-size:11px;color:#c0392b;margin-bottom:4px;">เหตุผลปฏิเสธ</div><div style="font-size:13px;background:#fdf2f2;padding:10px 12px;border-radius:6px;color:#c0392b;">${pr.rejectReason}</div></div>`:''}
+    ${pr.rejectReason?`<div style="margin-bottom:14px;"><div style="font-size:11px;color:var(--danger-text);margin-bottom:4px;">เหตุผลปฏิเสธ</div><div style="font-size:13px;background:#fdf2f2;padding:10px 12px;border-radius:6px;color:var(--danger-text);">${pr.rejectReason}</div></div>`:''}
     ${items.length?`<hr style="margin:12px 0;border-color:var(--border);"><div style="font-size:12px;font-weight:500;margin-bottom:8px;">📦 รายการสินค้า</div>${itemsHtml}`:''}
   `;
   openModal('modal-view-pr');
@@ -466,7 +466,7 @@ async function rejectPR(id) {
     '<textarea class="form-control" id="reject-reason-input" rows="3" placeholder="ระบุเหตุผล..." style="margin-top:6px;"></textarea></div>' +
     '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">' +
     '<button class="btn btn-ghost" id="reject-cancel-btn">ยกเลิก</button>' +
-    '<button class="btn btn-primary" id="reject-confirm-btn" style="background:#e74c3c;border-color:#e74c3c;">ปฏิเสธ</button></div>';
+    '<button class="btn btn-primary" id="reject-confirm-btn" style="background:var(--danger);border-color:var(--danger);">ปฏิเสธ</button></div>';
   overlay.appendChild(box);
   document.body.appendChild(overlay);
   document.getElementById('reject-cancel-btn').onclick = function() { overlay.remove(); };
@@ -786,7 +786,7 @@ function renderSupplierInvoices() {
         '<button class="btn btn-ghost btn-sm" title="ดูรายละเอียด" onclick="viewSupInv('+r.id+')">&#128065;</button>'+'<button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('+r.id+')">&#9998;</button>'+
         (r.status==='draft'?'<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="confirmInvoiceStock('+r.id+')">&#128230; ยืนยัน</button>':'')+
         (r.status==='pending'||r.status==='confirmed'?'<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('+r.id+')">&#9989; จ่าย</button>':'')+
-        (r.status==='draft'&&(currentUser?.role==='admin'||currentUser?.role==='manager')?'<button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="deleteSupplierInvoice('+r.id+',\''+r.invoiceNo+'\')">&#128465;</button>':'')+
+        (r.status==='draft'&&(currentUser?.role==='admin'||currentUser?.role==='manager')?'<button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="deleteSupplierInvoice('+r.id+',\''+r.invoiceNo+'\')">&#128465;</button>':'')+
       '</td>'+
       '</tr>'+
       linesHtml

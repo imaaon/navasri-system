@@ -87,7 +87,7 @@
         <span class="topbar-date" id="todayDate"></span>
         <div id="notif-bell-wrap" style="position:relative;display:inline-flex;align-items:center;" class="no-print">
           <button id="notif-bell-btn" onclick="toggleNotifPanel()" style="background:none;border:none;cursor:pointer;font-size:20px;padding:2px 4px;position:relative;" title="แจ้งเตือน">
-            🔔<span id="notif-badge" style="display:none;position:absolute;top:0;right:0;background:#e74c3c;color:#fff;border-radius:50%;font-size:10px;font-weight:700;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;"></span>
+            🔔<span id="notif-badge" style="display:none;position:absolute;top:0;right:0;background:var(--danger);color:#fff;border-radius:50%;font-size:10px;font-weight:700;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 3px;"></span>
           </button>
           <div id="notif-panel" style="display:none;position:absolute;top:36px;right:0;width:320px;max-height:400px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:9999;"></div>
         </div>
@@ -106,42 +106,42 @@
 <div class="toast-container" id="toastContainer"></div>
 <script src="js/core/supabase.js?v=2"></script>
 <script src="js/core/audit.js?v=2"></script>
-<script src="js/core/db.js?v=16"></script>
+<script src="js/core/db.js?v=17"></script>
 <script src="js/core/permissions.js?v=13"></script>
 <script src="js/core/auth.js?v=6"></script>
 <script src="js/core/router.js?v=7"></script>
 <script src="js/core/bottom-tab-bar.js?v=5"></script>
-<script src="js/shared/utils.js?v=4"></script>
-<script src="js/shared/ui.js?v=9"></script>
+<script src="js/shared/utils.js?v=5"></script>
+<script src="js/shared/ui.js?v=10"></script>
 <script src="js/shared/events.js?v=2"></script>
-<script src="js/modules/dashboard.js?v=5"></script>
-<script src="js/modules/inventory.js?v=27"></script>
-<script src="js/modules/requisition.js?v=23"></script>
+<script src="js/modules/dashboard.js?v=6"></script>
+<script src="js/modules/inventory.js?v=28"></script>
+<script src="js/modules/requisition.js?v=24"></script>
 <script src="js/modules/patients.js?v=15"></script>
 <script src="js/modules/clinical/clinical-photo.js?v=1"></script>
-<script src="js/modules/clinical/clinical-profile.js?v=72"></script>
-<script src="js/modules/clinical/clinical-appt.js?v=13"></script>
-<script src="js/modules/clinical/clinical-belongings.js?v=8"></script>
-<script src="js/modules/clinical/clinical-mar.js?v=25"></script>
-<script src="js/modules/clinical/clinical-vitals.js?v=11"></script>
-<script src="js/modules/clinical/clinical-nursing.js?v=19"></script>
-<script src="js/modules/rooms.js?v=7"></script>
+<script src="js/modules/clinical/clinical-profile.js?v=73"></script>
+<script src="js/modules/clinical/clinical-appt.js?v=14"></script>
+<script src="js/modules/clinical/clinical-belongings.js?v=9"></script>
+<script src="js/modules/clinical/clinical-mar.js?v=26"></script>
+<script src="js/modules/clinical/clinical-vitals.js?v=12"></script>
+<script src="js/modules/clinical/clinical-nursing.js?v=20"></script>
+<script src="js/modules/rooms.js?v=8"></script>
 <script src="js/modules/staff.js?v=4"></script>
-<script src="js/modules/accounts.js?v=5"></script>
-<script src="js/modules/health.js?v=20"></script>
-<script src="js/modules/physio.js?v=11"></script>
-<script src="js/modules/billing/billing-reset.js?v=3"></script>
-<script src="js/modules/billing/billing-core.js?v=35"></script>
+<script src="js/modules/accounts.js?v=6"></script>
+<script src="js/modules/health.js?v=21"></script>
+<script src="js/modules/physio.js?v=12"></script>
+<script src="js/modules/billing/billing-reset.js?v=4"></script>
+<script src="js/modules/billing/billing-core.js?v=36"></script>
 <script src="js/modules/billing/billing-package-helpers.js?v=3"></script>
-<script src="js/modules/billing/billing-contract.js?v=22"></script>
-<script src="js/modules/billing/billing-print.js?v=6"></script>
-<script src="js/modules/billing/billing-report.js?v=18"></script>
+<script src="js/modules/billing/billing-contract.js?v=23"></script>
+<script src="js/modules/billing/billing-print.js?v=7"></script>
+<script src="js/modules/billing/billing-report.js?v=19"></script>
 <script src="js/modules/billing/billing-clinical.js?v=23"></script>
-<script src="js/modules/suppliers.js?v=36"></script>
-<script src="js/modules/expenses.js?v=18"></script>
+<script src="js/modules/suppliers.js?v=37"></script>
+<script src="js/modules/expenses.js?v=19"></script>
 <script src="js/modules/assets.js?v=12"></script>
-<script src="js/modules/bi.js?v=5"></script>
-<script src="js/modules/features.js?v=11"></script>
+<script src="js/modules/bi.js?v=6"></script>
+<script src="js/modules/features.js?v=12"></script>
 <script>
 async function loadHTMLPartials() {
   const parts = [
@@ -192,7 +192,7 @@ window.onload = async function() {
   startClock();
 };
 </script>
-<script src="js/fix-features.js?v=85" defer></script>
+<script src="js/fix-features.js?v=86" defer></script>
 
 <!-- MODAL: Patient Contracts (popup จากหน้า patient profile) -->
 <div id="modal-patient-contracts" class="modal-overlay" style="z-index:190;">

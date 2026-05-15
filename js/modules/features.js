@@ -51,7 +51,7 @@ function renderMonthlySummaryCard(targetElementId, monthStr) {
   // สร้าง bar chart 6 เดือนย้อนหลัง
   const chartData = _buildMonthlyChartData(6);
 
-  const profitColor = netProfit >= 0 ? '#27ae60' : '#e74c3c';
+  const profitColor = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
   const profitIcon  = netProfit >= 0 ? '📈' : '📉';
 
   el.innerHTML = `
@@ -68,13 +68,13 @@ function renderMonthlySummaryCard(targetElementId, monthStr) {
       <!-- Summary Cards -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;padding:16px 16px 0 16px;margin-bottom:20px;">
         <div style="background:#eafaf1;border:1px solid #a9dfbf;border-radius:10px;padding:18px 20px;text-align:center;">
-          <div style="font-size:13px;color:#27ae60;font-weight:600;margin-bottom:6px;">💵 รายได้รวม</div>
-          <div style="font-size:20px;font-weight:800;color:#27ae60;">${_thb(totalRevenue)}</div>
+          <div style="font-size:13px;color:var(--success);font-weight:600;margin-bottom:6px;">💵 รายได้รวม</div>
+          <div style="font-size:20px;font-weight:800;color:var(--success);">${_thb(totalRevenue)}</div>
           <div style="font-size:12px;color:#7dcea0;margin-top:4px;">${paidPayments.length} รายการ</div>
         </div>
         <div style="background:#fdedec;border:1px solid #f1948a;border-radius:10px;padding:18px 20px;text-align:center;">
-          <div style="font-size:13px;color:#e74c3c;font-weight:600;margin-bottom:6px;">💸 รายจ่ายรวม</div>
-          <div style="font-size:20px;font-weight:800;color:#e74c3c;">${_thb(totalExpense)}</div>
+          <div style="font-size:13px;color:var(--danger);font-weight:600;margin-bottom:6px;">💸 รายจ่ายรวม</div>
+          <div style="font-size:20px;font-weight:800;color:var(--danger);">${_thb(totalExpense)}</div>
           <div style="font-size:12px;color:#f1948a;margin-top:4px;">ค่าใช้จ่าย + จัดซื้อ</div>
         </div>
         <div style="background:${netProfit>=0?'#eafaf1':'#fdedec'};border:1px solid ${netProfit>=0?'#a9dfbf':'#f1948a'};border-radius:10px;padding:18px 20px;text-align:center;">
@@ -110,7 +110,7 @@ function renderMonthlySummaryCard(targetElementId, monthStr) {
             ${monthExpenses.slice(0,10).map(e => `
             <tr style="border-top:1px solid var(--border);">
               <td style="padding:6px 10px;">${e.vendorName||e.job||'-'}</td>
-              <td style="padding:6px 10px;text-align:right;font-weight:600;color:#e74c3c;">${_thb(e.net||0)}</td>
+              <td style="padding:6px 10px;text-align:right;font-weight:600;color:var(--danger);">${_thb(e.net||0)}</td>
               <td style="padding:6px 10px;font-size:12px;color:var(--text3);">${e.date||'-'}</td>
             </tr>`).join('')}
           </tbody>
@@ -150,8 +150,8 @@ function _renderBarChart(data) {
     return `
       <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">
         <div style="display:flex;align-items:flex-end;gap:2px;height:${barH}px;">
-          <div title="รายได้ ${_thb(d.revenue)}" style="width:${bW}px;background:#27ae60;border-radius:3px 3px 0 0;height:${rH}px;min-height:${d.revenue>0?2:0}px;transition:height .3s;"></div>
-          <div title="รายจ่าย ${_thb(d.expense)}" style="width:${bW}px;background:#e74c3c;border-radius:3px 3px 0 0;height:${eH}px;min-height:${d.expense>0?2:0}px;transition:height .3s;"></div>
+          <div title="รายได้ ${_thb(d.revenue)}" style="width:${bW}px;background:var(--success);border-radius:3px 3px 0 0;height:${rH}px;min-height:${d.revenue>0?2:0}px;transition:height .3s;"></div>
+          <div title="รายจ่าย ${_thb(d.expense)}" style="width:${bW}px;background:var(--danger);border-radius:3px 3px 0 0;height:${eH}px;min-height:${d.expense>0?2:0}px;transition:height .3s;"></div>
         </div>
         <div style="font-size:10px;color:var(--text3);margin-top:4px;text-align:center;">${d.label}</div>
       </div>`;
@@ -160,8 +160,8 @@ function _renderBarChart(data) {
   return `
     <div>
       <div style="display:flex;gap:12px;margin-bottom:6px;">
-        <span style="font-size:11px;color:#27ae60;">■ รายได้</span>
-        <span style="font-size:11px;color:#e74c3c;">■ รายจ่าย</span>
+        <span style="font-size:11px;color:var(--success);">■ รายได้</span>
+        <span style="font-size:11px;color:var(--danger);">■ รายจ่าย</span>
       </div>
       <div style="display:flex;align-items:flex-end;gap:4px;padding:0 4px;border-bottom:1px solid var(--border);">
         ${bars}
@@ -526,7 +526,7 @@ function extendLineSettingsUI() {
         <button class="btn btn-sm" onclick="manualNotifyOverdueBills()" style="background:#e67e2222;color:#e67e22;border:1px solid #e67e22;">
           ⏰ ทดสอบส่งแจ้งบิลค้าง
         </button>
-        <button class="btn btn-sm" onclick="manualNotifyLowStock()" style="background:#3498db22;color:#3498db;border:1px solid #3498db;">
+        <button class="btn btn-sm" onclick="manualNotifyLowStock()" style="background:var(--info-bg);color:var(--info);border:1px solid var(--info);">
           📦 ทดสอบส่งแจ้งสต็อก
         </button>
       </div>
@@ -615,7 +615,7 @@ async function renderAuditPage() {
       mods.forEach(m => { const o=document.createElement('option'); o.value=m; o.textContent=m; modSel.appendChild(o); });
     }
 
-    const actionColors = {create:'#27ae60',update:'#2980b9',delete:'#e74c3c',login:'#8e44ad',logout:'#95a5a6',approve:'#16a085',reject:'#e67e22'};
+    const actionColors = {create:'var(--success)',update:'#2980b9',delete:'var(--danger)',login:'#8e44ad',logout:'#95a5a6',approve:'#16a085',reject:'#e67e22'};
     const total = count || 0;
     if (countEl) countEl.textContent = 'ทั้งหมด ' + total.toLocaleString() + ' รายการ';
 
@@ -753,17 +753,17 @@ function renderNotifPanel() {
   var soon30Str=soon30.toISOString().split('T')[0];
   var staleDate=new Date(today); staleDate.setDate(today.getDate()-3);
   var outItems=(db.items||[]).filter(function(i){return i.qty<=0;});
-  if(outItems.length) alerts.push({icon:'🔴',text:'สินค้าหมดสต็อค '+outItems.length+' รายการ',page:'stock',color:'#e74c3c'});
+  if(outItems.length) alerts.push({icon:'🔴',text:'สินค้าหมดสต็อค '+outItems.length+' รายการ',page:'stock',color:'var(--danger)'});
   var lowItems=(db.items||[]).filter(function(i){return i.qty>0&&i.qty<=i.reorder;});
   if(lowItems.length) alerts.push({icon:'🟡',text:'สินค้าใกล้หมด '+lowItems.length+' รายการ',page:'stock',color:'#e67e22'});
   var urgentExp=(db.itemLots||[]).filter(function(l){if(!l.expiryDate||l.qtyRemaining<=0)return false;var diff=Math.ceil((new Date(l.expiryDate)-today)/86400000);return diff>=0&&diff<=7;});
-  if(urgentExp.length) alerts.push({icon:'📅',text:'สินค้าหมดอายุใน 7 วัน '+urgentExp.length+' Lot',page:'stock',color:'#e74c3c'});
+  if(urgentExp.length) alerts.push({icon:'📅',text:'สินค้าหมดอายุใน 7 วัน '+urgentExp.length+' Lot',page:'stock',color:'var(--danger)'});
   var pendingPRs=(db.purchaseRequests||[]).filter(function(r){return r.status==='submitted';});
   if(pendingPRs.length) alerts.push({icon:'📋',text:'คำขอซื้อรอ approve '+pendingPRs.length+' รายการ',page:'purchaserequests',color:'#8e44ad'});
   var assetsDue=(db.assets||[]).filter(function(a){return a.status==='active'&&a.nextMaintenanceDate&&a.nextMaintenanceDate<=soon30Str;});
   if(assetsDue.length) alerts.push({icon:'🔧',text:'ครุภัณฑ์ถึงรอบซ่อม '+assetsDue.length+' รายการ',page:'assets',color:'#e67e22'});
   var overdueInv=(db.invoices||[]).filter(function(inv){if(inv.status==='paid'||inv.type!=='invoice')return false;return inv.dueDate&&inv.dueDate<todayStr;});
-  if(overdueInv.length) alerts.push({icon:'💸',text:'บิลเกินกำหนดชำระ '+overdueInv.length+' ใบ',page:'billing',color:'#e74c3c'});
+  if(overdueInv.length) alerts.push({icon:'💸',text:'บิลเกินกำหนดชำระ '+overdueInv.length+' ใบ',page:'billing',color:'var(--danger)'});
   if(badge){ if(alerts.length>0){badge.style.display='';badge.textContent=alerts.length>9?'9+':String(alerts.length);}else{badge.style.display='none';} }
   if(!window._notifOpen) return;
   if(alerts.length===0){ panel.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);">✅ ไม่มีการแจ้งเตือน</div>'; return; }

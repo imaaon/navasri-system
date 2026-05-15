@@ -160,7 +160,7 @@ async function openPatientProfile(id, activeTab) {
             ${p.dob ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">วันเกิด</span><strong style="text-align:right;">${p.dob}</strong></div>` : ''}
             ${age !== '-' ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">อายุ</span><strong style="text-align:right;">${age} ปี</strong></div>` : ''}
             ${idcard !== '-' ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">เลขบัตรประชาชน</span><strong style="text-align:right;font-family:var(--mono,monospace);">${idcard}</strong></div>` : ''}
-            ${p.bloodType ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">หมู่เลือด</span><strong style="text-align:right;color:#c0392b;">${p.bloodType}</strong></div>` : ''}
+            ${p.bloodType ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">หมู่เลือด</span><strong style="text-align:right;color:var(--danger-text);">${p.bloodType}</strong></div>` : ''}
             ${p.insurance ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">สิทธิ์การรักษา</span><strong style="text-align:right;">${p.insurance}</strong></div>` : ''}
             ${p.phone ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">โทรศัพท์</span><strong style="text-align:right;font-family:var(--mono,monospace);">${p.phone}</strong></div>` : ''}
             ${p.admitDate ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">วันแรกรับ</span><strong style="text-align:right;">${p.admitDate}</strong></div>` : ''}
@@ -256,7 +256,7 @@ async function openPatientProfile(id, activeTab) {
           `<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
             ${(p.contacts||[]).map(c => {
               const tone = c.isPayer ? 'payer' : c.isDecisionMaker ? 'decision' : 'emergency';
-              const accent = { payer: '#27ae60', decision: '#5e60ce', emergency: '#7a8a9a' }[tone];
+              const accent = { payer: 'var(--success)', decision: '#5e60ce', emergency: '#7a8a9a' }[tone];
               const tint = { payer: '#f0faf5', decision: '#f1f1fb', emergency: '#f7f8fa' }[tone];
               return `
               <div class="patprofile-contact-card" style="border:1px solid var(--border,#e8e3d4);border-left:3px solid ${accent};border-radius:10px;padding:14px 18px;background:${tint};transition:all 0.15s;">
@@ -279,7 +279,7 @@ async function openPatientProfile(id, activeTab) {
                   </div>
                   <div style="display:flex;gap:4px;flex-shrink:0;">
                     <button class="btn btn-ghost btn-sm" onclick="openEditContactModal('${p.id}','${c.id}')" title="แก้ไข">✏️</button>
-                    <button class="btn btn-ghost btn-sm" style="color:#c0392b;" onclick="deleteContact('${p.id}','${c.id}')" title="ลบ">🗑️</button>
+                    <button class="btn btn-ghost btn-sm" style="color:var(--danger-text);" onclick="deleteContact('${p.id}','${c.id}')" title="ลบ">🗑️</button>
                   </div>
                 </div>
               </div>`;
@@ -508,7 +508,7 @@ function _renderPatIncidentTab(pid, listEl) {
       d.style.cssText='margin-bottom:8px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;';
       var info=document.createElement('div');
       var incTime = x.date ? (x.time ? x.date+' '+x.time : x.date) : '-';
-      var sevBadge = {'mild':'<span style="background:#27ae6022;color:#27ae60;border-radius:4px;padding:1px 8px;font-size:11px;">เล็กน้อย</span>','moderate':'<span style="background:#e67e2222;color:#d35400;border-radius:4px;padding:1px 8px;font-size:11px;">ปานกลาง</span>','severe':'<span style="background:#e74c3c22;color:#c0392b;border-radius:4px;padding:1px 8px;font-size:11px;">รุนแรง</span>'}[x.severity]||(x.severity?'<span style="background:var(--surface2);border-radius:4px;padding:1px 8px;font-size:11px;">'+x.severity+'</span>':'');
+      var sevBadge = {'mild':'<span style="background:var(--success-bg);color:var(--success);border-radius:4px;padding:1px 8px;font-size:11px;">เล็กน้อย</span>','moderate':'<span style="background:#e67e2222;color:#d35400;border-radius:4px;padding:1px 8px;font-size:11px;">ปานกลาง</span>','severe':'<span style="background:var(--danger-bg);color:var(--danger-text);border-radius:4px;padding:1px 8px;font-size:11px;">รุนแรง</span>'}[x.severity]||(x.severity?'<span style="background:var(--surface2);border-radius:4px;padding:1px 8px;font-size:11px;">'+x.severity+'</span>':'');
       var incPhoto=x.photo_url?'<div style="margin-top:8px;"><img src="'+x.photo_url+'" style="max-width:180px;max-height:140px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>':'';
       info.innerHTML=
         '<div style="font-weight:600;font-size:13px;">⚠️ '+(x.type||'-')+' '+sevBadge+'</div>'
@@ -523,7 +523,7 @@ function _renderPatIncidentTab(pid, listEl) {
       btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
       eb.addEventListener('click',function(){openIncidentModal(x.id);});
-      var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='#c0392b'; db2.textContent='🗑️';
+      var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='var(--danger-text)'; db2.textContent='🗑️';
       db2.addEventListener('click',async function(){
         if(!(await customConfirm('ลบรายการนี้?'))) return;
         supa.from('incident_reports').delete().eq('id',x.id).then(function(){
@@ -539,7 +539,7 @@ function _renderPatIncidentTab(pid, listEl) {
       d.style.cssText='margin-bottom:8px;padding:12px;border-left:3px solid #e67e22;display:flex;justify-content:space-between;align-items:flex-start;';
       var info=document.createElement('div');
       var stageBadge=x.stage?'<span style="background:#e67e2222;color:#d35400;border-radius:4px;padding:1px 8px;font-size:11px;">Stage '+x.stage+'</span>':'';
-      var wndStatus={'active':'<span style="background:#e74c3c22;color:#c0392b;border-radius:4px;padding:1px 8px;font-size:11px;">กำลังรักษา</span>','healed':'<span style="background:#27ae6022;color:#27ae60;border-radius:4px;padding:1px 8px;font-size:11px;">หายแล้ว</span>','monitoring':'<span style="background:#3498db22;color:#2980b9;border-radius:4px;padding:1px 8px;font-size:11px;">เฝ้าระวัง</span>'}[x.status]||(x.status?'<span style="background:var(--surface2);border-radius:4px;padding:1px 8px;font-size:11px;">'+x.status+'</span>':'');
+      var wndStatus={'active':'<span style="background:var(--danger-bg);color:var(--danger-text);border-radius:4px;padding:1px 8px;font-size:11px;">กำลังรักษา</span>','healed':'<span style="background:var(--success-bg);color:var(--success);border-radius:4px;padding:1px 8px;font-size:11px;">หายแล้ว</span>','monitoring':'<span style="background:var(--info-bg);color:#2980b9;border-radius:4px;padding:1px 8px;font-size:11px;">เฝ้าระวัง</span>'}[x.status]||(x.status?'<span style="background:var(--surface2);border-radius:4px;padding:1px 8px;font-size:11px;">'+x.status+'</span>':'');
       var wndPhoto=x.photo_url?'<div style="margin-top:8px;"><img src="'+x.photo_url+'" style="max-width:180px;max-height:140px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>':'';
       // Parse size_cm "WxLxD" และ extract treatment/trend จาก note
       var sizeStr = '';
@@ -579,7 +579,7 @@ function _renderPatIncidentTab(pid, listEl) {
       btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
       eb.addEventListener('click',function(){openWoundModal(x.id);});
-      var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='#c0392b'; db2.textContent='🗑️';
+      var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='var(--danger-text)'; db2.textContent='🗑️';
       db2.addEventListener('click',async function(){
         if(!(await customConfirm('ลบรายการนี้?'))) return;
         supa.from('patient_wounds').delete().eq('id',x.id).then(function(){
@@ -625,7 +625,7 @@ function _renderPatDietaryTab(pid, listEl) {
       d.style.cssText='margin-bottom:8px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;';
       var info=document.createElement('div');
       var dietR='';
-      try{var rArr=JSON.parse(x.restrictions||'[]');if(rArr.length)dietR='<div style="font-size:12px;color:#c0392b;margin-top:2px;">⚫ ข้อห้าม: '+rArr.join(', ')+'</div>';}catch(e){}
+      try{var rArr=JSON.parse(x.restrictions||'[]');if(rArr.length)dietR='<div style="font-size:12px;color:var(--danger-text);margin-top:2px;">⚫ ข้อห้าม: '+rArr.join(', ')+'</div>';}catch(e){}
       info.innerHTML=
         '<div style="font-weight:600;font-size:13px;">สูตรอาหาร: '+(x.diet_type||'-')+'</div>'
         +(x.date?'<div style="font-size:12px;color:var(--text3);margin-top:2px;">📅 '+x.date+'</div>':'')
@@ -636,7 +636,7 @@ function _renderPatDietaryTab(pid, listEl) {
       var btns=document.createElement('div'); btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
       eb.addEventListener('click',function(){openDietModal(x.id);});
-      var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='#c0392b'; db2.textContent='🗑️';
+      var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='var(--danger-text)'; db2.textContent='🗑️';
       db2.addEventListener('click',async function(){
         if(!(await customConfirm('ลบรายการนี้?'))) return;
         supa.from('patient_diets').delete().eq('id',x.id).then(function(){
@@ -648,7 +648,7 @@ function _renderPatDietaryTab(pid, listEl) {
     });
     tD.forEach(function(x){
       var d=document.createElement('div'); d.className='card';
-      d.style.cssText='margin-bottom:8px;padding:12px;border-left:3px solid #27ae60;display:flex;justify-content:space-between;align-items:flex-start;';
+      d.style.cssText='margin-bottom:8px;padding:12px;border-left:3px solid var(--success);display:flex;justify-content:space-between;align-items:flex-start;';
       var info=document.createElement('div');
       info.innerHTML=
         '<div style="font-weight:600;font-size:13px;">🧪 สายให้อาหาร '+(x.meal?'· '+x.meal:'')+'</div>'
@@ -662,7 +662,7 @@ function _renderPatDietaryTab(pid, listEl) {
       var btns=document.createElement('div'); btns.style.cssText='display:flex;gap:4px;flex-shrink:0;';
       var eb=document.createElement('button'); eb.className='btn btn-ghost btn-sm'; eb.textContent='✏️';
       eb.addEventListener('click',function(){openTubeFeedModal(x.id);});
-      var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='#c0392b'; db2.textContent='🗑️';
+      var db2=document.createElement('button'); db2.className='btn btn-ghost btn-sm'; db2.style.color='var(--danger-text)'; db2.textContent='🗑️';
       db2.addEventListener('click',async function(){
         if(!(await customConfirm('ลบรายการนี้?'))) return;
         supa.from('tube_feedings').delete().eq('id',x.id).then(function(){
@@ -963,7 +963,7 @@ function renderLabTab(patientId, overrideFrom, overrideTo) {
           '<div style="font-weight:700;font-size:15px;color:#2d8f3f;">📅 ' + (r.test_date||'-') + '</div>' +
           '<div>' +
           '<button class="btn btn-ghost btn-sm" onclick="openEditLabModal(\'' + r.id + '\',\'' + patientId + '\')">✏️</button>' +
-          '<button class="btn btn-ghost btn-sm" onclick="deleteLabResult(\'' + r.id + '\',\'' + patientId + '\')" style="color:#e74c3c;">🗑️</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="deleteLabResult(\'' + r.id + '\',\'' + patientId + '\')" style="color:var(--danger);">🗑️</button>' +
           '</div></div>' +
           // Body: grid 2 columns
           '<div style="padding:14px 16px;">' +
@@ -980,13 +980,13 @@ function renderLabTab(patientId, overrideFrom, overrideTo) {
           // Abnormal badges
           (abn.length ? '<div style="margin-top:10px;">' + abn.map(function(x) {
             return '<span style="font-size:11px;padding:2px 6px;border-radius:10px;background:' +
-              (x.status==='high'?'#fde8e8':'#fff3e0') + ';color:' + (x.status==='high'?'#c0392b':'#d35400') + ';margin-right:4px;">' +
+              (x.status==='high'?'#fde8e8':'#fff3e0') + ';color:' + (x.status==='high'?'var(--danger-text)':'#d35400') + ';margin-right:4px;">' +
               x.test_name + ': ' + x.value + '</span>';
           }).join(' ') + '</div>' : '') +
           // Detailed results (collapsible)
           (results.length ? '<details style="margin-top:10px;"><summary style="font-size:12px;color:var(--text2);cursor:pointer;">ดูผลทั้งหมด (' + results.length + ' รายการ)</summary>' +
           '<div style="margin-top:6px;">' + results.map(function(x) {
-            var sc = x.status==='high'?'#e74c3c':x.status==='low'?'#e67e22':'#27ae60';
+            var sc = x.status==='high'?'var(--danger)':x.status==='low'?'#e67e22':'var(--success)';
             return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 6px;background:var(--surface2);border-radius:4px;margin-bottom:2px;">' +
               '<span>' + x.test_name + '</span><span style="color:' + sc + '">' + x.value + ' ' + (x.unit||'') +
               (x.reference_range ? ' (' + x.reference_range + ')' : '') + '</span></div>';
@@ -1030,7 +1030,7 @@ function _renderLabRows() {
   if (!c) return;
   if (!rows.length) { c.innerHTML = '<div style="text-align:center;padding:12px;">กด + เพิ่ม</div>'; return; }
   c.innerHTML = rows.map(function(row, i) {
-    var sc = row.status==='high' ? 'border-left:3px solid #e74c3c;' : row.status==='low' ? 'border-left:3px solid #e67e22;' : 'border-left:3px solid #27ae60;';
+    var sc = row.status==='high' ? 'border-left:3px solid var(--danger);' : row.status==='low' ? 'border-left:3px solid #e67e22;' : 'border-left:3px solid var(--success);';
     return '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr auto auto;gap:6px;align-items:center;padding:6px 8px;background:var(--surface2);border-radius:6px;margin-bottom:6px;' + sc + '">' +
       '<input class="form-control" style="font-size:12px;" placeholder="ชื่อ" value="' + (row.test_name||'') + '" oninput="window._labRows[' + i + '].test_name=this.value">' +
       '<input class="form-control" style="font-size:12px;" placeholder="ค่า" value="' + (row.value||'') + '" oninput="window._labRows[' + i + '].value=this.value">' +
@@ -1040,7 +1040,7 @@ function _renderLabRows() {
       '<option value="normal"' + (row.status==='normal'?' selected':'') + '>N</option>' +
       '<option value="high"' + (row.status==='high'?' selected':'') + '>H</option>' +
       '<option value="low"' + (row.status==='low'?' selected':'') + '>L</option></select>' +
-      '<button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="window._labRows.splice(' + i + ',1);window._renderLabRows()">✕</button></div>';
+      '<button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="window._labRows.splice(' + i + ',1);window._renderLabRows()">✕</button></div>';
   }).join('');
 }
 window._renderLabRows = _renderLabRows;
@@ -1156,7 +1156,7 @@ function renderPatientTabBar(p, totalReqs) {
   function _countBadge(c, tone) {
     if (!c) return '';
     const palette = {
-      danger:  { bg:'#fdf0ee', color:'#c0392b', border:'rgba(192,57,43,0.25)' },
+      danger:  { bg:'#fdf0ee', color:'var(--danger-text)', border:'rgba(192,57,43,0.25)' },
       brand:   { bg:'var(--sage-100,#eaf1eb)', color:'var(--brand,#2e6b4f)', border:'var(--sage-200,#dbe5dc)' },
       neutral: { bg:'var(--surface2,#f5f1e3)', color:'var(--text2,#5e5e5e)', border:'var(--border,#e8e3d4)' }
     }[tone] || { bg:'#eaf1eb', color:'#2e6b4f', border:'#dbe5dc' };
@@ -1170,7 +1170,7 @@ function renderPatientTabBar(p, totalReqs) {
 
   // Mobile: grid view (3 cols)
   const gridHtml = visibleTabs.map(t => {
-    const badge = t.count ? `<span class="pat-app-badge" style="position:absolute;top:6px;right:6px;background:${t.countTone==='danger'?'#c0392b':'var(--brand,#2e6b4f)'};color:white;border-radius:999px;font-size:10px;font-weight:700;padding:1px 6px;min-width:18px;text-align:center;">${t.count}</span>` : '';
+    const badge = t.count ? `<span class="pat-app-badge" style="position:absolute;top:6px;right:6px;background:${t.countTone==='danger'?'var(--danger-text)':'var(--brand,#2e6b4f)'};color:white;border-radius:999px;font-size:10px;font-weight:700;padding:1px 6px;min-width:18px;text-align:center;">${t.count}</span>` : '';
     return `<div class="pat-app-btn" style="position:relative;" onclick="switchPatTab('${t.k}');document.getElementById('patAppGrid').style.display='none';document.getElementById('patAppGridBackBtn').style.display='';">
         ${badge}
         <div class="pat-app-icon">${t.icon}</div>
@@ -2302,7 +2302,7 @@ function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
     totUrine += shUrine; totStool += shStool; totVomit += shVomit;
     var bal = shIn - shOut;
     var tr = document.createElement('tr');
-    tr.style.color = bal < 0 ? '#c0392b' : '#1a5276';
+    tr.style.color = bal < 0 ? 'var(--danger-text)' : '#1a5276';
     tr.innerHTML =
       '<td>' + sh.label + '<br><span style="font-size:10px;color:var(--text3);font-weight:normal;">' + sh.sub + '</span></td>' +
       '<td>' + shIn + '</td>' +
@@ -2320,7 +2320,7 @@ function _renderBalanceSummary(container, excretions, fluids, rangeLabel) {
     '<td>รวม 24 ชม.</td>' +
     '<td>' + totIn + '</td>' +
     '<td>' + totOut + '</td>' +
-    '<td style="color:' + (totBal < 0 ? '#c0392b' : '#1a5276') + '">' + (totBal >= 0 ? '+' : '') + totBal + '</td>' +
+    '<td style="color:' + (totBal < 0 ? 'var(--danger-text)' : '#1a5276') + '">' + (totBal >= 0 ? '+' : '') + totBal + '</td>' +
     '<td>' + totUrine + '</td>' +
     '<td>' + totStool + '</td>' +
     '<td>' + totVomit + '</td>';
@@ -2358,9 +2358,9 @@ function _buildClinicalAlerts(excretions, fluids) {
   // Helper สร้าง alert item
   function mkAlert(level, icon, titleText, detailText) {
     var styles = {
-      green:  { bg: '#ecf9f0', border: '#27ae60', color: '#1d8c4f' },
+      green:  { bg: '#ecf9f0', border: 'var(--success)', color: '#1d8c4f' },
       orange: { bg: '#fff8e8', border: '#d35400', color: '#8a4d00' },
-      red:    { bg: '#fff0f0', border: '#c0392b', color: '#8a1a0e' },
+      red:    { bg: '#fff0f0', border: 'var(--danger-text)', color: '#8a1a0e' },
       gray:   { bg: '#f5f5f5', border: '#b0b0b0', color: '#999' }
     };
     var s = styles[level] || styles.gray;
@@ -2565,7 +2565,7 @@ function _buildClinicalAlerts(excretions, fluids) {
   // ถ้าไม่มี alert ผิดปกติ → แสดงข้อความ "ปกติ" สั้นๆ
   if (filtered.length === 0) {
     var okDiv = document.createElement('div');
-    okDiv.style.cssText = 'background:#ecf9f0;border-radius:8px;padding:12px 14px;border-left:5px solid #27ae60;color:#1d8c4f;display:flex;gap:10px;font-size:13px;line-height:1.5';
+    okDiv.style.cssText = 'background:#ecf9f0;border-radius:8px;padding:12px 14px;border-left:5px solid var(--success);color:#1d8c4f;display:flex;gap:10px;font-size:13px;line-height:1.5';
     okDiv.innerHTML = '<div style="font-size:22px;line-height:1">✓</div>' +
                       '<div style="flex:1"><div style="font-weight:700">ไม่พบอาการผิดปกติ</div>' +
                       '<div style="font-size:12px;opacity:0.85;margin-top:2px">ทุกอย่างอยู่ในเกณฑ์ปกติ</div></div>';

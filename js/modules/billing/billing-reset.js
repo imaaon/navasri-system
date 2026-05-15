@@ -21,7 +21,7 @@ function openInvoiceResetModal(id) {
   const paid = getInvoicePaidAmount(id);
   document.getElementById('reset-invoice-info').innerHTML =
     `<div>เลขที่: <strong>${inv.docNo||'-'}</strong></div>
-     <div>สถานะปัจจุบัน: <strong style="color:#c0392b;">${STATUS_LABELS[dynStatus]||dynStatus}</strong></div>
+     <div>สถานะปัจจุบัน: <strong style="color:var(--danger-text);">${STATUS_LABELS[dynStatus]||dynStatus}</strong></div>
      <div>ยอดรับชำระแล้ว: <strong>${formatThb(paid)}</strong> / ${formatThb(inv.grandTotal||0)}</div>`;
 
   openModal('modal-invoice-reset');
@@ -109,8 +109,8 @@ function renderInvoiceResetLog() {
       <td style="padding:9px 12px;font-size:11px;color:var(--text3);">${l.reset_at ? new Date(l.reset_at).toLocaleString('th-TH') : '-'}</td>
       <td style="padding:9px 12px;font-weight:600;font-family:monospace;">${l.doc_no||'-'}</td>
       <td style="padding:9px 12px;">${l.patient_name||'-'}</td>
-      <td style="padding:9px 12px;"><span style="color:#c0392b;font-weight:600;">${STATUS_LABELS[l.old_status]||l.old_status||'-'}</span></td>
-      <td style="padding:9px 12px;"><span style="color:#27ae60;font-weight:600;">${STATUS_LABELS[l.new_status]||l.new_status||'-'}</span></td>
+      <td style="padding:9px 12px;"><span style="color:var(--danger-text);font-weight:600;">${STATUS_LABELS[l.old_status]||l.old_status||'-'}</span></td>
+      <td style="padding:9px 12px;"><span style="color:var(--success);font-weight:600;">${STATUS_LABELS[l.new_status]||l.new_status||'-'}</span></td>
       <td style="padding:9px 12px;text-align:right;">${l.old_paid_amount ? formatThb(l.old_paid_amount) : '-'}</td>
       <td style="padding:9px 12px;color:var(--text2);">${l.reason||'-'}</td>
       <td style="padding:9px 12px;font-size:12px;">${l.reset_by||'-'} <span style="color:var(--text3);">(${l.reset_by_role||'-'})</span></td>

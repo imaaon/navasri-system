@@ -33,7 +33,7 @@ function renderRooms() {
       <div style="font-size:11px;font-weight:700;color:${c};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">${t}</div>
       <div style="font-size:22px;font-weight:800;color:${c};">${tRooms.length} <span style="font-size:12px;font-weight:400;color:var(--text3);">ห้อง</span></div>
       <div style="font-size:12px;margin-top:4px;color:var(--text2);">
-        <span style="color:#27ae60;">● ว่าง ${available}</span> · <span style="color:#c0392b;">● มีผู้พัก ${occupied}</span>${maintenance?' · <span style="color:#e67e22;">● ซ่อม '+maintenance+'</span>':''}
+        <span style="color:var(--success);">● ว่าง ${available}</span> · <span style="color:var(--danger-text);">● มีผู้พัก ${occupied}</span>${maintenance?' · <span style="color:#e67e22;">● ซ่อม '+maintenance+'</span>':''}
       </div>
     </div>`;
   }).join('');
@@ -55,13 +55,13 @@ function renderRooms() {
       : roomBeds.map(b => {
           const occupant = db.patients.find(p => p.currentBedId == b.id);
           if (b.status === 'inactive') return ''; // ซ่อนเตียงที่ปิดใช้งาน
-          const statusColor = b.status==='available'?'#27ae60':b.status==='occupied'?'#c0392b':b.status==='maintenance'?'#e67e22':'#95a5a6';
+          const statusColor = b.status==='available'?'var(--success)':b.status==='occupied'?'var(--danger-text)':b.status==='maintenance'?'#e67e22':'#95a5a6';
           const statusLabel = b.status==='available'?'ว่าง':b.status==='occupied'?'มีผู้พัก':b.status==='maintenance'?'ซ่อมบำรุง':b.status==='other'?(b.otherNote||'อื่นๆ'):'ปิดใช้งาน';
           return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:${b.status==='available'?'#f9fff9':b.status==='occupied'?'#fff5f5':b.status==='maintenance'?'#fffbf0':'#f5f5f5'};">
             <span style="font-size:16px;">🛏️</span>
             <div style="flex:1;">
               <div style="font-weight:600;font-size:13px;">เตียง ${b.bedCode}</div>
-              ${occupant ? `<div style="font-size:11px;color:#c0392b;font-weight:600;">👤 ${occupant.name}</div>` : ''}
+              ${occupant ? `<div style="font-size:11px;color:var(--danger-text);font-weight:600;">👤 ${occupant.name}</div>` : ''}
             </div>
             <span style="font-size:11px;font-weight:700;color:${statusColor};">● ${statusLabel}</span>
             ${occupant ? `<button class="btn btn-ghost btn-sm" onclick="openTransferRoomModal('${occupant.id}')" style="padding:3px 7px;font-size:11px;color:#2980b9;">🔄 ย้าย</button>` : ''}
@@ -341,7 +341,7 @@ function renderRoomHistory() {
       <td style="padding:9px 12px;">${h.transfer_date||'-'}</td>
       <td style="padding:9px 12px;font-weight:600;">${h.patient_name||'-'}</td>
       <td style="padding:9px 12px;color:var(--text2);">ห้อง ${h.from_room||'-'} เตียง ${h.from_bed||'-'}</td>
-      <td style="padding:9px 12px;color:#27ae60;font-weight:600;">ห้อง ${h.to_room||'-'} เตียง ${h.to_bed||'-'}</td>
+      <td style="padding:9px 12px;color:var(--success);font-weight:600;">ห้อง ${h.to_room||'-'} เตียง ${h.to_bed||'-'}</td>
       <td style="padding:9px 12px;color:var(--text3);">${h.note||'-'}</td>
     </tr>`).join('')}</tbody>
   </table>`;

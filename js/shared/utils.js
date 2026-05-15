@@ -104,7 +104,7 @@ function customConfirm(message, opts) {
     const okBtn = document.getElementById('customConfirmOk');
     okBtn.textContent = okText;
     okBtn.className = opts.danger ? 'btn btn-danger' : 'btn btn-primary';
-    okBtn.style.cssText = opts.danger ? 'background:#e74c3c;border-color:#e74c3c;color:white;' : '';
+    okBtn.style.cssText = opts.danger ? 'background:var(--danger);border-color:var(--danger);color:white;' : '';
     
     document.getElementById('customConfirmCancel').textContent = cancelText;
     

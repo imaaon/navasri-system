@@ -26,7 +26,7 @@ function printReceiptData(p) {
       .divider { border:none;border-top:1px dashed #ccc;margin:12px 0; }
       .row { display:flex;justify-content:space-between;padding:3px 0;font-size:13px; }
       .total-row { display:flex;justify-content:space-between;padding:6px 0;font-size:16px;font-weight:700;color:#2d4a38; }
-      .badge { background:#f0fff4;border:1px solid #27ae60;border-radius:6px;padding:6px 12px;text-align:center;margin:12px 0;color:#27ae60;font-weight:700; }
+      .badge { background:#f0fff4;border:1px solid var(--success);border-radius:6px;padding:6px 12px;text-align:center;margin:12px 0;color:var(--success);font-weight:700; }
       @media print { body { padding:0; } }
     </style>
   </head><body>
@@ -103,7 +103,7 @@ function renderExpenseItems() {
       <td style="padding:4px 6px;"><input type="number" value="${it.qty||1}" min="0" oninput="updateExpItem(${idx},'qty',this.value)" style="width:60px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:12px;"></td>
       <td style="padding:4px 6px;"><input type="number" value="${it.price||0}" min="0" oninput="updateExpItem(${idx},'price',this.value)" style="width:85px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:12px;"></td>
       <td style="padding:4px 6px;text-align:right;font-weight:600;" id="exp-row-${idx}">${formatThb((it.qty||1)*(it.price||0))}</td>
-      <td><button onclick="removeExpItem(${idx})" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>
+      <td><button onclick="removeExpItem(${idx})" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:13px;">✕</button></td>
     </tr>`).join('')}
     </tbody></table>`;
   document.getElementById('exp-items-total').textContent=formatThb(items.reduce((s,it)=>s+(it.qty||1)*(it.price||0),0));
@@ -212,7 +212,7 @@ function buildInvoiceHTML(id, copyMode=false) {
     invoice:     {orig:'#2d4a38',copy:'#1a6b4a',origL:'#e8f5ee',copyL:'#e9f7ef',origB:'#c8e6d5',copyB:'#a9dfbf'},
     receipt:     {orig:'#1a5276',copy:'#117a8b',origL:'#eaf3fb',copyL:'#e8f8f5',origB:'#aed6f1',copyB:'#a2d9ce'},
     quotation:   {orig:'#b94000',copy:'#c0770a',origL:'#fef0e7',copyL:'#fef9e7',origB:'#f0b27a',copyB:'#f9e79f'},
-    tax_invoice: {orig:'#6c3483',copy:'#9b59b6',origL:'#f5eef8',copyL:'#fdf2ff',origB:'#d2b4de',copyB:'#dda0dd'},
+    tax_invoice: {orig:'#6c3483',copy:'var(--purple)',origL:'#f5eef8',copyL:'#fdf2ff',origB:'#d2b4de',copyB:'#dda0dd'},
   };
   const th = THEMES[inv.type] || THEMES.invoice;
   const logoSrc = 'img/logo.png';
@@ -266,7 +266,7 @@ function buildInvoiceHTML(id, copyMode=false) {
       });
     }
 
-    const rowsHtml = rows.map((r,i)=>r.name.startsWith('―') ? `<tr><td colspan="5" style="padding:4px 11px;font-size:11px;color:#888;border-bottom:1px solid #f0f0f0;">${r.name}</td></tr>` : r._included ? `<tr><td style="border-bottom:1px solid #f0f0f0;padding:5px 11px;text-align:center;color:#999;font-size:11px;">✓</td><td colspan="3" style="border-bottom:1px solid #f0f0f0;padding:5px 11px;font-size:12px;color:#555;">${r.name}</td><td style="border-bottom:1px solid #f0f0f0;padding:5px 11px;text-align:right;font-size:11px;color:#27ae60;">รวมใน package</td></tr>` : `<tr>
+    const rowsHtml = rows.map((r,i)=>r.name.startsWith('―') ? `<tr><td colspan="5" style="padding:4px 11px;font-size:11px;color:#888;border-bottom:1px solid #f0f0f0;">${r.name}</td></tr>` : r._included ? `<tr><td style="border-bottom:1px solid #f0f0f0;padding:5px 11px;text-align:center;color:#999;font-size:11px;">✓</td><td colspan="3" style="border-bottom:1px solid #f0f0f0;padding:5px 11px;font-size:12px;color:#555;">${r.name}</td><td style="border-bottom:1px solid #f0f0f0;padding:5px 11px;text-align:right;font-size:11px;color:var(--success);">รวมใน package</td></tr>` : `<tr>
       <td style="border-bottom:1px solid #f0f0f0;padding:8px 11px;text-align:center;color:#999;">${i+1}</td>
       <td style="border-bottom:1px solid #f0f0f0;padding:8px 11px;font-weight:500;">${r.name}${r.sub?`<span style="margin-left:6px;font-size:10px;color:#888;font-weight:400;">${r.sub}</span>`:''}</td>
       <td style="border-bottom:1px solid #f0f0f0;padding:8px 11px;text-align:center;font-family:monospace;">${r.qty}${r.unit?' '+r.unit:''}</td>
@@ -275,7 +275,7 @@ function buildInvoiceHTML(id, copyMode=false) {
     </tr>`).join('') || `<tr><td colspan="5" style="padding:16px;text-align:center;color:#999;">ไม่มีรายการ</td></tr>`;
 
     const vatLine = (inv.vatRate||0)>0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:${c}">VAT ${inv.vatRate}%</span><span style="font-family:monospace">${formatThb(inv.vatAmt||0)}</span></div>` : '';
-    const whtLine = (inv.whtRate||0)>0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:#c0392b">หัก ณ ที่จ่าย ${inv.whtRate}%</span><span style="font-family:monospace;color:#c0392b">-${formatThb(inv.whtAmt||0)}</span></div>` : '';
+    const whtLine = (inv.whtRate||0)>0 ? `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:var(--danger-text)">หัก ณ ที่จ่าย ${inv.whtRate}%</span><span style="font-family:monospace;color:var(--danger-text)">-${formatThb(inv.whtAmt||0)}</span></div>` : '';
     const dueRow  = inv.dueDate ? `<tr><td style="color:#999;padding:3px 8px;text-align:right;">กำหนดชำระ</td><td style="font-weight:600;font-family:monospace;">${inv.dueDate}</td></tr>` : '';
 
     return `<div style="font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;color:#222;background:white;overflow:hidden;border-radius:4px;">
@@ -450,7 +450,7 @@ function buildExpenseHTML(id) {
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;"><span style="color:#555;">ราคาไม่รวม VAT</span><span>${formatThb(exp.subtotal||0)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;"><span style="color:#555;">VAT 7%</span><span>${formatThb(exp.vatAmt||0)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px;font-weight:700;border-top:1px solid #ddd;margin-top:4px;"><span>จำนวนเงินรวมทั้งสิ้น</span><span>${formatThb(exp.totalVat||0)}</span></div>
-        ${(exp.whtRate||0)>0?`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;"><span style="color:#c0392b;">หัก ณ ที่จ่าย ${exp.whtRate}%</span><span style="color:#c0392b;">${formatThb(exp.whtAmt||0)}</span></div>`:''}
+        ${(exp.whtRate||0)>0?`<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;"><span style="color:var(--danger-text);">หัก ณ ที่จ่าย ${exp.whtRate}%</span><span style="color:var(--danger-text);">${formatThb(exp.whtAmt||0)}</span></div>`:''}
         <div style="display:flex;justify-content:space-between;padding:10px 12px;font-size:15px;font-weight:700;background:#2d4a38;color:white;border-radius:6px;margin-top:6px;"><span>ยอดชำระ</span><span>${formatThb(exp.net||0)}</span></div>
       </div>
     </div>

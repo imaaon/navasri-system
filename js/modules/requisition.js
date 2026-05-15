@@ -421,7 +421,7 @@ async function renderApprovalPanel() {
   const recentLogs = (db.approvalLogs||[]).slice(0,30);
 
   const STATUS_PILL = (s) => {
-    const map = { pending:'#e67e22|รออนุมัติ', approved:'#27ae60|อนุมัติแล้ว', rejected:'#e74c3c|ไม่อนุมัติ', forward:'#3498db|รออนุมัติ' };
+    const map = { pending:'#e67e22|รออนุมัติ', approved:'var(--success)|อนุมัติแล้ว', rejected:'var(--danger)|ไม่อนุมัติ', forward:'var(--info)|รออนุมัติ' };
     const [color,label] = (map[s]||'#888|ไม่ทราบ').split('|');
     return `<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${color}22;color:${color};">${label}</span>`;
   };
@@ -441,7 +441,7 @@ async function renderApprovalPanel() {
       <td style="white-space:nowrap;">
         ${canApproveReq() ? `
           <button class="btn btn-primary btn-sm" onclick="approveReq('${r.id}')" style="font-size:11px;">✅ อนุมัติ</button>
-          <button class="btn btn-sm" style="background:#e74c3c22;color:#e74c3c;font-size:11px;" onclick="openRejectModal('${r.id}')">❌ ไม่อนุมัติ</button>
+          <button class="btn btn-sm" style="background:var(--danger-bg);color:var(--danger);font-size:11px;" onclick="openRejectModal('${r.id}')">❌ ไม่อนุมัติ</button>
         ` : '<span style="font-size:12px;color:var(--text3);">ไม่มีสิทธิ์</span>'}
         <button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')">🖨️</button>
       </td>
@@ -451,7 +451,7 @@ async function renderApprovalPanel() {
     <div class="card" style="margin-bottom:16px;">
       <div class="card-header" style="background:rgba(230,126,34,.08);">
         <div class="card-title" style="color:#e67e22;">⏳ รออนุมัติ — ธุรการ (${pending.length} รายการ)</div>
-        ${canApproveReq()&&pending.length>0?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;" onclick="approveAllReq()">✅ อนุมัติทั้งหมด (${pending.length})</button>`:''}
+        ${canApproveReq()&&pending.length>0?`<button class="btn btn-sm" style="background:var(--success);color:#fff;font-size:11px;" onclick="approveAllReq()">✅ อนุมัติทั้งหมด (${pending.length})</button>`:''}
       </div>
       <div class="table-wrap">
         <table>
@@ -472,7 +472,7 @@ async function renderApprovalPanel() {
             ${recentLogs.length===0 ? '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text3);">ยังไม่มีประวัติ</td></tr>' :
               recentLogs.map(l => {
                 const ACTION_MAP   = { approved:'✅ อนุมัติ + ตัดสต็อก', reject:'❌ ไม่อนุมัติ' };
-                const ACTION_COLOR = { approved:'#27ae60', reject:'#e74c3c' };
+                const ACTION_COLOR = { approved:'var(--success)', reject:'var(--danger)' };
                 return `<tr>
                   <td style="font-size:11px;">${l.createdAt?.replace('T',' ').slice(0,16)||'-'}</td>
                   <td style="font-size:12px;">req#${l.reqId}</td>
@@ -726,7 +726,7 @@ function onReturnReqChange() {
       <span>🏥 <strong>${req.patientName||''}</strong></span>
       <span>📦 ${itemName}</span>
       <span>เบิกไป: <strong>${itemQty} ${itemUnit}</strong></span>
-      <span style="color:${canReturn<=0?'#e74c3c':'#27ae60'};">คืนได้: <strong>${canReturn} ${itemUnit}</strong></span>
+      <span style="color:${canReturn<=0?'var(--danger)':'var(--success)'};">คืนได้: <strong>${canReturn} ${itemUnit}</strong></span>
     </div>${multilineWarn}`;
   unitEl.textContent = itemUnit;
   maxEl.textContent = `สูงสุด ${canReturn} ${itemUnit}`;
@@ -864,7 +864,7 @@ async function renderHistory() {
   if (statusFilter) q = q.eq('status', statusFilter);
 
   const { data, error } = await q;
-  if (error) { if(tb) tb.innerHTML=`<tr><td colspan="9" style="text-align:center;color:#e74c3c;">เกิดข้อผิดพลาด: ${error.message}</td></tr>`; return; }
+  if (error) { if(tb) tb.innerHTML=`<tr><td colspan="9" style="text-align:center;color:var(--danger);">เกิดข้อผิดพลาด: ${error.message}</td></tr>`; return; }
 
   let reqs = (data||[]).map(mapReq);
   // caregiver / staff role sees only their own records
@@ -922,7 +922,7 @@ async function renderHistory() {
 
   if (!tb) return;
   if (reqs.length === 0) { tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบรายการ</td></tr>'; return; }
-  const STATUS_COLOR = { pending:'#e67e22', forward:'#3498db', approved:'#27ae60', rejected:'#e74c3c' };
+  const STATUS_COLOR = { pending:'#e67e22', forward:'var(--info)', approved:'var(--success)', rejected:'var(--danger)' };
   const STATUS_LABEL = { pending:'รอธุรการ', forward:'รออนุมัติ L2', approved:'✅ อนุมัติ', rejected:'❌ ไม่อนุมัติ' };
   tb.innerHTML = reqs.map(r => {
     const itemSummary = r.lines?.length > 0
@@ -948,7 +948,7 @@ async function renderHistory() {
     <td style="color:var(--text2);font-size:12px;">${r.note || '-'}</td>
     <td style="white-space:nowrap;">
       <button class="btn btn-ghost btn-sm" onclick="openReqForm('${r.id}')" title="ดูใบเบิก">🖨️</button>
-      ${canDel ? `<button class="btn btn-sm" onclick="deleteReq('${r.id}')" style="background:#e74c3c22;color:#e74c3c;font-size:11px;" title="ยกเลิกใบเบิก">🗑️</button>` : ''}
+      ${canDel ? `<button class="btn btn-sm" onclick="deleteReq('${r.id}')" style="background:var(--danger-bg);color:var(--danger);font-size:11px;" title="ยกเลิกใบเบิก">🗑️</button>` : ''}
     </td>
   </tr>`;}).join('');
 }
@@ -1295,7 +1295,7 @@ function renderReqForm({ reqs, first, group }) {
           const circleText  = done ? '✓' : rej ? '✕' : (i+1);
           return `<div class="rq-tl-step">
             <div style="display:flex;flex-direction:column;align-items:center;">
-              <div class="rq-tl-circle ${circleClass}" style="${rej?'background:#c0392b;border-color:#c0392b;':''}">${circleText}</div>
+              <div class="rq-tl-circle ${circleClass}" style="${rej?'background:var(--danger-text);border-color:var(--danger-text);':''}">${circleText}</div>
               <div style="font-size:10px;color:#444;text-align:center;line-height:1.4;margin-top:3px;font-weight:600;">${s.label}</div>
               <div style="font-size:9.5px;color:#888;text-align:center;">${s.sub}</div>
             </div>
@@ -1360,7 +1360,7 @@ function renderReqForm({ reqs, first, group }) {
         <div class="rq-sign-name">${approverName ? '('+approverName+')' : '(.............................)'}</div>
         <div style="font-size:10.5px;color:#888;margin-top:3px;">
           ${status==='approved' ? '<span style="color:#2a7a4f;font-weight:600;">✓ อนุมัติ</span> ' + thDate(approvedDate) :
-            status==='rejected' ? '<span style="color:#c0392b;font-weight:600;">✕ ไม่อนุมัติ</span>' :
+            status==='rejected' ? '<span style="color:var(--danger-text);font-weight:600;">✕ ไม่อนุมัติ</span>' :
             'วันที่: ...............'}
         </div>
       </div>
@@ -1490,7 +1490,7 @@ function getReqPrintCSS() {
     .rq-status-badge { display:inline-block;padding:3px 12px;border-radius:20px;font-size:11.5px;font-weight:700;border:1.5px solid; }
     .rq-status-pending { color:#d4760a;border-color:#d4760a;background:#fef3e0; }
     .rq-status-approved { color:#2a7a4f;border-color:#2a7a4f;background:#e8f5ee; }
-    .rq-status-rejected { color:#c0392b;border-color:#c0392b;background:#fdecea; }
+    .rq-status-rejected { color:var(--danger-text);border-color:var(--danger-text);background:#fdecea; }
     .rq-note-box { border:1px solid #ccc;border-radius:4px;padding:8px 10px;min-height:36px;margin-top:6px;font-size:12px;color:#444; }
     .rq-timeline { display:flex;align-items:flex-start;margin:8px 0; }
     .rq-tl-step { flex:1;text-align:center;position:relative; }

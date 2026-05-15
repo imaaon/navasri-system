@@ -527,7 +527,7 @@ function renderAllergyBanner(patient, compact=false) {
   const tone = hasSevere ? 'severe' : hasModerate ? 'moderate' : 'mild';
   // สีพื้น/ขอบ/ข้อความ ตาม tone
   const palette = {
-    severe:   { bg:'#fdf0ee', border:'#c0392b', text:'#7a1f12', icon:'#c0392b', label:'⚠️ แพ้ยา / แพ้อาหาร — เฝ้าระวัง', chipBg:'rgba(192,57,43,0.08)', chipText:'#7a1f12' },
+    severe:   { bg:'#fdf0ee', border:'var(--danger-text)', text:'#7a1f12', icon:'var(--danger-text)', label:'⚠️ แพ้ยา / แพ้อาหาร — เฝ้าระวัง', chipBg:'rgba(192,57,43,0.08)', chipText:'#7a1f12' },
     moderate: { bg:'#fdf3e8', border:'#e67e22', text:'#7a4310', icon:'#d35400', label:'⚠️ แพ้ยา / แพ้อาหาร — เฝ้าระวัง', chipBg:'rgba(230,126,34,0.10)', chipText:'#7a4310' },
     mild:     { bg:'#fdf6e0', border:'#d4a64a', text:'#6b4a0e', icon:'#b8862a', label:'⚠️ แพ้ยา / แพ้อาหาร — โปรดทราบ',  chipBg:'rgba(184,134,42,0.10)', chipText:'#6b4a0e' }
   }[tone];

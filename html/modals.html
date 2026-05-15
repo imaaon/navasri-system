@@ -965,7 +965,7 @@
 <!-- DNR & Consent Modal -->
 <div class="modal-overlay" id="modal-dnr">
   <div class="modal mw-560">
-    <div class="modal-header" style="background:linear-gradient(90deg,#c0392b11,transparent);">
+    <div class="modal-header" style="background:linear-gradient(90deg,var(--danger-bg),transparent);">
       <div class="modal-title">⚖️ DNR & Advance Consent</div>
       <button class="modal-close" onclick="closeModal('modal-dnr')">✕</button>
     </div>
@@ -1940,7 +1940,7 @@
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('staff-contract-input').click()">📎 แนบไฟล์ PDF</button>
             <button type="button" class="btn btn-ghost btn-sm" id="staff-contract-view-btn" onclick="viewStaffContract()" style="display:none;">👁️ ดูไฟล์</button>
-            <button type="button" class="btn btn-ghost btn-sm" id="staff-contract-clear-btn" onclick="clearStaffContract()" style="display:none;color:#e74c3c;">✕ ลบ</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="staff-contract-clear-btn" onclick="clearStaffContract()" style="display:none;color:var(--danger);">✕ ลบ</button>
           </div>
           <input type="file" id="staff-contract-input" accept=".pdf,application/pdf" style="display:none;" onchange="loadStaffContract()">
           <input type="hidden" id="staff-contract-data">
@@ -2118,7 +2118,7 @@
       <!-- PART C: Make.com -->
       <div style="margin-bottom:16px;">
         <div style="font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-          <span style="background:#9b59b6;color:white;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">C</span>
+          <span style="background:var(--purple);color:white;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">C</span>
           ทางเลือก: Make.com
         </div>
         <div style="display:grid;gap:8px;">
@@ -2158,8 +2158,8 @@
       <div style="font-weight:700;font-size:15px;" id="preview-modal-title">ดูเอกสาร</div>
       <div class="flex-gap8">
         <button class="btn btn-ghost btn-sm" id="preview-print-btn" onclick="printFromPreview()">🖨️ พิมพ์</button>
-        <button class="btn btn-ghost btn-sm" id="preview-pdf-btn" onclick="pdfFromPreview()" style="color:#e74c3c;">📄 PDF</button>
-        <button class="btn btn-ghost btn-sm" id="preview-excel-btn" onclick="excelFromPreview()" style="color:#27ae60;">📊 Excel</button>
+        <button class="btn btn-ghost btn-sm" id="preview-pdf-btn" onclick="pdfFromPreview()" style="color:var(--danger);">📄 PDF</button>
+        <button class="btn btn-ghost btn-sm" id="preview-excel-btn" onclick="excelFromPreview()" style="color:var(--success);">📊 Excel</button>
         <button class="modal-close" style="position:static;margin-left:8px;" onclick="closeModal('modal-doc-preview')">✕</button>
       </div>
     </div>

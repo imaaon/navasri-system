@@ -15,7 +15,7 @@ var _origOpen=window.openModal;if(typeof _origOpen==='function'){window.openModa
 // [MOVED to physio.js] savePhysioSession — delayed re-render after save
 console.log('[fix] v87 snippet loaded');
 function _statusLabel(s){return({active:'🏠 พักอยู่',hospital:'🏥 อยู่โรงพยาบาล',inactive:'🚶 ออกแล้ว',discharged:'🚶 ออกแล้ว',transferred:'🔄 ย้ายศูนย์',other:'📝 อื่นๆ'})[s]||s;}
-function _statusBg(s){return s==='active'?'#27ae60':s==='hospital'?'#f39c12':'#e74c3c';}
+function _statusBg(s){return s==='active'?'var(--success)':s==='hospital'?'var(--warning)':'var(--danger)';}
 window._injectStatusBtn=function(patientId){var p=db.patients.find(function(x){return String(x.id)===String(patientId);});if(!p)return;var profileCard=document.querySelector('#patprofile-content .card');if(!profileCard)return;var oldBadge=profileCard.querySelector('.badge');if(!oldBadge)return;var btn=document.createElement('button');btn.id='status-change-btn';btn.style.cssText='background:'+_statusBg(p.status)+';color:#fff;border:none;border-radius:20px;padding:5px 16px;font-size:13px;font-weight:600;cursor:pointer';btn.textContent=_statusLabel(p.status);btn.onclick=function(){_openStatusModal(p);};oldBadge.replaceWith(btn);}
 window._openStatusModal=function(p){var ex=document.getElementById('modal-status-change');if(ex)ex.remove();var actor=(typeof currentUser!=='undefined')?(currentUser.displayName||currentUser.username||''):'';var today=new Date().toISOString().slice(0,10);var modal=document.createElement('div');modal.id='modal-status-change';modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center';modal.innerHTML='<div style="background:var(--surface,#fff);border-radius:12px;padding:28px 24px;width:440px;max-width:95vw"><div style="font-size:16px;font-weight:700;margin-bottom:16px">🔄 เปลี่ยนสถานะ: '+p.name+'</div><div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600">สถานะใหม่ <span style="color:rgb(224,90,106);font-weight:700">*</span></label><select id="sc-status" class="form-control" style="margin-top:4px"><option value="active"'+(p.status==="active"?" selected":"")+'>'+_statusLabel('active')+'</option><option value="hospital"'+(p.status==="hospital"?" selected":"")+'>'+_statusLabel('hospital')+'</option><option value="inactive"'+(p.status==="inactive"?" selected":"")+'>'+_statusLabel('inactive')+'</option><option value="transferred"'+(p.status==="transferred"?" selected":"")+'>'+_statusLabel('transferred')+'</option><option value="other"'+(p.status==="other"?" selected":"")+'>'+_statusLabel('other')+'</option></select></div><div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600">วันที่ <span style="color:rgb(224,90,106);font-weight:700">*</span></label><input id="sc-date" type="date" class="form-control" value="'+today+'" style="margin-top:4px"></div><div id="sc-return-wrap" style="margin-bottom:12px;display:none"><label style="font-size:13px;font-weight:600">วันที่กลับ</label><input id="sc-return" type="date" class="form-control" style="margin-top:4px"></div><div style="margin-bottom:20px"><label style="font-size:13px;font-weight:600">หมายเหตุ</label><input id="sc-note" class="form-control" style="margin-top:4px"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" id="sc-cancel">ยกเลิก</button><button class="btn btn-primary" id="sc-submit">บันทึก</button></div></div>';document.body.appendChild(modal);var sel=document.getElementById('sc-status'),wrap=document.getElementById('sc-return-wrap');sel.onchange=function(){wrap.style.display=sel.value==='hospital'?'block':'none';};sel.onchange();document.getElementById('sc-cancel').onclick=function(){modal.remove();};document.getElementById('sc-submit').onclick=function(){_saveStatusChange(p,actor);};};
 window._saveStatusChange=async function(p,actor){var newStatus=document.getElementById('sc-status').value,statusDate=document.getElementById('sc-date').value,returnDate=document.getElementById('sc-return').value||null,note=document.getElementById('sc-note').value.trim();if(!statusDate){customAlert('กรุณาระบุวันที่');return;}var res=await supa.rpc('change_patient_status',{p_patient_id:p.id,p_status:newStatus,p_by:actor,p_note:note||null});if(res.error||!res.data?.ok){customAlert('บันทึกไม่สำเร็จ: '+(res.error?.message||res.data?.error||'unknown'));return;}var r2=await supa.from('patient_status_logs').insert({patient_id:p.id,old_status:p.status,new_status:newStatus,changed_by:actor,status_date:statusDate,return_date:returnDate||null,note:note||null});if(r2.error){console.error('[saveStatusChange] log insert fail:',r2.error.message);}var idx=db.patients.findIndex(function(x){return String(x.id)===String(p.id);});if(idx>=0)db.patients[idx].status=newStatus;document.getElementById('modal-status-change').remove();toast('เปลี่ยนสถานะเรียบร้อย','success');openPatientProfile(p.id);};
@@ -407,7 +407,7 @@ console.log('[fix] v98 snippet loaded');
               '</div>' +
               '<div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">' +
                 '<button class="btn btn-ghost btn-sm" data-diet-id="'+x.id+'">✏️</button>' +
-                '<button class="btn btn-ghost btn-sm" style="color:#c0392b;" data-diet-del="'+x.id+'">🗑️</button>' +
+                '<button class="btn btn-ghost btn-sm" style="color:var(--danger-text);" data-diet-del="'+x.id+'">🗑️</button>' +
               '</div>' +
             '</div>';
           d.querySelector('[data-diet-id]').addEventListener('click', function(){ openDietModal(this.dataset.dietId); });
@@ -462,7 +462,7 @@ console.log('[fix] v98 snippet loaded');
         tDshow.forEach(function(x) {
           var d = document.createElement('div');
           d.className = 'card';
-          d.style.cssText = 'margin-bottom:8px;padding:12px;border-left:3px solid #27ae60;';
+          d.style.cssText = 'margin-bottom:8px;padding:12px;border-left:3px solid var(--success);';
           d.innerHTML =
             '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
               '<div style="flex:1;">' +
@@ -473,7 +473,7 @@ console.log('[fix] v98 snippet loaded');
               '</div>' +
               '<div style="display:flex;gap:4px;flex-shrink:0;margin-left:8px;">' +
                 '<button class="btn btn-ghost btn-sm" data-tube-id="'+x.id+'">✏️</button>' +
-                '<button class="btn btn-ghost btn-sm" style="color:#c0392b;" data-tube-del="'+x.id+'">🗑️</button>' +
+                '<button class="btn btn-ghost btn-sm" style="color:var(--danger-text);" data-tube-del="'+x.id+'">🗑️</button>' +
               '</div>' +
             '</div>';
           d.querySelector('[data-tube-id]').addEventListener('click', function(){ openTubeFeedModal(this.dataset.tubeId); });

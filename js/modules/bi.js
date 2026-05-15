@@ -98,7 +98,7 @@ function renderBIKPICards(month) {
     { label: 'อัตราการใช้เตียง', value: Math.round(occupancy) + '%', icon: '🛏️', color: occupancy >= 80 ? 'green' : occupancy >= 50 ? 'orange' : 'red', sub: `${occupiedBeds} จาก ${totalBeds} เตียง` },
   ];
 
-  const colorMap = { blue:'#2980b9', green:'#27ae60', orange:'#e67e22', red:'#e74c3c', purple:'#8e44ad' };
+  const colorMap = { blue:'#2980b9', green:'var(--success)', orange:'#e67e22', red:'var(--danger)', purple:'#8e44ad' };
   el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;">` +
     cards.map(c => {
       const col = colorMap[c.color] || '#888';
@@ -131,8 +131,8 @@ function renderBIRevenueBreakdown(month) {
 
   const categories = [
     { label: '🛏️ ค่าห้องพัก', value: roomRev, color: '#2980b9' },
-    { label: '💊 ค่ายา/เวชภัณฑ์', value: medRev, color: '#e74c3c' },
-    { label: '🤸 กายภาพบำบัด', value: ptRev, color: '#27ae60' },
+    { label: '💊 ค่ายา/เวชภัณฑ์', value: medRev, color: 'var(--danger)' },
+    { label: '🤸 กายภาพบำบัด', value: ptRev, color: 'var(--success)' },
     { label: '📋 อื่นๆ', value: otherRev, color: '#8e44ad' },
   ].filter(c => c.value > 0);
 
@@ -765,7 +765,7 @@ function renderDecisionRecommendations() {
     return;
   }
 
-  const colorMap = { danger:'#e74c3c', warning:'#e67e22', info:'#2980b9' };
+  const colorMap = { danger:'var(--danger)', warning:'#e67e22', info:'#2980b9' };
   const bgMap    = { danger:'#fff5f5', warning:'#fff8f0', info:'#f0f7ff' };
 
   el.innerHTML = recs.map(r => `
@@ -1033,19 +1033,19 @@ function runCaseAcceptance() {
   let decision, decisionColor, decisionIcon, actions = [];
   if (margin >= 20) {
     decision = 'รับได้ — ผลกำไรดี';
-    decisionColor = '#27ae60'; decisionIcon = '✅';
+    decisionColor = 'var(--success)'; decisionIcon = '✅';
   } else if (margin >= 5) {
     decision = 'รับได้ แต่ควรปรับราคา';
     decisionColor = '#e67e22'; decisionIcon = '⚠️';
     actions.push(`เสนอราคา ฿${suggestedPrice.toLocaleString()}/เดือน`);
   } else if (margin >= 0) {
     decision = 'ความเสี่ยงสูง — กำไรน้อยมาก';
-    decisionColor = '#e74c3c'; decisionIcon = '🔶';
+    decisionColor = 'var(--danger)'; decisionIcon = '🔶';
     actions.push(`ปรับราคาเป็น ฿${suggestedPrice.toLocaleString()}/เดือน`);
     actions.push('ประเมินความสามารถชำระของครอบครัวก่อน');
   } else {
     decision = 'ไม่แนะนำ — ขาดทุน';
-    decisionColor = '#c0392b'; decisionIcon = '❌';
+    decisionColor = 'var(--danger-text)'; decisionIcon = '❌';
     actions.push(`ราคาขั้นต่ำที่รับได้: ฿${suggestedPrice.toLocaleString()}/เดือน`);
     if (complexity === 'high') actions.push('พิจารณาส่งต่อสถานพยาบาลที่เหมาะสมกว่า');
   }
@@ -1167,7 +1167,7 @@ function runROICalc() {
     <div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
         ${scenarioCard(sA, 'Scenario A', '#2980b9')}
-        ${scenarioCard(sB, 'Scenario B', '#27ae60')}
+        ${scenarioCard(sB, 'Scenario B', 'var(--success)')}
       </div>
       <div class="card">
         <div class="card-body">
@@ -1255,9 +1255,9 @@ function renderInvestorDashboard() {
       <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;">
         ${[
           {label:'ผู้รับบริการ',value:activePats.length+' คน',sub: atHospital > 0 ? `${activeOnly} อยู่บนเตียง · ${atHospital} ไปรพ.` : `Occupancy ${Math.round(occRate)}%`,color:'#2980b9'},
-          {label:'รายรับรวม',value:_thb(revenue),sub:`เก็บแล้ว ${_thb(collected)}`,color:'#27ae60'},
+          {label:'รายรับรวม',value:_thb(revenue),sub:`เก็บแล้ว ${_thb(collected)}`,color:'var(--success)'},
           {label:'ต้นทุนสินค้า',value:_thb(cogs),sub:`${reqs.length} รายการ`,color:'#e67e22'},
-          {label:'กำไรขั้นต้น',value:_thb(grossProfit),sub:`Margin ${Math.round(margin)}%`,color:grossProfit>=0?'#27ae60':'#e74c3c'},
+          {label:'กำไรขั้นต้น',value:_thb(grossProfit),sub:`Margin ${Math.round(margin)}%`,color:grossProfit>=0?'var(--success)':'var(--danger)'},
           {label:'Rev/Patient',value:_thb(revPerPat),sub:'เฉลี่ยต่อคน',color:'#8e44ad'},
           {label:'Cost/Patient',value:_thb(costPerPat),sub:'ต้นทุนต่อคน',color:'#16a085'},
         ].map(k=>`
@@ -1276,7 +1276,7 @@ function renderInvestorDashboard() {
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
               <div style="width:100%;display:flex;align-items:flex-end;gap:2px;height:80px;">
                 <div title="รายรับ" style="flex:1;background:#2980b9;border-radius:3px 3px 0 0;height:${Math.round(t.rev/maxTrend*80)}px;"></div>
-                <div title="กำไร" style="flex:1;background:${t.profit>=0?'#27ae60':'#e74c3c'};border-radius:3px 3px 0 0;height:${Math.round(Math.abs(t.profit)/maxTrend*80)}px;"></div>
+                <div title="กำไร" style="flex:1;background:${t.profit>=0?'var(--success)':'var(--danger)'};border-radius:3px 3px 0 0;height:${Math.round(Math.abs(t.profit)/maxTrend*80)}px;"></div>
               </div>
               <div style="font-size:10px;color:var(--text3);">${t.label}</div>
             </div>`).join('')}
@@ -1291,7 +1291,7 @@ function renderInvestorDashboard() {
         <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
           <div style="font-size:12px;font-weight:600;margin-bottom:8px;">🛏️ อัตราการใช้เตียง</div>
           <div style="background:var(--border);border-radius:6px;height:12px;overflow:hidden;">
-            <div style="background:${occRate>=80?'#27ae60':occRate>=60?'#e67e22':'#e74c3c'};height:100%;width:${Math.round(occRate)}%;border-radius:6px;transition:width .5s;"></div>
+            <div style="background:${occRate>=80?'var(--success)':occRate>=60?'#e67e22':'var(--danger)'};height:100%;width:${Math.round(occRate)}%;border-radius:6px;transition:width .5s;"></div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px;">
             <span>${occBeds} เตียงที่ใช้อยู่</span><span style="font-weight:700;">${Math.round(occRate)}%</span>
@@ -1300,7 +1300,7 @@ function renderInvestorDashboard() {
         <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
           <div style="font-size:12px;font-weight:600;margin-bottom:8px;">💹 Gross Margin</div>
           <div style="background:var(--border);border-radius:6px;height:12px;overflow:hidden;">
-            <div style="background:${margin>=25?'#27ae60':margin>=10?'#e67e22':'#e74c3c'};height:100%;width:${Math.max(0,Math.round(margin))}%;border-radius:6px;"></div>
+            <div style="background:${margin>=25?'var(--success)':margin>=10?'#e67e22':'var(--danger)'};height:100%;width:${Math.max(0,Math.round(margin))}%;border-radius:6px;"></div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px;">
             <span>กำไร ${_thb(grossProfit)}</span><span style="font-weight:700;">${Math.round(margin)}%</span>
