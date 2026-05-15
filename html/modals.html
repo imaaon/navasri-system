@@ -58,7 +58,7 @@
           <button type="button" class="btn btn-ghost btn-sm" onclick="clearItemPhoto()" style="margin-left:4px;color:var(--text3);">✕ ลบรูป</button>
           <input type="file" id="item-photo-input" accept="image/*" style="display:none;" onchange="previewItemPhoto()">
           <input type="hidden" id="item-photo-data">
-          <div style="font-size:11px;color:var(--text3);margin-top:4px;">รองรับ JPG, PNG (แนะนำ 1:1)</div>
+          <div class="help-text">รองรับ JPG, PNG (แนะนำ 1:1)</div>
         </div>
       </div>
       <hr class="divider">
@@ -69,7 +69,7 @@
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">รหัสบาร์โค้ด (ระบบ)</label>
-          <div style="display:flex;gap:8px;align-items:center;">
+          <div class="flex-gap8">
             <input class="form-control" id="item-barcode" placeholder="สร้างอัตโนมัติ" style="font-family:monospace;flex:1;">
             <button type="button" class="btn btn-ghost btn-sm" onclick="printItemBarcode()" id="btn-print-barcode" style="display:none;">🖨 พิมพ์</button>
           </div>
@@ -174,7 +174,7 @@
 
 <!-- MAR Entry Modal — บันทึกการให้ยาทีละครั้ง -->
 <div class="modal-overlay" id="modal-mar-entry">
-  <div class="modal mar-entry-modal-r6" style="max-width:480px;">
+  <div class="modal mar-entry-modal-r6 mw-480">
     <div class="modal-header">
       <div class="modal-title">💉 บันทึกการให้ยา</div>
       <button class="modal-close" onclick="closeModal('modal-mar-entry')">✕</button>
@@ -224,7 +224,7 @@
 
 <!-- Add Medication Modal -->
 <div class="modal-overlay" id="modal-add-medication">
-  <div class="modal" style="max-width:520px;">
+  <div class="modal mw-520">
     <div class="modal-header">
       <div class="modal-title">💊 เพิ่มยาประจำ</div>
       <button class="modal-close" onclick="closeModal('modal-add-medication')">✕</button>
@@ -258,13 +258,13 @@
       <div class="form-group">
         <label class="form-label">มื้อ / เวลาที่ให้ยา <span class="required">*</span></label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-เช้า" style="accent-color:var(--accent);"> เช้า</label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-กลางวัน" style="accent-color:var(--accent);"> กลางวัน</label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-เย็น" style="accent-color:var(--accent);"> เย็น</label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-ก่อนนอน" style="accent-color:var(--accent);"> ก่อนนอน</label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-ก่อนอาหาร" style="accent-color:var(--accent);"> ก่อนอาหาร</label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-หลังอาหาร" style="accent-color:var(--accent);"> หลังอาหาร</label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;"><input type="checkbox" id="med-timing-PRN__เมื่อมีอาการ_" style="accent-color:var(--accent);"> PRN (เมื่อมีอาการ)</label>
+          <label class="chip-toggle"><input class="accent-brand" type="checkbox" id="med-timing-เช้า"> เช้า</label>
+          <label class="chip-toggle"><input class="accent-brand" type="checkbox" id="med-timing-กลางวัน"> กลางวัน</label>
+          <label class="chip-toggle"><input class="accent-brand" type="checkbox" id="med-timing-เย็น"> เย็น</label>
+          <label class="chip-toggle"><input class="accent-brand" type="checkbox" id="med-timing-ก่อนนอน"> ก่อนนอน</label>
+          <label class="chip-toggle"><input class="accent-brand" type="checkbox" id="med-timing-ก่อนอาหาร"> ก่อนอาหาร</label>
+          <label class="chip-toggle"><input class="accent-brand" type="checkbox" id="med-timing-หลังอาหาร"> หลังอาหาร</label>
+          <label class="chip-toggle"><input class="accent-brand" type="checkbox" id="med-timing-PRN__เมื่อมีอาการ_"> PRN (เมื่อมีอาการ)</label>
         </div>
       </div>
       <div class="form-grid">
@@ -550,7 +550,7 @@
           <div id="incident-photo-preview"
                style="width:80px;height:80px;border-radius:8px;border:2px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;overflow:hidden;cursor:pointer;"
                onclick="document.getElementById('incident-photo-input').click()" title="คลิกเพื่อเลือกรูป">📷</div>
-          <div style="flex:1;">
+          <div class="flex-1">
             <input type="file" id="incident-photo-input" accept="image/*" capture="environment"
                    style="display:none;" onchange="previewPhoto('incident')">
             <input type="hidden" id="incident-photo-data">
@@ -560,7 +560,7 @@
             </button>
             <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red);"
                     onclick="clearIncidentPhoto()">✕ ลบรูป</button>
-            <div style="font-size:11px;color:var(--text3);margin-top:4px;">รองรับ JPG, PNG ขนาดไม่เกิน 5MB</div>
+            <div class="help-text">รองรับ JPG, PNG ขนาดไม่เกิน 5MB</div>
           </div>
         </div>
       </div>
@@ -671,7 +671,7 @@
           <div id="wound-photo-preview"
                style="width:80px;height:80px;border-radius:8px;border:2px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;overflow:hidden;cursor:pointer;"
                onclick="document.getElementById('wound-photo-input').click()" title="คลิกเพื่อเลือกรูป">📷</div>
-          <div style="flex:1;">
+          <div class="flex-1">
             <input type="file" id="wound-photo-input" accept="image/*" capture="environment"
                    style="display:none;" onchange="previewPhoto('wound')">
             <input type="hidden" id="wound-photo-data">
@@ -681,7 +681,7 @@
             </button>
             <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red);"
                     onclick="clearWoundPhoto()">✕ ลบรูป</button>
-            <div style="font-size:11px;color:var(--text3);margin-top:4px;">แนะนำถ่ายรูปแผลทุกครั้งเพื่อติดตามการรักษา</div>
+            <div class="help-text">แนะนำถ่ายรูปแผลทุกครั้งเพื่อติดตามการรักษา</div>
           </div>
         </div>
       </div>
@@ -695,7 +695,7 @@
 
 <!-- Diet Modal -->
 <div class="modal-overlay" id="modal-diet">
-  <div class="modal" style="max-width:560px;">
+  <div class="modal mw-560">
     <div class="modal-header">
       <div class="modal-title" id="modal-diet-title">🍽️ กำหนดแผนอาหารผู้ป่วย</div>
       <button class="modal-close" onclick="closeModal('modal-diet')">✕</button>
@@ -757,7 +757,7 @@
 
 <!-- Tube Feed Modal -->
 <div class="modal-overlay" id="modal-tubefeed">
-  <div class="modal" style="max-width:520px;">
+  <div class="modal mw-520">
     <div class="modal-header">
       <div class="modal-title" id="modal-tubefeed-title">🧪 บันทึกการให้อาหารทางสายยาง</div>
       <button class="modal-close" onclick="closeModal('modal-tubefeed')">✕</button>
@@ -833,7 +833,7 @@
 
 <!-- Deposit Modal -->
 <div class="modal-overlay" id="modal-deposit">
-  <div class="modal" style="max-width:520px;">
+  <div class="modal mw-520">
     <div class="modal-header">
       <div class="modal-title" id="modal-deposit-title">🏦 บันทึกเงินมัดจำ / เงินประกัน</div>
       <button class="modal-close" onclick="closeModal('modal-deposit')">✕</button>
@@ -904,7 +904,7 @@
 
 <!-- Belonging Modal -->
 <div class="modal-overlay" id="modal-belonging">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal mw-480">
     <div class="modal-header">
       <div class="modal-title">🧳 บันทึกทรัพย์สิน / ของมีค่า</div>
       <button class="modal-close" onclick="closeModal('modal-belonging')">✕</button>
@@ -964,7 +964,7 @@
 
 <!-- DNR & Consent Modal -->
 <div class="modal-overlay" id="modal-dnr">
-  <div class="modal" style="max-width:560px;">
+  <div class="modal mw-560">
     <div class="modal-header" style="background:linear-gradient(90deg,#c0392b11,transparent);">
       <div class="modal-title">⚖️ DNR & Advance Consent</div>
       <button class="modal-close" onclick="closeModal('modal-dnr')">✕</button>
@@ -1064,7 +1064,7 @@
 
 <!-- Return to Stock Modal -->
 <div class="modal-overlay" id="modal-return-item">
-  <div class="modal" style="max-width:520px;">
+  <div class="modal mw-520">
     <div class="modal-header">
       <div class="modal-title">↩️ บันทึกการคืนสินค้า</div>
       <button class="modal-close" onclick="closeModal('modal-return-item')">✕</button>
@@ -1087,18 +1087,18 @@
         <label class="form-label">จำนวนที่คืน <span class="required">*</span></label>
         <div style="display:flex;gap:10px;align-items:center;">
           <input class="form-control number" type="number" id="return-qty" min="1" placeholder="0" style="width:140px;">
-          <span id="return-unit-label" style="font-size:13px;color:var(--text2);"></span>
+          <span class="fs-13-muted" id="return-unit-label"></span>
           <span style="font-size:12px;color:var(--text3);" id="return-max-label"></span>
         </div>
       </div>
       <div class="form-group">
         <label class="form-label">เหตุผลการคืน <span class="required">*</span></label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;"><input type="radio" name="return-reason-preset" value="ญาติซื้อมาให้" onchange="toggleReturnOther()"> ญาติซื้อมาให้</label>
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;"><input type="radio" name="return-reason-preset" value="ผู้รับบริการจำหน่าย" onchange="toggleReturnOther()"> ผู้รับบริการจำหน่าย</label>
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;"><input type="radio" name="return-reason-preset" value="สินค้าเกินความต้องการ" onchange="toggleReturnOther()"> สินค้าเกินความต้องการ</label>
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;"><input type="radio" name="return-reason-preset" value="สินค้าชำรุด/หมดอายุ" onchange="toggleReturnOther()"> สินค้าชำรุด/หมดอายุ</label>
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:12px;"><input type="radio" name="return-reason-preset" value="อื่นๆ" onchange="toggleReturnOther()"> อื่นๆ</label>
+          <label class="chip-toggle-xs"><input type="radio" name="return-reason-preset" value="ญาติซื้อมาให้" onchange="toggleReturnOther()"> ญาติซื้อมาให้</label>
+          <label class="chip-toggle-xs"><input type="radio" name="return-reason-preset" value="ผู้รับบริการจำหน่าย" onchange="toggleReturnOther()"> ผู้รับบริการจำหน่าย</label>
+          <label class="chip-toggle-xs"><input type="radio" name="return-reason-preset" value="สินค้าเกินความต้องการ" onchange="toggleReturnOther()"> สินค้าเกินความต้องการ</label>
+          <label class="chip-toggle-xs"><input type="radio" name="return-reason-preset" value="สินค้าชำรุด/หมดอายุ" onchange="toggleReturnOther()"> สินค้าชำรุด/หมดอายุ</label>
+          <label class="chip-toggle-xs"><input type="radio" name="return-reason-preset" value="อื่นๆ" onchange="toggleReturnOther()"> อื่นๆ</label>
         </div>
         <div id="return-other-wrap" style="display:none;">
           <input class="form-control" id="return-reason-other" placeholder="ระบุเหตุผล...">
@@ -1118,7 +1118,7 @@
 
 <!-- Record Payment Modal -->
 <div class="modal-overlay" id="modal-record-payment">
-  <div class="modal" style="max-width:500px;">
+  <div class="modal mw-500">
     <div class="modal-header">
       <div class="modal-title">💳 บันทึกรับชำระเงิน</div>
       <button class="modal-close" onclick="closeModal('modal-record-payment')">✕</button>
@@ -1139,19 +1139,19 @@
       <div class="form-group">
         <label class="form-label">ช่องทางการชำระ</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;" id="pay-method-buttons">
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;">
+          <label class="chip-toggle-sm">
             <input type="radio" name="pay-method" value="เงินสด" onchange="togglePayOther()"> 💵 เงินสด
           </label>
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;">
+          <label class="chip-toggle-sm">
             <input type="radio" name="pay-method" value="โอนเงิน" checked onchange="togglePayOther()"> 🏦 โอนเงิน
           </label>
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;">
+          <label class="chip-toggle-sm">
             <input type="radio" name="pay-method" value="บัตรเครดิต" onchange="togglePayOther()"> 💳 บัตรเครดิต
           </label>
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;">
+          <label class="chip-toggle-sm">
             <input type="radio" name="pay-method" value="เช็ค" onchange="togglePayOther()"> 📝 เช็ค
           </label>
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:13px;">
+          <label class="chip-toggle-sm">
             <input type="radio" name="pay-method" value="อื่นๆ" onchange="togglePayOther()"> ✏️ อื่นๆ
           </label>
         </div>
@@ -1183,7 +1183,7 @@
 
 <!-- Add Contract Modal -->
 <div class="modal-overlay" id="modal-add-contract">
-  <div class="modal" style="max-width:560px;">
+  <div class="modal mw-560">
     <div class="modal-header">
       <div class="modal-title" id="modal-contract-title">📋 เพิ่มแพ็กเกจรายเดือน</div>
       <button class="modal-close" onclick="closeModal('modal-add-contract')">✕</button>
@@ -1208,7 +1208,7 @@
         <!-- Rendered by renderContractItems() -->
       </div>
       <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:13px;color:var(--text2);">ยอดรวมต่อเดือน</span>
+        <span class="fs-13-muted">ยอดรวมต่อเดือน</span>
         <span id="contract-total-display" style="font-size:16px;font-weight:700;color:var(--accent);">0 ฿</span>
       </div>
       <hr class="divider">
@@ -1247,7 +1247,7 @@
 
 <!-- Add Room Modal -->
 <div class="modal-overlay" id="modal-add-room">
-  <div class="modal" style="max-width:500px;">
+  <div class="modal mw-500">
     <div class="modal-header">
       <div class="modal-title" id="modal-room-title">🏠 เพิ่มห้องพัก</div>
       <button class="modal-close" onclick="closeModal('modal-add-room')">✕</button>
@@ -1345,7 +1345,7 @@
 
 <!-- Modal ย้ายห้อง -->
 <div class="modal-overlay" id="modal-transfer-room">
-  <div class="modal" style="max-width:520px;">
+  <div class="modal mw-520">
     <div class="modal-header">
       <div class="modal-title">🔄 ย้ายห้อง / เตียง</div>
       <button class="modal-close" onclick="closeModal('modal-transfer-room')">✕</button>
@@ -1407,7 +1407,7 @@
 
 <!-- Modal จำหน่ายผู้รับบริการ (Discharge) -->
 <div class="modal-overlay" id="modal-discharge">
-  <div class="modal" style="max-width:500px;">
+  <div class="modal mw-500">
     <div class="modal-header">
       <div class="modal-title">🚪 จำหน่ายผู้รับบริการ</div>
       <button class="modal-close" onclick="closeModal('modal-discharge')">✕</button>
@@ -1450,7 +1450,7 @@
 
 <!-- Modal Reset บิล -->
 <div class="modal-overlay" id="modal-invoice-reset">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal mw-480">
     <div class="modal-header">
       <div class="modal-title">🔄 Reset สถานะบิล</div>
       <button class="modal-close" onclick="closeModal('modal-invoice-reset')">✕</button>
@@ -1500,7 +1500,7 @@
 
 <!-- Add Allergy Modal -->
 <div class="modal-overlay" id="modal-add-allergy">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal mw-480">
     <div class="modal-header">
       <div class="modal-title" id="allergy-modal-title">🚨 เพิ่มประวัติการแพ้ยา / อาหาร</div>
       <button class="modal-close" onclick="closeModal('modal-add-allergy')">✕</button>
@@ -1541,7 +1541,7 @@
 
 <!-- Add Contact Modal -->
 <div class="modal-overlay" id="modal-add-contact">
-  <div class="modal" style="max-width:520px;">
+  <div class="modal mw-520">
     <div class="modal-header">
       <div class="modal-title">👥 เพิ่มผู้ติดต่อ / ผู้รับผิดชอบ</div>
       <button class="modal-close" onclick="closeModal('modal-add-contact')">✕</button>
@@ -1600,7 +1600,7 @@
 </div>
 
 <div class="modal-overlay" id="modal-receive">
-  <div class="modal" style="max-width:520px;">
+  <div class="modal mw-520">
     <div class="modal-header">
       <div class="modal-title">📦 สั่งซื้อ / รับสินค้าเข้าคลัง</div>
       <button class="modal-close" onclick="closeModal('modal-receive')">✕</button>
@@ -1721,7 +1721,7 @@
 </div>
 
 <div class="modal-overlay" id="modal-addPatient">
-  <div class="modal" style="max-width:560px;">
+  <div class="modal mw-560">
     <div class="modal-header">
       <div class="modal-title" id="modal-addPatient-title">เพิ่มผู้รับบริการ</div>
       <button class="modal-close" onclick="closeModal('modal-addPatient')">✕</button>
@@ -1834,7 +1834,7 @@
 </div>
 
 <div class="modal-overlay" id="modal-addStaff">
-  <div class="modal" style="max-width:560px;">
+  <div class="modal mw-560">
     <div class="modal-header">
       <div class="modal-title" id="modal-addStaff-title">เพิ่มพนักงาน</div>
       <button class="modal-close" onclick="closeModal('modal-addStaff')">✕</button>
@@ -1935,7 +1935,7 @@
       <div class="section-label">📄 สัญญาว่าจ้าง</div>
       <div style="display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
         <span style="font-size:28px;">📄</span>
-        <div style="flex:1;">
+        <div class="flex-1">
           <div id="staff-contract-name" style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:4px;">ยังไม่มีไฟล์</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('staff-contract-input').click()">📎 แนบไฟล์ PDF</button>
@@ -1944,7 +1944,7 @@
           </div>
           <input type="file" id="staff-contract-input" accept=".pdf,application/pdf" style="display:none;" onchange="loadStaffContract()">
           <input type="hidden" id="staff-contract-data">
-          <div style="font-size:11px;color:var(--text3);margin-top:4px;">รองรับ PDF เท่านั้น · แนะนำไม่เกิน 5 MB</div>
+          <div class="help-text">รองรับ PDF เท่านั้น · แนะนำไม่เกิน 5 MB</div>
         </div>
       </div>
     </div>
@@ -1957,7 +1957,7 @@
 
 <!-- Add/Edit Account Modal -->
 <div class="modal-overlay" id="modal-addAccount">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal mw-480">
     <div class="modal-header">
       <div class="modal-title" id="modal-addAccount-title">เพิ่ม Account</div>
       <button class="modal-close" onclick="closeModal('modal-addAccount')">✕</button>
@@ -1968,12 +1968,12 @@
       <div class="form-group">
         <label class="form-label">Username <span class="required">*</span></label>
         <input class="form-control" id="acc-username" placeholder="เช่น nurse01" autocomplete="off">
-        <div style="font-size:11px;color:var(--text3);margin-top:4px;">ภาษาอังกฤษ/ตัวเลข ไม่มีช่องว่าง</div>
+        <div class="help-text">ภาษาอังกฤษ/ตัวเลข ไม่มีช่องว่าง</div>
       </div>
       <div class="form-group">
         <label class="form-label">ชื่อ-นามสกุล (แสดงในระบบ) <span class="required">*</span></label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input class="form-control" id="acc-displayname" placeholder="เช่น น.ส.สมใจ ใจดี" style="flex:1;">
+        <div class="flex-gap8">
+          <input class="form-control flex-1" id="acc-displayname" placeholder="เช่น น.ส.สมใจ ใจดี">
           <button type="button" class="btn btn-ghost btn-sm" onclick="pickStaffForAccount()" style="white-space:nowrap;">เลือกจากพนักงาน</button>
         </div>
       </div>
@@ -2031,7 +2031,7 @@
 
 <!-- Add Medical Log Modal -->
 <div class="modal-overlay" id="modal-addMedLog">
-  <div class="modal" style="max-width:500px;">
+  <div class="modal mw-500">
     <div class="modal-header">
       <div class="modal-title" id="medlog-title">เพิ่มรายการ</div>
       <button class="modal-close" onclick="closeModal('modal-addMedLog')">✕</button>
@@ -2156,7 +2156,7 @@
   <div class="modal" style="max-width:860px;width:97%;max-height:94vh;overflow-y:auto;padding:0;">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:10;">
       <div style="font-weight:700;font-size:15px;" id="preview-modal-title">ดูเอกสาร</div>
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div class="flex-gap8">
         <button class="btn btn-ghost btn-sm" id="preview-print-btn" onclick="printFromPreview()">🖨️ พิมพ์</button>
         <button class="btn btn-ghost btn-sm" id="preview-pdf-btn" onclick="pdfFromPreview()" style="color:#e74c3c;">📄 PDF</button>
         <button class="btn btn-ghost btn-sm" id="preview-excel-btn" onclick="excelFromPreview()" style="color:#27ae60;">📊 Excel</button>
@@ -2270,9 +2270,9 @@
       </div>
 
       <!-- ค่าห้องและค่าดูแล -->
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+      <div class="box-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-weight:600;font-size:13px;color:var(--accent);">🏠 ค่าห้องและค่าดูแล</div>
+          <div class="fw600-accent">🏠 ค่าห้องและค่าดูแล</div>
           <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;">
             <input type="checkbox" id="inv-room-enabled" checked onchange="recalcInvoice()"> เปิดใช้
           </label>
@@ -2314,9 +2314,9 @@
       </div>
 
       <!-- ค่ากายภาพบำบัด -->
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+      <div class="box-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div style="font-weight:600;font-size:13px;color:var(--accent);">🤸 ค่ากายภาพบำบัด</div>
+          <div class="fw600-accent">🤸 ค่ากายภาพบำบัด</div>
           <button type="button" class="btn btn-ghost btn-sm fs-12" onclick="autoFillPhysioToInvoice()">📥 ดึงจากบันทึก Session</button>
         </div>
         <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:end;">
@@ -2352,10 +2352,10 @@
       </div>
 
       <!-- ค่าเวชภัณฑ์ -->
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+      <div class="box-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div style="font-weight:600;font-size:13px;color:var(--accent);">💊 ค่าเวชภัณฑ์ / ยา / ของใช้ / บริการ</div>
-          <div style="display:flex;gap:8px;align-items:center;">
+          <div class="fw600-accent">💊 ค่าเวชภัณฑ์ / ยา / ของใช้ / บริการ</div>
+          <div class="flex-gap8">
             <input id="inv-med-from" type="month" class="form-control" style="font-size:12px;padding:4px 8px;">
             <span style="font-size:12px;color:var(--text2);">ถึง</span>
             <input id="inv-med-to" type="month" class="form-control" style="font-size:12px;padding:4px 8px;">
@@ -2370,14 +2370,14 @@
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
           <button class="btn btn-ghost btn-sm" onclick="addManualInvoiceItem()">+ เพิ่มรายการ</button>
-          <div style="font-size:13px;color:var(--text2);">รวมเวชภัณฑ์: <strong id="inv-items-total">0.00 ฿</strong></div>
+          <div class="fs-13-muted">รวมเวชภัณฑ์: <strong id="inv-items-total">0.00 ฿</strong></div>
         </div>
       </div>
 
       <!-- ค่าอื่นๆ -->
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
+      <div class="box-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div style="font-weight:600;font-size:13px;color:var(--accent);">📋 ค่าอื่นๆ</div>
+          <div class="fw600-accent">📋 ค่าอื่นๆ</div>
           <button class="btn btn-ghost btn-sm" onclick="addOtherItem()">+ เพิ่ม</button>
         </div>
         <div id="inv-other-container">
@@ -2451,7 +2451,7 @@
 <!-- Modal บันทึก Session กายภาพบำบัด               -->
 <!-- ════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modal-physio-session">
-  <div class="modal" style="max-width:500px;">
+  <div class="modal mw-500">
     <div class="modal-header">
       <span id="modal-physio-title">🤸 บันทึกกายภาพบำบัด</span>
       <button class="modal-close" onclick="closeModal('modal-physio-session')">✕</button>
@@ -2521,7 +2521,7 @@
         <div class="modal-title" id="modal-addSupplier-title">+ เพิ่มผู้จำหน่าย</div>
         <button class="modal-close" onclick="closeModal('modal-addSupplier')">✕</button>
       </div>
-      <div class="modal-body" style="overflow-y:auto;flex:1;">
+      <div class="modal-body overflow-y-auto-flex">
         <input type="hidden" id="editSupplierId">
         <div class="form-grid">
           <div class="form-group">
@@ -2591,7 +2591,7 @@
 
   <!-- Add Purchase Request Modal -->
   <div class="modal-overlay" id="modal-addPR">
-    <div class="modal" style="max-width:560px;">
+    <div class="modal mw-560">
       <div class="modal-header">
         <div class="modal-title">📋 สร้างคำขอซื้อ</div>
         <button class="modal-close" onclick="closeModal('modal-addPR')">✕</button>
@@ -2913,18 +2913,18 @@
 
       <!-- ยอดเงิน — ตัวเลือก C: custom arrow + height + identical look -->
       <div style="display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:8px;margin-top:12px;">
-        <div style="min-width:0;">
+        <div class="min-w-0">
           <label class="form-label">ยอดก่อน VAT <span class="required">*</span></label>
           <input type="number" id="exp-subtotal" class="form-control number" min="0" step="0.01" oninput="calcExpTotal()" style="width:100%;box-sizing:border-box;height:38px;padding:8px 12px;text-align:right;">
         </div>
-        <div style="min-width:0;">
+        <div class="min-w-0">
           <label class="form-label">VAT (%)</label>
           <select id="exp-vat-rate" class="form-control" onchange="calcExpTotal()" style="width:100%;box-sizing:border-box;height:38px;padding:8px 28px 8px 12px;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml;utf8,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22&gt;&lt;path fill=%22%23888%22 d=%22M0 0l5 6 5-6z%22/&gt;&lt;/svg&gt;');background-repeat:no-repeat;background-position:right 10px center;">
             <option value="0">0%</option>
             <option value="7">7%</option>
           </select>
         </div>
-        <div style="min-width:0;">
+        <div class="min-w-0">
           <label class="form-label">หัก ณ ที่จ่าย (%)</label>
           <select id="exp-wht-rate" class="form-control" onchange="calcExpTotal()" style="width:100%;box-sizing:border-box;height:38px;padding:8px 28px 8px 12px;-webkit-appearance:none;appearance:none;background-image:url('data:image/svg+xml;utf8,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22&gt;&lt;path fill=%22%23888%22 d=%22M0 0l5 6 5-6z%22/&gt;&lt;/svg&gt;');background-repeat:no-repeat;background-position:right 10px center;">
             <option value="0">0%</option>
@@ -2934,7 +2934,7 @@
             <option value="5">5%</option>
           </select>
         </div>
-        <div style="min-width:0;">
+        <div class="min-w-0">
           <label class="form-label">ยอดสุทธิ</label>
           <input type="number" id="exp-net" class="form-control number" readonly style="width:100%;box-sizing:border-box;height:38px;padding:8px 12px;text-align:right;font-weight:700;background:var(--surface2);">
         </div>
@@ -3153,7 +3153,7 @@
           <input type="date" id="maint-next-date" class="form-control">
         </div>
         <div>
-          <label class="form-label" style="display:flex;gap:8px;align-items:center;">
+          <label class="form-label flex-gap8">
             <input type="checkbox" id="maint-resolved" checked>
             แก้ไขได้สมบูรณ์แล้ว
           </label>
@@ -3181,7 +3181,7 @@
       <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#e0f7ec;color:#0a3626;font-weight:500;">ดูข้อมูลเท่านั้น</span>
       <button class="modal-close" onclick="closeModal('modal-view-supinv')">&#x2715;</button>
     </div>
-    <div class="modal-body" style="overflow-y:auto;flex:1;">
+    <div class="modal-body overflow-y-auto-flex">
       <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#0F6E56;background:#E1F5EE;padding:8px 12px;border-radius:6px;margin-bottom:14px;">&#128065; โหมดดูข้อมูล — ไม่สามารถแก้ไขได้</div>
       <div id="view-supinv-content"></div>
     </div>
@@ -3198,7 +3198,7 @@
       <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#e0f7ec;color:#0a3626;font-weight:500;">ดูข้อมูลเท่านั้น</span>
       <button class="modal-close" onclick="closeModal('modal-view-supplier')">&#x2715;</button>
     </div>
-    <div class="modal-body" style="overflow-y:auto;flex:1;">
+    <div class="modal-body overflow-y-auto-flex">
       <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#0F6E56;background:#E1F5EE;padding:8px 12px;border-radius:6px;margin-bottom:14px;">&#128065; โหมดดูข้อมูล — ไม่สามารถแก้ไขได้</div>
       <div id="view-supplier-content"></div>
     </div>
@@ -3215,7 +3215,7 @@
       <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#e0f7ec;color:#0a3626;font-weight:500;">ดูข้อมูลเท่านั้น</span>
       <button class="modal-close" onclick="closeModal('modal-view-pr')">&#x2715;</button>
     </div>
-    <div class="modal-body" style="overflow-y:auto;flex:1;">
+    <div class="modal-body overflow-y-auto-flex">
       <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#0F6E56;background:#E1F5EE;padding:8px 12px;border-radius:6px;margin-bottom:14px;">&#128065; โหมดดูข้อมูล — ไม่สามารถแก้ไขได้</div>
       <div id="view-pr-content"></div>
     </div>
@@ -3249,7 +3249,7 @@
         <div id="hr-range-month" style="display:none;"><input type="month" id="hr-month-val" class="form-control" style="max-width:180px;font-size:13px;"></div>
         <div id="hr-range-custom" style="display:none;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <input type="date" id="hr-date-from" class="form-control" style="max-width:160px;font-size:13px;">
-          <span style="font-size:13px;color:var(--text2);">ถึง</span>
+          <span class="fs-13-muted">ถึง</span>
           <input type="date" id="hr-date-to"   class="form-control" style="max-width:160px;font-size:13px;">
         </div>
       </div>

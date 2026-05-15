@@ -4832,3 +4832,122 @@ tr:hover td {
   padding: 40px;
   color: var(--text3);
 }
+
+/* ════════════════════════════════════════════════════════════════
+   R18 · Inline Reduction Batch 3 · 15 พ.ค. 2569
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Modal max-width sizes ── */
+.mw-480 { max-width: 480px; }
+.mw-500 { max-width: 500px; }
+.mw-520 { max-width: 520px; }
+.mw-560 { max-width: 560px; }
+
+/* ── Chip-toggle (modals × 17 รวม 3 sizes) ── */
+.chip-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 13px;
+}
+.chip-toggle-sm {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 13px;
+}
+.chip-toggle-xs {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* ── Form helpers ── */
+.accent-brand { accent-color: var(--accent); }
+
+/* ── Help text patterns ── */
+.help-text {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+.help-text-3 {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 3px;
+}
+
+/* ── Flex utility variants ── */
+.flex-gap8 { display: flex; gap: 8px; align-items: center; }
+.flex-1 { flex: 1; }
+.min-w-0 { min-width: 0; }
+.overflow-y-auto-flex { overflow-y: auto; flex: 1; }
+
+/* ── Typography variants ── */
+.fw600-accent { font-weight: 600; font-size: 13px; color: var(--accent); }
+.fs-13-muted { font-size: 13px; color: var(--text2); }
+
+/* ── Box / panel patterns ── */
+.box-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+}
+.panel-light {
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+/* ── pages.html: tab buttons ── */
+.tab-button {
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text2);
+}
+.tab-button-bold {
+  padding: 8px 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+/* ── pages.html: misc ── */
+.label-mini {
+  font-size: 12px;
+  color: var(--text2);
+  font-weight: 500;
+}
+.w-160 { width: 160px; }
+.fw600-fs135 { font-weight: 600; font-size: 13.5px; }
+.row-spread-mb {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.fs-12-subtle { font-size: 12px; color: var(--text3); }
+.mb-20 { margin-bottom: 20px; }
+
+/* ════════════════════════════════════════════════════════════════
+   END R18
+   ════════════════════════════════════════════════════════════════ */

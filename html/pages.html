@@ -98,7 +98,7 @@
         </div>
 
         <!-- Upcoming Appointments Widget -->
-        <div class="card" style="margin-bottom:20px;">
+        <div class="card mb-20">
           <div class="card-header" style="background:#eef4ff;">
             <div class="card-title" style="color:#1e5fa0;">🚐 นัดหมายแพทย์ที่กำลังจะถึง</div>
             <button class="btn btn-ghost btn-sm" onclick="showPage('patients')">ดูคนไข้ทั้งหมด</button>
@@ -199,9 +199,9 @@
         <!-- BI Tab Navigation -->
         <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;flex-wrap:wrap;">
           <div class="bi-tab" data-tab="analytics" onclick="switchBITab('analytics')" style="padding:8px 16px;font-size:13px;cursor:pointer;border-bottom:2px solid var(--accent);margin-bottom:-2px;color:var(--accent);font-weight:600;">📊 Analytics</div>
-          <div class="bi-tab" data-tab="case" onclick="switchBITab('case')" style="padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text2);">🏥 Case Acceptance</div>
-          <div class="bi-tab" data-tab="roi" onclick="switchBITab('roi')" style="padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text2);">💼 ROI Calculator</div>
-          <div class="bi-tab" data-tab="investor" onclick="switchBITab('investor')" style="padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text2);">📋 Investor View</div>
+          <div class="bi-tab tab-button" data-tab="case" onclick="switchBITab('case')">🏥 Case Acceptance</div>
+          <div class="bi-tab tab-button" data-tab="roi" onclick="switchBITab('roi')">💼 ROI Calculator</div>
+          <div class="bi-tab tab-button" data-tab="investor" onclick="switchBITab('investor')">📋 Investor View</div>
         </div>
 
         <!-- TAB: Analytics (existing) -->
@@ -220,7 +220,7 @@
         </div>
 
         <!-- KPI Cards -->
-        <div id="bi-kpi-cards" style="margin-bottom:20px;"></div>
+        <div class="mb-20" id="bi-kpi-cards"></div>
 
         <!-- 3-Month Trend -->
         <div class="card mb-16">
@@ -418,9 +418,9 @@
 
         <!-- TAB: Investor Dashboard -->
         <div id="bi-section-investor" style="display:none;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div class="row-spread-mb">
             <div>
-              <input type="month" class="form-control" id="inv-month" style="width:160px;" oninput="renderInvestorDashboard()">
+              <input type="month" class="form-control w-160" id="inv-month" oninput="renderInvestorDashboard()">
             </div>
             <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️ พิมพ์รายงาน</button>
           </div>
@@ -458,20 +458,20 @@
           <!-- 1. รายการทั้งหมด -->
           <div class="stock-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--brand,#2e6b4f);border-radius:12px;padding:14px 16px;">
             <div class="kpi-card-r10__header">
-              <div style="font-size:12px;color:var(--text2);font-weight:500;">📦 รายการทั้งหมด</div>
+              <div class="label-mini">📦 รายการทั้งหมด</div>
               <span class="kpi-card-r10__decor">📦</span>
             </div>
             <div id="stock-kpi-total" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--brand,#2e6b4f);">0</div>
-            <div id="stock-kpi-total-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">SKU</div>
+            <div class="help-text-3" id="stock-kpi-total-sub">SKU</div>
           </div>
           <!-- 2. มูลค่ารวม -->
           <div class="stock-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid #5e60ce;border-radius:12px;padding:14px 16px;">
             <div class="kpi-card-r10__header">
-              <div style="font-size:12px;color:var(--text2);font-weight:500;">💰 มูลค่ารวม</div>
+              <div class="label-mini">💰 มูลค่ารวม</div>
               <span class="kpi-card-r10__decor">💰</span>
             </div>
             <div id="stock-kpi-value" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#3d3d9e;">฿0</div>
-            <div id="stock-kpi-value-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">ราคาทุนรวม</div>
+            <div class="help-text-3" id="stock-kpi-value-sub">ราคาทุนรวม</div>
           </div>
           <!-- 3. ใกล้หมด ต้องสั่ง -->
           <div class="stock-kpi-card" style="background:var(--tone-orange-bg);border:1px solid var(--tone-orange-border);border-left:3px solid var(--tone-orange-accent);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('stockStatusFilter').value='low';renderStock()" title="กรองดูเฉพาะรายการที่ใกล้หมด">
@@ -607,7 +607,7 @@
               <div style="display:flex;gap:8px;align-items:center;">
                 <input class="form-control" id="req-barcode-scan" placeholder="ยิงบาร์โค้ดหรือพิมพ์รหัสสินค้า..." inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false" style="font-family:monospace;" oninput="onReqBarcodeScan()">
               </div>
-              <div style="font-size:11px;color:var(--text3);margin-top:3px;">ยิงบาร์โค้ดเพื่อเพิ่มสินค้าลงรายการเบิกอัตโนมัติ</div>
+              <div class="help-text-3">ยิงบาร์โค้ดเพื่อเพิ่มสินค้าลงรายการเบิกอัตโนมัติ</div>
             </div>
             <div id="reqItems"></div>
             <button class="btn btn-secondary" style="width:100%;margin-top:4px;border-style:dashed;" onclick="addReqItem()">+ เพิ่มรายการ</button>
@@ -640,8 +640,8 @@
         <!-- Tabs -->
         <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;" id="history-tabs">
           <div class="history-tab active-htab" onclick="switchHistoryTab('list')" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:2px solid var(--accent);margin-bottom:-2px;color:var(--accent);">📋 ประวัติการเบิก</div>
-          <div class="history-tab" onclick="switchHistoryTab('approval')" id="htab-approval" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);">✅ อนุมัติใบเบิก <span id="approval-badge" style="display:none;background:#e74c3c;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;"></span></div>
-          <div class="history-tab" onclick="switchHistoryTab('returns')" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);">↩️ คืนสินค้า</div>
+          <div class="history-tab tab-button-bold" onclick="switchHistoryTab('approval')" id="htab-approval">✅ อนุมัติใบเบิก <span id="approval-badge" style="display:none;background:#e74c3c;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;"></span></div>
+          <div class="history-tab tab-button-bold" onclick="switchHistoryTab('returns')">↩️ คืนสินค้า</div>
         </div>
 
         <!-- TAB: LIST (existing history) -->
@@ -712,10 +712,10 @@
 
         <!-- TAB: RETURNS -->
         <div id="history-tab-returns" style="display:none;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div class="row-spread-mb">
             <div>
               <div style="font-size:15px;font-weight:700;">↩️ รายการคืนสินค้า</div>
-              <div style="font-size:12px;color:var(--text3);">คืนสต็อกอัตโนมัติ · ระบุเหตุผลการคืน</div>
+              <div class="fs-12-subtle">คืนสต็อกอัตโนมัติ · ระบุเหตุผลการคืน</div>
             </div>
             <button class="btn btn-primary btn-sm" onclick="openReturnModal()">+ บันทึกการคืน</button>
           </div>
@@ -854,11 +854,11 @@
           <!-- 1. ทั้งหมด -->
           <div class="patient-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--brand,#2e6b4f);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='';renderPatients()" title="แสดงทั้งหมด">
             <div class="kpi-card-r10__header">
-              <div style="font-size:12px;color:var(--text2);font-weight:500;">👥 ทั้งหมด</div>
+              <div class="label-mini">👥 ทั้งหมด</div>
               <span class="kpi-card-r10__decor">👥</span>
             </div>
             <div id="pat-kpi-total" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--brand,#2e6b4f);">0</div>
-            <div id="pat-kpi-total-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">ราย</div>
+            <div class="help-text-3" id="pat-kpi-total-sub">ราย</div>
           </div>
           <!-- 2. พักอยู่ -->
           <div class="patient-kpi-card" style="background:var(--tone-green-bg);border:1px solid var(--tone-green-border);border-left:3px solid var(--tone-green-accent);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='active';renderPatients()" title="กรองเฉพาะที่พักอยู่">
@@ -881,11 +881,11 @@
           <!-- 4. ออกแล้ว -->
           <div class="patient-kpi-card" style="background:var(--surface2,#f8f7f3);border:1px solid var(--border);border-left:3px solid var(--tone-gray-border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='inactive';renderPatients()" title="กรองเฉพาะที่ออกแล้ว">
             <div class="kpi-card-r10__header">
-              <div style="font-size:12px;color:var(--text2);font-weight:500;">📤 ออกแล้ว</div>
+              <div class="label-mini">📤 ออกแล้ว</div>
               <span class="kpi-card-r10__decor">📤</span>
             </div>
             <div id="pat-kpi-inactive" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--tone-gray-text);">0</div>
-            <div id="pat-kpi-inactive-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">จำหน่ายแล้ว</div>
+            <div class="help-text-3" id="pat-kpi-inactive-sub">จำหน่ายแล้ว</div>
           </div>
         </div>
 
@@ -1034,7 +1034,7 @@
             <div style="font-size:13px;color:var(--text2);">รายการสั่งซื้อและรับสินค้าเข้าคลังทั้งหมด</div>
           </div>
           <div style="display:flex;gap:8px;">
-            <input class="form-control" type="month" id="ph-month" onchange="renderPurchaseHistory()" style="width:160px;">
+            <input class="form-control w-160" type="month" id="ph-month" onchange="renderPurchaseHistory()">
             <select class="form-control" id="ph-item-filter" onchange="renderPurchaseHistory()" style="width:180px;">
               <option value="">ทุกรายการ</option>
             </select>
@@ -1056,7 +1056,7 @@
         <!-- TAB: Stock Movement History -->
         <div id="ph-section-movement" style="display:none;">
           <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
-            <input class="form-control" type="month" id="mv-month" onchange="renderMovementHistory()" style="width:160px;">
+            <input class="form-control w-160" type="month" id="mv-month" onchange="renderMovementHistory()">
             <select class="form-control" id="mv-type-filter" onchange="renderMovementHistory()" style="width:150px;">
               <option value="">ทุกประเภท</option>
               <option value="receive">รับเข้า</option>
@@ -1110,10 +1110,10 @@
         <!-- Tabs: Invoices / Contracts / Payments -->
         <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;" id="billing-tabs">
           <div class="billing-tab active" onclick="switchBillingTab('invoices')" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:2px solid var(--accent);margin-bottom:-2px;color:var(--accent);">📄 เอกสาร</div>
-          <div class="billing-tab" onclick="switchBillingTab('contracts')" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);">📋 แพ็กเกจรายเดือน</div>
-          <div class="billing-tab" onclick="switchBillingTab('payments')" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);">💳 รับชำระเงิน</div>
+          <div class="billing-tab tab-button-bold" onclick="switchBillingTab('contracts')">📋 แพ็กเกจรายเดือน</div>
+          <div class="billing-tab tab-button-bold" onclick="switchBillingTab('payments')">💳 รับชำระเงิน</div>
           
-          <div class="billing-tab" onclick="switchBillingTab('physio')" style="padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);">🤸 กายภาพ package</div>
+          <div class="billing-tab tab-button-bold" onclick="switchBillingTab('physio')">🤸 กายภาพ package</div>
         </div>
 
         <!-- TAB: INVOICES -->
@@ -1128,7 +1128,7 @@
           <div class="billing-kpi-grid kpi-grid-r10">
             <div class="billing-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--brand,#2e6b4f);border-radius:12px;padding:14px 16px;">
               <div class="kpi-card-r10__header">
-                <div style="font-size:12px;color:var(--text2);font-weight:500;">💰 ยอดรวมทั้งหมด</div>
+                <div class="label-mini">💰 ยอดรวมทั้งหมด</div>
                 <span class="kpi-card-r10__decor">💰</span>
               </div>
               <div id="billing-total-amount" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--brand,#2e6b4f);">0 ฿</div>
@@ -1150,7 +1150,7 @@
             </div>
             <div class="billing-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid #5e60ce;border-radius:12px;padding:14px 16px;">
               <div class="kpi-card-r10__header">
-                <div style="font-size:12px;color:var(--text2);font-weight:500;">📄 จำนวนเอกสาร</div>
+                <div class="label-mini">📄 จำนวนเอกสาร</div>
                 <span class="kpi-card-r10__decor">📄</span>
               </div>
               <div id="billing-doc-count" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#3d3d9e;">0</div>
@@ -1206,10 +1206,10 @@
 
         <!-- TAB: CONTRACTS -->
         <div id="billing-tab-contracts" style="display:none;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div class="row-spread-mb">
             <div>
               <div style="font-size:15px;font-weight:700;">📋 แพ็กเกจค่าบริการรายเดือน</div>
-              <div style="font-size:12px;color:var(--text3);">กำหนดค่าแพ็กเกจรายคน · ระบบจะออกบิลให้อัตโนมัติตามรอบแอดมิท</div>
+              <div class="fs-12-subtle">กำหนดค่าแพ็กเกจรายคน · ระบบจะออกบิลให้อัตโนมัติตามรอบแอดมิท</div>
             </div>
             <button class="btn btn-primary btn-sm" onclick="openAddContractModal()">+ เพิ่มแพ็กเกจ</button>
           </div>
@@ -1221,10 +1221,10 @@
         <!-- TAB: PAYMENTS -->
         <div id="billing-tab-physio" style="display:none;">
           <div id="physio-packages-content">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div class="row-spread-mb">
               <div>
                 <div style="font-size:16px;font-weight:700;">🦵 แพ็กเกจกายภาพบำบัด</div>
-                <div style="font-size:12px;color:var(--text3);">จัดการแพ็กเกจ session กายภาพแยกจาก contract รายเดือน</div>
+                <div class="fs-12-subtle">จัดการแพ็กเกจ session กายภาพแยกจาก contract รายเดือน</div>
               </div>
               <button class="btn btn-primary btn-sm" onclick="openAddPhysioPackageModal()">➕ เพิ่มแพ็กเกจ</button>
             </div>
@@ -1233,10 +1233,10 @@
         </div>
 
         <div id="billing-tab-payments" style="display:none;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div class="row-spread-mb">
             <div>
               <div style="font-size:15px;font-weight:700;">💳 ประวัติรับชำระเงิน</div>
-              <div style="font-size:12px;color:var(--text3);">บันทึกทุกการชำระ รวมแบ่งจ่ายหลายงวด</div>
+              <div class="fs-12-subtle">บันทึกทุกการชำระ รวมแบ่งจ่ายหลายงวด</div>
             </div>
           </div>
           <div id="payments-list">
@@ -1317,25 +1317,25 @@
           <div style="padding:14px 20px;">
             <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">สิทธิ์แต่ละ Role</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;font-size:12px;">
-              <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
+              <div class="panel-light">
                 <div style="font-weight:700;color:var(--tone-red-accent);margin-bottom:6px;">👑 admin</div>
-                <div style="color:var(--text2);">ทุกหน้า + จัดการ Account</div>
+                <div class="text-muted">ทุกหน้า + จัดการ Account</div>
               </div>
-              <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
+              <div class="panel-light">
                 <div style="font-weight:700;color:var(--tone-red-accent);margin-bottom:6px;">🏆 ผู้บริหาร (Executive)</div>
-                <div style="color:var(--text2);">เห็นทุกหน้า · ดูรายงาน · ไม่จัดการ account</div>
+                <div class="text-muted">เห็นทุกหน้า · ดูรายงาน · ไม่จัดการ account</div>
               </div>
-              <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
+              <div class="panel-light">
                 <div style="font-weight:700;color:#8e44ad;margin-bottom:6px;">📋 ธุรการ (Officer)</div>
-                <div style="color:var(--text2);">เบิก · ประวัติทั้งหมด · ผู้รับบริการ · พนักงาน</div>
+                <div class="text-muted">เบิก · ประวัติทั้งหมด · ผู้รับบริการ · พนักงาน</div>
               </div>
-              <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
+              <div class="panel-light">
                 <div style="font-weight:700;color:var(--tone-blue-accent);margin-bottom:6px;">🏥 พยาบาล</div>
-                <div style="color:var(--text2);">เบิก · ประวัติทั้งหมด · ผู้รับบริการ</div>
+                <div class="text-muted">เบิก · ประวัติทั้งหมด · ผู้รับบริการ</div>
               </div>
-              <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
+              <div class="panel-light">
                 <div style="font-weight:700;color:#27ae60;margin-bottom:6px;">👤 ผู้ดูแล / บริบาล</div>
-                <div style="color:var(--text2);">เบิกสินค้า · เห็นเฉพาะรายการของตัวเอง</div>
+                <div class="text-muted">เบิกสินค้า · เห็นเฉพาะรายการของตัวเอง</div>
               </div>
             </div>
           </div>
@@ -1367,7 +1367,7 @@
           <div id="lineBanner" style="display:none;margin-bottom:20px;"></div>
 
           <!-- Line Integration Card -->
-          <div class="card" style="margin-bottom:20px;">
+          <div class="card mb-20">
             <div class="card-header">
               <div class="card-title" style="display:flex;align-items:center;gap:10px;">
                 <span style="font-size:22px;">💬</span>
@@ -1414,35 +1414,35 @@
                   <label class="checkbox-row">
                     <input type="checkbox" id="notifyNewReq" onchange="saveLineSettings()">
                     <div>
-                      <div style="font-weight:600;font-size:13.5px;">📋 พนักงานสร้างใบเบิกใหม่</div>
+                      <div class="fw600-fs135">📋 พนักงานสร้างใบเบิกใหม่</div>
                       <div class="fs-12 text-muted">แจ้งเตือน <strong>หัวหน้า</strong> เมื่อมีใบเบิกใหม่รอตรวจสอบ</div>
                     </div>
                   </label>
                   <label class="checkbox-row">
                     <input type="checkbox" id="notifyForward" onchange="saveLineSettings()">
                     <div>
-                      <div style="font-weight:600;font-size:13.5px;">📤 หัวหน้าส่งต่อใบเบิก</div>
+                      <div class="fw600-fs135">📤 หัวหน้าส่งต่อใบเบิก</div>
                       <div class="fs-12 text-muted">แจ้งเตือน <strong>แผนกเบิกจ่าย</strong> เมื่อมีใบเบิกรออนุมัติ</div>
                     </div>
                   </label>
                   <label class="checkbox-row">
                     <input type="checkbox" id="notifyApproved" onchange="saveLineSettings()">
                     <div>
-                      <div style="font-weight:600;font-size:13.5px;">✅ อนุมัติใบเบิกแล้ว</div>
+                      <div class="fw600-fs135">✅ อนุมัติใบเบิกแล้ว</div>
                       <div class="fs-12 text-muted">แจ้งเตือน <strong>ผู้เบิก</strong> เมื่อใบเบิกได้รับการอนุมัติและตัดสต็อกแล้ว</div>
                     </div>
                   </label>
                   <label class="checkbox-row">
                     <input type="checkbox" id="notifyRejected" onchange="saveLineSettings()">
                     <div>
-                      <div style="font-weight:600;font-size:13.5px;">❌ ไม่อนุมัติใบเบิก</div>
+                      <div class="fw600-fs135">❌ ไม่อนุมัติใบเบิก</div>
                       <div class="fs-12 text-muted">แจ้งเตือน <strong>ผู้เบิก</strong> เมื่อใบเบิกถูกปฏิเสธพร้อมเหตุผล</div>
                     </div>
                   </label>
                   <label class="checkbox-row">
                     <input type="checkbox" id="notifyLowStock" onchange="saveLineSettings()">
                     <div>
-                      <div style="font-weight:600;font-size:13.5px;">⚠️ สินค้าใกล้หมด / หมดสต็อก</div>
+                      <div class="fw600-fs135">⚠️ สินค้าใกล้หมด / หมดสต็อก</div>
                       <div class="fs-12 text-muted">แจ้งเตือน <strong>แผนกเบิกจ่าย</strong> ทันทีที่สต็อกถึงจุดแจ้งเตือน</div>
                     </div>
                   </label>
@@ -1456,7 +1456,7 @@
           </div>
 
           <!-- Backup Section -->
-          <div class="card" style="margin-bottom:20px;">
+          <div class="card mb-20">
             <div class="card-header">
               <div class="card-title" style="display:flex;align-items:center;gap:10px;">
                 <span style="font-size:22px;">💾</span>
@@ -1610,7 +1610,7 @@
             <select class="form-control" id="tubefeed-filter-patient" onchange="renderTubeFeedTable()" style="width:220px;">
               <option value="">— เลือกผู้ป่วย —</option>
             </select>
-            <input class="form-control" type="date" id="tubefeed-filter-date" onchange="renderTubeFeedTable()" style="width:160px;">
+            <input class="form-control w-160" type="date" id="tubefeed-filter-date" onchange="renderTubeFeedTable()">
           </div>
           <div class="card">
             <div class="card-header"><div class="card-title">🧪 บันทึกการให้อาหารทางสายยาง (Tube Feeding)</div></div>
@@ -1827,13 +1827,13 @@
         <!-- Tab bar -->
         <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
           <div class="sr-tab" data-tab="lowstock" onclick="switchStockReportTab('lowstock')" style="padding:8px 16px;font-size:13px;cursor:pointer;border-bottom:2px solid var(--accent);margin-bottom:-2px;color:var(--accent);font-weight:600;">⚠️ ใกล้หมด</div>
-          <div class="sr-tab" data-tab="expiry" onclick="switchStockReportTab('expiry')" style="padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text2);">📅 ใกล้หมดอายุ</div>
-          <div class="sr-tab" data-tab="movement" onclick="switchStockReportTab('movement')" style="padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text2);">📊 ความเคลื่อนไหว</div>
-          <div class="sr-tab" data-tab="bysupplier" onclick="switchStockReportTab('bysupplier')" style="padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text2);">🏭 แยกตามผู้จำหน่าย</div>
-          <div class="sr-tab" data-tab="trace" onclick="switchStockReportTab('trace')" style="padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text2);">🔍 Traceability</div>
+          <div class="sr-tab tab-button" data-tab="expiry" onclick="switchStockReportTab('expiry')">📅 ใกล้หมดอายุ</div>
+          <div class="sr-tab tab-button" data-tab="movement" onclick="switchStockReportTab('movement')">📊 ความเคลื่อนไหว</div>
+          <div class="sr-tab tab-button" data-tab="bysupplier" onclick="switchStockReportTab('bysupplier')">🏭 แยกตามผู้จำหน่าย</div>
+          <div class="sr-tab tab-button" data-tab="trace" onclick="switchStockReportTab('trace')">🔍 Traceability</div>
         </div>
         <div class="mb-12">
-          <input type="month" class="form-control" id="sr-month" style="width:160px;" oninput="renderMovementSummary()" value="">
+          <input type="month" class="form-control w-160" id="sr-month" oninput="renderMovementSummary()" value="">
         </div>
         <div id="sr-lowstock" class="sr-section card" style="padding:0;overflow:hidden;"></div>
         <div id="sr-expiry" class="sr-section card" style="display:none;padding:0;overflow:hidden;"></div>
@@ -2030,7 +2030,7 @@
 <div class="card">
   <div class="card-header">
     <div class="card-title">📄 บันทึกการใช้งาน</div>
-    <div id="audit-count" style="font-size:12px;color:var(--text3);"></div>
+    <div class="fs-12-subtle" id="audit-count"></div>
   </div>
   <div class="table-wrap">
     <table>
