@@ -10,7 +10,8 @@ function _monthStr(offsetMonths = 0) {
   return d.toISOString().slice(0, 7); // "YYYY-MM"
 }
 
-function _thb(n) {
+// [R27-P2B 15พค69] rename จาก _thb เพื่อไม่ override _thb ใน features.js (มีทศนิยม)
+function _thbInt(n) {  // Integer format สำหรับ BI dashboard (ไม่มีทศนิยม)
   return '฿' + (Math.round(n || 0)).toLocaleString();
 }
 
@@ -91,10 +92,10 @@ function renderBIKPICards(month) {
 
   const cards = [
     { label: 'ผู้รับบริการ (Active)', value: activePats.length + ' คน', icon: '👥', color: 'blue', sub: atHospital > 0 ? `${activeOnly} อยู่บนเตียง · ${atHospital} ไปรพ.` : `${activeOnly} อยู่บนเตียง` },
-    { label: 'รายรับรวมเดือนนี้', value: _thb(revenue), icon: '💰', color: 'green', sub: `เก็บแล้ว ${_thb(collected)}` },
-    { label: 'ต้นทุนสินค้าเดือนนี้', value: _thb(costItems), icon: '📦', color: 'orange', sub: `${reqs.length} รายการเบิก` },
-    { label: 'กำไรขั้นต้น', value: _thb(grossProfit), icon: grossProfit >= 0 ? '📈' : '📉', color: grossProfit >= 0 ? 'green' : 'red', sub: `Margin ${_pct(grossProfit, revenue)}` },
-    { label: 'รายรับ/ผู้รับบริการ', value: _thb(revPerPat), icon: '🏥', color: 'purple', sub: `เฉลี่ยต่อคน` },
+    { label: 'รายรับรวมเดือนนี้', value: _thbInt(revenue), icon: '💰', color: 'green', sub: `เก็บแล้ว ${_thbInt(collected)}` },
+    { label: 'ต้นทุนสินค้าเดือนนี้', value: _thbInt(costItems), icon: '📦', color: 'orange', sub: `${reqs.length} รายการเบิก` },
+    { label: 'กำไรขั้นต้น', value: _thbInt(grossProfit), icon: grossProfit >= 0 ? '📈' : '📉', color: grossProfit >= 0 ? 'green' : 'red', sub: `Margin ${_pct(grossProfit, revenue)}` },
+    { label: 'รายรับ/ผู้รับบริการ', value: _thbInt(revPerPat), icon: '🏥', color: 'purple', sub: `เฉลี่ยต่อคน` },
     { label: 'อัตราการใช้เตียง', value: Math.round(occupancy) + '%', icon: '🛏️', color: occupancy >= 80 ? 'green' : occupancy >= 50 ? 'orange' : 'red', sub: `${occupiedBeds} จาก ${totalBeds} เตียง` },
   ];
 
@@ -142,7 +143,7 @@ function renderBIRevenueBreakdown(month) {
       const barW = total > 0 ? Math.round(c.value / total * 100) : 0;
       return `<div style="background:var(--surface2);border-radius:8px;padding:12px;">
         <div style="font-size:12px;font-weight:600;margin-bottom:6px;">${c.label}</div>
-        <div style="font-size:20px;font-weight:700;color:${c.color};">${_thb(c.value)}</div>
+        <div style="font-size:20px;font-weight:700;color:${c.color};">${_thbInt(c.value)}</div>
         <div style="margin-top:6px;background:var(--border);border-radius:4px;height:6px;">
           <div style="background:${c.color};border-radius:4px;height:6px;width:${barW}%;"></div>
         </div>
@@ -214,17 +215,17 @@ function renderBICostPerPatient(month) {
       const profitColor = r.profit >= 0 ? 'var(--green)' : 'var(--red)';
       return `<tr>
         <td style="font-weight:500;">${r.name}</td>
-        <td style="text-align:right;">${_thb(r.rev)}</td>
-        <td style="text-align:right;color:var(--orange);">${_thb(r.cost)}</td>
-        <td style="text-align:right;font-weight:600;color:${profitColor};">${_thb(r.profit)}</td>
+        <td style="text-align:right;">${_thbInt(r.rev)}</td>
+        <td style="text-align:right;color:var(--orange);">${_thbInt(r.cost)}</td>
+        <td style="text-align:right;font-weight:600;color:${profitColor};">${_thbInt(r.profit)}</td>
         <td style="text-align:right;font-size:12px;color:var(--text2);">${_pct(r.profit, r.rev)}</td>
       </tr>`;
     }).join('') +
     `<tr style="background:var(--surface2);font-weight:700;">
       <td>รวม</td>
-      <td style="text-align:right;">${_thb(totalRev)}</td>
-      <td style="text-align:right;color:var(--orange);">${_thb(totalCost)}</td>
-      <td style="text-align:right;color:${totalProfit>=0?'var(--green)':'var(--red)'};">${_thb(totalProfit)}</td>
+      <td style="text-align:right;">${_thbInt(totalRev)}</td>
+      <td style="text-align:right;color:var(--orange);">${_thbInt(totalCost)}</td>
+      <td style="text-align:right;color:${totalProfit>=0?'var(--green)':'var(--red)'};">${_thbInt(totalProfit)}</td>
       <td style="text-align:right;">${_pct(totalProfit, totalRev)}</td>
     </tr>
     </tbody></table></div>`;
@@ -284,9 +285,9 @@ function renderBIProfitByZone(month) {
     rows.map(r => `<tr>
       <td style="font-weight:600;">${r.zone}</td>
       <td style="text-align:right;">${r.patients}</td>
-      <td style="text-align:right;">${_thb(r.revenue)}</td>
-      <td style="text-align:right;color:var(--orange);">${_thb(r.cost)}</td>
-      <td style="text-align:right;font-weight:600;color:${r.profit>=0?'var(--green)':'var(--red)'};">${_thb(r.profit)}</td>
+      <td style="text-align:right;">${_thbInt(r.revenue)}</td>
+      <td style="text-align:right;color:var(--orange);">${_thbInt(r.cost)}</td>
+      <td style="text-align:right;font-weight:600;color:${r.profit>=0?'var(--green)':'var(--red)'};">${_thbInt(r.profit)}</td>
       <td style="text-align:right;font-size:12px;">${_pct(r.profit, r.revenue)}</td>
     </tr>`).join('') +
     `</tbody></table></div>`;
@@ -396,7 +397,7 @@ function renderBITopItems(month) {
       <td style="color:var(--text3);">${i+1}</td>
       <td style="font-weight:500;">${r.name}</td>
       <td style="text-align:right;">${r.qty.toLocaleString()}</td>
-      <td style="text-align:right;font-weight:600;">${_thb(r.cost)}</td>
+      <td style="text-align:right;font-weight:600;">${_thbInt(r.cost)}</td>
     </tr>`).join('') + `</tbody></table></div>`;
 }
 
@@ -434,9 +435,9 @@ function renderBITrend() {
           <div title="รายรับ" style="width:28px;background:var(--info-text);border-radius:4px 4px 0 0;height:${barH}px;"></div>
           <div title="ต้นทุน" style="width:28px;background:var(--warning);border-radius:4px 4px 0 0;height:${Math.round(r.cost/maxVal*80)}px;"></div>
         </div>
-        <div style="font-size:13px;font-weight:600;color:var(--info-text);">${_thb(r.revenue)}</div>
-        <div style="font-size:11px;color:var(--orange);">ต้นทุน ${_thb(r.cost)}</div>
-        <div style="font-size:12px;font-weight:700;color:${profitColor};margin-top:4px;">กำไร ${_thb(r.profit)}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--info-text);">${_thbInt(r.revenue)}</div>
+        <div style="font-size:11px;color:var(--orange);">ต้นทุน ${_thbInt(r.cost)}</div>
+        <div style="font-size:12px;font-weight:700;color:${profitColor};margin-top:4px;">กำไร ${_thbInt(r.profit)}</div>
       </div>`;
     }).join('') + `</div>
     <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;font-size:11px;color:var(--text2);">
@@ -612,7 +613,7 @@ function renderPricingAnalysis() {
       </div>
       <div style="background:var(--surface2);border-radius:8px;padding:10px 16px;text-align:center;">
         <div style="font-size:11px;color:var(--text3);">กำไรรวมเดือนนี้</div>
-        <div style="font-size:20px;font-weight:700;color:${totProfit>=0?'var(--green)':'var(--red)'};">${_thb(totProfit)}</div>
+        <div style="font-size:20px;font-weight:700;color:${totProfit>=0?'var(--green)':'var(--red)'};">${_thbInt(totProfit)}</div>
       </div>
     </div>` +
     '<div class="table-wrap"><table><thead><tr>' +
@@ -638,7 +639,7 @@ function renderPricingAnalysis() {
         <td style="text-align:right;font-size:12px;">฿${r.price.toLocaleString()}</td>
         <td style="text-align:right;font-weight:600;color:${marginColor};">${Math.round(r.margin)}%</td>
         <td style="text-align:right;font-size:12px;">${r.used}</td>
-        <td style="text-align:right;font-weight:600;color:${r.profit>=0?'var(--green)':'var(--red)'};">${_thb(r.profit)}</td>
+        <td style="text-align:right;font-weight:600;color:${r.profit>=0?'var(--green)':'var(--red)'};">${_thbInt(r.profit)}</td>
         <td>${suggestion}</td>
       </tr>`;
     }).join('') + '</tbody></table></div>';
@@ -850,8 +851,8 @@ function renderProfitPerBed() {
         <td style="font-weight:600;">${r.zone}</td>
         <td style="text-align:right;">${r.occupied}/${r.total}</td>
         <td style="text-align:right;font-weight:600;">${r.occPct}%</td>
-        <td style="text-align:right;">${_thb(r.profit)}</td>
-        <td style="text-align:right;font-weight:700;color:${perBedColor};">${_thb(r.perBed)}</td>
+        <td style="text-align:right;">${_thbInt(r.profit)}</td>
+        <td style="text-align:right;font-weight:700;color:${perBedColor};">${_thbInt(r.perBed)}</td>
       </tr>`;
     }).join('') + '</tbody></table></div>';
 }
@@ -894,9 +895,9 @@ function renderScenarioSim() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
         <div>เตียงทั้งหมด</div><div style="font-weight:600;">${totalBeds} → ${newBeds}</div>
         <div>ผู้รับบริการคาด</div><div style="font-weight:600;">${occBeds} → ${newOcc}</div>
-        <div>รายรับปัจจุบัน</div><div>${_thb(curRev)}</div>
-        <div>รายรับที่คาด</div><div style="font-weight:700;color:${color};">${_thb(projRev)}</div>
-        <div>เปลี่ยนแปลง</div><div style="font-weight:700;color:${color};">${sign}${_thb(delta)}</div>
+        <div>รายรับปัจจุบัน</div><div>${_thbInt(curRev)}</div>
+        <div>รายรับที่คาด</div><div style="font-weight:700;color:${color};">${_thbInt(projRev)}</div>
+        <div>เปลี่ยนแปลง</div><div style="font-weight:700;color:${color};">${sign}${_thbInt(delta)}</div>
       </div>
       <div style="font-size:10px;color:var(--text3);margin-top:8px;">*คำนวณจาก avg revenue/patient เดือนนี้ และ occupancy rate ปัจจุบัน</div>
     </div>`;
@@ -1068,11 +1069,11 @@ function runCaseAcceptance() {
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
           <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;">
             <div style="font-size:11px;color:var(--text3);">ต้นทุนรวม/เดือน</div>
-            <div style="font-size:22px;font-weight:700;color:var(--red);">${_thb(totalCost)}</div>
+            <div style="font-size:22px;font-weight:700;color:var(--red);">${_thbInt(totalCost)}</div>
           </div>
           <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;">
             <div style="font-size:11px;color:var(--text3);">กำไร/เดือน</div>
-            <div style="font-size:22px;font-weight:700;color:${profit>=0?'var(--green)':'var(--red)'};">${_thb(profit)}</div>
+            <div style="font-size:22px;font-weight:700;color:${profit>=0?'var(--green)':'var(--red)'};">${_thbInt(profit)}</div>
           </div>
           <div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;">
             <div style="font-size:11px;color:var(--text3);">Margin</div>
@@ -1083,10 +1084,10 @@ function runCaseAcceptance() {
           <div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:6px;">รายละเอียดต้นทุน</div>
           ${costBreakdown.map(c => `
             <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border);font-size:13px;">
-              <span>${c.label}</span><span style="font-weight:600;">${_thb(c.value)}</span>
+              <span>${c.label}</span><span style="font-weight:600;">${_thbInt(c.value)}</span>
             </div>`).join('')}
           <div style="display:flex;justify-content:space-between;padding:6px 0;font-weight:700;font-size:14px;">
-            <span>รวมต้นทุน</span><span style="color:var(--red);">${_thb(totalCost)}</span>
+            <span>รวมต้นทุน</span><span style="color:var(--red);">${_thbInt(totalCost)}</span>
           </div>
         </div>
         ${actions.length > 0 ? `
@@ -1140,16 +1141,16 @@ function runROICalc() {
             <span>ผู้รับบริการ/เดือน</span><span style="font-weight:600;">${Math.round(beds*s.occ)} คน</span>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:13px;">
-            <span>รายรับ/เดือน</span><span style="font-weight:600;color:var(--green);">${_thb(s.monthlyRev)}</span>
+            <span>รายรับ/เดือน</span><span style="font-weight:600;color:var(--green);">${_thbInt(s.monthlyRev)}</span>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:13px;">
-            <span>ต้นทุน/เดือน</span><span style="font-weight:600;color:var(--red);">${_thb(s.monthlyOpex)}</span>
+            <span>ต้นทุน/เดือน</span><span style="font-weight:600;color:var(--red);">${_thbInt(s.monthlyOpex)}</span>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;border-top:1px solid var(--border);padding-top:6px;">
-            <span>กำไร/เดือน</span><span style="color:${s.monthlyProfit>=0?'var(--green)':'var(--red)'};">${_thb(s.monthlyProfit)}</span>
+            <span>กำไร/เดือน</span><span style="color:${s.monthlyProfit>=0?'var(--green)':'var(--red)'};">${_thbInt(s.monthlyProfit)}</span>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:13px;">
-            <span>กำไรต่อปี</span><span style="font-weight:600;">${_thb(s.annualProfit)}</span>
+            <span>กำไรต่อปี</span><span style="font-weight:600;">${_thbInt(s.annualProfit)}</span>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:13px;">
             <span>Break-even</span><span style="font-weight:700;color:${color};">${beText}</span>
@@ -1175,7 +1176,7 @@ function runROICalc() {
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
             <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
               <div style="font-size:11px;color:var(--text3);">ส่วนต่างกำไร/เดือน</div>
-              <div style="font-size:18px;font-weight:700;color:var(--green);">+${_thb(diff)}</div>
+              <div style="font-size:18px;font-weight:700;color:var(--green);">+${_thbInt(diff)}</div>
             </div>
             <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
               <div style="font-size:11px;color:var(--text3);">Occupancy เพิ่ม</div>
@@ -1183,7 +1184,7 @@ function runROICalc() {
             </div>
             <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
               <div style="font-size:11px;color:var(--text3);">เงินลงทุน</div>
-              <div style="font-size:18px;font-weight:700;">${_thb(capex)}</div>
+              <div style="font-size:18px;font-weight:700;">${_thbInt(capex)}</div>
             </div>
           </div>
         </div>
@@ -1255,11 +1256,11 @@ function renderInvestorDashboard() {
       <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;">
         ${[
           {label:'ผู้รับบริการ',value:activePats.length+' คน',sub: atHospital > 0 ? `${activeOnly} อยู่บนเตียง · ${atHospital} ไปรพ.` : `Occupancy ${Math.round(occRate)}%`,color:'var(--info-text)'},
-          {label:'รายรับรวม',value:_thb(revenue),sub:`เก็บแล้ว ${_thb(collected)}`,color:'var(--success)'},
-          {label:'ต้นทุนสินค้า',value:_thb(cogs),sub:`${reqs.length} รายการ`,color:'var(--warning)'},
-          {label:'กำไรขั้นต้น',value:_thb(grossProfit),sub:`Margin ${Math.round(margin)}%`,color:grossProfit>=0?'var(--success)':'var(--danger)'},
-          {label:'Rev/Patient',value:_thb(revPerPat),sub:'เฉลี่ยต่อคน',color:'var(--purple)'},
-          {label:'Cost/Patient',value:_thb(costPerPat),sub:'ต้นทุนต่อคน',color:'var(--brand)'},
+          {label:'รายรับรวม',value:_thbInt(revenue),sub:`เก็บแล้ว ${_thbInt(collected)}`,color:'var(--success)'},
+          {label:'ต้นทุนสินค้า',value:_thbInt(cogs),sub:`${reqs.length} รายการ`,color:'var(--warning)'},
+          {label:'กำไรขั้นต้น',value:_thbInt(grossProfit),sub:`Margin ${Math.round(margin)}%`,color:grossProfit>=0?'var(--success)':'var(--danger)'},
+          {label:'Rev/Patient',value:_thbInt(revPerPat),sub:'เฉลี่ยต่อคน',color:'var(--purple)'},
+          {label:'Cost/Patient',value:_thbInt(costPerPat),sub:'ต้นทุนต่อคน',color:'var(--brand)'},
         ].map(k=>`
           <div style="background:#fff;border-radius:10px;padding:12px;border-bottom:3px solid ${k.color};box-shadow:0 1px 4px rgba(0,0,0,0.06);text-align:center;">
             <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">${k.label}</div>
@@ -1303,7 +1304,7 @@ function renderInvestorDashboard() {
             <div style="background:${margin>=25?'var(--success)':margin>=10?'var(--warning)':'var(--danger)'};height:100%;width:${Math.max(0,Math.round(margin))}%;border-radius:6px;"></div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px;">
-            <span>กำไร ${_thb(grossProfit)}</span><span style="font-weight:700;">${Math.round(margin)}%</span>
+            <span>กำไร ${_thbInt(grossProfit)}</span><span style="font-weight:700;">${Math.round(margin)}%</span>
           </div>
         </div>
       </div>
