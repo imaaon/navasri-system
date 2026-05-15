@@ -239,8 +239,11 @@ function onPatDobUnknownChange() {
 
 // ===== PATIENT CRUD =====
 function openAddPatientModal() {
+  // [R27-P4 15พค69] UAT-2: เพิ่ม reset field ที่ขาด (pat-id-type/phone/emergency/address)
+  //   เดิม reset แค่ 11 fields ทำให้ข้อมูลค้างเมื่อเปิด modal ครั้งถัดไปหลัง save
   document.getElementById('pat-edit-id').value = '';
   document.getElementById('pat-name').value = '';
+  document.getElementById('pat-id-type').value = 'thai';
   document.getElementById('pat-id').value = '';
   document.getElementById('pat-dob').value = '';
   document.getElementById('pat-dob').disabled = false;
@@ -248,12 +251,18 @@ function openAddPatientModal() {
   document.getElementById('pat-birth-year').disabled = false;
   document.getElementById('pat-dob-unknown').checked = false;
   document.getElementById('pat-age-display').value = '';
+  document.getElementById('pat-phone').value = '';
+  document.getElementById('pat-emergency').value = '';
+  document.getElementById('pat-address').value = '';
   document.getElementById('pat-admit').value = '';
   document.getElementById('pat-enddate').value = '';
   document.getElementById('pat-status').value = 'active';
   document.getElementById('pat-note').value = '';
   document.getElementById('pat-photo-data').value = '';
   document.getElementById('pat-photo-preview').innerHTML = '👤';
+  // photo input file ก็ต้อง reset (ไม่งั้นเลือกไฟล์เดิมจะไม่ trigger change)
+  const photoInput = document.getElementById('pat-photo-input');
+  if (photoInput) photoInput.value = '';
   populateBedDropdown(null);
   document.getElementById('pat-room-info').style.display = 'none';
   document.getElementById('modal-addPatient-title').textContent = 'เพิ่มผู้รับบริการ';
