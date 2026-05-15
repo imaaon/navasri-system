@@ -187,12 +187,12 @@
       <div id="page-bi" style="display:none;">
 
         <!-- [R13-BI 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">🔍</span> BI & วิเคราะห์กำไร
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">🔍</span> BI & วิเคราะห์กำไร
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">มุมมองผู้บริหาร · รายได้ · ต้นทุน · อัตราเข้าพัก · ประสิทธิภาพการดูแล</div>
+            <div class="section-subtitle">มุมมองผู้บริหาร · รายได้ · ต้นทุน · อัตราเข้าพัก · ประสิทธิภาพการดูแล</div>
           </div>
         </div>
 
@@ -433,13 +433,13 @@
       <div id="page-stock" style="display:none;">
         <!-- [R8-A 14พค69] Section header — ตาม R7 style -->
         <div class="stock-page-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">📦</span> คลังสต็อก
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">📦</span> คลังสต็อก
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="stock-header-subtitle">รายการสินค้าทั้งหมด · มูลค่ารวม · อัปเดตล่าสุด</div>
+            <div class="section-subtitle" id="stock-header-subtitle">รายการสินค้าทั้งหมด · มูลค่ารวม · อัปเดตล่าสุด</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openAddItemModal()" style="white-space:nowrap;">+ เพิ่มสินค้าใหม่</button>
             <button class="btn btn-ghost btn-sm" onclick="openReceiveModal()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">📥 รับเข้าสินค้า</button>
             <button class="btn btn-ghost btn-sm" onclick="showPage('requisition')" style="white-space:nowrap;">📋 เบิกสินค้า</button>
@@ -454,39 +454,39 @@
         </div>
 
         <!-- [R8-A] KPI Cards — 4 cards ตาม mockup page 29 -->
-        <div class="stock-kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px;">
+        <div class="stock-kpi-grid kpi-grid-r10">
           <!-- 1. รายการทั้งหมด -->
           <div class="stock-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--brand,#2e6b4f);border-radius:12px;padding:14px 16px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="kpi-card-r10__header">
               <div style="font-size:12px;color:var(--text2);font-weight:500;">📦 รายการทั้งหมด</div>
-              <span style="font-size:18px;opacity:0.4;">📦</span>
+              <span class="kpi-card-r10__decor">📦</span>
             </div>
             <div id="stock-kpi-total" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--brand,#2e6b4f);">0</div>
             <div id="stock-kpi-total-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">SKU</div>
           </div>
           <!-- 2. มูลค่ารวม -->
           <div class="stock-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid #5e60ce;border-radius:12px;padding:14px 16px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="kpi-card-r10__header">
               <div style="font-size:12px;color:var(--text2);font-weight:500;">💰 มูลค่ารวม</div>
-              <span style="font-size:18px;opacity:0.4;">💰</span>
+              <span class="kpi-card-r10__decor">💰</span>
             </div>
             <div id="stock-kpi-value" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#3d3d9e;">฿0</div>
             <div id="stock-kpi-value-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">ราคาทุนรวม</div>
           </div>
           <!-- 3. ใกล้หมด ต้องสั่ง -->
           <div class="stock-kpi-card" style="background:#fdf3e8;border:1px solid #f5c842;border-left:3px solid #e67e22;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('stockStatusFilter').value='low';renderStock()" title="กรองดูเฉพาะรายการที่ใกล้หมด">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="kpi-card-r10__header">
               <div style="font-size:12px;color:#7a4310;font-weight:500;">⚠️ ใกล้หมด · ต้องสั่ง</div>
-              <span style="font-size:18px;opacity:0.4;">⚠️</span>
+              <span class="kpi-card-r10__decor">⚠️</span>
             </div>
             <div id="stock-kpi-low" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#d35400;">0</div>
             <div id="stock-kpi-low-sub" style="font-size:11px;color:#7a4310;margin-top:3px;">รายการต่ำกว่าจุดสั่งซื้อ</div>
           </div>
           <!-- 4. ใกล้หมดอายุ -->
           <div class="stock-kpi-card" style="background:#fde8e8;border:1px solid #f5a3a3;border-left:3px solid #c0392b;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="showExpiringLots()" title="ดูรายการ Lot ที่ใกล้หมดอายุ">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="kpi-card-r10__header">
               <div style="font-size:12px;color:#7a1a10;font-weight:500;">📅 ใกล้หมดอายุ</div>
-              <span style="font-size:18px;opacity:0.4;">📅</span>
+              <span class="kpi-card-r10__decor">📅</span>
             </div>
             <div id="stock-kpi-expiry" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#c0392b;">0</div>
             <div id="stock-kpi-expiry-sub" style="font-size:11px;color:#7a1a10;margin-top:3px;">Lot ที่ต้องระวัง</div>
@@ -557,12 +557,12 @@
       <!-- REQUISITION -->
       <div id="page-requisition" style="display:none;">
         <!-- [R15-REQ 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">📋</span> เบิกสินค้า
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">📋</span> เบิกสินค้า
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">บันทึกการเบิกของออกจากคลัง · ระบบจะหักจำนวนทันทีหลังบันทึก</div>
+            <div class="section-subtitle">บันทึกการเบิกของออกจากคลัง · ระบบจะหักจำนวนทันทีหลังบันทึก</div>
           </div>
         </div>
         <div class="card" style="max-width:680px;">
@@ -629,12 +629,12 @@
       <!-- HISTORY -->
       <div id="page-history" style="display:none;">
         <!-- [R15-HIST 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">🕐</span> รายละเอียดการเบิก
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">🕐</span> รายละเอียดการเบิก
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ประวัติเบิก · อนุมัติใบเบิก · คืนสินค้า</div>
+            <div class="section-subtitle">ประวัติเบิก · อนุมัติใบเบิก · คืนสินค้า</div>
           </div>
         </div>
         <!-- Tabs -->
@@ -728,12 +728,12 @@
       <!-- REPORT -->
       <div id="page-report" style="display:none;">
         <!-- [R15-RPT 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">📈</span> สรุปวิเคราะห์การเบิก
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">📈</span> สรุปวิเคราะห์การเบิก
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">รายงานยอดเบิกรายเดือน · แยกตามผู้รับบริการ/สินค้า/พนักงาน · ต้นทุน</div>
+            <div class="section-subtitle">รายงานยอดเบิกรายเดือน · แยกตามผู้รับบริการ/สินค้า/พนักงาน · ต้นทุน</div>
           </div>
         </div>
         <!-- [R15-RPT] Filter bar -->
@@ -812,15 +812,15 @@
       <!-- ROOMS MANAGEMENT PAGE -->
       <div id="page-rooms" style="display:none;">
         <!-- [R12-ROOMS 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+        <div class="page-redesign-header section-header-row">
           <button class="btn btn-ghost btn-sm" onclick="showPage('patients')" style="padding:6px 12px;flex-shrink:0;">← กลับ</button>
-          <div style="flex:1;min-width:200px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">🛏️</span> ห้องและเตียง
+          <div class="section-title-wrap" style="min-width:200px;">
+            <h2 class="section-title">
+              <span class="section-icon">🛏️</span> ห้องและเตียง
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">แผนผังห้อง · จัดการเตียง · ย้ายผู้รับบริการ · แจ้งทำความสะอาด</div>
+            <div class="section-subtitle">แผนผังห้อง · จัดการเตียง · ย้ายผู้รับบริการ · แจ้งทำความสะอาด</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openAddBedModal()" style="white-space:nowrap;">+ เพิ่มเตียง</button>
             <button class="btn btn-ghost btn-sm" onclick="openAddRoomModal()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">+ เพิ่มห้อง</button>
             <button class="btn btn-ghost btn-sm" onclick="openRoomHistoryModal()" style="white-space:nowrap;">📋 ประวัติย้ายห้อง</button>
@@ -836,13 +836,13 @@
       <div id="page-patients" style="display:none;">
         <!-- [R9-A 14พค69] Section header — ตาม mockup PDF p.12 -->
         <div class="patient-page-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">👥</span> ผู้รับบริการ
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">👥</span> ผู้รับบริการ
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="pat-header-subtitle">รายชื่อผู้รับบริการ · กำลังโหลด...</div>
+            <div class="section-subtitle" id="pat-header-subtitle">รายชื่อผู้รับบริการ · กำลังโหลด...</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openAddPatientModal()" style="white-space:nowrap;">+ เพิ่มผู้รับบริการ</button>
             <button class="btn btn-ghost btn-sm" onclick="showPage('rooms')" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">🛏️ จัดการห้องพัก</button>
             <button class="btn btn-ghost btn-sm" onclick="exportPatientsExcel()" style="white-space:nowrap;" title="ส่งออก Excel">📥 Excel</button>
@@ -850,39 +850,39 @@
         </div>
 
         <!-- [R9-A] KPI Cards — 4 cards (clickable to filter) -->
-        <div class="patient-kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px;">
+        <div class="patient-kpi-grid kpi-grid-r10">
           <!-- 1. ทั้งหมด -->
           <div class="patient-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--brand,#2e6b4f);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='';renderPatients()" title="แสดงทั้งหมด">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="kpi-card-r10__header">
               <div style="font-size:12px;color:var(--text2);font-weight:500;">👥 ทั้งหมด</div>
-              <span style="font-size:18px;opacity:0.4;">👥</span>
+              <span class="kpi-card-r10__decor">👥</span>
             </div>
             <div id="pat-kpi-total" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--brand,#2e6b4f);">0</div>
             <div id="pat-kpi-total-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">ราย</div>
           </div>
           <!-- 2. พักอยู่ -->
           <div class="patient-kpi-card" style="background:#e0f7ec;border:1px solid #5ecba1;border-left:3px solid #1f8a52;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='active';renderPatients()" title="กรองเฉพาะที่พักอยู่">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="kpi-card-r10__header">
               <div style="font-size:12px;color:#0a3626;font-weight:500;">🏠 พักอยู่</div>
-              <span style="font-size:18px;opacity:0.4;">🏠</span>
+              <span class="kpi-card-r10__decor">🏠</span>
             </div>
             <div id="pat-kpi-active" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#1f5132;">0</div>
             <div id="pat-kpi-active-sub" style="font-size:11px;color:#1f5132;margin-top:3px;">รายในศูนย์</div>
           </div>
           <!-- 3. อยู่โรงพยาบาล -->
           <div class="patient-kpi-card" style="background:#eaf3fc;border:1px solid #8ec1ea;border-left:3px solid #2980b9;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='hospital';renderPatients()" title="กรองเฉพาะที่อยู่โรงพยาบาล">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="kpi-card-r10__header">
               <div style="font-size:12px;color:#1a3a5a;font-weight:500;">🏥 อยู่โรงพยาบาล</div>
-              <span style="font-size:18px;opacity:0.4;">🏥</span>
+              <span class="kpi-card-r10__decor">🏥</span>
             </div>
             <div id="pat-kpi-hospital" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#1f4e7a;">0</div>
             <div id="pat-kpi-hospital-sub" style="font-size:11px;color:#1f4e7a;margin-top:3px;">รายเข้ารับการรักษา</div>
           </div>
           <!-- 4. ออกแล้ว -->
           <div class="patient-kpi-card" style="background:var(--surface2,#f8f7f3);border:1px solid var(--border);border-left:3px solid #95a5a6;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='inactive';renderPatients()" title="กรองเฉพาะที่ออกแล้ว">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="kpi-card-r10__header">
               <div style="font-size:12px;color:var(--text2);font-weight:500;">📤 ออกแล้ว</div>
-              <span style="font-size:18px;opacity:0.4;">📤</span>
+              <span class="kpi-card-r10__decor">📤</span>
             </div>
             <div id="pat-kpi-inactive" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#5d6d7e;">0</div>
             <div id="pat-kpi-inactive-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">จำหน่ายแล้ว</div>
@@ -921,14 +921,14 @@
       <!-- STAFF -->
       <div id="page-staff" style="display:none;">
         <!-- [R12-STAFF 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">👤</span> พนักงาน
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">👤</span> พนักงาน
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">รายชื่อพนักงาน · ตำแหน่ง · ตารางเวร · อายุงาน</div>
+            <div class="section-subtitle">รายชื่อพนักงาน · ตำแหน่ง · ตารางเวร · อายุงาน</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openAddStaffModal()" style="white-space:nowrap;">+ เพิ่มพนักงาน</button>
             <button class="btn btn-ghost btn-sm" onclick="exportStaffExcel()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);" title="ส่งออก Excel">📥 Excel</button>
           </div>
@@ -974,14 +974,14 @@
       <!-- HEALTH REPORT PAGE -->
       <div id="page-healthreport" style="display:none;">
         <!-- [R14-HR 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">📋</span> รายงานสุขภาพ
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">📋</span> รายงานสุขภาพ
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ประวัติการรักษา · ยาประจำ · สรุปสัญญาณชีพ · ส่งออก PDF/Excel</div>
+            <div class="section-subtitle">ประวัติการรักษา · ยาประจำ · สรุปสัญญาณชีพ · ส่งออก PDF/Excel</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openHealthReportModal('')" style="white-space:nowrap;">📋 สร้างรายงาน</button>
             <button class="btn btn-ghost btn-sm" onclick="exportHealthExcel()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">📊 Excel</button>
             <button class="btn btn-ghost btn-sm" onclick="exportHealthPDF()" style="white-space:nowrap;">📄 PDF</button>
@@ -1013,12 +1013,12 @@
       <!-- PURCHASE HISTORY -->
       <div id="page-purchasehistory" style="display:none;">
         <!-- [R15-PH 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">📦</span> ประวัติรับสินค้า
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">📦</span> ประวัติรับสินค้า
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">รายการสั่งซื้อและรับสินค้าเข้าคลัง · ความเคลื่อนไหวสต็อก · Lot tracking</div>
+            <div class="section-subtitle">รายการสั่งซื้อและรับสินค้าเข้าคลัง · ความเคลื่อนไหวสต็อก · Lot tracking</div>
           </div>
         </div>
         <!-- Tabs -->
@@ -1091,13 +1091,13 @@
       <div id="page-billing" style="display:none;">
         <!-- [R7-A 14พค69] Section header — ตาม R5 style -->
         <div class="billing-page-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">💰</span> ระบบบัญชี
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">💰</span> ระบบบัญชี
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ใบแจ้งหนี้ · รับชำระ · แพ็กเกจรายเดือน</div>
+            <div class="section-subtitle">ใบแจ้งหนี้ · รับชำระ · แพ็กเกจรายเดือน</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openQuickInvoiceModal()" style="white-space:nowrap;">🧾 สร้างใบวางบิล</button>
             <button class="btn btn-ghost btn-sm" onclick="openCreateInvoiceModal()" style="white-space:nowrap;">+ เอกสารทั่วไป</button>
             <button class="btn btn-ghost btn-sm" onclick="runAutoBilling()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">🤖 ออกบิลอัตโนมัติ</button>
@@ -1125,33 +1125,33 @@
           </div>
 
           <!-- [R7-A] KPI Cards — redesigned ตาม R5 style -->
-          <div class="billing-kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px;">
+          <div class="billing-kpi-grid kpi-grid-r10">
             <div class="billing-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--brand,#2e6b4f);border-radius:12px;padding:14px 16px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div class="kpi-card-r10__header">
                 <div style="font-size:12px;color:var(--text2);font-weight:500;">💰 ยอดรวมทั้งหมด</div>
-                <span style="font-size:18px;opacity:0.4;">💰</span>
+                <span class="kpi-card-r10__decor">💰</span>
               </div>
               <div id="billing-total-amount" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--brand,#2e6b4f);">0 ฿</div>
             </div>
             <div class="billing-kpi-card" style="background:#fdf3e8;border:1px solid #f5c842;border-left:3px solid #e67e22;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('billing-filter-status').value='sent';renderBilling()">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div class="kpi-card-r10__header">
                 <div style="font-size:12px;color:#7a4310;font-weight:500;">⏳ รอชำระ / ค้าง</div>
-                <span style="font-size:18px;opacity:0.4;">⏳</span>
+                <span class="kpi-card-r10__decor">⏳</span>
               </div>
               <div id="billing-pending-amount" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#d35400;">0 ฿</div>
               <div id="billing-overdue-count" style="font-size:11px;color:#c0392b;margin-top:3px;font-weight:600;"></div>
             </div>
             <div class="billing-kpi-card" style="background:#e0f7ec;border:1px solid #5ecba1;border-left:3px solid #1f8a52;border-radius:12px;padding:14px 16px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div class="kpi-card-r10__header">
                 <div style="font-size:12px;color:#0a3626;font-weight:500;">✅ ชำระแล้ว</div>
-                <span style="font-size:18px;opacity:0.4;">✓</span>
+                <span class="kpi-card-r10__decor">✓</span>
               </div>
               <div id="billing-paid-amount" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#1f5132;">0 ฿</div>
             </div>
             <div class="billing-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid #5e60ce;border-radius:12px;padding:14px 16px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div class="kpi-card-r10__header">
                 <div style="font-size:12px;color:var(--text2);font-weight:500;">📄 จำนวนเอกสาร</div>
-                <span style="font-size:18px;opacity:0.4;">📄</span>
+                <span class="kpi-card-r10__decor">📄</span>
               </div>
               <div id="billing-doc-count" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#3d3d9e;">0</div>
             </div>
@@ -1301,14 +1301,14 @@
 
       <div id="page-accounts" style="display:none;">
         <!-- [R12-ACC 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">🔑</span> จัดการ Account
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">🔑</span> จัดการ Account
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">บัญชีผู้ใช้งานระบบ · username/password · Role & Permission</div>
+            <div class="section-subtitle">บัญชีผู้ใช้งานระบบ · username/password · Role & Permission</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openAddAccountModal()" style="white-space:nowrap;">+ เพิ่ม Account</button>
           </div>
         </div>
@@ -1353,12 +1353,12 @@
 
       <div id="page-settings" style="display:none;">
         <!-- [R13-SET 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">💬</span> ตั้งค่าระบบ
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">💬</span> ตั้งค่าระบบ
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">LINE Notify · การแจ้งเตือน · ระบบ</div>
+            <div class="section-subtitle">LINE Notify · การแจ้งเตือน · ระบบ</div>
           </div>
         </div>
         <div style="max-width:680px;">
@@ -1518,14 +1518,14 @@
       <!-- ===== PAGE: INCIDENT & WOUND CARE ===== -->
       <div id="page-incident" style="display:none;">
         <!-- [R14-INC 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">⚠️</span> อุบัติเหตุ & แผลกดทับ
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">⚠️</span> อุบัติเหตุ & แผลกดทับ
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">บันทึกเหตุการณ์และการดูแลแผล · ติดตามความรุนแรง · การปฐมพยาบาล</div>
+            <div class="section-subtitle">บันทึกเหตุการณ์และการดูแลแผล · ติดตามความรุนแรง · การปฐมพยาบาล</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openIncidentModal()" style="white-space:nowrap;">⚠️ + บันทึกอุบัติเหตุ</button>
             <button class="btn btn-ghost btn-sm" onclick="openWoundModal()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">🩹 + บันทึกการทำแผล</button>
           </div>
@@ -1575,14 +1575,14 @@
       <!-- ===== PAGE: DIETARY & TUBE FEEDING ===== -->
       <div id="page-dietary" style="display:none;">
         <!-- [R14-DIET 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">🍽️</span> โภชนาการ & สายให้อาหาร
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">🍽️</span> โภชนาการ & สายให้อาหาร
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">แผนอาหาร · การให้อาหารทางสาย · แคลอรี · ข้อจำกัด/แพ้</div>
+            <div class="section-subtitle">แผนอาหาร · การให้อาหารทางสาย · แคลอรี · ข้อจำกัด/แพ้</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openDietModal()" style="white-space:nowrap;">🍽️ + กำหนดแผนอาหาร</button>
             <button class="btn btn-ghost btn-sm" onclick="openTubeFeedModal()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">🧪 + สายให้อาหาร</button>
             <button class="btn btn-ghost btn-sm" onclick="printDietaryReport()" style="white-space:nowrap;">🖨️ พิมพ์ใบจัดอาหาร</button>
@@ -1629,14 +1629,14 @@
       <!-- ===== PAGE: DEPOSITS ===== -->
       <div id="page-deposits" style="display:none;">
         <!-- [R11-DEP 14พค69] Section header — ตาม R8/R9 pattern -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">🏦</span> เงินมัดจำ & เงินประกัน
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">🏦</span> เงินมัดจำ & เงินประกัน
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">เงินที่ถือไว้ก่อน · คืนเมื่อจำหน่ายผู้รับบริการ</div>
+            <div class="section-subtitle">เงินที่ถือไว้ก่อน · คืนเมื่อจำหน่ายผู้รับบริการ</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openDepositModal()" style="white-space:nowrap;">🏦 + บันทึกมัดจำใหม่</button>
           </div>
         </div>
@@ -1687,14 +1687,14 @@
       <!-- SUPPLIERS PAGE -->
       <div id="page-suppliers" style="display:none;">
         <!-- [R10-SUP 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">🏭</span> ผู้จำหน่าย
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">🏭</span> ผู้จำหน่าย
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="supplier-subtitle">รายชื่อผู้จำหน่าย · เครดิต · ข้อมูลติดต่อ</div>
+            <div class="section-subtitle" id="supplier-subtitle">รายชื่อผู้จำหน่าย · เครดิต · ข้อมูลติดต่อ</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openAddSupplierModal()" style="white-space:nowrap;">+ เพิ่มผู้จำหน่าย</button>
           </div>
         </div>
@@ -1725,14 +1725,14 @@
       <!-- SUPPLIER INVOICES PAGE -->
       <div id="page-supplierinvoices" style="display:none;">
         <!-- [R10-SUPINV 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">🧾</span> ใบแจ้งหนี้จากผู้จำหน่าย
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">🧾</span> ใบแจ้งหนี้จากผู้จำหน่าย
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="supinv-subtitle">บันทึกใบแจ้งหนี้ · ติดตามวันครบกำหนด · จ่ายเงิน</div>
+            <div class="section-subtitle" id="supinv-subtitle">บันทึกใบแจ้งหนี้ · ติดตามวันครบกำหนด · จ่ายเงิน</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openAddSupplierInvoiceModal()" style="white-space:nowrap;">+ เพิ่มใบแจ้งหนี้</button>
           </div>
         </div>
@@ -1777,14 +1777,14 @@
       <!-- PURCHASE REQUESTS PAGE -->
       <div id="page-purchaserequests" style="display:none;">
         <!-- [R10-PR 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">📋</span> คำขอซื้อ (PR)
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">📋</span> คำขอซื้อ (PR)
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="pr-subtitle">บันทึกคำขอซื้อสินค้า · อนุมัติ · สั่งซื้อ · รับเข้า</div>
+            <div class="section-subtitle" id="pr-subtitle">บันทึกคำขอซื้อสินค้า · อนุมัติ · สั่งซื้อ · รับเข้า</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openAddPRModal()" style="white-space:nowrap;">+ สร้างคำขอใหม่</button>
           </div>
         </div>
@@ -1816,12 +1816,12 @@
       <!-- STOCK REPORT PAGE -->
       <div id="page-stockreport" style="display:none;">
         <!-- [R10-SR 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">📊</span> รายงานสต็อก
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">📊</span> รายงานสต็อก
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ใกล้หมด · ใกล้หมดอายุ · ความเคลื่อนไหว · ตามผู้จำหน่าย · Traceability</div>
+            <div class="section-subtitle">ใกล้หมด · ใกล้หมดอายุ · ความเคลื่อนไหว · ตามผู้จำหน่าย · Traceability</div>
           </div>
         </div>
         <!-- Tab bar -->
@@ -1856,14 +1856,14 @@
       <!-- ===== PAGE: EXPENSES ===== -->
       <div id="page-expenses" style="display:none;">
         <!-- [R11-EXP 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">💸</span> ค่าใช้จ่าย
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">💸</span> ค่าใช้จ่าย
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ค่าน้ำ · ค่าไฟ · ซ่อมแซม · เงินเดือน · บริการวิชาชีพ · และอื่นๆ</div>
+            <div class="section-subtitle">ค่าน้ำ · ค่าไฟ · ซ่อมแซม · เงินเดือน · บริการวิชาชีพ · และอื่นๆ</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()" style="white-space:nowrap;">+ บันทึกค่าใช้จ่าย</button>
             <button class="btn btn-ghost btn-sm" onclick="exportExpensesExcel()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">📥 Excel</button>
           </div>
@@ -1931,14 +1931,14 @@
       <!-- ===== PAGE: ASSETS ===== -->
       <div id="page-assets" style="display:none;">
         <!-- [R11-AST 14พค69] Section header -->
-        <div class="page-redesign-header" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:240px;">
-            <h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;display:flex;align-items:center;gap:10px;">
-              <span style="font-size:24px;">🔧</span> ครุภัณฑ์ & ซ่อมบำรุง
+        <div class="page-redesign-header section-header-row">
+          <div class="section-title-wrap">
+            <h2 class="section-title">
+              <span class="section-icon">🔧</span> ครุภัณฑ์ & ซ่อมบำรุง
             </h2>
-            <div style="font-size:13px;color:var(--text2);margin-top:4px;">ทะเบียนอุปกรณ์ · ประวัติซ่อม · แจ้งเตือนบำรุงรักษา · ประกัน</div>
+            <div class="section-subtitle">ทะเบียนอุปกรณ์ · ประวัติซ่อม · แจ้งเตือนบำรุงรักษา · ประกัน</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <div class="section-actions">
             <button class="btn btn-primary btn-sm" onclick="openAddAssetModal()" id="btn-add-asset" style="white-space:nowrap;">+ เพิ่มครุภัณฑ์</button>
             <button class="btn btn-ghost btn-sm" onclick="exportAssetsExcel()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">📥 Excel</button>
           </div>
