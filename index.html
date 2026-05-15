@@ -234,22 +234,20 @@ window.onload = async function() {
   // Start poller — runs every 1 sec forever
   var iv = setInterval(tryRender, 1000);
   
-  // Also hook into showPage to re-render when returning to dashboard
-  var origShowPage = window.showPage;
-  Object.defineProperty(window, 'showPage', {
-    configurable: true,
-    set: function(v) { origShowPage = v; },
-    get: function() {
-      return function() {
-        var result = origShowPage.apply(this, arguments);
-        if (arguments[0] === 'dashboard') {
-          setTimeout(tryRender, 100);
-          setTimeout(tryRender, 500);
-        }
-        return result;
-      };
-    }
-  });
+  // Hook into showPage to re-render when returning to dashboard
+  // Note: showPage is a function declaration in router.js, which makes it
+  // non-configurable on window. Use simple function wrap instead of Object.defineProperty.
+  if (typeof window.showPage === 'function') {
+    var _origShowPage = window.showPage;
+    window.showPage = function() {
+      var result = _origShowPage.apply(this, arguments);
+      if (arguments[0] === 'dashboard') {
+        setTimeout(tryRender, 100);
+        setTimeout(tryRender, 500);
+      }
+      return result;
+    };
+  }
 })();
 </script>
 <!-- _uaPoller END -->
