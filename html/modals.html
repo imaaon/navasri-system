@@ -99,7 +99,7 @@
       <div class="form-grid">
         <div class="form-group" id="item-qty-wrap">
           <label class="form-label">จำนวนคงเหลือ <span style="font-size:11px;color:var(--text3);">(รับสินค้าเข้าเพื่อเพิ่มสต็อก)</span></label>
-          <input class="form-control number" id="item-qty" type="number" min="0" value="0" readonly style="background:var(--surface2);color:var(--text2);cursor:default;">
+          <input class="form-control number field-readonly" id="item-qty" type="number" min="0" value="0" readonly>
         </div>
         <div class="form-group">
           <label class="form-label">จุดสั่งซื้อ (แจ้งเตือน)</label>
@@ -107,7 +107,7 @@
         </div>
       </div>
       <hr class="divider">
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">📦 หน่วยนับ (Unit Conversion)</div>
+      <div class="section-label">📦 หน่วยนับ (Unit Conversion)</div>
       <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;align-items:stretch;">
         <div class="form-group" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:flex-end;">
           <label class="form-label">หน่วยสั่งซื้อ <span style="font-size:10px;color:var(--text3);">(Purchase Unit)</span></label>
@@ -130,7 +130,7 @@
         <div style="font-size:11px;color:var(--text3);margin-top:4px;margin-left:26px;">ปิดถ้าเป็นของใช้ส่วนกลางที่คลินิกรับผิดชอบ</div>
       </div>
       <hr class="divider">
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">💰 ราคา</div>
+      <div class="section-label">💰 ราคา</div>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">ราคาซื้อ (บาท/หน่วย)</label>
@@ -198,7 +198,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">พยาบาลผู้ให้ยา</label>
-        <input class="form-control" id="mar-entry-by" placeholder="ชื่อพยาบาล" readonly style="background:var(--surface2);color:var(--text2);cursor:default;">
+        <input class="form-control field-readonly" id="mar-entry-by" placeholder="ชื่อพยาบาล" readonly>
       </div>
       <div class="form-group">
         <label class="form-label">สถานะการให้ยา <span class="required">*</span></label>
@@ -210,7 +210,7 @@
           <option value="npo">🚫 งดยาเพราะผ่าตัด/ทำหัตถการ</option>
         </select>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="mar-entry-note" placeholder="เช่น ผู้รับบริการปฏิเสธ, ให้ช้ากว่ากำหนด 30 นาที">
       </div>
@@ -277,7 +277,7 @@
           <input class="form-control" type="date" id="med-end">
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ / คำแนะนำ</label>
         <input class="form-control" id="med-note" placeholder="เช่น ให้หลังอาหาร, ระวังความดันต่ำ">
       </div>
@@ -316,11 +316,11 @@
         </div>
         <div class="form-group">
           <label class="form-label">ผู้บันทึก</label>
-          <input class="form-control" id="nursing-by" placeholder="ชื่อพยาบาล" readonly style="background:var(--surface2);color:var(--text2);cursor:default;">
+          <input class="form-control field-readonly" id="nursing-by" placeholder="ชื่อพยาบาล" readonly>
         </div>
       </div>
       <hr class="divider">
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🧍 อาการทั่วไปและสภาพผู้รับบริการ</div>
+      <div class="section-label">🧍 อาการทั่วไปและสภาพผู้รับบริการ</div>
       <div style="margin-bottom:0;">
         <div class="form-group" style="margin-bottom:10px;">
           <label class="form-label">อาการทั่วไป</label>
@@ -332,7 +332,7 @@
         </div>
       </div>
       <hr class="divider">
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🍽️ การรับประทานอาหาร & อาการปวด</div>
+      <div class="section-label">🍽️ การรับประทานอาหาร & อาการปวด</div>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">การทานอาหาร</label>
@@ -344,7 +344,7 @@
         </div>
       </div>
       <hr class="divider">
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🌙 การนอนหลับ & กิจกรรม</div>
+      <div class="section-label">🌙 การนอนหลับ & กิจกรรม</div>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">การนอนหลับ</label>
@@ -356,7 +356,7 @@
         </div>
       </div>
       <hr class="divider">
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🩹 การดูแลพิเศษ</div>
+      <div class="section-label">🩹 การดูแลพิเศษ</div>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">แผล / การดูแลผิวหนัง</label>
@@ -372,7 +372,7 @@
         </div>
       </div>
       <hr class="divider">
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label" style="color:var(--red);font-size:13px;">📢 บันทึกส่งเวร (สำหรับพยาบาลกะต่อไป)</label>
         <textarea class="form-control" id="nursing-handover" rows="3" placeholder="ระบุสิ่งสำคัญที่ต้องติดตาม, ยาพิเศษ, อาการที่ต้องเฝ้าระวัง..." style="resize:vertical;border-color:var(--red);"></textarea>
       </div>
@@ -444,7 +444,7 @@
           </select>
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุการเดินทาง / รายละเอียดเพิ่มเติม</label>
         <input class="form-control" id="appt-transport-note" placeholder="">
       </div>
@@ -480,9 +480,9 @@
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
-          <div style="position:relative;">
-            <input type="text" id="ta-inc-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
-            <div id="ta-inc-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+          <div class="pos-rel">
+            <input type="text" id="ta-inc-inp" class="form-control fs-13" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div class="typeahead-dropdown" id="ta-inc-list"></div>
             <input type="hidden" id="ta-inc-id">
           </div>
         </div>
@@ -531,10 +531,10 @@
         </div>
         <div class="form-group">
           <label class="form-label">ผู้บันทึก</label>
-          <input class="form-control" id="incident-recorder" placeholder="ชื่อผู้บันทึก" readonly style="background:var(--surface2);color:var(--text2);cursor:default;">
+          <input class="form-control field-readonly" id="incident-recorder" placeholder="ชื่อผู้บันทึก" readonly>
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">แจ้งญาติแล้ว?</label>
         <select class="form-control" id="incident-notified">
           <option value="ยังไม่แจ้ง">❌ ยังไม่แจ้ง</option>
@@ -584,9 +584,9 @@
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
-          <div style="position:relative;">
-            <input type="text" id="ta-wnd-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
-            <div id="ta-wnd-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+          <div class="pos-rel">
+            <input type="text" id="ta-wnd-inp" class="form-control fs-13" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div class="typeahead-dropdown" id="ta-wnd-list"></div>
             <input type="hidden" id="ta-wnd-id">
           </div>
         </div>
@@ -656,10 +656,10 @@
         </div>
         <div class="form-group">
           <label class="form-label">ผู้บันทึก</label>
-          <input class="form-control" id="wound-recorder" placeholder="ชื่อพยาบาล/ผู้ดูแล" readonly style="background:var(--surface2);color:var(--text2);cursor:default;">
+          <input class="form-control field-readonly" id="wound-recorder" placeholder="ชื่อพยาบาล/ผู้ดูแล" readonly>
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="wound-note" placeholder="">
       </div>
@@ -704,9 +704,9 @@
       <input type="hidden" id="diet-edit-id">
       <div class="form-group">
         <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
-        <div style="position:relative;">
-          <input type="text" id="ta-diet-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
-          <div id="ta-diet-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+        <div class="pos-rel">
+          <input type="text" id="ta-diet-inp" class="form-control fs-13" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+          <div class="typeahead-dropdown" id="ta-diet-list"></div>
           <input type="hidden" id="ta-diet-id">
         </div>
       </div>
@@ -733,17 +733,17 @@
       <div class="form-group">
         <label class="form-label">ข้อจำกัดอาหาร (เลือกได้หลายข้อ)</label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;" id="diet-restrictions-wrap">
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="Low Sodium"> Low Sodium (เกลือต่ำ)</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="Low Purine"> Low Purine (เกาต์)</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="No Seafood"> No Seafood</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="Diabetic Diet"> Diabetic Diet (เบาหวาน)</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="Low Potassium"> Low Potassium (โรคไต)</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="Low Fat"> Low Fat (ไขมันต่ำ)</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="No Pork"> No Pork</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" value="Vegetarian"> Vegetarian</label>
+          <label class="flex-center-6 fs-13"><input type="checkbox" value="Low Sodium"> Low Sodium (เกลือต่ำ)</label>
+          <label class="flex-center-6 fs-13"><input type="checkbox" value="Low Purine"> Low Purine (เกาต์)</label>
+          <label class="flex-center-6 fs-13"><input type="checkbox" value="No Seafood"> No Seafood</label>
+          <label class="flex-center-6 fs-13"><input type="checkbox" value="Diabetic Diet"> Diabetic Diet (เบาหวาน)</label>
+          <label class="flex-center-6 fs-13"><input type="checkbox" value="Low Potassium"> Low Potassium (โรคไต)</label>
+          <label class="flex-center-6 fs-13"><input type="checkbox" value="Low Fat"> Low Fat (ไขมันต่ำ)</label>
+          <label class="flex-center-6 fs-13"><input type="checkbox" value="No Pork"> No Pork</label>
+          <label class="flex-center-6 fs-13"><input type="checkbox" value="Vegetarian"> Vegetarian</label>
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุพิเศษ</label>
         <textarea class="form-control" id="diet-note" rows="2" placeholder="เช่น ไม่ชอบผัก, แพ้กุ้ง, ต้องการน้ำอุ่นเสมอ..."></textarea>
       </div>
@@ -767,9 +767,9 @@
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
-          <div style="position:relative;">
-            <input type="text" id="ta-tf-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
-            <div id="ta-tf-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+          <div class="pos-rel">
+            <input type="text" id="ta-tf-inp" class="form-control fs-13" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div class="typeahead-dropdown" id="ta-tf-list"></div>
             <input type="hidden" id="ta-tf-id">
           </div>
         </div>
@@ -816,10 +816,10 @@
         </div>
         <div class="form-group">
           <label class="form-label">ผู้บันทึก</label>
-          <input class="form-control" id="tubefeed-recorder" placeholder="ชื่อพยาบาล/ผู้ดูแล" readonly style="background:var(--surface2);color:var(--text2);cursor:default;">
+          <input class="form-control field-readonly" id="tubefeed-recorder" placeholder="ชื่อพยาบาล/ผู้ดูแล" readonly>
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ (อาการขณะฟีด ฯลฯ)</label>
         <input class="form-control" id="tubefeed-note" placeholder="เช่น ให้อาหารได้ปกติ, มีอาการแน่นท้องเล็กน้อย...">
       </div>
@@ -843,9 +843,9 @@
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">ผู้ป่วย <span class="required">*</span></label>
-          <div style="position:relative;">
-            <input type="text" id="ta-dep-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
-            <div id="ta-dep-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+          <div class="pos-rel">
+            <input type="text" id="ta-dep-inp" class="form-control fs-13" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div class="typeahead-dropdown" id="ta-dep-list"></div>
             <input type="hidden" id="ta-dep-id">
           </div>
         </div>
@@ -890,7 +890,7 @@
         <label class="form-label">วันที่คืน/หักชำระ</label>
         <input class="form-control" type="date" id="deposit-date-out">
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="deposit-note" placeholder="เช่น วางมัดจำตอนรับเข้าพัก, หักค่าบริการเดือนสุดท้าย...">
       </div>
@@ -939,10 +939,10 @@
         </div>
         <div class="form-group">
           <label class="form-label">รับโดย</label>
-          <input class="form-control" id="belonging-received-by" placeholder="" readonly style="background:var(--surface2);color:var(--text2);cursor:default;">
+          <input class="form-control field-readonly" id="belonging-received-by" placeholder="" readonly>
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="belonging-note" placeholder="">
       </div>
@@ -1028,7 +1028,7 @@
           <input class="form-control" id="dnr-signed-by" placeholder="ชื่อ ความสัมพันธ์">
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="dnr-note" placeholder="">
       </div>
@@ -1050,7 +1050,7 @@
     <div class="modal-body">
       <input type="hidden" id="reject-req-ids">
       <div id="reject-req-summary" style="background:var(--surface2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;"></div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">เหตุผลที่ไม่อนุมัติ <span class="required">*</span></label>
         <textarea class="form-control" id="reject-reason" rows="3" placeholder="ระบุเหตุผล เช่น สินค้าไม่พอ / ไม่ตรงตามระเบียบ / รออนุมัติงบ..."></textarea>
       </div>
@@ -1104,7 +1104,7 @@
           <input class="form-control" id="return-reason-other" placeholder="ระบุเหตุผล...">
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุเพิ่มเติม</label>
         <input class="form-control" id="return-note" placeholder="">
       </div>
@@ -1169,7 +1169,7 @@
           <input class="form-control" id="pay-by" placeholder="ชื่อผู้รับเงิน">
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="pay-note" placeholder="">
       </div>
@@ -1193,9 +1193,9 @@
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">ผู้รับบริการ <span class="required">*</span></label>
-          <div style="position:relative;">
-            <input type="text" id="ta-con-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
-            <div id="ta-con-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+          <div class="pos-rel">
+            <input type="text" id="ta-con-inp" class="form-control fs-13" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div class="typeahead-dropdown" id="ta-con-list"></div>
             <input type="hidden" id="ta-con-id">
           </div>
         </div>
@@ -1233,7 +1233,7 @@
           <input class="form-control" type="date" id="contract-end">
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="contract-note" placeholder="">
       </div>
@@ -1275,7 +1275,7 @@
         <label class="form-label">โซน / ชั้น</label>
         <input class="form-control" id="room-zone" placeholder="เช่น โซน A, ชั้น 2, ตึกเหนือ">
       </div>
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">💰 ค่าห้อง</div>
+      <div class="section-label">💰 ค่าห้อง</div>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">ค่าห้องรายเดือน (฿)</label>
@@ -1286,7 +1286,7 @@
           <input class="form-control number" id="room-daily" type="number" min="0" placeholder="0">
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="room-note" placeholder="รายละเอียดเพิ่มเติม">
       </div>
@@ -1330,7 +1330,7 @@
           <input class="form-control" id="bed-other-note" style="display:none;margin-top:6px;" placeholder="ระบุสถานะ เช่น ลาพักร้อน, รอผู้รับบริการใหม่...">
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="bed-note" placeholder="รายละเอียด">
       </div>
@@ -1376,7 +1376,7 @@
           <option value="">-- เลือกเตียง --</option>
         </select>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="transfer-note" placeholder="เหตุผลการย้าย">
       </div>
@@ -1435,7 +1435,7 @@
           </select>
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">สรุปอาการก่อนจำหน่าย (Discharge Summary)</label>
         <textarea class="form-control" id="discharge-summary" rows="3" placeholder="สรุปสภาพผู้รับบริการก่อนจำหน่าย เช่น อาการดีขึ้น สัญญาณชีพปกติ..."></textarea>
       </div>
@@ -1473,7 +1473,7 @@
           <option value="partial">ชำระบางส่วน</option>
         </select>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">เหตุผลที่ Reset <span class="required">*</span></label>
         <input class="form-control" id="reset-invoice-reason" placeholder="เช่น แก้ไขวันที่ชำระ, ยอดเงินไม่ถูกต้อง">
       </div>
@@ -1527,7 +1527,7 @@
         <label class="form-label">อาการที่เกิดขึ้น</label>
         <input class="form-control" id="allergy-reaction" placeholder="เช่น ผื่นลมพิษ, หายใจลำบาก, ช็อก">
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="allergy-note" placeholder="ข้อมูลเพิ่มเติม">
       </div>
@@ -1587,7 +1587,7 @@
           </label>
         </div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="contact-note" placeholder="เพิ่มเติม">
       </div>
@@ -1613,9 +1613,9 @@
       </div>
       <div class="form-group">
         <label class="form-label">รายการสินค้า <span class="required">*</span></label>
-        <div style="position:relative;">
-          <input type="text" id="ta-ri-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อสินค้า..." autocomplete="off">
-          <div id="ta-ri-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+        <div class="pos-rel">
+          <input type="text" id="ta-ri-inp" class="form-control fs-13" placeholder="พิมพ์ชื่อสินค้า..." autocomplete="off">
+          <div class="typeahead-dropdown" id="ta-ri-list"></div>
           <input type="hidden" id="ta-ri-id">
         </div>
       </div>
@@ -1625,12 +1625,12 @@
       <div id="new-item-inline-form" style="display:none;background:var(--sage-light);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;">
         <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">➕ เพิ่มสินค้าใหม่เข้าระบบ</div>
         <div class="form-grid" style="grid-template-columns:1fr 1fr;">
-          <div class="form-group" style="margin-bottom:8px;">
-            <label class="form-label" style="font-size:12px;">ชื่อสินค้า <span class="required">*</span></label>
+          <div class="form-group mb-8">
+            <label class="form-label fs-12">ชื่อสินค้า <span class="required">*</span></label>
             <input class="form-control" id="new-item-name" placeholder="เช่น ถุงมือยาง M">
           </div>
-          <div class="form-group" style="margin-bottom:8px;">
-            <label class="form-label" style="font-size:12px;">ประเภท</label>
+          <div class="form-group mb-8">
+            <label class="form-label fs-12">ประเภท</label>
             <select class="form-control" id="new-item-cat">
               <option value="ยา">ยา</option>
               <option value="เวชภัณฑ์">เวชภัณฑ์</option>
@@ -1641,12 +1641,12 @@
           </div>
         </div>
         <div class="form-grid" style="grid-template-columns:1fr 1fr;">
-          <div class="form-group" style="margin-bottom:8px;">
-            <label class="form-label" style="font-size:12px;">หน่วย</label>
+          <div class="form-group mb-8">
+            <label class="form-label fs-12">หน่วย</label>
             <input class="form-control" id="new-item-unit" placeholder="เช่น เม็ด, ซอง, กล่อง, ขวด">
           </div>
-          <div class="form-group" style="margin-bottom:8px;">
-            <label class="form-label" style="font-size:12px;">จุดแจ้งเตือน (min)</label>
+          <div class="form-group mb-8">
+            <label class="form-label fs-12">จุดแจ้งเตือน (min)</label>
             <input class="form-control number" id="new-item-reorder" type="number" min="0" value="10" placeholder="10">
           </div>
         </div>
@@ -1669,7 +1669,7 @@
         </div>
       </div>
       <hr class="divider">
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🏷️ ข้อมูล Lot / วันหมดอายุ</div>
+      <div class="section-label">🏷️ ข้อมูล Lot / วันหมดอายุ</div>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">เลข Lot Number</label>
@@ -1696,7 +1696,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">ชื่อผู้จำหน่าย / Supplier</label>
-        <div style="position:relative;">
+        <div class="pos-rel">
           <input class="form-control" id="recv-supplier" placeholder="พิมพ์ชื่อหรือเลือกจากรายชื่อ..." autocomplete="off">
           <div id="recv-sup-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;"></div>
           <input type="hidden" id="recv-sup-hidden">
@@ -1708,7 +1708,7 @@
           <option value="">-- ไม่อ้างอิง --</option>
         </select>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
         <input class="form-control" id="recv-note" placeholder="เพิ่มเติม">
       </div>
@@ -1740,7 +1740,7 @@
       </div>
       <hr class="divider">
       <!-- Basic info -->
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">ข้อมูลทั่วไป</div>
+      <div class="section-label">ข้อมูลทั่วไป</div>
       <div class="form-group">
         <label class="form-label">ชื่อ-นามสกุล <span class="required">*</span></label>
         <input class="form-control" id="pat-name" placeholder="เช่น นาง สมใจ ใจดี">
@@ -1759,8 +1759,8 @@
         <input class="form-control number" id="pat-id" placeholder="0-0000-00000-00-0">
       </div>
       <div class="form-grid" style="grid-template-rows:auto auto auto;align-items:start;row-gap:6px;">
-        <label class="form-label" style="margin:0;">วันเกิด</label>
-        <label class="form-label" style="margin:0;">อายุ</label>
+        <label class="form-label m-0">วันเกิด</label>
+        <label class="form-label m-0">อายุ</label>
         <input type="date" id="pat-dob" class="form-control">
         <input type="text" id="pat-age-display" class="form-control" placeholder="-" readonly style="background:var(--surface2);cursor:default;">
         <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;min-height:48px;">
@@ -1792,7 +1792,7 @@
       </div>
       <hr class="divider">
       <!-- Contact -->
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">ข้อมูลติดต่อ</div>
+      <div class="section-label">ข้อมูลติดต่อ</div>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">เบอร์โทรศัพท์</label>
@@ -1805,19 +1805,19 @@
       </div>
       <div class="form-group">
         <label class="form-label">ที่อยู่</label>
-        <textarea class="form-control" id="pat-address" rows="2" placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด" style="resize:vertical;"></textarea>
+        <textarea class="form-control resize-v" id="pat-address" rows="2" placeholder="บ้านเลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด"></textarea>
       </div>
       
       <hr class="divider">
       <!-- Notes -->
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">หมายเหตุ</div>
-      <div class="form-group" style="margin:0;">
-        <textarea class="form-control" id="pat-note" rows="2" placeholder="ข้อมูลเพิ่มเติม" style="resize:vertical;"></textarea>
+      <div class="section-label">หมายเหตุ</div>
+      <div class="form-group m-0">
+        <textarea class="form-control resize-v" id="pat-note" rows="2" placeholder="ข้อมูลเพิ่มเติม"></textarea>
       </div>
       
       <hr class="divider">
       <!-- Room & Bed Assignment -->
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">🛏️ ห้องพักและเตียง</div>
+      <div class="section-label">🛏️ ห้องพักและเตียง</div>
       <div class="form-group">
         <label class="form-label">มอบหมายเตียง</label>
         <select class="form-control" id="pat-bed" onchange="onPatBedChange()">
@@ -1852,7 +1852,7 @@
         </div>
       </div>
       <hr class="divider">
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">ข้อมูลทั่วไป</div>
+      <div class="section-label">ข้อมูลทั่วไป</div>
       <div class="form-group">
         <label class="form-label">ชื่อ-นามสกุล <span class="required">*</span></label>
         <input class="form-control" id="staff-name" placeholder="เช่น น.ส.สมใจ ใจดี">
@@ -1902,7 +1902,7 @@
         </div>
       </div>
       <hr class="divider">
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">ข้อมูลการจ้างงาน</div>
+      <div class="section-label">ข้อมูลการจ้างงาน</div>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">วันเริ่มงาน</label>
@@ -1914,7 +1914,7 @@
         </div>
       </div>
       <hr class="divider">
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">ข้อมูลติดต่อ</div>
+      <div class="section-label">ข้อมูลติดต่อ</div>
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">เบอร์โทรศัพท์</label>
@@ -1923,16 +1923,16 @@
       </div>
       <div class="form-group">
         <label class="form-label">ที่อยู่</label>
-        <textarea class="form-control" id="staff-address" rows="2" placeholder="ที่อยู่" style="resize:vertical;"></textarea>
+        <textarea class="form-control resize-v" id="staff-address" rows="2" placeholder="ที่อยู่"></textarea>
       </div>
       <hr class="divider">
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">หมายเหตุ</label>
-        <textarea class="form-control" id="staff-note" rows="2" placeholder="ข้อมูลเพิ่มเติม" style="resize:vertical;"></textarea>
+        <textarea class="form-control resize-v" id="staff-note" rows="2" placeholder="ข้อมูลเพิ่มเติม"></textarea>
       </div>
       <hr class="divider">
       <!-- Contract PDF -->
-      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">📄 สัญญาว่าจ้าง</div>
+      <div class="section-label">📄 สัญญาว่าจ้าง</div>
       <div style="display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
         <span style="font-size:28px;">📄</span>
         <div style="flex:1;">
@@ -2001,7 +2001,7 @@
         <input class="form-control" id="acc-password" type="password" placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="new-password">
         <div id="acc-pass-hint" style="font-size:11px;color:var(--text3);margin-top:4px;display:none;">เว้นว่างไว้ถ้าไม่ต้องการเปลี่ยน password</div>
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">ยืนยัน Password <span class="required" id="acc-confirm-req">*</span></label>
         <input class="form-control" id="acc-password2" type="password" placeholder="กรอก password อีกครั้ง" autocomplete="new-password">
       </div>
@@ -2044,13 +2044,13 @@
         <label class="form-label">วันที่ <span class="required">*</span></label>
         <input class="form-control" type="date" id="medlog-date">
       </div>
-      <div class="form-group" style="margin:0;">
+      <div class="form-group m-0">
         <label class="form-label">รายละเอียด <span class="required">*</span></label>
-        <textarea class="form-control" id="medlog-detail" rows="4" placeholder="กรอกรายละเอียด..." style="resize:vertical;"></textarea>
+        <textarea class="form-control resize-v" id="medlog-detail" rows="4" placeholder="กรอกรายละเอียด..."></textarea>
       </div>
       <div class="form-group" style="margin-top:10px;">
         <label class="form-label">บันทึกโดย</label>
-        <input class="form-control" id="medlog-by" placeholder="ชื่อผู้บันทึก" readonly style="background:var(--surface2);color:var(--text2);cursor:default;">
+        <input class="form-control field-readonly" id="medlog-by" placeholder="ชื่อผู้บันทึก" readonly>
       </div>
     </div>
     <div class="modal-footer">
@@ -2182,14 +2182,14 @@
 
       <div>
         <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">ผู้รับบริการ <span class="required">*</span></label>
-        <div style="position:relative;">
-          <input type="text" id="ta-qi-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
-          <div id="ta-qi-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+        <div class="pos-rel">
+          <input type="text" id="ta-qi-inp" class="form-control fs-13" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+          <div class="typeahead-dropdown" id="ta-qi-list"></div>
           <input type="hidden" id="ta-qi-id">
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="grid-2col">
         <div>
           <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">ตั้งแต่วันที่ <span class="required">*</span></label>
           <input id="qi-date-from" type="date" class="form-control">
@@ -2226,9 +2226,9 @@
     <div class="modal-body">
     <div style="display:grid;gap:14px;">
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="grid-2col">
         <div>
-          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">ประเภทเอกสาร <span class="required">*</span></label>
+          <label class="field-label">ประเภทเอกสาร <span class="required">*</span></label>
           <select id="inv-type" class="form-control" onchange="updateInvoiceTitle()">
             <option value="quotation">ใบเสนอราคา</option>
             <option value="invoice">ใบแจ้งหนี้ / วางบิล</option>
@@ -2237,34 +2237,34 @@
           </select>
         </div>
         <div>
-          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">เลขที่เอกสาร</label>
+          <label class="field-label">เลขที่เอกสาร</label>
           <input id="inv-docno" type="text" class="form-control" placeholder="จะสร้างอัตโนมัติ" onblur="checkDocNoDuplicate(this.value,'invoice')">
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="grid-2col">
         <div>
-          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">ผู้รับบริการ <span class="required">*</span></label>
-          <div style="position:relative;">
-            <input type="text" id="ta-inv-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
-            <div id="ta-inv-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+          <label class="field-label">ผู้รับบริการ <span class="required">*</span></label>
+          <div class="pos-rel">
+            <input type="text" id="ta-inv-inp" class="form-control fs-13" placeholder="พิมพ์ชื่อหรือ HN..." autocomplete="off">
+            <div class="typeahead-dropdown" id="ta-inv-list"></div>
             <input type="hidden" id="ta-inv-id">
           </div>
           <div id="inv-payer-info" style="display:none;margin-top:6px;font-size:12px;color:var(--accent-dark);background:var(--accent-light);border-radius:5px;padding:6px 10px;"></div>
         </div>
         <div>
-          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">วันที่เอกสาร <span class="required">*</span></label>
+          <label class="field-label">วันที่เอกสาร <span class="required">*</span></label>
           <input id="inv-date" type="date" class="form-control">
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="grid-2col">
         <div>
-          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">กำหนดชำระ</label>
+          <label class="field-label">กำหนดชำระ</label>
           <input id="inv-due-date" type="date" class="form-control">
         </div>
         <div>
-          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">ชื่องาน / หมายเหตุงาน</label>
+          <label class="field-label">ชื่องาน / หมายเหตุงาน</label>
           <input id="inv-job-name" type="text" class="form-control" placeholder="เช่น ค่าห้องและค่าดูแล 03/69">
         </div>
       </div>
@@ -2286,28 +2286,28 @@
           </div>
         </div>
         <!-- Editable room label (description on invoice) -->
-        <div style="margin-bottom:8px;">
-          <label style="font-size:11px;color:var(--text2);">ชื่อที่แสดงในใบวางบิล</label>
-          <input id="inv-room-label" type="text" class="form-control" placeholder="เช่น ค่าห้อง 101 (ห้องเดี่ยว) เดือนมีนาคม" style="font-size:13px;">
+        <div class="mb-8">
+          <label class="fs-11 text-muted">ชื่อที่แสดงในใบวางบิล</label>
+          <input id="inv-room-label" type="text" class="form-control fs-13" placeholder="เช่น ค่าห้อง 101 (ห้องเดี่ยว) เดือนมีนาคม">
         </div>
         <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;align-items:end;">
           <div>
-            <label style="font-size:11px;color:var(--text2);">รูปแบบการคิด</label>
+            <label class="fs-11 text-muted">รูปแบบการคิด</label>
             <select id="inv-room-type" class="form-control" onchange="onInvRoomTypeChange()">
               <option value="monthly">รายเดือน</option>
               <option value="daily">รายวัน</option>
             </select>
           </div>
           <div>
-            <label style="font-size:11px;color:var(--text2);" id="inv-room-qty-label">จำนวน (เดือน)</label>
+            <label class="fs-11 text-muted" id="inv-room-qty-label">จำนวน (เดือน)</label>
             <input id="inv-room-qty" type="number" class="form-control" value="1" min="0" step="0.5" oninput="recalcInvoice()">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--text2);">ราคา/หน่วย (฿) <span style="color:var(--accent);font-size:10px;">แก้ไขได้</span></label>
+            <label class="fs-11 text-muted">ราคา/หน่วย (฿) <span style="color:var(--accent);font-size:10px;">แก้ไขได้</span></label>
             <input id="inv-room-rate" type="number" class="form-control" value="0" min="0" oninput="recalcInvoice()" style="border-color:var(--accent);">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--text2);">รวม (฿)</label>
+            <label class="fs-11 text-muted">รวม (฿)</label>
             <input id="inv-room-total" type="text" class="form-control" readonly style="background:var(--surface2);font-weight:700;text-align:right;color:var(--accent);" value="0.00">
           </div>
         </div>
@@ -2317,11 +2317,11 @@
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
           <div style="font-weight:600;font-size:13px;color:var(--accent);">🤸 ค่ากายภาพบำบัด</div>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="autoFillPhysioToInvoice()" style="font-size:12px;">📥 ดึงจากบันทึก Session</button>
+          <button type="button" class="btn btn-ghost btn-sm fs-12" onclick="autoFillPhysioToInvoice()">📥 ดึงจากบันทึก Session</button>
         </div>
         <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:end;">
           <div>
-            <label style="font-size:11px;color:var(--text2);">รูปแบบ</label>
+            <label class="fs-11 text-muted">รูปแบบ</label>
             <select id="inv-pt-type" class="form-control" onchange="recalcInvoice()">
               <option value="monthly">รายเดือน</option>
               <option value="daily">รายวัน</option>
@@ -2329,15 +2329,15 @@
             </select>
           </div>
           <div>
-            <label style="font-size:11px;color:var(--text2);">จำนวน</label>
+            <label class="fs-11 text-muted">จำนวน</label>
             <input id="inv-pt-qty" type="number" class="form-control" value="1" min="0" step="0.5" oninput="recalcInvoice()">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--text2);">ราคา/หน่วย (฿)</label>
+            <label class="fs-11 text-muted">ราคา/หน่วย (฿)</label>
             <input id="inv-pt-rate" type="number" class="form-control" value="0" min="0" oninput="recalcInvoice()">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--text2);">รวม (฿)</label>
+            <label class="fs-11 text-muted">รวม (฿)</label>
             <input id="inv-pt-total" type="text" class="form-control" readonly style="background:var(--surface2);font-weight:600;text-align:right;" value="0.00">
           </div>
           <div>
@@ -2424,7 +2424,7 @@
       </div>
 
       <div>
-        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">หมายเหตุ</label>
+        <label class="field-label">หมายเหตุ</label>
         <textarea id="inv-note" class="form-control" rows="2" placeholder="หมายเหตุเพิ่มเติม..."></textarea>
       </div>
 
@@ -2468,16 +2468,16 @@
       <!-- Banner: package info (ค้างถาวรเมื่อมี contract) -->
       <div id="physio-pkg-info" style="display:none;"></div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="grid-2col">
         <div class="form-group">
           <label class="form-label">วันที่ทำกายภาพ <span class="required">*</span></label>
           <input class="form-control" type="date" id="physio-date">
         </div>
         <div class="form-group">
           <label class="form-label">นักกายภาพที่ทำ <span class="required">*</span></label>
-          <div style="position:relative;">
-            <input type="text" id="ta-pt-inp" class="form-control" style="font-size:13px;" placeholder="เลือกชื่อนักกายภาพจากรายการ..." autocomplete="off">
-            <div id="ta-pt-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+          <div class="pos-rel">
+            <input type="text" id="ta-pt-inp" class="form-control fs-13" placeholder="เลือกชื่อนักกายภาพจากรายการ..." autocomplete="off">
+            <div class="typeahead-dropdown" id="ta-pt-list"></div>
             <input type="hidden" id="ta-pt-id">
           </div>
         </div>
@@ -2567,14 +2567,14 @@
           </div>
         </div>
           <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
-          <b style="font-size:13px;">ข้อมูลธนาคาร</b>
+          <b class="fs-13">ข้อมูลธนาคาร</b>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
             <div class="form-group"><label class="form-label">ธนาคาร</label><input class="form-control" id="supplier-bank-name" type="text" placeholder=""></div>
             <div class="form-group"><label class="form-label">ชื่อบัญชี</label><input class="form-control" id="supplier-bank-account-name" type="text"></div>
             <div class="form-group" style="grid-column:1/-1;"><label class="form-label">เลขที่บัญชี</label><input class="form-control" id="supplier-bank-account-no" type="text"></div>
           </div></div>
           <div style="margin-top:10px;">
-          <b style="font-size:13px;">ข้อมูลเพิ่มเติม</b>
+          <b class="fs-13">ข้อมูลเพิ่มเติม</b>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
             <div class="form-group"><label class="form-label">ประเภท</label><select class="form-control" id="supplier-entity-type"><option value="นิติบุคคล">นิติบุคคล</option><option value="บุคคลธรรมดา">บุคคลธรรมดา</option></select></div>
             <div class="form-group"><label class="form-label">เครดิต (วัน)</label><input class="form-control" id="supplier-credit-days" type="number" min="0" placeholder="0"></div>
@@ -2615,15 +2615,15 @@
         </div>
         <div class="form-group">
           <label class="form-label">ผู้จำหน่าย (ถ้าทราบ)</label>
-          <div style="position:relative;">
-            <input type="text" id="ta-prs-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อผู้จำหน่าย..." autocomplete="off">
-            <div id="ta-prs-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+          <div class="pos-rel">
+            <input type="text" id="ta-prs-inp" class="form-control fs-13" placeholder="พิมพ์ชื่อผู้จำหน่าย..." autocomplete="off">
+            <div class="typeahead-dropdown" id="ta-prs-list"></div>
             <input type="hidden" id="ta-prs-id">
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">รายการสินค้าที่ขอซื้อ</label>
-          <div id="pr-items-container" style="margin-bottom:8px;"></div>
+          <div class="mb-8" id="pr-items-container"></div>
           <button type="button" class="btn btn-ghost btn-sm" onclick="addPRItem()" style="width:100%;">+ เพิ่มรายการ</button>
         </div>
         <div class="form-group">
@@ -2676,9 +2676,9 @@
         </div>
         <div class="form-group">
           <label class="form-label">ผู้จำหน่าย</label>
-          <div style="position:relative;">
-            <input type="text" id="ta-sis-inp" class="form-control" style="font-size:13px;" placeholder="พิมพ์ชื่อผู้จำหน่าย..." autocomplete="off">
-            <div id="ta-sis-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
+          <div class="pos-rel">
+            <input type="text" id="ta-sis-inp" class="form-control fs-13" placeholder="พิมพ์ชื่อผู้จำหน่าย..." autocomplete="off">
+            <div class="typeahead-dropdown" id="ta-sis-list"></div>
             <input type="hidden" id="ta-sis-id">
           </div>
         </div>
@@ -2760,13 +2760,13 @@
     <div style="display:grid;gap:14px;margin-top:16px;">
       <input type="hidden" id="lab-edit-id">
       <input type="hidden" id="lab-patient-id">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="grid-2col">
         <div class="form-group"><label class="form-label">วันที่ตรวจ <span class="required">*</span></label>
           <input class="form-control" type="date" id="lab-test-date"></div>
         <div class="form-group"><label class="form-label">โรงพยาบาล/สถานพยาบาล</label>
           <input class="form-control" type="text" id="lab-hospital" placeholder="ชื่อโรงพยาบาล"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="grid-2col">
         <div class="form-group"><label class="form-label">แพทย์</label>
           <input class="form-control" type="text" id="lab-doctor" placeholder="ชื่อแพทย์"></div>
         <div class="form-group"><label class="form-label">สรุปผลโดยย่อ</label>
@@ -2774,7 +2774,7 @@
       </div>
       <div class="form-group">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <label class="form-label" style="margin:0;">รายการผลตรวจ</label>
+          <label class="form-label m-0">รายการผลตรวจ</label>
           <button class="btn btn-ghost btn-sm" onclick="addLabResultRow()">+ เพิ่มรายการ</button>
         </div>
         <div id="lab-results-container">
@@ -2801,7 +2801,7 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="editExpenseId">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="grid-2col">
         <div>
           <label class="form-label">วันที่ <span class="required">*</span></label>
           <input type="date" id="exp-date" class="form-control">
@@ -3003,9 +3003,9 @@
       <input type="hidden" id="editAssetId">
       <div style="margin-bottom:12px;">
         <label class="form-label">รหัสครุภัณฑ์ <span style="background:var(--surface2);color:var(--text2);font-size:11px;padding:1px 6px;border-radius:4px;font-weight:400;">สร้างอัตโนมัติ</span></label>
-        <input type="text" id="asset-no" class="form-control" readonly style="background:var(--surface2);color:var(--text2);cursor:default;" placeholder="จะสร้างอัตโนมัติเมื่อบันทึก">
+        <input type="text" id="asset-no" class="form-control field-readonly" readonly placeholder="จะสร้างอัตโนมัติเมื่อบันทึก">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="grid-2col">
         <div>
           <label class="form-label">ชื่ออุปกรณ์ <span class="required">*</span></label>
           <input type="text" id="asset-name" class="form-control" placeholder="เช่น เครื่องวัดความดัน">
@@ -3103,7 +3103,7 @@
     <div class="modal-body">
       <input type="hidden" id="maintAssetId">
       <div id="maint-asset-name-badge" style="background:var(--surface2);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-weight:600;font-size:13px;"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="grid-2col">
         <div>
           <label class="form-label">วันที่ซ่อม <span class="required">*</span></label>
           <input type="date" id="maint-date" class="form-control">
@@ -3241,10 +3241,10 @@
       <div style="margin-bottom:14px;">
         <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">ช่วงเวลา</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-          <button id="hr-btn-7d"  onclick="hrSetRange('7d')"     class="btn btn-sm btn-ghost" style="font-size:12px;">7 วันล่าสุด</button>
-          <button id="hr-btn-30d" onclick="hrSetRange('30d')"    class="btn btn-sm btn-ghost" style="font-size:12px;">30 วันล่าสุด</button>
-          <button id="hr-btn-month" onclick="hrSetRange('month')" class="btn btn-sm btn-ghost" style="font-size:12px;">เลือกเดือน</button>
-          <button id="hr-btn-custom" onclick="hrSetRange('custom')" class="btn btn-sm btn-ghost" style="font-size:12px;">กำหนดเอง</button>
+          <button id="hr-btn-7d"  onclick="hrSetRange('7d')"     class="btn btn-sm btn-ghost fs-12">7 วันล่าสุด</button>
+          <button id="hr-btn-30d" onclick="hrSetRange('30d')"    class="btn btn-sm btn-ghost fs-12">30 วันล่าสุด</button>
+          <button id="hr-btn-month" onclick="hrSetRange('month')" class="btn btn-sm btn-ghost fs-12">เลือกเดือน</button>
+          <button id="hr-btn-custom" onclick="hrSetRange('custom')" class="btn btn-sm btn-ghost fs-12">กำหนดเอง</button>
         </div>
         <div id="hr-range-month" style="display:none;"><input type="month" id="hr-month-val" class="form-control" style="max-width:180px;font-size:13px;"></div>
         <div id="hr-range-custom" style="display:none;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -3304,11 +3304,11 @@
       <div style="display:grid;gap:14px;">
         <div class="form-group"><label class="form-label">ผู้รับบริการ <span class="required">*</span></label><select id="pp-patient" class="form-control"><option value="">— เลือก —</option></select></div>
         <div class="form-group"><label class="form-label">ชื่อแพ็กเกจ <span class="required">*</span></label><input id="pp-name" type="text" class="form-control" placeholder="เช่น แพ็กเกจ 10 ครั้ง"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="grid-2col">
           <div class="form-group"><label class="form-label">Session รวม</label><input id="pp-sessions-included" type="number" class="form-control number" min="1" value="10"></div>
           <div class="form-group"><label class="form-label">ราคา/ชม. เกิน (บาท)</label><input id="pp-rate-extra" type="number" class="form-control number" min="0" value="0"></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="grid-2col">
           <div class="form-group"><label class="form-label">วันเริ่มต้น</label><input id="pp-start-date" type="date" class="form-control"></div>
           <div class="form-group"><label class="form-label">วันหมดอายุ</label><input id="pp-end-date" type="date" class="form-control"></div>
         </div>

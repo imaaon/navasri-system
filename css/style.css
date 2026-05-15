@@ -4697,3 +4697,138 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R16-B (v2)
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R17 · Inline Reduction · 15 พ.ค. 2569
+   Utility classes แทน inline styles ใน html/modals.html + pages.html
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Margin/Padding utilities ── */
+.m-0 { margin: 0; }
+.mb-0 { margin-bottom: 0; }
+.mb-4 { margin-bottom: 4px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-10 { margin-bottom: 10px; }
+
+/* ── Display utilities ── */
+.pos-rel { position: relative; }
+.flex-center { display: flex; align-items: center; }
+.flex-center-6 { display: flex; align-items: center; gap: 6px; }
+
+/* ── Typography utilities ── */
+.fs-11 { font-size: 11px; }
+.fs-12 { font-size: 12px; }
+.fs-13 { font-size: 13px; }
+.text-muted { color: var(--text2); }
+.text-subtle { color: var(--text3); }
+
+/* ── Section label pattern (modals.html × 16) ── */
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+
+/* ── Modal sub-form-label pattern (modals.html × 7) ── */
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* ── 2-column grid pattern (modals.html × 12) ── */
+.grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Typeahead dropdown pattern (modals.html × 12) ── */
+.typeahead-dropdown {
+  display: none;
+  position: absolute;
+  z-index: 9999;
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 2px;
+}
+
+/* ── Disabled-look field (modals.html × 9) ── */
+.field-readonly {
+  background: var(--surface2);
+  color: var(--text2);
+  cursor: default;
+}
+
+/* ── Resize utilities ── */
+.resize-v { resize: vertical; }
+
+/* ════════════════════════════════════════════════════════════════
+   END R17
+   ════════════════════════════════════════════════════════════════ */
+
+
+/* ── R17: pages.html additional utilities ── */
+.nowrap { white-space: nowrap; }
+.text-right { text-align: right; }
+.p-0 { padding: 0; }
+.w-full { width: 100%; }
+.mb-16 { margin-bottom: 16px; }
+.mb-12 { margin-bottom: 12px; }
+
+/* ── Filter chip (pages.html × 13) ── */
+.filter-chip-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+/* ── Mini select (pages.html × 17) ── */
+.mini-select {
+  width: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: white;
+  color: var(--text);
+  font-size: 13px;
+  height: auto;
+}
+
+/* ── Section label small (pages.html × 13) ── */
+.label-sm {
+  font-size: 12px;
+  color: var(--text2);
+  font-weight: 600;
+}
+
+/* ── Brand chip (pages.html × 10) ── */
+.chip-brand {
+  white-space: nowrap;
+  color: var(--brand);
+  border-color: var(--sage-200);
+  background: var(--sage-50);
+}
+
+/* ── Empty state center (pages.html × 5) ── */
+.empty-center {
+  text-align: center;
+  padding: 40px;
+  color: var(--text3);
+}

@@ -7,7 +7,7 @@
             <div style="font-weight:700;font-size:14px;color:var(--tone-orange-text);margin-bottom:4px;">มีรายการเร่งด่วนที่ต้องดำเนินการ</div>
             <div id="dashboard-exec-alert-detail" style="font-size:12.5px;color:#6b4a0e;"></div>
           </div>
-          <button class="btn btn-ghost btn-sm" style="white-space:nowrap;" onclick="document.getElementById('dashboard-exec-alert').style.display='none';">✕ ปิด</button>
+          <button class="btn btn-ghost btn-sm nowrap" onclick="document.getElementById('dashboard-exec-alert').style.display='none';">✕ ปิด</button>
         </div>
 
         <!-- [R5-C] Section header: ภาพรวมประจำวัน -->
@@ -75,7 +75,7 @@
               <div class="card-title">⚠️ สินค้าใกล้หมด</div>
               <button class="btn btn-ghost btn-sm" onclick="showPage('stock')">ดูทั้งหมด</button>
             </div>
-            <div class="card-body" style="padding:0;">
+            <div class="card-body p-0">
               <table>
                 <thead>
                   <tr><th>รายการ</th><th>คงเหลือ</th><th>หน่วย</th><th>สถานะ</th></tr>
@@ -112,7 +112,7 @@
             <div class="card-title" style="color:#e65100;">🚨 แจ้งเตือนยา / สินค้าใกล้หมดอายุ</div>
             <button class="btn btn-ghost btn-sm" onclick="showPage('stock')">ดูทั้งหมด</button>
           </div>
-          <div class="card-body" style="padding:0;">
+          <div class="card-body p-0">
             <table>
               <thead><tr><th>รายการ</th><th>Lot</th><th>คงเหลือ</th><th>หน่วย</th><th>วันหมดอายุ</th><th>สถานะ</th></tr></thead>
               <tbody id="expiryAlertTable"></tbody>
@@ -214,7 +214,7 @@
           </div>
           <button class="btn btn-primary" onclick="renderBIPage()">🔄 อัปเดต</button>
           <div style="flex:1;"></div>
-          <div style="font-size:11px;color:var(--text3);">
+          <div class="fs-11 text-subtle">
             ข้อมูลจาก: invoices · payments · requisitions · items · rooms
           </div>
         </div>
@@ -223,7 +223,7 @@
         <div id="bi-kpi-cards" style="margin-bottom:20px;"></div>
 
         <!-- 3-Month Trend -->
-        <div class="card" style="margin-bottom:16px;">
+        <div class="card mb-16">
           <div class="card-header">
             <div class="card-title">📈 แนวโน้ม 3 เดือน (รายรับ vs ต้นทุน)</div>
           </div>
@@ -243,10 +243,10 @@
         </div>
 
         <!-- Cost & Profit per Patient -->
-        <div class="card" style="margin-bottom:16px;">
+        <div class="card mb-16">
           <div class="card-header">
             <div class="card-title">🏥 กำไรขั้นต้นต่อผู้รับบริการ</div>
-            <div style="font-size:11px;color:var(--text3);">รายรับ (invoices) − ต้นทุนสินค้า (requisitions × cost)</div>
+            <div class="fs-11 text-subtle">รายรับ (invoices) − ต้นทุนสินค้า (requisitions × cost)</div>
           </div>
           <div id="bi-cost-per-patient"></div>
         </div>
@@ -260,7 +260,7 @@
           <div class="card">
             <div class="card-header">
               <div class="card-title">🔮 พยากรณ์สต็อก (30 วัน)</div>
-              <div style="font-size:11px;color:var(--text3);">avg daily usage จากประวัติเบิก</div>
+              <div class="fs-11 text-subtle">avg daily usage จากประวัติเบิก</div>
             </div>
             <div id="bi-predictive-stock"></div>
           </div>
@@ -270,25 +270,25 @@
         <div class="card" style="margin-bottom:16px;border-left:4px solid var(--accent);">
           <div class="card-header" style="background:var(--accent-light);">
             <div class="card-title" style="color:var(--accent);">🤖 คำแนะนำการตัดสินใจ</div>
-            <div style="font-size:11px;color:var(--text3);">Auto-generated จาก stock, usage, pricing, และ profit data</div>
+            <div class="fs-11 text-subtle">Auto-generated จาก stock, usage, pricing, และ profit data</div>
           </div>
           <div class="card-body" id="bi-recommendations"></div>
         </div>
 
         <!-- Advanced Forecast -->
-        <div class="card" style="margin-bottom:16px;">
+        <div class="card mb-16">
           <div class="card-header">
             <div class="card-title">📊 พยากรณ์สต็อกขั้นสูง (Rolling Average)</div>
-            <div style="font-size:11px;color:var(--text3);">เปรียบเทียบ trend 7 / 14 / 30 วัน — ตรวจจับการใช้ที่ผิดปกติ</div>
+            <div class="fs-11 text-subtle">เปรียบเทียบ trend 7 / 14 / 30 วัน — ตรวจจับการใช้ที่ผิดปกติ</div>
           </div>
           <div id="bi-forecast"></div>
         </div>
 
         <!-- Pricing Analysis -->
-        <div class="card" style="margin-bottom:16px;">
+        <div class="card mb-16">
           <div class="card-header">
             <div class="card-title">💹 วิเคราะห์ Margin และ Pricing</div>
-            <div style="font-size:11px;color:var(--text3);">Margin = (ราคาขาย − ต้นทุน) / ราคาขาย — flag สินค้าที่ loss หรือ margin ต่ำ</div>
+            <div class="fs-11 text-subtle">Margin = (ราคาขาย − ต้นทุน) / ราคาขาย — flag สินค้าที่ loss หรือ margin ต่ำ</div>
           </div>
           <div id="bi-pricing"></div>
         </div>
@@ -302,16 +302,16 @@
           <div class="card">
             <div class="card-header">
               <div class="card-title">🔬 Scenario Simulation</div>
-              <div style="font-size:11px;color:var(--text3);">จำลองผลถ้าเพิ่มเตียง / ปรับราคา</div>
+              <div class="fs-11 text-subtle">จำลองผลถ้าเพิ่มเตียง / ปรับราคา</div>
             </div>
             <div class="card-body" id="bi-simulation">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-                <div class="form-group" style="margin:0;">
-                  <label class="form-label" style="font-size:11px;">เพิ่มเตียง</label>
+                <div class="form-group m-0">
+                  <label class="form-label fs-11">เพิ่มเตียง</label>
                   <input type="number" class="form-control number" id="sim-extra-beds" value="5" min="0" max="50" oninput="renderScenarioSim()">
                 </div>
-                <div class="form-group" style="margin:0;">
-                  <label class="form-label" style="font-size:11px;">ปรับราคาห้อง (%)</label>
+                <div class="form-group m-0">
+                  <label class="form-label fs-11">ปรับราคาห้อง (%)</label>
                   <input type="number" class="form-control number" id="sim-price-pct" value="0" min="-50" max="100" oninput="renderScenarioSim()">
                 </div>
               </div>
@@ -330,7 +330,7 @@
             <div class="card">
               <div class="card-header"><div class="card-title">🏥 ข้อมูลผู้ป่วยที่จะรับ</div></div>
               <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
-                <div class="form-group" style="margin:0;">
+                <div class="form-group m-0">
                   <label class="form-label">ประเภทห้องพัก</label>
                   <select class="form-control" id="ca-room-type" onchange="runCaseAcceptance()">
                     <option value="single">ห้องเดี่ยว</option>
@@ -338,26 +338,26 @@
                     <option value="ward">Ward รวม</option>
                   </select>
                 </div>
-                <div class="form-group" style="margin:0;">
+                <div class="form-group m-0">
                   <label class="form-label">ระดับ ADL (1=ดูแลตัวเองได้ — 5=ต้องการดูแลเต็มที่)</label>
-                  <input type="range" id="ca-adl" min="1" max="5" value="3" oninput="document.getElementById('ca-adl-val').textContent=this.value; runCaseAcceptance()" style="width:100%;">
+                  <input class="w-full" type="range" id="ca-adl" min="1" max="5" value="3" oninput="document.getElementById('ca-adl-val').textContent=this.value; runCaseAcceptance()">
                   <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);">
                     <span>1 (ดูแลตัวเองได้)</span><span id="ca-adl-val" style="font-weight:700;color:var(--accent);">3</span><span>5 (ต้องการดูแลเต็มที่)</span>
                   </div>
                 </div>
-                <div class="form-group" style="margin:0;">
+                <div class="form-group m-0">
                   <label class="form-label">จำนวน PT sessions / สัปดาห์</label>
                   <input type="number" class="form-control number" id="ca-pt" min="0" max="14" value="3" oninput="runCaseAcceptance()">
                 </div>
-                <div class="form-group" style="margin:0;">
+                <div class="form-group m-0">
                   <label class="form-label">ยาประจำที่คาดว่าจะใช้ (฿/เดือน)</label>
                   <input type="number" class="form-control number" id="ca-med-cost" min="0" value="2000" oninput="runCaseAcceptance()">
                 </div>
-                <div class="form-group" style="margin:0;">
+                <div class="form-group m-0">
                   <label class="form-label">ราคาที่ครอบครัวเสนอ (฿/เดือน)</label>
                   <input type="number" class="form-control number" id="ca-offered" min="0" value="25000" oninput="runCaseAcceptance()">
                 </div>
-                <div class="form-group" style="margin:0;">
+                <div class="form-group m-0">
                   <label class="form-label">โรคประจำตัวที่ซับซ้อน</label>
                   <select class="form-control" id="ca-complexity" onchange="runCaseAcceptance()">
                     <option value="low">น้อย (เบาหวาน/ความดัน)</option>
@@ -381,30 +381,30 @@
             <div class="card">
               <div class="card-header"><div class="card-title">💼 ข้อมูลการลงทุน</div></div>
               <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
-                <div class="form-group" style="margin:0;">
+                <div class="form-group m-0">
                   <label class="form-label">จำนวนเตียงที่ต้องการเพิ่ม</label>
                   <input type="number" class="form-control number" id="roi-beds" value="10" min="1" oninput="runROICalc()">
                 </div>
-                <div class="form-group" style="margin:0;">
+                <div class="form-group m-0">
                   <label class="form-label">ค่าใช้จ่ายลงทุนเริ่มต้น (฿)</label>
                   <input type="number" class="form-control number" id="roi-capex" value="2000000" min="0" oninput="runROICalc()">
                 </div>
-                <div class="form-group" style="margin:0;">
+                <div class="form-group m-0">
                   <label class="form-label">ราคา/เตียง/เดือน (฿)</label>
                   <input type="number" class="form-control number" id="roi-rate" value="25000" min="0" oninput="runROICalc()">
                 </div>
-                <div class="form-group" style="margin:0;">
+                <div class="form-group m-0">
                   <label class="form-label">ต้นทุนดำเนินการ/เตียง/เดือน (฿)</label>
                   <input type="number" class="form-control number" id="roi-opex" value="12000" min="0" oninput="runROICalc()">
                 </div>
                 <hr class="divider">
                 <div style="font-size:12px;font-weight:600;color:var(--text3);">SCENARIO A</div>
-                <div class="form-group" style="margin:0;">
+                <div class="form-group m-0">
                   <label class="form-label">Occupancy Rate A (%)</label>
                   <input type="number" class="form-control number" id="roi-occ-a" value="70" min="1" max="100" oninput="runROICalc()">
                 </div>
                 <div style="font-size:12px;font-weight:600;color:var(--text3);">SCENARIO B</div>
-                <div class="form-group" style="margin:0;">
+                <div class="form-group m-0">
                   <label class="form-label">Occupancy Rate B (%)</label>
                   <input type="number" class="form-control number" id="roi-occ-b" value="90" min="1" max="100" oninput="runROICalc()">
                 </div>
@@ -440,10 +440,10 @@
             <div class="section-subtitle" id="stock-header-subtitle">รายการสินค้าทั้งหมด · มูลค่ารวม · อัปเดตล่าสุด</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openAddItemModal()" style="white-space:nowrap;">+ เพิ่มสินค้าใหม่</button>
-            <button class="btn btn-ghost btn-sm" onclick="openReceiveModal()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">📥 รับเข้าสินค้า</button>
-            <button class="btn btn-ghost btn-sm" onclick="showPage('requisition')" style="white-space:nowrap;">📋 เบิกสินค้า</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportInventoryExcel()" style="white-space:nowrap;" title="ส่งออก Excel">📥 Excel</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openAddItemModal()">+ เพิ่มสินค้าใหม่</button>
+            <button class="btn btn-ghost btn-sm chip-brand" onclick="openReceiveModal()">📥 รับเข้าสินค้า</button>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="showPage('requisition')">📋 เบิกสินค้า</button>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="exportInventoryExcel()" title="ส่งออก Excel">📥 Excel</button>
           </div>
         </div>
 
@@ -494,17 +494,17 @@
         </div>
 
         <!-- [R8-A] Filter bar — refreshed -->
-        <div class="stock-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+        <div class="stock-filter-bar filter-chip-row">
+          <span class="label-sm">🔍 กรอง:</span>
           <input class="form-control" id="stockSearch" placeholder="ค้นหารหัส / ชื่อสินค้า / barcode..." oninput="renderStock()" style="flex:1;min-width:220px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
-          <select class="form-control" id="stockCatFilter" onchange="renderStock()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select class="form-control mini-select" id="stockCatFilter" onchange="renderStock()">
             <option value="">หมวด: ทั้งหมด</option>
             <option value="ยา">💊 ยา</option>
             <option value="เวชภัณฑ์">🩹 เวชภัณฑ์</option>
             <option value="ของใช้">🧴 ของใช้</option>
             <option value="บริการ">🛎 บริการ</option>
           </select>
-          <select class="form-control" id="stockStatusFilter" onchange="renderStock()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select class="form-control mini-select" id="stockStatusFilter" onchange="renderStock()">
             <option value="">สถานะ: ทั้งหมด</option>
             <option value="low">⚠️ ใกล้หมด</option>
             <option value="out">🚫 หมดแล้ว</option>
@@ -528,7 +528,7 @@
         <div class="card">
           <div class="card-header">
             <div class="card-title">รายการสินค้า</div>
-            <div style="font-size:12px;color:var(--text2);" id="stockCount">รายการทั้งหมด: 0</div>
+            <div class="fs-12 text-muted" id="stockCount">รายการทั้งหมด: 0</div>
           </div>
           <div class="table-wrap">
             <table class="stock-table-r8">
@@ -541,7 +541,7 @@
                   <th>ประเภท</th>
                   <th>คงเหลือ</th>
                   <th>หน่วย</th>
-                  <th style="text-align:right;">จุดสั่งซื้อ</th>
+                  <th class="text-right">จุดสั่งซื้อ</th>
                   <th style="white-space:nowrap;text-align:right;">ราคาซื้อ (฿)</th>
                   <th style="white-space:nowrap;text-align:right;">ราคาขาย (฿)</th>
                   <th>สถานะ</th>
@@ -603,7 +603,7 @@
             <div style="font-size:13px;font-weight:600;margin-bottom:12px;">รายการที่เบิก</div>
 
             <div style="margin-bottom:10px;">
-              <label class="form-label" style="font-size:11px;">สแกนบาร์โค้ดสินค้า</label>
+              <label class="form-label fs-11">สแกนบาร์โค้ดสินค้า</label>
               <div style="display:flex;gap:8px;align-items:center;">
                 <input class="form-control" id="req-barcode-scan" placeholder="ยิงบาร์โค้ดหรือพิมพ์รหัสสินค้า..." inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false" style="font-family:monospace;" oninput="onReqBarcodeScan()">
               </div>
@@ -647,22 +647,22 @@
         <!-- TAB: LIST (existing history) -->
         <div id="history-tab-list">
           <!-- Filter bar -->
-          <div class="card" style="margin-bottom:16px;">
+          <div class="card mb-16">
             <div class="card-body" style="padding:16px 20px;">
               <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
                 <div class="form-group" style="margin:0;flex:2;min-width:160px;">
-                  <label class="form-label" style="font-size:11px;">🔍 ค้นหา</label>
+                  <label class="form-label fs-11">🔍 ค้นหา</label>
                   <div class="search-wrap">
                     <span class="search-icon">🔍</span>
                     <input class="form-control" id="histSearch" placeholder="ชื่อสินค้า / คนไข้ / พนักงาน..." oninput="renderHistory()">
                   </div>
                 </div>
                 <div class="form-group" style="margin:0;min-width:140px;">
-                  <label class="form-label" style="font-size:11px;">📅 เดือน-ปี</label>
+                  <label class="form-label fs-11">📅 เดือน-ปี</label>
                   <input class="form-control" type="month" id="histMonth" onchange="renderHistory()">
                 </div>
                 <div class="form-group" style="margin:0;min-width:150px;">
-                  <label class="form-label" style="font-size:11px;">สถานะ</label>
+                  <label class="form-label fs-11">สถานะ</label>
                   <select class="form-control" id="histStatus" onchange="renderHistory()">
                     <option value="">ทั้งหมด</option>
                     <option value="pending">รอหัวหน้า</option>
@@ -672,13 +672,13 @@
                   </select>
                 </div>
                 <div class="form-group" style="margin:0;min-width:170px;">
-                  <label class="form-label" style="font-size:11px;">🏥 ผู้รับบริการ</label>
+                  <label class="form-label fs-11">🏥 ผู้รับบริการ</label>
                   <select class="form-control" id="histPatient" onchange="renderHistory()">
                     <option value="">ทั้งหมด</option>
                   </select>
                 </div>
                 <div class="form-group" style="margin:0;min-width:170px;">
-                  <label class="form-label" style="font-size:11px;">👤 พนักงาน</label>
+                  <label class="form-label fs-11">👤 พนักงาน</label>
                   <select class="form-control" id="histStaff" onchange="renderHistory()">
                     <option value="">ทั้งหมด</option>
                   </select>
@@ -687,7 +687,7 @@
               </div>
             </div>
           </div>
-          <div id="histSummaryStrip" style="margin-bottom:12px;"></div>
+          <div class="mb-12" id="histSummaryStrip"></div>
           <div class="card">
             <div class="card-header">
               <div class="card-title" id="histTableTitle">ประวัติการเบิกสินค้า</div>
@@ -706,7 +706,7 @@
         <!-- TAB: APPROVAL -->
         <div id="history-tab-approval" style="display:none;">
           <div id="approval-panel-content">
-            <div style="text-align:center;padding:40px;color:var(--text3);">กำลังโหลด...</div>
+            <div class="empty-center">กำลังโหลด...</div>
           </div>
         </div>
 
@@ -720,7 +720,7 @@
             <button class="btn btn-primary btn-sm" onclick="openReturnModal()">+ บันทึกการคืน</button>
           </div>
           <div id="returns-list">
-            <div style="text-align:center;padding:40px;color:var(--text3);">กำลังโหลด...</div>
+            <div class="empty-center">กำลังโหลด...</div>
           </div>
         </div>
       </div>
@@ -737,19 +737,19 @@
           </div>
         </div>
         <!-- [R15-RPT] Filter bar -->
-        <div class="page-redesign-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
-          <input class="form-control" type="month" id="reportMonth" onchange="renderReport()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+        <div class="page-redesign-filter-bar filter-chip-row">
+          <span class="label-sm">🔍 กรอง:</span>
+          <input class="form-control mini-select" type="month" id="reportMonth" onchange="renderReport()">
           <select class="form-control" id="reportPatient" onchange="renderReport()" style="width:auto;min-width:160px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
             <option value="">ผู้รับบริการ: ทั้งหมด</option>
           </select>
           <select class="form-control" id="reportStaff" onchange="renderReport()" style="width:auto;min-width:140px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
             <option value="">พนักงาน: ทั้งหมด</option>
           </select>
-          <button class="btn btn-ghost btn-sm" onclick="resetReportFilters()" style="white-space:nowrap;">↺ รีเซ็ต</button>
+          <button class="btn btn-ghost btn-sm nowrap" onclick="resetReportFilters()">↺ รีเซ็ต</button>
         </div>
         <!-- Summary strip -->
-        <div id="reportSummaryStrip" style="margin-bottom:12px;"></div>
+        <div class="mb-12" id="reportSummaryStrip"></div>
         <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
           <div class="tabs" id="reportTabs">
             <div class="tab active" onclick="switchReportTab('summary')">รายการทั้งหมด</div>
@@ -791,13 +791,13 @@
             <div class="card">
               <div class="card-header"><div class="card-title">💰 ต้นทุนต่อผู้รับบริการ</div></div>
               <div class="table-wrap"><table><thead><tr>
-                <th>ผู้รับบริการ</th><th style="text-align:right;">Billable (฿)</th><th style="text-align:right;">Non-Bill (฿)</th><th style="text-align:right;">รวม (฿)</th>
+                <th>ผู้รับบริการ</th><th class="text-right">Billable (฿)</th><th class="text-right">Non-Bill (฿)</th><th class="text-right">รวม (฿)</th>
               </tr></thead><tbody id="cost-bypatient"></tbody></table></div>
             </div>
             <div class="card">
               <div class="card-header"><div class="card-title">📦 สินค้าที่ใช้มากที่สุด</div></div>
               <div class="table-wrap"><table><thead><tr>
-                <th>สินค้า</th><th style="text-align:right;">จำนวนรวม</th><th style="text-align:right;">มูลค่า (฿)</th>
+                <th>สินค้า</th><th class="text-right">จำนวนรวม</th><th class="text-right">มูลค่า (฿)</th>
               </tr></thead><tbody id="cost-topitems"></tbody></table></div>
             </div>
           </div>
@@ -821,10 +821,10 @@
             <div class="section-subtitle">แผนผังห้อง · จัดการเตียง · ย้ายผู้รับบริการ · แจ้งทำความสะอาด</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openAddBedModal()" style="white-space:nowrap;">+ เพิ่มเตียง</button>
-            <button class="btn btn-ghost btn-sm" onclick="openAddRoomModal()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">+ เพิ่มห้อง</button>
-            <button class="btn btn-ghost btn-sm" onclick="openRoomHistoryModal()" style="white-space:nowrap;">📋 ประวัติย้ายห้อง</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportRoomsExcel()" style="white-space:nowrap;" title="ส่งออก Excel">📥 Excel</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openAddBedModal()">+ เพิ่มเตียง</button>
+            <button class="btn btn-ghost btn-sm chip-brand" onclick="openAddRoomModal()">+ เพิ่มห้อง</button>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="openRoomHistoryModal()">📋 ประวัติย้ายห้อง</button>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="exportRoomsExcel()" title="ส่งออก Excel">📥 Excel</button>
           </div>
         </div>
         <!-- Room type summary -->
@@ -843,9 +843,9 @@
             <div class="section-subtitle" id="pat-header-subtitle">รายชื่อผู้รับบริการ · กำลังโหลด...</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openAddPatientModal()" style="white-space:nowrap;">+ เพิ่มผู้รับบริการ</button>
-            <button class="btn btn-ghost btn-sm" onclick="showPage('rooms')" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">🛏️ จัดการห้องพัก</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportPatientsExcel()" style="white-space:nowrap;" title="ส่งออก Excel">📥 Excel</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openAddPatientModal()">+ เพิ่มผู้รับบริการ</button>
+            <button class="btn btn-ghost btn-sm chip-brand" onclick="showPage('rooms')">🛏️ จัดการห้องพัก</button>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="exportPatientsExcel()" title="ส่งออก Excel">📥 Excel</button>
           </div>
         </div>
 
@@ -890,10 +890,10 @@
         </div>
 
         <!-- [R9-A] Filter bar — refreshed (card-style with prefix label) -->
-        <div class="patient-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+        <div class="patient-filter-bar filter-chip-row">
+          <span class="label-sm">🔍 กรอง:</span>
           <input class="form-control" id="patSearch" placeholder="ค้นหาชื่อ / เลขบัตรประชาชน / HN..." oninput="renderPatients()" style="flex:1;min-width:240px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
-          <select class="form-control" id="patStatusFilter" onchange="renderPatients()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select class="form-control mini-select" id="patStatusFilter" onchange="renderPatients()">
             <option value="">สถานะ: ทั้งหมด</option>
             <option value="active">🏠 พักอยู่</option>
             <option value="hospital">🏥 อยู่โรงพยาบาล</option>
@@ -907,7 +907,7 @@
         <div class="card">
           <div class="card-header">
             <div class="card-title" id="patTableTitle">รายชื่อผู้รับบริการ</div>
-            <div style="font-size:12px;color:var(--text2);" id="patCount">0 ราย · กดที่แถวเพื่อดูโปรไฟล์</div>
+            <div class="fs-12 text-muted" id="patCount">0 ราย · กดที่แถวเพื่อดูโปรไฟล์</div>
           </div>
           <div class="table-wrap">
             <table class="patient-table-r9">
@@ -929,19 +929,19 @@
             <div class="section-subtitle">รายชื่อพนักงาน · ตำแหน่ง · ตารางเวร · อายุงาน</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openAddStaffModal()" style="white-space:nowrap;">+ เพิ่มพนักงาน</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportStaffExcel()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);" title="ส่งออก Excel">📥 Excel</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openAddStaffModal()">+ เพิ่มพนักงาน</button>
+            <button class="btn btn-ghost btn-sm chip-brand" onclick="exportStaffExcel()" title="ส่งออก Excel">📥 Excel</button>
           </div>
         </div>
         <!-- [R12-STAFF] Filter bar -->
-        <div class="page-redesign-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+        <div class="page-redesign-filter-bar filter-chip-row">
+          <span class="label-sm">🔍 กรอง:</span>
           <input class="form-control" id="staffSearch" placeholder="ค้นหาชื่อ / ชื่อเล่น / ตำแหน่ง..." oninput="renderStaff()" style="flex:1;min-width:220px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
           <select class="form-control" id="staffPosFilter" onchange="renderStaff()" style="width:auto;min-width:140px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
             <option value="">ตำแหน่ง: ทั้งหมด</option>
           </select>
         </div>
-        <div id="staffSummary" style="margin-bottom:12px;"></div>
+        <div class="mb-12" id="staffSummary"></div>
         <div class="card">
           <div class="card-header"><div class="card-title" id="staffTableTitle">ข้อมูลพนักงาน</div></div>
           <div class="table-wrap">
@@ -982,27 +982,27 @@
             <div class="section-subtitle">ประวัติการรักษา · ยาประจำ · สรุปสัญญาณชีพ · ส่งออก PDF/Excel</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openHealthReportModal('')" style="white-space:nowrap;">📋 สร้างรายงาน</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportHealthExcel()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">📊 Excel</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportHealthPDF()" style="white-space:nowrap;">📄 PDF</button>
-            <button class="btn btn-ghost btn-sm" onclick="printHealthReport()" style="white-space:nowrap;">🖨️ Print</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openHealthReportModal('')">📋 สร้างรายงาน</button>
+            <button class="btn btn-ghost btn-sm chip-brand" onclick="exportHealthExcel()">📊 Excel</button>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="exportHealthPDF()">📄 PDF</button>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="printHealthReport()">🖨️ Print</button>
           </div>
         </div>
         <!-- [R14-HR] Filter bar — card-style -->
-        <div class="page-redesign-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
-          <input class="form-control" type="month" id="hr-month" onchange="renderHealthReport()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+        <div class="page-redesign-filter-bar filter-chip-row">
+          <span class="label-sm">🔍 กรอง:</span>
+          <input class="form-control mini-select" type="month" id="hr-month" onchange="renderHealthReport()">
           <div style="position:relative;flex:1;min-width:200px;">
             <input type="text" id="ta-hrp-inp" class="form-control" style="font-size:13px;width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);height:auto;" placeholder="🏥 ผู้รับบริการ — พิมพ์ชื่อหรือ HN..." autocomplete="off">
             <div id="ta-hrp-list" style="display:none;position:absolute;z-index:9999;left:0;right:0;max-height:220px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;"></div>
             <input type="hidden" id="ta-hrp-id">
           </div>
-          <select class="form-control" id="hr-type" onchange="renderHealthReport()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select class="form-control mini-select" id="hr-type" onchange="renderHealthReport()">
             <option value="both">ประเภท: ทั้งหมด</option>
             <option value="medical">🩺 ประวัติการรักษา</option>
             <option value="meds">💊 ยาประจำ</option>
           </select>
-          <button class="btn btn-ghost btn-sm" onclick="resetHealthFilters()" style="white-space:nowrap;">↺ ล้าง</button>
+          <button class="btn btn-ghost btn-sm nowrap" onclick="resetHealthFilters()">↺ ล้าง</button>
         </div>
         <!-- Summary strip -->
         <div id="hr-summary" style="margin-bottom:14px;"></div>
@@ -1046,7 +1046,7 @@
           <div class="card-header"><div class="card-title" id="ph-table-title">ประวัติการสั่งซื้อ</div></div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>วันที่</th><th>รายการสินค้า</th><th>จำนวน</th><th>หน่วย</th><th style="white-space:nowrap;">ราคาซื้อ (฿)</th><th style="white-space:nowrap;">รวม (฿)</th><th>เลข PO</th><th>Supplier</th><th>ผู้บันทึก</th><th>หมายเหตุ</th></tr></thead>
+              <thead><tr><th>วันที่</th><th>รายการสินค้า</th><th>จำนวน</th><th>หน่วย</th><th class="nowrap">ราคาซื้อ (฿)</th><th class="nowrap">รวม (฿)</th><th>เลข PO</th><th>Supplier</th><th>ผู้บันทึก</th><th>หมายเหตุ</th></tr></thead>
               <tbody id="ph-table"></tbody>
             </table>
           </div>
@@ -1071,8 +1071,8 @@
               <table>
                 <thead><tr>
                   <th>วันที่-เวลา</th><th>สินค้า</th><th>ประเภท</th>
-                  <th style="text-align:right;">จำนวน</th>
-                  <th style="text-align:right;">ก่อน→หลัง</th>
+                  <th class="text-right">จำนวน</th>
+                  <th class="text-right">ก่อน→หลัง</th>
                   <th>Lot</th><th>หมายเหตุ</th>
                 </tr></thead>
                 <tbody id="mv-table">
@@ -1098,12 +1098,12 @@
             <div class="section-subtitle">ใบแจ้งหนี้ · รับชำระ · แพ็กเกจรายเดือน</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openQuickInvoiceModal()" style="white-space:nowrap;">🧾 สร้างใบวางบิล</button>
-            <button class="btn btn-ghost btn-sm" onclick="openCreateInvoiceModal()" style="white-space:nowrap;">+ เอกสารทั่วไป</button>
-            <button class="btn btn-ghost btn-sm" onclick="runAutoBilling()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">🤖 ออกบิลอัตโนมัติ</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openQuickInvoiceModal()">🧾 สร้างใบวางบิล</button>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="openCreateInvoiceModal()">+ เอกสารทั่วไป</button>
+            <button class="btn btn-ghost btn-sm chip-brand" onclick="runAutoBilling()">🤖 ออกบิลอัตโนมัติ</button>
             <button class="btn btn-ghost btn-sm" onclick="openInvoiceResetLogModal()" style="white-space:nowrap;color:#8e44ad;">📋 Reset Log</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportBillingExcel()" style="white-space:nowrap;">📥 Excel</button>
-            <button class="btn btn-ghost btn-sm" onclick="showPage('billing-settings')" style="white-space:nowrap;">⚙️ ตั้งค่า</button>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="exportBillingExcel()">📥 Excel</button>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="showPage('billing-settings')">⚙️ ตั้งค่า</button>
           </div>
         </div>
 
@@ -1158,8 +1158,8 @@
           </div>
 
           <!-- [R7-A] Filter bar — refreshed -->
-          <div class="billing-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-            <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+          <div class="billing-filter-bar filter-chip-row">
+            <span class="label-sm">🔍 กรอง:</span>
             <select id="billing-filter-type" onchange="renderBilling()" style="border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;">
               <option value="">ประเภททั้งหมด</option>
               <option value="quotation">ใบเสนอราคา</option>
@@ -1190,9 +1190,9 @@
                   <th>ผู้รับบริการ</th>
                   <th>วันที่</th>
                   <th>กำหนดชำระ</th>
-                  <th style="text-align:right;">ยอดรวม</th>
-                  <th style="text-align:right;">ชำระแล้ว</th>
-                  <th style="text-align:right;">คงค้าง</th>
+                  <th class="text-right">ยอดรวม</th>
+                  <th class="text-right">ชำระแล้ว</th>
+                  <th class="text-right">คงค้าง</th>
                   <th>สถานะ</th>
                   <th></th>
                 </tr>
@@ -1214,7 +1214,7 @@
             <button class="btn btn-primary btn-sm" onclick="openAddContractModal()">+ เพิ่มแพ็กเกจ</button>
           </div>
           <div id="contracts-list">
-            <div style="text-align:center;padding:40px;color:var(--text3);">กำลังโหลด...</div>
+            <div class="empty-center">กำลังโหลด...</div>
           </div>
         </div>
 
@@ -1228,7 +1228,7 @@
               </div>
               <button class="btn btn-primary btn-sm" onclick="openAddPhysioPackageModal()">➕ เพิ่มแพ็กเกจ</button>
             </div>
-            <div id="physio-packages-list"><div style="text-align:center;padding:40px;color:var(--text3);">loading...</div></div>
+            <div id="physio-packages-list"><div class="empty-center">loading...</div></div>
           </div>
         </div>
 
@@ -1240,7 +1240,7 @@
             </div>
           </div>
           <div id="payments-list">
-            <div style="text-align:center;padding:40px;color:var(--text3);">กำลังโหลด...</div>
+            <div class="empty-center">กำลังโหลด...</div>
           </div>
         </div>
       </div>
@@ -1256,29 +1256,29 @@
         <div style="max-width:600px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:24px;">
           <div style="display:grid;gap:16px;">
             <div>
-              <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">ชื่อกิจการ / บริษัท</label>
+              <label class="field-label">ชื่อกิจการ / บริษัท</label>
               <input id="bs-company" type="text" class="form-control" placeholder="เช่น บริษัท นวศรี เนอร์สซิ่งโฮม จำกัด">
             </div>
             <div>
-              <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">ที่อยู่</label>
+              <label class="field-label">ที่อยู่</label>
               <textarea id="bs-address" class="form-control" rows="3" placeholder="ที่อยู่กิจการ..."></textarea>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
               <div>
-                <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">เลขประจำตัวผู้เสียภาษี</label>
+                <label class="field-label">เลขประจำตัวผู้เสียภาษี</label>
                 <input id="bs-taxid" type="text" class="form-control" placeholder="0-0000-00000-00-0">
               </div>
               <div>
-                <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">เบอร์โทรศัพท์</label>
+                <label class="field-label">เบอร์โทรศัพท์</label>
                 <input id="bs-phone" type="text" class="form-control" placeholder="02-xxx-xxxx">
               </div>
             </div>
             <div>
-              <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">อีเมล</label>
+              <label class="field-label">อีเมล</label>
               <input id="bs-email" type="email" class="form-control" placeholder="contact@navasri.com">
             </div>
             <div>
-              <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">รูปแบบเลขที่เอกสาร</label>
+              <label class="field-label">รูปแบบเลขที่เอกสาร</label>
               <input id="bs-doc-prefix" type="text" class="form-control" placeholder="INV" value="INV" style="width:100px;display:inline-block;margin-right:8px;">
               <span style="font-size:13px;color:var(--text2);">BL=วางบิล, RE=เสร็จ, QT=เสนอราคา, TX=ภาษี, EXP=ค่าใช้จ่าย (reset ทุกเดือน)</span>
             </div>
@@ -1309,11 +1309,11 @@
             <div class="section-subtitle">บัญชีผู้ใช้งานระบบ · username/password · Role & Permission</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openAddAccountModal()" style="white-space:nowrap;">+ เพิ่ม Account</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openAddAccountModal()">+ เพิ่ม Account</button>
           </div>
         </div>
         <!-- Role legend -->
-        <div class="card" style="margin-bottom:16px;">
+        <div class="card mb-16">
           <div style="padding:14px 20px;">
             <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">สิทธิ์แต่ละ Role</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;font-size:12px;">
@@ -1415,35 +1415,35 @@
                     <input type="checkbox" id="notifyNewReq" onchange="saveLineSettings()">
                     <div>
                       <div style="font-weight:600;font-size:13.5px;">📋 พนักงานสร้างใบเบิกใหม่</div>
-                      <div style="font-size:12px;color:var(--text2);">แจ้งเตือน <strong>หัวหน้า</strong> เมื่อมีใบเบิกใหม่รอตรวจสอบ</div>
+                      <div class="fs-12 text-muted">แจ้งเตือน <strong>หัวหน้า</strong> เมื่อมีใบเบิกใหม่รอตรวจสอบ</div>
                     </div>
                   </label>
                   <label class="checkbox-row">
                     <input type="checkbox" id="notifyForward" onchange="saveLineSettings()">
                     <div>
                       <div style="font-weight:600;font-size:13.5px;">📤 หัวหน้าส่งต่อใบเบิก</div>
-                      <div style="font-size:12px;color:var(--text2);">แจ้งเตือน <strong>แผนกเบิกจ่าย</strong> เมื่อมีใบเบิกรออนุมัติ</div>
+                      <div class="fs-12 text-muted">แจ้งเตือน <strong>แผนกเบิกจ่าย</strong> เมื่อมีใบเบิกรออนุมัติ</div>
                     </div>
                   </label>
                   <label class="checkbox-row">
                     <input type="checkbox" id="notifyApproved" onchange="saveLineSettings()">
                     <div>
                       <div style="font-weight:600;font-size:13.5px;">✅ อนุมัติใบเบิกแล้ว</div>
-                      <div style="font-size:12px;color:var(--text2);">แจ้งเตือน <strong>ผู้เบิก</strong> เมื่อใบเบิกได้รับการอนุมัติและตัดสต็อกแล้ว</div>
+                      <div class="fs-12 text-muted">แจ้งเตือน <strong>ผู้เบิก</strong> เมื่อใบเบิกได้รับการอนุมัติและตัดสต็อกแล้ว</div>
                     </div>
                   </label>
                   <label class="checkbox-row">
                     <input type="checkbox" id="notifyRejected" onchange="saveLineSettings()">
                     <div>
                       <div style="font-weight:600;font-size:13.5px;">❌ ไม่อนุมัติใบเบิก</div>
-                      <div style="font-size:12px;color:var(--text2);">แจ้งเตือน <strong>ผู้เบิก</strong> เมื่อใบเบิกถูกปฏิเสธพร้อมเหตุผล</div>
+                      <div class="fs-12 text-muted">แจ้งเตือน <strong>ผู้เบิก</strong> เมื่อใบเบิกถูกปฏิเสธพร้อมเหตุผล</div>
                     </div>
                   </label>
                   <label class="checkbox-row">
                     <input type="checkbox" id="notifyLowStock" onchange="saveLineSettings()">
                     <div>
                       <div style="font-weight:600;font-size:13.5px;">⚠️ สินค้าใกล้หมด / หมดสต็อก</div>
-                      <div style="font-size:12px;color:var(--text2);">แจ้งเตือน <strong>แผนกเบิกจ่าย</strong> ทันทีที่สต็อกถึงจุดแจ้งเตือน</div>
+                      <div class="fs-12 text-muted">แจ้งเตือน <strong>แผนกเบิกจ่าย</strong> ทันทีที่สต็อกถึงจุดแจ้งเตือน</div>
                     </div>
                   </label>
                 </div>
@@ -1484,7 +1484,7 @@
           <!-- Test log -->
           <div class="card" id="testLogCard" style="display:none;">
             <div class="card-header"><div class="card-title">📡 Log การส่งล่าสุด</div><button class="btn btn-ghost btn-sm" onclick="clearLog()">ล้าง</button></div>
-            <div class="card-body" style="padding:0;">
+            <div class="card-body p-0">
               <div id="testLog" style="font-family:var(--mono);font-size:12px;padding:14px;max-height:200px;overflow-y:auto;"></div>
             </div>
           </div>
@@ -1526,19 +1526,19 @@
             <div class="section-subtitle">บันทึกเหตุการณ์และการดูแลแผล · ติดตามความรุนแรง · การปฐมพยาบาล</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openIncidentModal()" style="white-space:nowrap;">⚠️ + บันทึกอุบัติเหตุ</button>
-            <button class="btn btn-ghost btn-sm" onclick="openWoundModal()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">🩹 + บันทึกการทำแผล</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openIncidentModal()">⚠️ + บันทึกอุบัติเหตุ</button>
+            <button class="btn btn-ghost btn-sm chip-brand" onclick="openWoundModal()">🩹 + บันทึกการทำแผล</button>
           </div>
         </div>
         <!-- [R14-INC] Filter bar -->
-        <div class="page-redesign-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
-          <select class="form-control" id="incident-filter-type" onchange="renderIncidentPage()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+        <div class="page-redesign-filter-bar filter-chip-row">
+          <span class="label-sm">🔍 กรอง:</span>
+          <select class="form-control mini-select" id="incident-filter-type" onchange="renderIncidentPage()">
             <option value="">ประเภท: ทั้งหมด</option>
             <option value="incident">⚠️ อุบัติเหตุ</option>
             <option value="wound">🩹 แผลกดทับ</option>
           </select>
-          <input class="form-control" type="month" id="incident-filter-month" onchange="renderIncidentPage()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <input class="form-control mini-select" type="month" id="incident-filter-month" onchange="renderIncidentPage()">
         </div>
         <div class="tabs" id="incident-tabs">
           <div class="tab active" onclick="switchIncidentTab('incidents')">⚠️ รายงานอุบัติเหตุ</div>
@@ -1547,7 +1547,7 @@
         <div id="incident-tab-incidents">
           <div class="card">
             <div class="card-header"><div class="card-title">⚠️ รายงานอุบัติเหตุและความเสี่ยง</div></div>
-            <div class="card-body" style="padding:0;">
+            <div class="card-body p-0">
               <div class="table-wrap"><table>
                 <thead><tr>
                   <th>วันที่/เวลา</th><th>ผู้ป่วย</th><th>ประเภท</th><th>สถานที่</th><th>รายละเอียด</th><th>การปฐมพยาบาล</th><th>ความรุนแรง</th><th>แจ้ง</th><th>ผู้บันทึก</th><th>รูปภาพ</th><th>การจัดการ</th>
@@ -1560,7 +1560,7 @@
         <div id="incident-tab-wounds" style="display:none;">
           <div class="card">
             <div class="card-header"><div class="card-title">🩹 บันทึกการทำแผล / แผลกดทับ</div></div>
-            <div class="card-body" style="padding:0;">
+            <div class="card-body p-0">
               <div class="table-wrap"><table>
                 <thead><tr>
                   <th>วันที่</th><th>ผู้ป่วย</th><th>ตำแหน่งแผล</th><th>Stage</th><th>ขนาด (ซม.)</th><th>ลักษณะ</th><th>การรักษา</th><th>ความเจ็บปวด</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th>รูปภาพ</th><th>จัดการ</th>
@@ -1583,9 +1583,9 @@
             <div class="section-subtitle">แผนอาหาร · การให้อาหารทางสาย · แคลอรี · ข้อจำกัด/แพ้</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openDietModal()" style="white-space:nowrap;">🍽️ + กำหนดแผนอาหาร</button>
-            <button class="btn btn-ghost btn-sm" onclick="openTubeFeedModal()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">🧪 + สายให้อาหาร</button>
-            <button class="btn btn-ghost btn-sm" onclick="printDietaryReport()" style="white-space:nowrap;">🖨️ พิมพ์ใบจัดอาหาร</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openDietModal()">🍽️ + กำหนดแผนอาหาร</button>
+            <button class="btn btn-ghost btn-sm chip-brand" onclick="openTubeFeedModal()">🧪 + สายให้อาหาร</button>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="printDietaryReport()">🖨️ พิมพ์ใบจัดอาหาร</button>
           </div>
         </div>
         <div class="tabs">
@@ -1595,7 +1595,7 @@
         <div id="diet-tab-diets">
           <div class="card">
             <div class="card-header"><div class="card-title">🍽️ แผนโภชนาการผู้ป่วย</div></div>
-            <div class="card-body" style="padding:0;">
+            <div class="card-body p-0">
               <div class="table-wrap"><table>
                 <thead><tr>
                   <th>ผู้ป่วย</th><th>ประเภทอาหาร</th><th>ข้อจำกัด</th><th>วิธีรับอาหาร</th><th>แคลอรี</th><th>โปรตีน (g)</th><th>ผู้บันทึก</th><th>หมายเหตุ</th><th>อัปเดต</th><th>จัดการ</th>
@@ -1614,7 +1614,7 @@
           </div>
           <div class="card">
             <div class="card-header"><div class="card-title">🧪 บันทึกการให้อาหารทางสายยาง (Tube Feeding)</div></div>
-            <div class="card-body" style="padding:0;">
+            <div class="card-body p-0">
               <div class="table-wrap"><table>
                 <thead><tr>
                   <th>วันที่/เวลา</th><th>ผู้ป่วย</th><th>สูตรอาหาร</th><th>ปริมาตร (ml)</th><th>น้ำตาม (ml)</th><th>Residual (ml)</th><th>ผู้บันทึก</th><th>หมายเหตุ</th><th>จัดการ</th>
@@ -1637,14 +1637,14 @@
             <div class="section-subtitle">เงินที่ถือไว้ก่อน · คืนเมื่อจำหน่ายผู้รับบริการ</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openDepositModal()" style="white-space:nowrap;">🏦 + บันทึกมัดจำใหม่</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openDepositModal()">🏦 + บันทึกมัดจำใหม่</button>
           </div>
         </div>
         <!-- [R11-DEP] Filter bar — card-style with prefix -->
-        <div class="page-redesign-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+        <div class="page-redesign-filter-bar filter-chip-row">
+          <span class="label-sm">🔍 กรอง:</span>
           <input class="form-control" id="deposit-search" placeholder="ค้นหาชื่อผู้รับบริการ / HN..." oninput="renderDeposits()" style="flex:1;min-width:220px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
-          <select class="form-control" id="deposit-filter-status" onchange="renderDeposits()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select class="form-control mini-select" id="deposit-filter-status" onchange="renderDeposits()">
             <option value="">สถานะ: ทั้งหมด</option>
             <option value="active">💰 ถือครองอยู่</option>
             <option value="refunded">↩️ คืนแล้ว</option>
@@ -1673,7 +1673,7 @@
         </div>
         <div class="card">
           <div class="card-header"><div class="card-title">🏦 รายการเงินมัดจำและเงินประกัน</div></div>
-          <div class="card-body" style="padding:0;">
+          <div class="card-body p-0">
             <div class="table-wrap"><table>
               <thead><tr>
                 <th>ผู้ป่วย</th><th>ประเภท</th><th>จำนวนเงิน</th><th>วันที่รับ</th><th>วิธีชำระ</th><th>สถานะ</th><th>วันที่คืน/หัก</th><th>หมายเหตุ</th><th>จัดการ</th>
@@ -1695,14 +1695,14 @@
             <div class="section-subtitle" id="supplier-subtitle">รายชื่อผู้จำหน่าย · เครดิต · ข้อมูลติดต่อ</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openAddSupplierModal()" style="white-space:nowrap;">+ เพิ่มผู้จำหน่าย</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openAddSupplierModal()">+ เพิ่มผู้จำหน่าย</button>
           </div>
         </div>
         <!-- [R10-SUP] Filter bar -->
-        <div class="page-redesign-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+        <div class="page-redesign-filter-bar filter-chip-row">
+          <span class="label-sm">🔍 กรอง:</span>
           <input class="form-control" id="supplierSearch" placeholder="ค้นหาชื่อ / รหัส / เบอร์โทร / เลขภาษี..." oninput="renderSuppliers()" style="flex:1;min-width:240px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
-          <select class="form-control" id="supplierStatusFilter" onchange="renderSuppliers()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select class="form-control mini-select" id="supplierStatusFilter" onchange="renderSuppliers()">
             <option value="">สถานะ: ทั้งหมด</option>
             <option value="active">✓ ใช้งาน</option>
             <option value="inactive">⛔ ปิด</option>
@@ -1711,10 +1711,10 @@
         <div class="card">
           <div class="card-header">
             <div class="card-title">🏭 รายชื่อผู้จำหน่าย</div>
-            <div style="font-size:12px;color:var(--text2);" id="supplierCount"></div>
+            <div class="fs-12 text-muted" id="supplierCount"></div>
           </div>
           <div class="table-wrap">
-            <table style="width:100%;">
+            <table class="w-full">
               <thead><tr><th>#</th><th>รหัส</th><th>ชื่อ / ผู้ติดต่อ</th><th>ประเภท</th><th>โทร</th><th>มือถือ</th><th>อีเมล</th><th>เลขภาษี</th><th>เครดิต (วัน)</th><th>ธนาคาร</th><th>ที่อยู่</th><th>หมายเหตุ</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
               <tbody id="supplierTable"></tbody>
             </table>
@@ -1733,13 +1733,13 @@
             <div class="section-subtitle" id="supinv-subtitle">บันทึกใบแจ้งหนี้ · ติดตามวันครบกำหนด · จ่ายเงิน</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openAddSupplierInvoiceModal()" style="white-space:nowrap;">+ เพิ่มใบแจ้งหนี้</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openAddSupplierInvoiceModal()">+ เพิ่มใบแจ้งหนี้</button>
           </div>
         </div>
         <!-- [R10-SUPINV] Filter bar -->
-        <div class="page-redesign-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
-          <select class="form-control" id="supInvStatusFilter" onchange="renderSupplierInvoices()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+        <div class="page-redesign-filter-bar filter-chip-row">
+          <span class="label-sm">🔍 กรอง:</span>
+          <select class="form-control mini-select" id="supInvStatusFilter" onchange="renderSupplierInvoices()">
             <option value="">สถานะ: ทั้งหมด</option>
             <option value="draft">📝 ร่าง (ยังไม่รับสต็อก)</option>
             <option value="confirmed">📦 รับสต็อกแล้ว</option>
@@ -1755,17 +1755,17 @@
         <div class="card">
           <div class="card-header">
             <div class="card-title">🧾 ใบแจ้งหนี้จากผู้จำหน่าย</div>
-            <div style="font-size:12px;color:var(--text2);" id="supInvCount"></div>
+            <div class="fs-12 text-muted" id="supInvCount"></div>
           </div>
           <div class="table-wrap">
-            <table style="width:100%;">
+            <table class="w-full">
               <thead><tr>
                 <th>วันที่</th><th>เลขที่ใบแจ้งหนี้</th><th>ผู้จำหน่าย</th>
-                <th>ชื่องาน</th><th style="text-align:right;">ก่อน VAT</th>
-                <th style="text-align:right;">VAT</th>
-                <th style="text-align:right;">รวม</th>
-                <th style="text-align:right;">หัก ณ(%)</th>
-                <th style="text-align:right;">ยอดชำระ</th>
+                <th>ชื่องาน</th><th class="text-right">ก่อน VAT</th>
+                <th class="text-right">VAT</th>
+                <th class="text-right">รวม</th>
+                <th class="text-right">หัก ณ(%)</th>
+                <th class="text-right">ยอดชำระ</th>
                 <th>สถานะ</th><th>จัดการ</th>
               </tr></thead>
               <tbody id="supInvTable"></tbody>
@@ -1785,13 +1785,13 @@
             <div class="section-subtitle" id="pr-subtitle">บันทึกคำขอซื้อสินค้า · อนุมัติ · สั่งซื้อ · รับเข้า</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openAddPRModal()" style="white-space:nowrap;">+ สร้างคำขอใหม่</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openAddPRModal()">+ สร้างคำขอใหม่</button>
           </div>
         </div>
         <!-- [R10-PR] Filter bar -->
-        <div class="page-redesign-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
-          <select class="form-control" id="prStatusFilter" onchange="renderPurchaseRequests()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+        <div class="page-redesign-filter-bar filter-chip-row">
+          <span class="label-sm">🔍 กรอง:</span>
+          <select class="form-control mini-select" id="prStatusFilter" onchange="renderPurchaseRequests()">
             <option value="">สถานะ: ทั้งหมด</option>
             <option value="draft">📝 ร่าง</option>
             <option value="submitted">📤 ส่งแล้ว</option>
@@ -1805,7 +1805,7 @@
         <div class="card">
           <div class="card-header"><div class="card-title">📋 คำขอซื้อสินค้า</div></div>
           <div class="table-wrap">
-            <table style="width:100%;">
+            <table class="w-full">
               <thead><tr><th>วันที่</th><th>เลขที่</th><th>ผู้ขอ</th><th>ผู้จำหน่าย</th><th>ความเร่งด่วน</th><th>วันต้องการรับ</th><th>เหตุผล</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
               <tbody id="prTable"></tbody>
             </table>
@@ -1832,7 +1832,7 @@
           <div class="sr-tab" data-tab="bysupplier" onclick="switchStockReportTab('bysupplier')" style="padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text2);">🏭 แยกตามผู้จำหน่าย</div>
           <div class="sr-tab" data-tab="trace" onclick="switchStockReportTab('trace')" style="padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text2);">🔍 Traceability</div>
         </div>
-        <div style="margin-bottom:12px;">
+        <div class="mb-12">
           <input type="month" class="form-control" id="sr-month" style="width:160px;" oninput="renderMovementSummary()" value="">
         </div>
         <div id="sr-lowstock" class="sr-section card" style="padding:0;overflow:hidden;"></div>
@@ -1840,7 +1840,7 @@
         <div id="sr-movement" class="sr-section card" style="display:none;padding:16px;"></div>
         <div id="sr-bysupplier" class="sr-section card" style="display:none;padding:0;overflow:hidden;"></div>
         <div id="sr-trace" class="sr-section" style="display:none;">
-          <div class="card" style="margin-bottom:12px;">
+          <div class="card mb-12">
             <div class="card-header"><div class="card-title">🔍 ติดตามการเคลื่อนไหวสินค้า</div></div>
             <div class="card-body" style="padding:12px 16px;">
               <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -1864,8 +1864,8 @@
             <div class="section-subtitle">ค่าน้ำ · ค่าไฟ · ซ่อมแซม · เงินเดือน · บริการวิชาชีพ · และอื่นๆ</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()" style="white-space:nowrap;">+ บันทึกค่าใช้จ่าย</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportExpensesExcel()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">📥 Excel</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openAddExpenseModal()">+ บันทึกค่าใช้จ่าย</button>
+            <button class="btn btn-ghost btn-sm chip-brand" onclick="exportExpensesExcel()">📥 Excel</button>
           </div>
         </div>
         <!-- Summary Cards -->
@@ -1884,10 +1884,10 @@
           </div>
         </div>
         <!-- [R11-EXP] Filter bar — card-style -->
-        <div class="page-redesign-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+        <div class="page-redesign-filter-bar filter-chip-row">
+          <span class="label-sm">🔍 กรอง:</span>
           <input id="exp-search" class="form-control" placeholder="ค้นหารายการ / ผู้รับเงิน..." oninput="renderExpenses()" style="flex:1;min-width:200px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
-          <select id="exp-filter-category" class="form-control" onchange="renderExpenses()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select id="exp-filter-category" class="form-control mini-select" onchange="renderExpenses()">
             <option value="">หมวด: ทั้งหมด</option>
             <option value="utilities">สาธารณูปโภค</option>
             <option value="maintenance">ซ่อมแซม</option>
@@ -1903,24 +1903,24 @@
             <option value="transport">เดินทาง/น้ำมัน</option>
             <option value="other">อื่นๆ</option>
           </select>
-          <select id="exp-filter-status" class="form-control" onchange="renderExpenses()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select id="exp-filter-status" class="form-control mini-select" onchange="renderExpenses()">
             <option value="">สถานะ: ทั้งหมด</option>
             <option value="unpaid">⏳ ค้างชำระ</option>
             <option value="paid">✓ จ่ายแล้ว</option>
             <option value="overdue">🚨 เกินกำหนด</option>
           </select>
-          <select id="exp-filter-month" class="form-control" onchange="renderExpenses()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select id="exp-filter-month" class="form-control mini-select" onchange="renderExpenses()">
             <option value="">เดือน: ทั้งหมด</option>
           </select>
           <span id="exp-count" style="font-size:12px;color:var(--text3);margin-left:auto;"></span>
         </div>
         <!-- Table -->
         <div class="card" style="padding:0;overflow:hidden;">
-          <table class="data-table" style="width:100%;">
+          <table class="data-table w-full">
             <thead><tr>
               <th>วันที่</th><th>เลขที่</th><th>ประเภท</th>
               <th>รายการ</th><th>ผู้รับ/บริษัท</th>
-              <th style="text-align:right;">ยอดสุทธิ</th>
+              <th class="text-right">ยอดสุทธิ</th>
               <th>สถานะ</th><th>จ่ายโดย</th><th></th>
             </tr></thead>
             <tbody id="expTable"></tbody>
@@ -1939,8 +1939,8 @@
             <div class="section-subtitle">ทะเบียนอุปกรณ์ · ประวัติซ่อม · แจ้งเตือนบำรุงรักษา · ประกัน</div>
           </div>
           <div class="section-actions">
-            <button class="btn btn-primary btn-sm" onclick="openAddAssetModal()" id="btn-add-asset" style="white-space:nowrap;">+ เพิ่มครุภัณฑ์</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportAssetsExcel()" style="white-space:nowrap;color:var(--brand,#2e6b4f);border-color:var(--sage-200,#dbe5dc);background:var(--sage-50,#f4f8f5);">📥 Excel</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="openAddAssetModal()" id="btn-add-asset">+ เพิ่มครุภัณฑ์</button>
+            <button class="btn btn-ghost btn-sm chip-brand" onclick="exportAssetsExcel()">📥 Excel</button>
           </div>
         </div>
         <!-- Alert: ใกล้ถึงรอบซ่อม -->
@@ -1949,10 +1949,10 @@
           <div id="asset-alert-list" style="font-size:13px;"></div>
         </div>
         <!-- [R11-AST] Filter bar -->
-        <div class="page-redesign-filter-bar" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
-          <span style="font-size:12px;color:var(--text2);font-weight:600;">🔍 กรอง:</span>
+        <div class="page-redesign-filter-bar filter-chip-row">
+          <span class="label-sm">🔍 กรอง:</span>
           <input id="asset-search" class="form-control" placeholder="ค้นหาชื่อ / รหัส / ตำแหน่ง..." oninput="renderAssets()" style="flex:1;min-width:220px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;background:white;color:var(--text);font-size:13px;height:auto;">
-          <select id="asset-filter-category" class="form-control" onchange="renderAssets()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select id="asset-filter-category" class="form-control mini-select" onchange="renderAssets()">
             <option value="">หมวด: ทั้งหมด</option>
             <option value="medical_equipment">🩺 เครื่องมือแพทย์</option>
             <option value="furniture">🛏 เฟอร์นิเจอร์/เตียง</option>
@@ -1962,7 +1962,7 @@
             <option value="it_telecom">💻 IT/สื่อสาร</option>
             <option value="other">📦 อื่นๆ</option>
           </select>
-          <select id="asset-filter-status" class="form-control" onchange="renderAssets()" style="width:auto;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:white;color:var(--text);font-size:13px;height:auto;">
+          <select id="asset-filter-status" class="form-control mini-select" onchange="renderAssets()">
             <option value="">สถานะ: ทั้งหมด</option>
             <option value="active">✓ ใช้งานปกติ</option>
             <option value="under_repair">🔧 ส่งซ่อม</option>
@@ -1972,7 +1972,7 @@
         </div>
         <!-- Table -->
         <div class="card" style="padding:0;overflow:hidden;">
-          <table class="data-table" style="width:100%;">
+          <table class="data-table w-full">
             <thead><tr>
               <th>รหัส</th><th>ชื่ออุปกรณ์</th><th>ประเภท</th>
               <th>ตำแหน่ง</th><th>ซ่อมล่าสุด</th>
@@ -1991,7 +1991,7 @@
     <div class="page-subtitle">ประวัติการใช้งานระบบ</div>
   </div>
 </div>
-<div class="card" style="margin-bottom:12px;">
+<div class="card mb-12">
   <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
     <div>
       <label class="form-label">หมวดหมู่</label>
