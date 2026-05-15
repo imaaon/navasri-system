@@ -494,8 +494,7 @@
 
   /* Form */
   .form-group { margin-bottom: 16px; }
-  .form-label { font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
-  .form-label .required { color: var(--red); margin-left: 2px; }
+  /* ── .form-label + .required moved to redesign block (line ~2976) ── */
   /* ── .form-control base rule — moved to redesign block (line ~2989) ── */
   /* ── Select arrow fix (iOS Safari doesn't render default arrow on styled selects) ── */
   select.form-control {
@@ -2974,12 +2973,15 @@ tr:hover td {
 
 /* ──────────── 6. FORMS ──────────── */
 .form-label {
+  display: block;
   font-size: 12.5px;
   font-weight: 500;
   color: var(--ink);
+  margin-bottom: 6px;
 }
 .form-label .required {
   color: var(--danger);
+  margin-left: 2px;
 }
 .form-control {
   width: 100%;
