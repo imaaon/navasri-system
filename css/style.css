@@ -4575,3 +4575,157 @@ tr:hover td {
    END R10-R15 CONSOLIDATED — REDESIGN COMPLETE (R3-R15 = 13 iterations, 30+ pages)
    Refactored by R16-A: 11 class variants → 1 unified class (page-redesign-*)
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R16-B · Utility classes for redesigned page sections
+   Added 14 พ.ค. 69 · Replaces ~189 inline style instances
+   Single source of truth for section headers + filter bars + KPI cards
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Section header row (replaces 22× inline) ── */
+.section-header-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+/* ── Section title wrap (flex grow container, replaces 21×) ── */
+.section-title-wrap {
+  flex: 1;
+  min-width: 240px;
+}
+
+/* ── Section h2 title (replaces 22×) ── */
+.section-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+
+/* ── Section emoji icon (replaces 22×) ── */
+.section-icon {
+  font-size: 24px;
+}
+
+/* ── Section subtitle (replaces 22×) ── */
+.section-subtitle {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 4px;
+}
+
+/* ── Section actions row (replaces 15×) ── */
+.section-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ── Filter bar (replaces 13×) ── */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+/* ── Filter prefix label (🔍 กรอง:) (replaces 13×) ── */
+.filter-prefix {
+  font-size: 12px;
+  color: var(--text2);
+  font-weight: 600;
+}
+
+/* ── Filter input/select shared style (replaces 17×) ── */
+.filter-input,
+.filter-select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  background: white;
+  color: var(--text);
+  font-size: 13px;
+  height: auto;
+}
+.filter-select {
+  padding: 6px 10px;
+  cursor: pointer;
+  width: auto;
+}
+.filter-input--grow {
+  flex: 1;
+  min-width: 220px;
+}
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: var(--brand, #2e6b4f);
+  box-shadow: 0 0 0 2px var(--sage-100, #e6efe7);
+}
+
+/* ── KPI card base (replaces 12× inline base) ── */
+.kpi-card-r10 {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.kpi-card-r10[onclick] {
+  cursor: pointer;
+}
+.kpi-card-r10[onclick]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.kpi-card-r10__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.kpi-card-r10__label {
+  font-size: 12px;
+  color: var(--text2);
+  font-weight: 500;
+}
+.kpi-card-r10__decor {
+  font-size: 18px;
+  opacity: 0.4;
+}
+.kpi-card-r10__value {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--mono, monospace);
+  letter-spacing: -0.5px;
+}
+.kpi-card-r10__sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 3px;
+}
+
+/* ── KPI grid container ── */
+.kpi-grid-r10 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R16-B utilities
+   ════════════════════════════════════════════════════════════════ */
