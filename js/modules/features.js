@@ -67,26 +67,26 @@ function renderMonthlySummaryCard(targetElementId, monthStr) {
 
       <!-- Summary Cards -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;padding:16px 16px 0 16px;margin-bottom:20px;">
-        <div style="background:#eafaf1;border:1px solid #a9dfbf;border-radius:10px;padding:18px 20px;text-align:center;">
+        <div style="background:var(--success-bg);border:1px solid var(--success-bg);border-radius:10px;padding:18px 20px;text-align:center;">
           <div style="font-size:13px;color:var(--success);font-weight:600;margin-bottom:6px;">💵 รายได้รวม</div>
           <div style="font-size:20px;font-weight:800;color:var(--success);">${_thb(totalRevenue)}</div>
-          <div style="font-size:12px;color:#7dcea0;margin-top:4px;">${paidPayments.length} รายการ</div>
+          <div style="font-size:12px;color:var(--success);margin-top:4px;">${paidPayments.length} รายการ</div>
         </div>
-        <div style="background:#fdedec;border:1px solid #f1948a;border-radius:10px;padding:18px 20px;text-align:center;">
+        <div style="background:var(--danger-bg);border:1px solid var(--danger);border-radius:10px;padding:18px 20px;text-align:center;">
           <div style="font-size:13px;color:var(--danger);font-weight:600;margin-bottom:6px;">💸 รายจ่ายรวม</div>
           <div style="font-size:20px;font-weight:800;color:var(--danger);">${_thb(totalExpense)}</div>
-          <div style="font-size:12px;color:#f1948a;margin-top:4px;">ค่าใช้จ่าย + จัดซื้อ</div>
+          <div style="font-size:12px;color:var(--danger);margin-top:4px;">ค่าใช้จ่าย + จัดซื้อ</div>
         </div>
-        <div style="background:${netProfit>=0?'#eafaf1':'#fdedec'};border:1px solid ${netProfit>=0?'#a9dfbf':'#f1948a'};border-radius:10px;padding:18px 20px;text-align:center;">
+        <div style="background:${netProfit>=0?'var(--success-bg)':'var(--danger-bg)'};border:1px solid ${netProfit>=0?'var(--success-bg)':'var(--danger)'};border-radius:10px;padding:18px 20px;text-align:center;">
           <div style="font-size:13px;color:${profitColor};font-weight:600;margin-bottom:6px;">${profitIcon} กำไรสุทธิ</div>
           <div style="font-size:20px;font-weight:800;color:${profitColor};">${_thb(netProfit)}</div>
           <div style="font-size:12px;color:${profitColor}99;margin-top:4px;">${netProfit>=0?'กำไร':'ขาดทุน'}</div>
         </div>
         ${overdueTotal > 0 ? `
-        <div style="background:#fef9e7;border:1px solid #f9e79f;border-radius:10px;padding:18px 20px;text-align:center;cursor:pointer;" onclick="showPage('billing')">
+        <div style="background:var(--warning-bg);border:1px solid var(--warning);border-radius:10px;padding:18px 20px;text-align:center;cursor:pointer;" onclick="showPage('billing')">
           <div style="font-size:13px;color:var(--warning);font-weight:600;margin-bottom:6px;">⏰ ค้างชำระ</div>
           <div style="font-size:20px;font-weight:800;color:var(--warning);">${_thb(overdueTotal)}</div>
-          <div style="font-size:12px;color:#f0b27a;margin-top:4px;">${overdueInvoices.length} บิล</div>
+          <div style="font-size:12px;color:var(--warning);margin-top:4px;">${overdueInvoices.length} บิล</div>
         </div>` : ''}
       </div>
 
@@ -615,7 +615,7 @@ async function renderAuditPage() {
       mods.forEach(m => { const o=document.createElement('option'); o.value=m; o.textContent=m; modSel.appendChild(o); });
     }
 
-    const actionColors = {create:'var(--success)',update:'var(--info-text)',delete:'var(--danger)',login:'var(--purple)',logout:'var(--ink-3)',approve:'#16a085',reject:'var(--warning)'};
+    const actionColors = {create:'var(--success)',update:'var(--info-text)',delete:'var(--danger)',login:'var(--purple)',logout:'var(--ink-3)',approve:'var(--brand)',reject:'var(--warning)'};
     const total = count || 0;
     if (countEl) countEl.textContent = 'ทั้งหมด ' + total.toLocaleString() + ' รายการ';
 

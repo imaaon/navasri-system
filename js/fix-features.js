@@ -454,7 +454,7 @@ console.log('[fix] v98 snippet loaded');
         var tDshow = tooMany ? tD.slice(0, MAX) : tD;
         if (tooMany) {
           var warn = document.createElement('div');
-          warn.style.cssText = 'padding:10px;text-align:center;background:#fef3c7;color:#92400e;font-size:12px;border-radius:6px;margin-bottom:8px;';
+          warn.style.cssText = 'padding:10px;text-align:center;background:var(--warning-bg);color:var(--warning-text);font-size:12px;border-radius:6px;margin-bottom:8px;';
           warn.textContent = '⚠️ พบ ' + tD.length + ' รายการ — แสดง ' + MAX + ' รายการล่าสุด กรุณาเลือกช่วงให้แคบลง';
           tubeSection.appendChild(warn);
         }

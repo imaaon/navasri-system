@@ -65,10 +65,10 @@ function updateLineBanner() {
   const s = db.lineSettings;
   if (s.enabled) {
     banner.style.display = '';
-    banner.innerHTML = `<div style="background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+    banner.innerHTML = `<div style="background:var(--success-bg);border:1px solid var(--success);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
       <span style="font-size:20px;">✅</span>
-      <div><div style="font-weight:700;color:#166534;font-size:13.5px;">Line Notification เปิดใช้งานแล้ว</div>
-      <div style="font-size:12px;color:#15803d;margin-top:1px;">ส่งผ่าน Supabase Edge Function — ปลอดภัย ไม่มี CORS</div></div>
+      <div><div style="font-weight:700;color:var(--success-text);font-size:13.5px;">Line Notification เปิดใช้งานแล้ว</div>
+      <div style="font-size:12px;color:var(--success-text);margin-top:1px;">ส่งผ่าน Supabase Edge Function — ปลอดภัย ไม่มี CORS</div></div>
     </div>`;
   } else {
     banner.style.display = 'none';

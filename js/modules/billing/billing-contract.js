@@ -11,7 +11,7 @@ function renderPaymentsTab() {
 
   container.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;">
-      <div style="background:#f0fff4;border:1px solid var(--success);border-radius:10px;padding:14px;text-align:center;">
+      <div style="background:var(--success-bg);border:1px solid var(--success);border-radius:10px;padding:14px;text-align:center;">
         <div style="font-size:11px;color:var(--success);margin-bottom:4px;">รับชำระรวมทั้งหมด</div>
         <div style="font-size:18px;font-weight:700;color:var(--success);">${formatThb(totalReceived)}</div>
       </div>

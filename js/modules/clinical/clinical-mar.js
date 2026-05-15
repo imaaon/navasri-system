@@ -117,7 +117,7 @@ function renderMARTab(pid, patientId) {
               const tooMany = filteredAll.length > MAX_ROWS;
               const filtered = tooMany ? filteredAll.slice(0, MAX_ROWS) : filteredAll;
               const warning = tooMany 
-                ? `<tr><td colspan="9" style="text-align:center;padding:10px;background:#fef3c7;color:#92400e;font-size:12px;">⚠️ พบ ${filteredAll.length} รายการ — แสดง ${MAX_ROWS} รายการล่าสุด กรุณาเลือกช่วงให้แคบลง</td></tr>` 
+                ? `<tr><td colspan="9" style="text-align:center;padding:10px;background:var(--warning-bg);color:var(--warning-text);font-size:12px;">⚠️ พบ ${filteredAll.length} รายการ — แสดง ${MAX_ROWS} รายการล่าสุด กรุณาเลือกช่วงให้แคบลง</td></tr>` 
                 : '';
               const rangeText = (fromDate === toDate) ? '' : ` (${fromDate} ถึง ${toDate})`;
               return filtered.length ? warning + filtered.map(r => {

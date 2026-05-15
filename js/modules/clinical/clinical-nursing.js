@@ -84,7 +84,7 @@ function renderNursingTab(pid, patientId, overrideFrom, overrideTo) {
     }).join('');
   
   const warning = tooMany 
-    ? `<div style="padding:10px;text-align:center;background:#fef3c7;color:#92400e;font-size:12px;border-radius:6px;margin-bottom:8px;">⚠️ พบ ${allDates.length} วัน — แสดง ${MAX_DAYS} วันล่าสุด กรุณาเลือกช่วงให้แคบลง</div>` 
+    ? `<div style="padding:10px;text-align:center;background:var(--warning-bg);color:var(--warning-text);font-size:12px;border-radius:6px;margin-bottom:8px;">⚠️ พบ ${allDates.length} วัน — แสดง ${MAX_DAYS} วันล่าสุด กรุณาเลือกช่วงให้แคบลง</div>` 
     : '';
   
   const isTodayInRange = today >= fromDate && today <= toDate;

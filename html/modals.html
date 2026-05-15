@@ -1457,8 +1457,8 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="reset-invoice-id">
-      <div style="background:#fff3e0;border:1px solid #f5a453;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
-        <div style="font-weight:700;color:#f5a453;margin-bottom:4px;">⚠️ คำเตือน</div>
+      <div style="background:var(--warning-bg);border:1px solid var(--warning);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-weight:700;color:var(--warning);margin-bottom:4px;">⚠️ คำเตือน</div>
         <div style="font-size:13px;color:#7d4e00;">การ Reset จะบันทึก Log ไว้ทุกครั้ง และจะแสดงในประวัติการ Reset ครับ</div>
       </div>
       <div class="form-group">
@@ -2069,14 +2069,14 @@
     </div>
     <div class="modal-body" style="padding:20px 24px;">
 
-      <div style="background:#e8f5fa;border:1px solid #b0d8e8;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;">
+      <div style="background:var(--info-bg);border:1px solid var(--info);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;">
         💡 ใช้ <strong>n8n</strong> (แนะนำ — ฟรี self-host หรือ cloud trial) หรือ <strong>Make.com</strong> (ฟรี 1,000 operations/เดือน) เป็นตัวกลางเชื่อม Webhook → Line
       </div>
 
       <!-- PART A: LINE OA -->
       <div style="margin-bottom:24px;">
         <div style="font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-          <span style="background:#06c755;color:white;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">A</span>
+          <span style="background:var(--success);color:white;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">A</span>
           สร้าง Line Official Account & Messaging API
         </div>
         <div style="display:grid;gap:8px;">
@@ -2099,7 +2099,7 @@
           <div class="guide-step"><span class="guide-num">2</span><div>New Workflow → Add Node → เลือก <strong>Webhook</strong></div></div>
           <div class="guide-step"><span class="guide-num">3</span><div>ตั้งค่า Webhook: Method = <strong>POST</strong>, Authentication = <strong>None</strong> → Copy Webhook URL</div></div>
           <div class="guide-step"><span class="guide-num">4</span><div>เพิ่ม Node → <strong>HTTP Request</strong> → ตั้งค่าดังนี้:<br>
-            <div style="background:#f8f8f8;border:1px solid #e0e0e0;border-radius:6px;padding:10px;margin-top:8px;font-family:monospace;font-size:12px;line-height:1.7;">
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:10px;margin-top:8px;font-family:monospace;font-size:12px;line-height:1.7;">
               URL: <strong>https://api.line.me/v2/bot/message/push</strong><br>
               Method: <strong>POST</strong><br>
               Header: <strong>Authorization: Bearer {Channel Access Token}</strong><br>
@@ -2163,7 +2163,7 @@
         <button class="modal-close" style="position:static;margin-left:8px;" onclick="closeModal('modal-doc-preview')">✕</button>
       </div>
     </div>
-    <div id="preview-content" style="padding:32px;background:#f5f5f5;min-height:400px;">
+    <div id="preview-content" style="padding:32px;background:var(--surface-2);min-height:400px;">
       <div style="background:white;max-width:800px;margin:0 auto;padding:32px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.1);" id="preview-doc-body">
       </div>
     </div>
@@ -2986,7 +2986,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-addExpense')">ยกเลิก</button>
-      <button class="btn btn-ghost" onclick="saveExpense({print:true})" style="color:#5a9e7a;border-color:#5a9e7a;">🖨️ บันทึก + พิมพ์ใบสำคัญจ่าย</button>
+      <button class="btn btn-ghost" onclick="saveExpense({print:true})" style="color:var(--brand);border-color:var(--brand);">🖨️ บันทึก + พิมพ์ใบสำคัญจ่าย</button>
       <button class="btn btn-primary" onclick="saveExpense()">💾 บันทึก</button>
     </div>
   </div>
@@ -3178,11 +3178,11 @@
   <div class="modal" style="max-width:640px;max-height:92vh;display:flex;flex-direction:column;">
     <div class="modal-header">
       <div class="modal-title">🔍 รายละเอียดใบแจ้งหนี้</div>
-      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#e0f7ec;color:#0a3626;font-weight:500;">ดูข้อมูลเท่านั้น</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--success-bg);color:var(--success-text);font-weight:500;">ดูข้อมูลเท่านั้น</span>
       <button class="modal-close" onclick="closeModal('modal-view-supinv')">&#x2715;</button>
     </div>
     <div class="modal-body overflow-y-auto-flex">
-      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#0F6E56;background:#E1F5EE;padding:8px 12px;border-radius:6px;margin-bottom:14px;">&#128065; โหมดดูข้อมูล — ไม่สามารถแก้ไขได้</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--success-text);background:var(--success-bg);padding:8px 12px;border-radius:6px;margin-bottom:14px;">&var(--success-text); โหมดดูข้อมูล — ไม่สามารถแก้ไขได้</div>
       <div id="view-supinv-content"></div>
     </div>
     <div class="modal-footer">
@@ -3195,11 +3195,11 @@
   <div class="modal" style="max-width:640px;max-height:92vh;display:flex;flex-direction:column;">
     <div class="modal-header">
       <div class="modal-title">🔍 รายละเอียดผู้จำหน่าย</div>
-      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#e0f7ec;color:#0a3626;font-weight:500;">ดูข้อมูลเท่านั้น</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--success-bg);color:var(--success-text);font-weight:500;">ดูข้อมูลเท่านั้น</span>
       <button class="modal-close" onclick="closeModal('modal-view-supplier')">&#x2715;</button>
     </div>
     <div class="modal-body overflow-y-auto-flex">
-      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#0F6E56;background:#E1F5EE;padding:8px 12px;border-radius:6px;margin-bottom:14px;">&#128065; โหมดดูข้อมูล — ไม่สามารถแก้ไขได้</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--success-text);background:var(--success-bg);padding:8px 12px;border-radius:6px;margin-bottom:14px;">&var(--success-text); โหมดดูข้อมูล — ไม่สามารถแก้ไขได้</div>
       <div id="view-supplier-content"></div>
     </div>
     <div class="modal-footer">
@@ -3212,11 +3212,11 @@
   <div class="modal" style="max-width:640px;max-height:92vh;display:flex;flex-direction:column;">
     <div class="modal-header">
       <div class="modal-title">🔍 รายละเอียดคำขอซื้อ</div>
-      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#e0f7ec;color:#0a3626;font-weight:500;">ดูข้อมูลเท่านั้น</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--success-bg);color:var(--success-text);font-weight:500;">ดูข้อมูลเท่านั้น</span>
       <button class="modal-close" onclick="closeModal('modal-view-pr')">&#x2715;</button>
     </div>
     <div class="modal-body overflow-y-auto-flex">
-      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#0F6E56;background:#E1F5EE;padding:8px 12px;border-radius:6px;margin-bottom:14px;">&#128065; โหมดดูข้อมูล — ไม่สามารถแก้ไขได้</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--success-text);background:var(--success-bg);padding:8px 12px;border-radius:6px;margin-bottom:14px;">&var(--success-text); โหมดดูข้อมูล — ไม่สามารถแก้ไขได้</div>
       <div id="view-pr-content"></div>
     </div>
     <div class="modal-footer">

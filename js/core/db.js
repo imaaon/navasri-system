@@ -527,7 +527,7 @@ function renderAllergyBanner(patient, compact=false) {
   const tone = hasSevere ? 'severe' : hasModerate ? 'moderate' : 'mild';
   // สีพื้น/ขอบ/ข้อความ ตาม tone
   const palette = {
-    severe:   { bg:'#fdf0ee', border:'var(--danger-text)', text:'#7a1f12', icon:'var(--danger-text)', label:'⚠️ แพ้ยา / แพ้อาหาร — เฝ้าระวัง', chipBg:'rgba(192,57,43,0.08)', chipText:'#7a1f12' },
+    severe:   { bg:'var(--danger-bg)', border:'var(--danger-text)', text:'var(--danger-text)', icon:'var(--danger-text)', label:'⚠️ แพ้ยา / แพ้อาหาร — เฝ้าระวัง', chipBg:'rgba(192,57,43,0.08)', chipText:'var(--danger-text)' },
     moderate: { bg:'var(--warning-bg)', border:'var(--warning)', text:'var(--warning-text)', icon:'var(--warning-text)', label:'⚠️ แพ้ยา / แพ้อาหาร — เฝ้าระวัง', chipBg:'rgba(230,126,34,0.10)', chipText:'var(--warning-text)' },
     mild:     { bg:'var(--warning-bg)', border:'#d4a64a', text:'#6b4a0e', icon:'#b8862a', label:'⚠️ แพ้ยา / แพ้อาหาร — โปรดทราบ',  chipBg:'rgba(184,134,42,0.10)', chipText:'#6b4a0e' }
   }[tone];
@@ -652,7 +652,7 @@ function showLoadingOverlay(show) {
     el = document.createElement('div');
     el.id = '_loading_overlay';
     el.style.cssText = 'position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;';
-    el.innerHTML = '<div style="font-size:40px;">🏥</div><div style="font-size:16px;font-weight:700;color:var(--brand);">กำลังโหลดข้อมูล...</div><div style="font-size:12px;color:#6b7280;">กำลังเชื่อมต่อ Supabase</div>';
+    el.innerHTML = '<div style="font-size:40px;">🏥</div><div style="font-size:16px;font-weight:700;color:var(--brand);">กำลังโหลดข้อมูล...</div><div style="font-size:12px;color:var(--ink-2);">กำลังเชื่อมต่อ Supabase</div>';
     document.body.appendChild(el);
   }
   el.style.display = show ? 'flex' : 'none';

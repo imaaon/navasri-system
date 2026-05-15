@@ -253,10 +253,10 @@ function showPhysioPackageBanner(rule, patientId) {
       }).length;
       var used = Math.min(inPackageCount, qty); // cap ที่ quota
       
-      var html = '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 12px;margin-bottom:8px;">' +
-        '<div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:4px;">📦 แพ็คเกจของลูกค้า</div>' +
-        '<div style="font-size:12px;color:#15803d;">' + dur + ' นาที × ' + rate.toLocaleString("th-TH") + ' บาท/session × ' + qty + ' ครั้ง/เดือน</div>' +
-        '<div style="font-size:11px;color:#16a34a;margin-top:2px;">ใช้แล้ว ' + used + '/' + qty + ' ครั้งในเดือนนี้ (เฉพาะที่ตรงสเปค)</div>' +
+      var html = '<div style="background:var(--success-bg);border:1px solid var(--success);border-radius:8px;padding:10px 12px;margin-bottom:8px;">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--success-text);margin-bottom:4px;">📦 แพ็คเกจของลูกค้า</div>' +
+        '<div style="font-size:12px;color:var(--success-text);">' + dur + ' นาที × ' + rate.toLocaleString("th-TH") + ' บาท/session × ' + qty + ' ครั้ง/เดือน</div>' +
+        '<div style="font-size:11px;color:var(--success);margin-top:2px;">ใช้แล้ว ' + used + '/' + qty + ' ครั้งในเดือนนี้ (เฉพาะที่ตรงสเปค)</div>' +
         '<button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:11px;padding:2px 8px;" onclick="resetPhysioToPackage()">↺ ใช้สเปคแพ็คเกจ</button>' +
         '</div>';
       banner.innerHTML = html;
@@ -306,10 +306,10 @@ function validatePhysioAgainstPackage() {
     if (confirmCB) confirmCB.checked = false;
   } else {
     if (warn) {
-      warn.innerHTML = '<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 12px;">' +
-        '<div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;">⚠️ ค่ากรอกไม่ตรงสเปคแพ็คเกจ</div>' +
-        '<div style="font-size:11px;color:#78350f;margin-bottom:6px;">จะคิดเป็น Add-on นอกแพ็คเกจ — ลูกค้าจะถูกเรียกเก็บ ' + (rate || 0).toLocaleString("th-TH") + ' บาท</div>' +
-        '<label style="font-size:11px;display:flex;align-items:center;gap:6px;color:#78350f;">' +
+      warn.innerHTML = '<div style="background:var(--warning-bg);border:1px solid var(--warning);border-radius:8px;padding:10px 12px;">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--warning-text);margin-bottom:4px;">⚠️ ค่ากรอกไม่ตรงสเปคแพ็คเกจ</div>' +
+        '<div style="font-size:11px;color:var(--warning-text);margin-bottom:6px;">จะคิดเป็น Add-on นอกแพ็คเกจ — ลูกค้าจะถูกเรียกเก็บ ' + (rate || 0).toLocaleString("th-TH") + ' บาท</div>' +
+        '<label style="font-size:11px;display:flex;align-items:center;gap:6px;color:var(--warning-text);">' +
         '<input type="checkbox" id="physio-addon-confirm" onchange="validatePhysioAgainstPackage()"' + (confirmCB && confirmCB.checked ? ' checked' : '') + '>' +
         'ฉันยืนยันว่าต้องการบันทึกเป็น Add-on' +
         '</label>' +

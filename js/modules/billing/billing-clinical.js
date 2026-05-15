@@ -593,7 +593,7 @@ function printDietaryReport() {
   <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'IBM Plex Sans Thai',sans-serif;font-size:13px;padding:24px;}
   h1{font-size:18px;color:#2d4a38;margin-bottom:4px;}h2{font-size:12px;color:#888;margin-bottom:16px;font-weight:400;}
   table{width:100%;border-collapse:collapse;}th{background:#2d4a38;color:#fff;padding:8px 10px;font-size:12px;}
-  td{border:1px solid #ddd;padding:7px 10px;}.print-btn{position:fixed;top:12px;right:12px;background:#5a9e7a;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;}
+  td{border:1px solid #ddd;padding:7px 10px;}.print-btn{position:fixed;top:12px;right:12px;background:var(--brand);color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;}
   @media print{.print-btn{display:none;}}</style></head><body>
   <button class="print-btn" onclick="window.print()">🖨️ พิมพ์</button>
   <h1>🍽️ ใบจัดอาหารประจำวัน — นวศรี เนอร์สซิ่งโฮม</h1>

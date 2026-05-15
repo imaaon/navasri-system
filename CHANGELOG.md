@@ -6,6 +6,94 @@
 
 ---
 
+
+## [R17–R24: R3 Design Alignment] — 15 พ.ค. 2569
+
+ชุดการปรับปรุงเพื่อ align ระบบทั้งหมดกับ R3 design intent — กำจัด legacy code ที่หลงเหลือ และลดความซับซ้อนของ codebase
+
+### R17 — Inline Styles Reduction Batch 2 (Tag `v-r17-complete`)
+
+- เพิ่ม 22 utility classes ใน `style.css` (`.m-0`, `.section-label`, `.fs-13`, `.pos-rel`, `.typeahead-dropdown`, `.grid-2col`, etc.)
+- ลด inline styles ใน `html/modals.html`: 589 → 438 (-151)
+- ลด inline styles ใน `html/pages.html`: 555 → 379 (-176)
+- รวมลด -327 inline styles
+- ไม่แตะ `style="display:none"` (JS toggle ใช้)
+
+### BUG-D06 Fix — Physio Package Modal (Tag `bug-d06-fixed`)
+
+- แก้ DOM ID mismatch 9/12 ใน `openAddPhysioPackageModal()` + `savePhysioPackage()`
+- เปลี่ยน pattern จาก typeahead → select
+- ลบ field ที่ไม่อยู่ใน HTML (`pp-used`, `pp-active`) → stash ค่าเดิมผ่าน `dataset` แทน
+- ผู้ใช้สามารถเพิ่ม/แก้ Physio Package ได้แล้ว (เดิมพังเงียบ ๆ)
+
+### R18 — Inline Styles Reduction Batch 3 (Tag `v-r18-complete`)
+
+- เพิ่ม 26 utility classes (chip-toggle 3 sizes, modal max-widths, tab-button, label-mini, etc.)
+- ลด -138 inline styles
+- รวม R17+R18: -465 inline styles
+
+### R19 — CSS Duplicate Cleanup (Safe) (Tag `v-r19-complete`)
+
+- รวม `.sidebar` legacy (layout) + R3 (visual) เป็น rule เดียว
+- ลบ legacy `.toast` backgrounds ที่ทับ R3 redesign (พื้นเขียว/ส้ม/แดงสด → พื้นขาวขอบซ้ายสี)
+
+### R20 — Eliminate All CSS Duplicates (Tag `v-r20-complete`)
+
+- รวม/ลบ 48 selectors ที่ legacy + R3 redesign เขียนซ้อนกัน → เหลือ 1 rule ต่อ selector
+- กลยุทธ์: ยึด R3 (override) + เก็บ legacy-only functional properties
+- Selectors ที่กระทบ: `.btn` family (6), `.card` family (4), `.modal-*` (7), `.sidebar/nav/topbar` (10), tables (5), `.cat-*` (4), อื่น ๆ
+- Verified: brace balance + property-key sets ตรงกัน R19 baseline
+
+### R21 — Replace Non-R3 Colors in JS/HTML (Tag `v-r21-complete`)
+
+- แทน 230 occurrences ของสีสด R2-era ใน 29 ไฟล์
+- `#e74c3c` → `var(--danger)` (85 ครั้ง)
+- `#3498db` → `var(--info)` (13 ครั้ง)
+- `#27ae60` → `var(--success)`
+- `#f39c12` → `var(--warning)`
+- Alpha versions `#XXXXXX22` → semantic-bg tokens
+- **Critical fix:** `vitalsSparkline` SVG attribute → `style=""` (SVG attrs ไม่ resolve CSS var)
+
+### R22 — CSS Hex Hunt (Tag `v-r22-complete`)
+
+- แทน 27 R2-era hex literals ใน `style.css` → R3 tokens
+- ค้นพบและหลีกเลี่ยง bug: CSS attribute selectors `[style*="#hex"]` ต้องเก็บ literal hex (match กับ HTML inline)
+
+### R23 — Final Non-R3 Cleanup (Tag `v-r23-complete`)
+
+- เก็บกวาด 90 บรรทัดที่ R21 script ไม่ครอบ
+- `#e67e22`, `#2980b9`, `#d4760a`, `#95a5a6`, `#2a7a4f`, `#7a4310`, `#d35400`, `#8e44ad` → R3 tokens
+
+### R24 — Deep Cleanup (Tag `v-r24-complete`)
+
+- ครอบ Tailwind-style colors + tailwind grays (`#fef3c7`, `#15803d`, `#9ca3af`, etc.) → R3 tokens
+- ครอบ 100+ unique colors → semantic tokens
+- เก็บ legacy hex ใน `billing-print.js` (PDF generation ใช้ literal color)
+- เก็บ domain colors (room types, billing doc type variants)
+
+### สรุปสถิติทั้งชุด
+
+- **CSS duplicate selectors:** 48 → 0
+- **Inline styles:** -465
+- **Non-R3 colors:** ~550 → 0 (เฉพาะที่มี R3 equivalent)
+- **ไฟล์ที่กระทบ:** 30+
+- **Cache:** style.css v=84 → v=93 (+9 bumps)
+- **JS files:** 26 file versions bumped
+- **Functional bug fix:** BUG-D06 (Physio Package modal)
+
+### Anchors สำหรับ revert
+
+- `v-r17-complete` — ก่อน BUG-D06 fix
+- `v-r18-complete` — หลัง inline batch 3
+- `v-r19-complete` — หลัง safe CSS duplicate cleanup
+- `v-r20-complete` — หลังกำจัด CSS duplicates ทั้งหมด
+- `v-r21-complete` — หลัง JS/HTML color migration
+- `v-r22-complete` — หลัง CSS hex hunt
+- `v-r23-complete` — หลัง final non-R3 cleanup
+- `v-r24-complete` — current HEAD (deep cleanup)
+
+---
+
 ## [Final Inspection R2] — 9 พ.ค. 2569
 
 การตรวจสอบและ harden ระบบรอบที่ 2 ครอบคลุม 8 ด้าน เพื่อยกระดับความปลอดภัย ความถูกต้องของข้อมูล และความสามารถในการกู้คืน
