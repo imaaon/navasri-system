@@ -770,10 +770,6 @@
     color: var(--red); border-radius: 7px; padding: 9px 13px;
     font-size: 13px; margin-bottom: 14px; display: none;
   }
-  .login-footer {
-    margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
-    font-size: 11.5px; color: var(--text3); text-align: center; line-height: 1.6;
-  }
 
   /* user chip in topbar */
   /* [R20 15พค69] .user-chip merged into R3 rule (only-legacy props moved) */
@@ -1107,9 +1103,6 @@
   /* Body padding-bottom เพื่อกัน content โดน bar บัง */
   body {
     padding-bottom: 64px;
-  }
-  body.has-safe-area {
-    padding-bottom: calc(64px + env(safe-area-inset-bottom));
   }
 
   /* More menu overlay */
@@ -4830,10 +4823,7 @@ tr:hover td {
 
 /* ── Margin/Padding utilities ── */
 .m-0 { margin: 0; }
-.mb-0 { margin-bottom: 0; }
-.mb-4 { margin-bottom: 4px; }
 .mb-8 { margin-bottom: 8px; }
-.mb-10 { margin-bottom: 10px; }
 
 /* ── Display utilities ── */
 .pos-rel { position: relative; }
