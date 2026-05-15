@@ -345,6 +345,9 @@
     display: flex; flex-direction: column;
     position: fixed; top: 0; left: 0; z-index: 100;
     transition: transform 0.3s; overflow: hidden;
+    background: var(--sage-50);
+    border-right: 1px solid var(--sage-200);
+    color: var(--sage-800);
   }
   .sidebar-logo {
     padding: 16px 14px 14px;
@@ -758,13 +761,13 @@
   /* Toast */
   .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
   .toast {
-    background: var(--text); color: #f0ede6; padding: 12px 18px; border-radius: 8px;
-    font-size: 13px; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 10px;
+    /* visual properties (background, color, border, border-radius, box-shadow) — see redesign block @line ~3324 */
+    padding: 12px 18px;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
     animation: slideIn 0.25s ease; min-width: 240px;
   }
-  .toast.success { background: var(--green); }
-  .toast.warning { background: var(--orange); }
-  .toast.error { background: var(--red); }
+  /* .toast.success/.warning/.error backgrounds — REMOVED R19. Use redesign border-left-color instead. */
   @keyframes slideIn { from { transform: translateX(100%); opacity:0; } to { transform: translateX(0); opacity:1; } }
 
   /* Responsive */
@@ -2790,11 +2793,7 @@ html {
    ════════════════════════════════════════════════════════════════ */
 
 /* ──────────── 1. SIDEBAR ──────────── */
-.sidebar {
-  background: var(--sage-50);
-  border-right: 1px solid var(--sage-200);
-  color: var(--sage-800);
-}
+/* .sidebar — merged into legacy block @line 343 (R19) */
 .sidebar-logo {
   background: var(--brand);
   color: var(--ink-on-brand);
