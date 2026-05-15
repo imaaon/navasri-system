@@ -3,11 +3,82 @@
 // ===== MODAL HELPERS =====
 function openModal(id) { const el = document.getElementById(id); if (el) el.classList.add('open'); else console.warn('openModal: not found:', id); }
 function closeModal(id) { const el = document.getElementById(id); if (el) el.classList.remove('open'); }
+
+// [R27-P3C 15พค69] ตรวจว่า modal มี form ที่ผู้ใช้กรอกข้อมูลแล้วหรือไม่
+//   ใช้ตัดสินว่าตอน ESC จะปิดทันที หรือต้อง confirm ก่อน
+function _modalHasUserInput(modalEl) {
+  if (!modalEl) return false;
+  const inputs = modalEl.querySelectorAll('input, textarea, select');
+  for (const el of inputs) {
+    // skip hidden + readonly + disabled
+    if (el.type === 'hidden' || el.readOnly || el.disabled) continue;
+    if (el.type === 'checkbox' || el.type === 'radio') {
+      if (el.checked !== el.defaultChecked) return true;
+    } else if (el.tagName === 'SELECT') {
+      // เลือก option ที่ไม่ใช่ default (index 0)
+      if (el.selectedIndex > 0) return true;
+    } else {
+      const v = (el.value || '').trim();
+      if (v && v !== (el.defaultValue || '').trim()) return true;
+    }
+  }
+  return false;
+}
+
+// [R27-P3C 15พค69] หา modal ที่เปิดอยู่บนสุด (z-index สูงสุด)
+function _findTopMostOpenModal() {
+  const open = document.querySelectorAll('.modal-overlay.open');
+  if (open.length === 0) return null;
+  if (open.length === 1) return open[0];
+  // หา modal ที่ z-index สูงสุด (stacked modal pattern)
+  let top = open[0];
+  let topZ = parseInt(getComputedStyle(top).zIndex) || 0;
+  for (let i = 1; i < open.length; i++) {
+    const z = parseInt(getComputedStyle(open[i]).zIndex) || 0;
+    if (z >= topZ) { top = open[i]; topZ = z; }
+  }
+  return top;
+}
+
 // Modal click-outside ต้องรัน หลัง DOM โหลด (ถูกเรียกจาก loadHTMLPartials แล้ว)
 function initModalClickOutside() {
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
   });
+
+  // [R27-P3C 15พค69] Global ESC key handler — ปิด modal บนสุด
+  //   ถ้าฟอร์มเปล่า → ปิดทันที
+  //   ถ้าฟอร์มมีข้อมูล → ถาม confirm ก่อน (ป้องกัน data loss)
+  if (!window._escModalHandlerInstalled) {
+    document.addEventListener('keydown', async function(e) {
+      if (e.key !== 'Escape') return;
+      // ไม่ block ถ้ามี customConfirm/customAlert เปิดอยู่ (พวกนี้มี handler ของตัวเอง)
+      const cc = document.getElementById('modal-customConfirm');
+      const ca = document.getElementById('modal-customAlert');
+      if ((cc && cc.classList.contains('open')) || (ca && ca.classList.contains('open'))) return;
+
+      const top = _findTopMostOpenModal();
+      if (!top) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (_modalHasUserInput(top)) {
+        // มีข้อมูลกรอกแล้ว → ถาม confirm
+        if (typeof customConfirm === 'function') {
+          const ok = await customConfirm('ยกเลิกการแก้ไข? ข้อมูลที่กรอกจะหายไป');
+          if (ok) top.classList.remove('open');
+        } else {
+          // fallback: ใช้ native confirm
+          if (confirm('ยกเลิกการแก้ไข? ข้อมูลที่กรอกจะหายไป')) top.classList.remove('open');
+        }
+      } else {
+        // ฟอร์มเปล่า → ปิดทันที
+        top.classList.remove('open');
+      }
+    });
+    window._escModalHandlerInstalled = true;
+  }
 }
 
 // ===== TOAST =====

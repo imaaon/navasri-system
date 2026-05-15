@@ -5066,3 +5066,42 @@ tr:hover td {
 /* ════════════════════════════════════════════════════════════════
    END R18
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   [R27-P3A 15พค69] Suppliers + similar wide tables — proper scroll
+   - UAT-1: ตาราง suppliers มี 14 columns, ล้นจอแม้ desktop 1448px
+   - Fix: เพิ่ม min-width บน table → scrollbar ทำงานจริงจัง
+   - ครอบ supplier_invoices ด้วย (table โครงคล้ายกัน)
+   ════════════════════════════════════════════════════════════════ */
+#page-suppliers .table-wrap table,
+#page-supplierinvoices .table-wrap table {
+  min-width: 1400px;
+}
+@media (max-width: 768px) {
+  #page-suppliers .table-wrap table,
+  #page-supplierinvoices .table-wrap table {
+    min-width: 1200px; /* mobile: ลดลงเล็กน้อย, scroll ทำงานปกติ */
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   [R27-P3B 15พค69] Billing action bar — mobile responsive
+   - UAT-3: 6 ปุ่ม action บน mobile <768px แสดงไม่สวย
+   - Fix: ปุ่มเล็กลง, font-size ลด, padding ลด, ปุ่มกระจายเต็มแถว
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  #page-billing .billing-page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  #page-billing .section-actions {
+    width: 100%;
+    gap: 4px;
+  }
+  #page-billing .section-actions .btn {
+    font-size: 12px;
+    padding: 6px 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
