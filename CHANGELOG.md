@@ -7,6 +7,125 @@
 ---
 
 
+## [R27: Post-UAT Bug Fixes] — 15 พ.ค. 2569
+
+ชุดแก้ bug ที่พบจาก deep code audit (Claude) + UAT testing (Claude in Chrome) หลัง R3-R26 redesign
+
+### R27-P1 — Critical Security Fix (Tag `v-r27-p1-critical-fixed`)
+
+**Bug A1-001 (CRITICAL):** `canApproveReq()` permission bypass
+- `js/modules/suppliers.js:144` มี duplicate function `return true` เสมอ
+- โหลดหลัง `js/core/permissions.js:117` (line 140 vs 110 ใน index.html) → override
+- ผลกระทบ: ทุก role อนุมัติใบเบิก/ใบขอซื้อได้ทั้งหมด
+
+**Fix:** ลบ duplicate function (3 บรรทัด) — ระบบใช้ตัวจาก `permissions.js` ที่ check role: admin/manager/officer
+
+**Cache:** `suppliers.js` v=38 → v=39
+
+### R27-P2 — Function Name Collisions (Tag `v-r27-p2-collisions-fixed`)
+
+**P2A — Bug A1-002 (HIGH):** `markInvoicePaid()` collision
+- `suppliers.js:1495` (update supplier_invoices) vs `billing-core.js:914` (open customer payment modal)
+- suppliers.js โหลดหลัง → override → ปุ่ม "จ่าย" ใน customer invoice page เรียก function ผิด
+- **Fix:** Rename `suppliers.js` version เป็น `markSupplierInvoicePaid()` + update caller (line 787)
+
+**P2B — Bug A1-003 (MEDIUM):** `_thb()` format conflict
+- `bi.js:13` (no decimal) vs `features.js:186` (2 decimals)
+- features.js โหลดหลัง → override → BI dashboard ตัวเลขมีทศนิยมผิดตั้งใจ
+- **Fix:** Rename `bi.js` version เป็น `_thbInt()` (43 callers + 1 declaration = 44 จุด)
+
+**Cache:** `suppliers.js` v=39 → v=40, `bi.js` v=8 → v=9
+
+### R27-P3 — UI Bugs จาก UAT (Tag `v-r27-p3-ui-fixed`)
+
+**P3A — UAT-1 (MEDIUM):** Suppliers table 14 columns ล้นจอแม้ desktop 1448px
+- **Fix:** เพิ่ม `min-width: 1400px` (desktop) / `1200px` (mobile) บน suppliers + supplier_invoices tables
+
+**P3B — UAT-3 (LOW):** Billing action bar 6 ปุ่ม mobile แสดงไม่สวย
+- **Fix:** Column layout บน mobile, ปุ่ม `flex: 1`, font-size ลด
+
+**P3C — UAT-4 (LOW):** ESC key ไม่ปิด modal
+- **Fix:** เพิ่ม global ESC listener ใน `utils.js`
+  - ฟอร์มเปล่า → ปิดทันที
+  - ฟอร์มมีข้อมูล → `customConfirm` ก่อน
+  - Stacked modal: ปิดเฉพาะ z-index สูงสุด
+
+**Cache:** `style.css` v=95 → v=96, `utils.js` v=5 → v=6
+
+### R27-P4 — Form Reset Incomplete (Tag `v-r27-complete`)
+
+**Bug UAT-2 (LOW → MEDIUM after audit):** `openAddPatientModal()` reset แค่ 11 fields
+- ขาด: `pat-id-type`, `pat-phone`, `pat-emergency`, `pat-address`, `pat-photo-input`
+- ผลกระทบ: เปิด modal เพิ่ม patient ครั้งที่ 2 หลัง save → field เหล่านี้ค้างค่าเดิม
+
+**Fix:** เพิ่ม reset 5 fields ที่ขาด + default `pat-id-type='thai'`
+
+**Cache:** `patients.js` v=15 → v=16
+
+### สรุปสถิติ R27
+
+- **Bugs fixed:** 7 (1 CRITICAL, 1 HIGH, 4 MEDIUM/LOW + 1 escalated)
+- **Files changed:** 6 (`suppliers.js`, `billing-core.js`*, `bi.js`, `patients.js`, `utils.js`, `style.css`, `index.html`)
+- **Lines changed:** +130 / -50
+- **Cache bumps:** 6 files
+- **No breaking changes:** ทุก behavior เดิมยังทำงาน + เพิ่ม coverage
+
+\* `billing-core.js` ไม่ได้แก้ตรงๆ แต่ behavior เปลี่ยน (ไม่โดน override อีก)
+
+### Anchors
+
+- `v-pre-uat-fixes` (`5e0cd28`) — ก่อนเริ่มแก้
+- `v-r27-p1-critical-fixed` — หลัง P1 security
+- `v-r27-p2-collisions-fixed` — หลัง P2 collisions
+- `v-r27-p3-ui-fixed` — หลัง P3 UI
+- `v-r27-complete` — current HEAD
+
+### Revert
+
+```bash
+git reset --hard v-pre-uat-fixes
+```
+
+---
+
+
+## [R25–R26: Design Spec Completion + Cleanup] — 15 พ.ค. 2569
+
+ชุดการปิด audit gap ที่ R1-R24 รายงาน และ defensive coding cleanup
+
+### R25 — Complete Remaining R3 Design Spec (Tag `v-r25-complete`)
+
+**Pages (3 หน้าที่ยังไม่มี R3 header pattern):**
+- `page-audit` — legacy `page-header` → R3 `section-header-row`
+- `page-reqform` — plain toolbar → R3 `section-header-row` พร้อม actions
+- `page-staffprofile` — plain breadcrumb → R3 `section-header-row`
+
+ผลลัพธ์: 25/27 main pages มี R3 design pattern (2 ที่เหลือเป็น intentional exception: `page-dashboard`, `page-patprofile`)
+
+**State variants:**
+- เพิ่ม `.loading-state` CSS พร้อม spin animation
+- เพิ่ม `.error-state` CSS พร้อม retry button
+
+**Role-based variants:**
+- เพิ่ม `body.role-{rolename}` class marker ผ่าน `updateSidebarForRole()`
+
+**Reference docs (5 ฉบับ):**
+- `docs/MIGRATION_MAP.md`, `docs/STAT_CARD_MAPPING.md`, `docs/MOBILE_MODAL_CSS.md`, `docs/TOKEN_COMPATIBILITY_LAYER.md`, `docs/PRINT_MODE.md`
+
+### R26 — Cleanup: JSON.parse Safety + Dead CSS Audit (Tag `v-r26-complete`)
+
+**JSON.parse defensive wrappers (3 จุด):**
+- `js/core/db.js:112` (`lineSettings`) — try/catch + console.warn
+- `js/modules/billing/billing-clinical.js` — extract `safeParseRestrictions()` helper
+
+**CSS Audit (NOT removed — false positives):**
+- `.empty-state`, `.btn-soft`, `.alert` family, `.allergy-banner`, `.critical-stock`, `.low-stock` — ใช้ใน Claude Design spec
+
+**Cache:** `style.css` v=94 → v=95, `db.js` v=19 → v=20, `billing-clinical.js` v=23 → v=24
+
+---
+
+
 ## [R17–R24: R3 Design Alignment] — 15 พ.ค. 2569
 
 ชุดการปรับปรุงเพื่อ align ระบบทั้งหมดกับ R3 design intent — กำจัด legacy code ที่หลงเหลือ และลดความซับซ้อนของ codebase
