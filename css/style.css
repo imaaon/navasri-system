@@ -175,6 +175,49 @@
   --oc-turquoise:  var(--sage-200);    --oc-turquoise-text: var(--sage-700);
   --oc-celadon:    var(--sage-100);    --oc-celadon-text:   var(--sage-800);
   --oc-powder:     var(--info-bg);     --oc-powder-text:    var(--info-text);
+
+  /* ─── R16-C: KPI tone palettes (gold/orange/red/green/blue/gray) ─── */
+  /* GOLD — มูลค่ารวม / financial value KPIs */
+  --tone-gold-bg:     #fdf6e0;
+  --tone-gold-border: #e8d090;
+  --tone-gold-accent: #b8860b;
+  --tone-gold-text:   #6b4d10;
+  --tone-gold-text-2: #7a5a10;
+  --tone-gold-text-3: #8a6a20;
+
+  /* ORANGE — ใกล้หมด / low-stock alerts */
+  --tone-orange-bg:     #fdf3e8;
+  --tone-orange-border: #f5c842;
+  --tone-orange-accent: #e67e22;
+  --tone-orange-text:   #7a4310;
+  --tone-orange-text-2: #d35400;
+  --tone-orange-deep:   #c0392b;
+
+  /* RED — หมดอายุ / critical / overdue */
+  --tone-red-bg:     #fde7e7;
+  --tone-red-border: #f1a8a8;
+  --tone-red-accent: #c0392b;
+  --tone-red-text:   #7a1d1d;
+  --tone-red-text-2: #8a3030;
+  --tone-red-deep:   #a52a2a;
+
+  /* GREEN — active / success / patient พักอยู่ */
+  --tone-green-bg:     #e0f7ec;
+  --tone-green-border: #5ecba1;
+  --tone-green-accent: #1f8a52;
+  --tone-green-text:   #0a3626;
+  --tone-green-text-2: #1f5132;
+
+  /* BLUE — hospital / info */
+  --tone-blue-bg:     #eaf3fc;
+  --tone-blue-border: #8ec1ea;
+  --tone-blue-accent: #2980b9;
+  --tone-blue-text:   #1a3a5a;
+  --tone-blue-text-2: #1f4e7a;
+
+  /* GRAY — inactive / discharged */
+  --tone-gray-border: #95a5a6;
+  --tone-gray-text:   #5d6d7e;
 }
 
 /* ════════════════════════════════════════════════════════════════
