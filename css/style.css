@@ -4575,3 +4575,81 @@ tr:hover td {
    END R10-R15 CONSOLIDATED — REDESIGN COMPLETE (R3-R15 = 13 iterations, 30+ pages)
    Refactored by R16-A: 11 class variants → 1 unified class (page-redesign-*)
    ════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════
+   R16-B (v2) · Utility classes for redesigned page sections
+   Added 15 พ.ค. 69 · Fixed version after duplicate-class bug
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Section header row ── */
+.section-header-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+/* ── Section title wrap ── */
+.section-title-wrap {
+  flex: 1;
+  min-width: 240px;
+}
+
+/* ── Section h2 title ── */
+.section-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+
+/* ── Section emoji icon ── */
+.section-icon {
+  font-size: 24px;
+}
+
+/* ── Section subtitle ── */
+.section-subtitle {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 4px;
+}
+
+/* ── Section actions row ── */
+.section-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ── KPI card inner header ── */
+.kpi-card-r10__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+/* ── KPI decor (right-side emoji) ── */
+.kpi-card-r10__decor {
+  font-size: 18px;
+  opacity: 0.4;
+}
+
+/* ── KPI grid container ── */
+.kpi-grid-r10 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   END R16-B (v2)
+   ════════════════════════════════════════════════════════════════ */
