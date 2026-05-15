@@ -9,7 +9,7 @@ function renderApptList(patientId) {
     .sort((a,b)=>a.apptDate.localeCompare(b.apptDate));
   if (!appts.length) return `<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีนัดหมาย</div>`;
   const today = new Date().toISOString().split('T')[0];
-  const STATUS_COLOR = { upcoming:'var(--info)', done:'var(--success)', cancelled:'var(--danger)', postponed:'#e67e22' };
+  const STATUS_COLOR = { upcoming:'var(--info)', done:'var(--success)', cancelled:'var(--danger)', postponed:'var(--warning)' };
   const STATUS_LABEL = { upcoming:'🔵 กำลังจะถึง', done:'✅ เสร็จแล้ว', cancelled:'❌ ยกเลิก', postponed:'⏸ เลื่อน' };
   const TRANSPORT_ICON = { 'รถคลินิก':'🚐', 'ญาติมารับ':'👨‍👩‍👧', 'แท็กซี่/รถรับจ้าง':'🚕', 'รถพยาบาล':'🚑' };
   return `<div style="display:flex;flex-direction:column;gap:10px;padding:12px 16px;">
@@ -27,7 +27,7 @@ function renderApptList(patientId) {
             <div style="font-weight:600;font-size:14px;">${a.hospital}</div>
             <div style="font-size:13px;color:var(--text2);">${a.department?'แผนก '+a.department+' ':''} ${a.doctor?'นพ./พญ. '+a.doctor:''}</div>
             <div style="font-size:12px;margin-top:4px;">🎯 ${a.purpose||'-'}</div>
-            ${a.preparation?`<div style="font-size:12px;color:#e67e22;margin-top:2px;">📋 เตรียม: ${a.preparation}</div>`:''}
+            ${a.preparation?`<div style="font-size:12px;color:var(--warning);margin-top:2px;">📋 เตรียม: ${a.preparation}</div>`:''}
             ${a.coverage?`<div style="font-size:12px;color:var(--text2);margin-top:2px;">💳 สิทธิ/ผู้จ่าย: ${a.coverage}</div>`:''}
             ${a.orders?`<div style="font-size:12px;color:var(--text2);margin-top:2px;">📝 คำสั่งแพทย์: ${a.orders}</div>`:''}
             <div style="font-size:12px;margin-top:4px;">${TRANSPORT_ICON[a.transport]||'🚗'} ${a.transport} ${a.transportNote?'('+a.transportNote+')':''}</div>

@@ -128,7 +128,7 @@ function renderMARTab(pid, patientId) {
                   <td style="font-weight:500;">${med?.name||'-'}</td>
                   <td style="font-size:12px;color:var(--text2);">${med?.dose||''} ${med?.unit||''}</td>
                   <td><span style="background:var(--sage-light);border-radius:4px;padding:2px 8px;font-size:12px;">${r.timing||'-'}</span></td>
-                  <td>${r.status==='refused'?'<span style="background:var(--danger-bg);color:var(--danger-text);border-radius:4px;padding:2px 8px;font-size:12px;">❌ ปฏิเสธ</span>':r.status==='withheld'?'<span style="background:#e67e2222;color:#d35400;border-radius:4px;padding:2px 8px;font-size:12px;">⏸️ งดยา</span>':'<span style="background:var(--success-bg);color:var(--success);border-radius:4px;padding:2px 8px;font-size:12px;">✅ ให้แล้ว</span>'}</td>
+                  <td>${r.status==='refused'?'<span style="background:var(--danger-bg);color:var(--danger-text);border-radius:4px;padding:2px 8px;font-size:12px;">❌ ปฏิเสธ</span>':r.status==='withheld'?'<span style="background:var(--warning-bg);color:var(--warning-text);border-radius:4px;padding:2px 8px;font-size:12px;">⏸️ งดยา</span>':'<span style="background:var(--success-bg);color:var(--success);border-radius:4px;padding:2px 8px;font-size:12px;">✅ ให้แล้ว</span>'}</td>
                   <td style="font-size:12px;">${r.givenBy||'-'}</td>
                   <td style="font-size:12px;color:var(--text3);">${r.note||''}</td>
                   <td><button class="btn btn-ghost btn-sm" onclick="deleteMAREntry('${pid}','${patientId}','${r.id}')">🗑️</button></td>
@@ -238,7 +238,7 @@ function onMARStatusChange() {
   } else {
     timeField.disabled = false;
     btn.textContent = '⏸️ บันทึกการงดยา';
-    btn.style.background = '#e67e22';
+    btn.style.background = 'var(--warning)';
   }
 }
 

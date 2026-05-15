@@ -206,7 +206,7 @@ function renderContracts() {
               <td style="text-align:center;">วันที่ ${c.billingDay}</td>
               <td>
                 <span style="font-size:12px;">${nextBill}</span>
-                <span style="font-size:11px;color:${daysUntil<=3?'var(--danger)':daysUntil<=7?'#e67e22':'var(--text3)'};">
+                <span style="font-size:11px;color:${daysUntil<=3?'var(--danger)':daysUntil<=7?'var(--warning)':'var(--text3)'};">
                   (${daysUntil<=0?'ถึงกำหนดแล้ว!':daysUntil+' วัน'})
                 </span>
               </td>
@@ -694,7 +694,7 @@ function _pcRenderTable(contracts, isActive) {
     if (isActive) {
       const next = getNextBillingDate(c);
       const days = Math.ceil((new Date(next) - new Date()) / (1000*60*60*24));
-      const colDays = days <= 3 ? 'var(--danger)' : days <= 7 ? '#e67e22' : 'var(--text3)';
+      const colDays = days <= 3 ? 'var(--danger)' : days <= 7 ? 'var(--warning)' : 'var(--text3)';
       html += '<td><div style="font-size:11px;">' + next + '</div>';
       html += '<div style="font-size:10px;color:' + colDays + ';">(' + (days <= 0 ? 'ถึงกำหนดแล้ว!' : days + ' วัน') + ')</div></td>';
     } else {

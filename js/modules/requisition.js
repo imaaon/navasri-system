@@ -421,7 +421,7 @@ async function renderApprovalPanel() {
   const recentLogs = (db.approvalLogs||[]).slice(0,30);
 
   const STATUS_PILL = (s) => {
-    const map = { pending:'#e67e22|รออนุมัติ', approved:'var(--success)|อนุมัติแล้ว', rejected:'var(--danger)|ไม่อนุมัติ', forward:'var(--info)|รออนุมัติ' };
+    const map = { pending:'var(--warning)|รออนุมัติ', approved:'var(--success)|อนุมัติแล้ว', rejected:'var(--danger)|ไม่อนุมัติ', forward:'var(--info)|รออนุมัติ' };
     const [color,label] = (map[s]||'#888|ไม่ทราบ').split('|');
     return `<span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${color}22;color:${color};">${label}</span>`;
   };
@@ -450,7 +450,7 @@ async function renderApprovalPanel() {
   container.innerHTML = `
     <div class="card" style="margin-bottom:16px;">
       <div class="card-header" style="background:rgba(230,126,34,.08);">
-        <div class="card-title" style="color:#e67e22;">⏳ รออนุมัติ — ธุรการ (${pending.length} รายการ)</div>
+        <div class="card-title" style="color:var(--warning);">⏳ รออนุมัติ — ธุรการ (${pending.length} รายการ)</div>
         ${canApproveReq()&&pending.length>0?`<button class="btn btn-sm" style="background:var(--success);color:#fff;font-size:11px;" onclick="approveAllReq()">✅ อนุมัติทั้งหมด (${pending.length})</button>`:''}
       </div>
       <div class="table-wrap">
@@ -717,7 +717,7 @@ function onReturnReqChange() {
   const itemQty  = firstLine?.qty || req.qty || 0;
   const itemUnit = firstLine?.unit || req.unit || '';
   const multilineWarn = (req.lines && req.lines.length > 1)
-    ? `<div style="color:#e67e22;font-size:11px;margin-top:6px;">⚠️ ใบนี้มี ${req.lines.length} รายการ — ปัจจุบันคืนได้เฉพาะรายการแรก</div>` : '';
+    ? `<div style="color:var(--warning);font-size:11px;margin-top:6px;">⚠️ ใบนี้มี ${req.lines.length} รายการ — ปัจจุบันคืนได้เฉพาะรายการแรก</div>` : '';
   const alreadyReturned = (db.returnItems||[]).filter(x=>x.reqId==reqId).reduce((s,x)=>s+x.qtyReturned,0);
   const canReturn = itemQty - alreadyReturned;
   infoEl.style.display = '';
@@ -922,7 +922,7 @@ async function renderHistory() {
 
   if (!tb) return;
   if (reqs.length === 0) { tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบรายการ</td></tr>'; return; }
-  const STATUS_COLOR = { pending:'#e67e22', forward:'var(--info)', approved:'var(--success)', rejected:'var(--danger)' };
+  const STATUS_COLOR = { pending:'var(--warning)', forward:'var(--info)', approved:'var(--success)', rejected:'var(--danger)' };
   const STATUS_LABEL = { pending:'รอธุรการ', forward:'รออนุมัติ L2', approved:'✅ อนุมัติ', rejected:'❌ ไม่อนุมัติ' };
   tb.innerHTML = reqs.map(r => {
     const itemSummary = r.lines?.length > 0
@@ -1359,7 +1359,7 @@ function renderReqForm({ reqs, first, group }) {
         <div class="rq-sign-label">ผู้อนุมัติ / Approved by</div>
         <div class="rq-sign-name">${approverName ? '('+approverName+')' : '(.............................)'}</div>
         <div style="font-size:10.5px;color:#888;margin-top:3px;">
-          ${status==='approved' ? '<span style="color:#2a7a4f;font-weight:600;">✓ อนุมัติ</span> ' + thDate(approvedDate) :
+          ${status==='approved' ? '<span style="color:var(--brand);font-weight:600;">✓ อนุมัติ</span> ' + thDate(approvedDate) :
             status==='rejected' ? '<span style="color:var(--danger-text);font-weight:600;">✕ ไม่อนุมัติ</span>' :
             'วันที่: ...............'}
         </div>
@@ -1488,16 +1488,16 @@ function getReqPrintCSS() {
     .rq-sign-label { font-size:11.5px;color:#444; }
     .rq-sign-name { font-size:12px;font-weight:600;margin-top:2px; }
     .rq-status-badge { display:inline-block;padding:3px 12px;border-radius:20px;font-size:11.5px;font-weight:700;border:1.5px solid; }
-    .rq-status-pending { color:#d4760a;border-color:#d4760a;background:#fef3e0; }
-    .rq-status-approved { color:#2a7a4f;border-color:#2a7a4f;background:#e8f5ee; }
-    .rq-status-rejected { color:var(--danger-text);border-color:var(--danger-text);background:#fdecea; }
+    .rq-status-pending { color:var(--warning-text);border-color:var(--warning-text);background:var(--warning-bg); }
+    .rq-status-approved { color:var(--brand);border-color:var(--brand);background:#e8f5ee; }
+    .rq-status-rejected { color:var(--danger-text);border-color:var(--danger-text);background:var(--danger-bg); }
     .rq-note-box { border:1px solid #ccc;border-radius:4px;padding:8px 10px;min-height:36px;margin-top:6px;font-size:12px;color:#444; }
     .rq-timeline { display:flex;align-items:flex-start;margin:8px 0; }
     .rq-tl-step { flex:1;text-align:center;position:relative; }
     .rq-tl-step:not(:last-child)::after { content:'';position:absolute;top:10px;left:50%;width:100%;height:1.5px;background:#bbb;z-index:0; }
     .rq-tl-circle { width:20px;height:20px;border-radius:50%;background:#eee;border:1.5px solid #bbb;color:#888;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;position:relative;z-index:1;margin-bottom:4px; }
-    .rq-tl-circle.done { background:#2a7a4f;border-color:#2a7a4f;color:white; }
-    .rq-tl-circle.active { background:#d4760a;border-color:#d4760a;color:white; }
+    .rq-tl-circle.done { background:var(--brand);border-color:var(--brand);color:white; }
+    .rq-tl-circle.active { background:var(--warning-text);border-color:var(--warning-text);color:white; }
     .center { text-align:center; }
   `;
 }

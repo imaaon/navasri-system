@@ -508,7 +508,7 @@ function _renderPatIncidentTab(pid, listEl) {
       d.style.cssText='margin-bottom:8px;padding:12px;display:flex;justify-content:space-between;align-items:flex-start;';
       var info=document.createElement('div');
       var incTime = x.date ? (x.time ? x.date+' '+x.time : x.date) : '-';
-      var sevBadge = {'mild':'<span style="background:var(--success-bg);color:var(--success);border-radius:4px;padding:1px 8px;font-size:11px;">เล็กน้อย</span>','moderate':'<span style="background:#e67e2222;color:#d35400;border-radius:4px;padding:1px 8px;font-size:11px;">ปานกลาง</span>','severe':'<span style="background:var(--danger-bg);color:var(--danger-text);border-radius:4px;padding:1px 8px;font-size:11px;">รุนแรง</span>'}[x.severity]||(x.severity?'<span style="background:var(--surface2);border-radius:4px;padding:1px 8px;font-size:11px;">'+x.severity+'</span>':'');
+      var sevBadge = {'mild':'<span style="background:var(--success-bg);color:var(--success);border-radius:4px;padding:1px 8px;font-size:11px;">เล็กน้อย</span>','moderate':'<span style="background:var(--warning-bg);color:var(--warning-text);border-radius:4px;padding:1px 8px;font-size:11px;">ปานกลาง</span>','severe':'<span style="background:var(--danger-bg);color:var(--danger-text);border-radius:4px;padding:1px 8px;font-size:11px;">รุนแรง</span>'}[x.severity]||(x.severity?'<span style="background:var(--surface2);border-radius:4px;padding:1px 8px;font-size:11px;">'+x.severity+'</span>':'');
       var incPhoto=x.photo_url?'<div style="margin-top:8px;"><img src="'+x.photo_url+'" style="max-width:180px;max-height:140px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>':'';
       info.innerHTML=
         '<div style="font-weight:600;font-size:13px;">⚠️ '+(x.type||'-')+' '+sevBadge+'</div>'
@@ -536,10 +536,10 @@ function _renderPatIncidentTab(pid, listEl) {
     wD.forEach(function(x){
       var d=document.createElement('div');
       d.className='card';
-      d.style.cssText='margin-bottom:8px;padding:12px;border-left:3px solid #e67e22;display:flex;justify-content:space-between;align-items:flex-start;';
+      d.style.cssText='margin-bottom:8px;padding:12px;border-left:3px solid var(--warning);display:flex;justify-content:space-between;align-items:flex-start;';
       var info=document.createElement('div');
-      var stageBadge=x.stage?'<span style="background:#e67e2222;color:#d35400;border-radius:4px;padding:1px 8px;font-size:11px;">Stage '+x.stage+'</span>':'';
-      var wndStatus={'active':'<span style="background:var(--danger-bg);color:var(--danger-text);border-radius:4px;padding:1px 8px;font-size:11px;">กำลังรักษา</span>','healed':'<span style="background:var(--success-bg);color:var(--success);border-radius:4px;padding:1px 8px;font-size:11px;">หายแล้ว</span>','monitoring':'<span style="background:var(--info-bg);color:#2980b9;border-radius:4px;padding:1px 8px;font-size:11px;">เฝ้าระวัง</span>'}[x.status]||(x.status?'<span style="background:var(--surface2);border-radius:4px;padding:1px 8px;font-size:11px;">'+x.status+'</span>':'');
+      var stageBadge=x.stage?'<span style="background:var(--warning-bg);color:var(--warning-text);border-radius:4px;padding:1px 8px;font-size:11px;">Stage '+x.stage+'</span>':'';
+      var wndStatus={'active':'<span style="background:var(--danger-bg);color:var(--danger-text);border-radius:4px;padding:1px 8px;font-size:11px;">กำลังรักษา</span>','healed':'<span style="background:var(--success-bg);color:var(--success);border-radius:4px;padding:1px 8px;font-size:11px;">หายแล้ว</span>','monitoring':'<span style="background:var(--info-bg);color:var(--info-text);border-radius:4px;padding:1px 8px;font-size:11px;">เฝ้าระวัง</span>'}[x.status]||(x.status?'<span style="background:var(--surface2);border-radius:4px;padding:1px 8px;font-size:11px;">'+x.status+'</span>':'');
       var wndPhoto=x.photo_url?'<div style="margin-top:8px;"><img src="'+x.photo_url+'" style="max-width:180px;max-height:140px;border-radius:6px;object-fit:cover;border:1px solid var(--border);" loading="lazy"></div>':'';
       // Parse size_cm "WxLxD" และ extract treatment/trend จาก note
       var sizeStr = '';
@@ -980,13 +980,13 @@ function renderLabTab(patientId, overrideFrom, overrideTo) {
           // Abnormal badges
           (abn.length ? '<div style="margin-top:10px;">' + abn.map(function(x) {
             return '<span style="font-size:11px;padding:2px 6px;border-radius:10px;background:' +
-              (x.status==='high'?'#fde8e8':'#fff3e0') + ';color:' + (x.status==='high'?'var(--danger-text)':'#d35400') + ';margin-right:4px;">' +
+              (x.status==='high'?'#fde8e8':'#fff3e0') + ';color:' + (x.status==='high'?'var(--danger-text)':'var(--warning-text)') + ';margin-right:4px;">' +
               x.test_name + ': ' + x.value + '</span>';
           }).join(' ') + '</div>' : '') +
           // Detailed results (collapsible)
           (results.length ? '<details style="margin-top:10px;"><summary style="font-size:12px;color:var(--text2);cursor:pointer;">ดูผลทั้งหมด (' + results.length + ' รายการ)</summary>' +
           '<div style="margin-top:6px;">' + results.map(function(x) {
-            var sc = x.status==='high'?'var(--danger)':x.status==='low'?'#e67e22':'var(--success)';
+            var sc = x.status==='high'?'var(--danger)':x.status==='low'?'var(--warning)':'var(--success)';
             return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 6px;background:var(--surface2);border-radius:4px;margin-bottom:2px;">' +
               '<span>' + x.test_name + '</span><span style="color:' + sc + '">' + x.value + ' ' + (x.unit||'') +
               (x.reference_range ? ' (' + x.reference_range + ')' : '') + '</span></div>';
@@ -1030,7 +1030,7 @@ function _renderLabRows() {
   if (!c) return;
   if (!rows.length) { c.innerHTML = '<div style="text-align:center;padding:12px;">กด + เพิ่ม</div>'; return; }
   c.innerHTML = rows.map(function(row, i) {
-    var sc = row.status==='high' ? 'border-left:3px solid var(--danger);' : row.status==='low' ? 'border-left:3px solid #e67e22;' : 'border-left:3px solid var(--success);';
+    var sc = row.status==='high' ? 'border-left:3px solid var(--danger);' : row.status==='low' ? 'border-left:3px solid var(--warning);' : 'border-left:3px solid var(--success);';
     return '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr auto auto;gap:6px;align-items:center;padding:6px 8px;background:var(--surface2);border-radius:6px;margin-bottom:6px;' + sc + '">' +
       '<input class="form-control" style="font-size:12px;" placeholder="ชื่อ" value="' + (row.test_name||'') + '" oninput="window._labRows[' + i + '].test_name=this.value">' +
       '<input class="form-control" style="font-size:12px;" placeholder="ค่า" value="' + (row.value||'') + '" oninput="window._labRows[' + i + '].value=this.value">' +
@@ -2359,7 +2359,7 @@ function _buildClinicalAlerts(excretions, fluids) {
   function mkAlert(level, icon, titleText, detailText) {
     var styles = {
       green:  { bg: '#ecf9f0', border: 'var(--success)', color: '#1d8c4f' },
-      orange: { bg: '#fff8e8', border: '#d35400', color: '#8a4d00' },
+      orange: { bg: '#fff8e8', border: 'var(--warning-text)', color: '#8a4d00' },
       red:    { bg: '#fff0f0', border: 'var(--danger-text)', color: '#8a1a0e' },
       gray:   { bg: '#f5f5f5', border: '#b0b0b0', color: '#999' }
     };

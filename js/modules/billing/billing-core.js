@@ -66,7 +66,7 @@ function renderBilling() {
   document.getElementById('billing-doc-count').textContent       = invList.length;
 
   const TYPE_LABELS   = { invoice:'ใบแจ้งหนี้', receipt:'ใบเสร็จ', quotation:'ใบเสนอราคา', tax_invoice:'ใบกำกับภาษี' };
-  const STATUS_COLORS = { draft:'#888', sent:'#e67e22', partial:'var(--info)', paid:'var(--success)', cancelled:'var(--danger)' };
+  const STATUS_COLORS = { draft:'#888', sent:'var(--warning)', partial:'var(--info)', paid:'var(--success)', cancelled:'var(--danger)' };
   const STATUS_LABELS = { draft:'ร่าง', sent:'รอชำระ', partial:'ชำระบางส่วน', paid:'ชำระครบ', cancelled:'ยกเลิก' };
 
   const TYPE_ORDER = {quotation:1, invoice:2, tax_invoice:3, receipt:4};
@@ -88,7 +88,7 @@ function renderBilling() {
       <td style="font-size:12px;color:${isOverdue?'var(--danger)':'var(--text2)'};">${inv.dueDate||'-'}${isOverdue?' ⚠️':''}</td>
       <td style="text-align:right;font-weight:600;">${formatThb(inv.grandTotal||0)}</td>
       <td style="text-align:right;color:var(--success);">${paid>0?formatThb(paid):'-'}</td>
-      <td style="text-align:right;font-weight:${balance>0?'700':'400'};color:${balance>0?'#e67e22':'var(--text3)'};">${balance>0?formatThb(balance):'-'}</td>
+      <td style="text-align:right;font-weight:${balance>0?'700':'400'};color:${balance>0?'var(--warning)':'var(--text3)'};">${balance>0?formatThb(balance):'-'}</td>
       <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${STATUS_COLORS[dynStatus]||'#888'}22;color:${STATUS_COLORS[dynStatus]||'#888'};">${STATUS_LABELS[dynStatus]||dynStatus}</span></td>
       <td style="white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" onclick="previewDoc('${inv.id}','invoice')" title="ดู Preview">👁️</button>
@@ -96,7 +96,7 @@ function renderBilling() {
         <button class="btn btn-ghost btn-sm" onclick="exportInvoicePDF('${inv.id}')" title="Export PDF" style="color:var(--danger);">📄</button>
         <button class="btn btn-ghost btn-sm" onclick="editInvoice('${inv.id}')" title="แก้ไข">✏️</button>
         ${dynStatus!=='paid'?`<button class="btn btn-primary btn-sm" onclick="openRecordPaymentModal('${inv.id}')" title="รับชำระ" style="font-size:11px;">💳 รับชำระ</button>`:''}
-        ${['admin','manager','officer'].includes(currentUser?.role) && (dynStatus==='paid'||dynStatus==='partial') ? `<button class="btn btn-ghost btn-sm" onclick="openInvoiceResetModal('${inv.id}')" title="Reset บิล" style="color:#8e44ad;font-size:11px;">🔄 Reset</button>` : ''}
+        ${['admin','manager','officer'].includes(currentUser?.role) && (dynStatus==='paid'||dynStatus==='partial') ? `<button class="btn btn-ghost btn-sm" onclick="openInvoiceResetModal('${inv.id}')" title="Reset บิล" style="color:var(--purple);font-size:11px;">🔄 Reset</button>` : ''}
         <button class="btn btn-ghost btn-sm" onclick="deleteInvoice('${inv.id}')" style="color:var(--danger);">🗑️</button>
       </td>
     </tr>`;
@@ -966,7 +966,7 @@ function openRecordPaymentModal(invoiceId) {
     <div style="display:flex;gap:16px;font-size:12px;">
       <span>ยอดรวม: <strong>${formatThb(inv.grandTotal||0)}</strong></span>
       <span style="color:var(--success);">ชำระแล้ว: <strong>${formatThb(paid)}</strong></span>
-      <span style="color:#e67e22;">คงค้าง: <strong>${formatThb(balance)}</strong></span>
+      <span style="color:var(--warning);">คงค้าง: <strong>${formatThb(balance)}</strong></span>
     </div>`;
   document.getElementById('pay-amount').value = balance.toFixed(2);
   document.getElementById('pay-date').value = new Date().toISOString().split('T')[0];

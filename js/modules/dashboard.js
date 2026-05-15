@@ -188,7 +188,7 @@ function renderAdminDashboard() {
 
   // Category summary
   const catDiv = document.getElementById('catSummary');
-  const catColors2 = { ยา:{bg:'#fdecea',color:'var(--danger-text)',icon:'💊'}, เวชภัณฑ์:{bg:'#fef3e0',color:'#d4760a',icon:'🩺'}, ของใช้:{bg:'#e8f0fa',color:'#1e5fa0',icon:'🧴'}, บริการ:{bg:'#f0e8fa',color:'#6e3fa0',icon:'⚕️'} };
+  const catColors2 = { ยา:{bg:'var(--danger-bg)',color:'var(--danger-text)',icon:'💊'}, เวชภัณฑ์:{bg:'var(--warning-bg)',color:'var(--warning-text)',icon:'🩺'}, ของใช้:{bg:'#e8f0fa',color:'#1e5fa0',icon:'🧴'}, บริการ:{bg:'#f0e8fa',color:'#6e3fa0',icon:'⚕️'} };
   const cats = ['ยา','เวชภัณฑ์','ของใช้','บริการ'];
   catDiv.innerHTML = cats.map(cat => {
     const count = db.items.filter(i => i.category === cat).length;

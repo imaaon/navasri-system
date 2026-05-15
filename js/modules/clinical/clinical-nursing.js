@@ -6,7 +6,7 @@
 
 const SHIFTS = ['เวรเช้า','เวรดึก'];
 const SHIFT_TIMES = {'เวรเช้า':'07:00–19:00','เวรดึก':'19:00–07:00'};
-const SHIFT_COLORS = {'เวรเช้า':'#e67e22','เวรดึก':'#8e44ad'};
+const SHIFT_COLORS = {'เวรเช้า':'var(--warning)','เวรดึก':'var(--purple)'};
 
 function renderNursingTab(pid, patientId, overrideFrom, overrideTo) {
   const allNotes = (db.nursingNotes[pid]||[]);

@@ -53,7 +53,7 @@ function renderBelongingList(patientId) {
   if(!items.length) return `<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีสิ่งของบันทึกไว้</div>`;
   const held = items.filter(i=>i.status==='held');
   const returned = items.filter(i=>i.status==='returned');
-  const COND_COLOR = { ดี:'var(--success)', ปานกลาง:'#e67e22', ชำรุด:'var(--danger)' };
+  const COND_COLOR = { ดี:'var(--success)', ปานกลาง:'var(--warning)', ชำรุด:'var(--danger)' };
   const renderGroup = (list, label) => !list.length ? '' : `
     <div style="padding:10px 16px 0;font-size:12px;font-weight:700;color:var(--text3);">${label} (${list.length})</div>
     <table style="width:100%;">
@@ -194,7 +194,7 @@ function renderDnrPanel(p) {
   const DNR_STYLES = {
     dnr:   { bg:'#fdf2f8', border:'var(--danger-text)', badge:'var(--danger-text)', icon:'🚫', label:'DNR — ไม่ต้องการการช่วยชีวิต' },
     full:  { bg:'#f0fff4', border:'var(--success)', badge:'var(--success)', icon:'✅', label:'Full Code — ยินยอมให้ช่วยชีวิตเต็มที่' },
-    limited:{ bg:'#fffdf0', border:'#e67e22', badge:'#e67e22', icon:'⚠️', label:'Limited — ยินยอมบางส่วน (ดูรายละเอียด)' },
+    limited:{ bg:'var(--warning-bg)', border:'var(--warning)', badge:'var(--warning)', icon:'⚠️', label:'Limited — ยินยอมบางส่วน (ดูรายละเอียด)' },
     not_set:{ bg:'var(--surface2)', border:'var(--border)', badge:'#888', icon:'❓', label:'ยังไม่ได้กำหนด' },
   };
   const style = DNR_STYLES[consent?.dnrStatus||'not_set'];

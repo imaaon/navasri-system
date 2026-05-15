@@ -84,8 +84,8 @@ function renderMonthlySummaryCard(targetElementId, monthStr) {
         </div>
         ${overdueTotal > 0 ? `
         <div style="background:#fef9e7;border:1px solid #f9e79f;border-radius:10px;padding:18px 20px;text-align:center;cursor:pointer;" onclick="showPage('billing')">
-          <div style="font-size:13px;color:#e67e22;font-weight:600;margin-bottom:6px;">⏰ ค้างชำระ</div>
-          <div style="font-size:20px;font-weight:800;color:#e67e22;">${_thb(overdueTotal)}</div>
+          <div style="font-size:13px;color:var(--warning);font-weight:600;margin-bottom:6px;">⏰ ค้างชำระ</div>
+          <div style="font-size:20px;font-weight:800;color:var(--warning);">${_thb(overdueTotal)}</div>
           <div style="font-size:12px;color:#f0b27a;margin-top:4px;">${overdueInvoices.length} บิล</div>
         </div>` : ''}
       </div>
@@ -523,7 +523,7 @@ function extendLineSettingsUI() {
         <span style="font-size:13px;">📦 แจ้งเตือนสต็อกสินค้าใกล้หมด/หมดอายุ</span>
       </label>
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
-        <button class="btn btn-sm" onclick="manualNotifyOverdueBills()" style="background:#e67e2222;color:#e67e22;border:1px solid #e67e22;">
+        <button class="btn btn-sm" onclick="manualNotifyOverdueBills()" style="background:var(--warning-bg);color:var(--warning);border:1px solid var(--warning);">
           ⏰ ทดสอบส่งแจ้งบิลค้าง
         </button>
         <button class="btn btn-sm" onclick="manualNotifyLowStock()" style="background:var(--info-bg);color:var(--info);border:1px solid var(--info);">
@@ -615,7 +615,7 @@ async function renderAuditPage() {
       mods.forEach(m => { const o=document.createElement('option'); o.value=m; o.textContent=m; modSel.appendChild(o); });
     }
 
-    const actionColors = {create:'var(--success)',update:'#2980b9',delete:'var(--danger)',login:'#8e44ad',logout:'#95a5a6',approve:'#16a085',reject:'#e67e22'};
+    const actionColors = {create:'var(--success)',update:'var(--info-text)',delete:'var(--danger)',login:'var(--purple)',logout:'var(--ink-3)',approve:'#16a085',reject:'var(--warning)'};
     const total = count || 0;
     if (countEl) countEl.textContent = 'ทั้งหมด ' + total.toLocaleString() + ' รายการ';
 
@@ -755,13 +755,13 @@ function renderNotifPanel() {
   var outItems=(db.items||[]).filter(function(i){return i.qty<=0;});
   if(outItems.length) alerts.push({icon:'🔴',text:'สินค้าหมดสต็อค '+outItems.length+' รายการ',page:'stock',color:'var(--danger)'});
   var lowItems=(db.items||[]).filter(function(i){return i.qty>0&&i.qty<=i.reorder;});
-  if(lowItems.length) alerts.push({icon:'🟡',text:'สินค้าใกล้หมด '+lowItems.length+' รายการ',page:'stock',color:'#e67e22'});
+  if(lowItems.length) alerts.push({icon:'🟡',text:'สินค้าใกล้หมด '+lowItems.length+' รายการ',page:'stock',color:'var(--warning)'});
   var urgentExp=(db.itemLots||[]).filter(function(l){if(!l.expiryDate||l.qtyRemaining<=0)return false;var diff=Math.ceil((new Date(l.expiryDate)-today)/86400000);return diff>=0&&diff<=7;});
   if(urgentExp.length) alerts.push({icon:'📅',text:'สินค้าหมดอายุใน 7 วัน '+urgentExp.length+' Lot',page:'stock',color:'var(--danger)'});
   var pendingPRs=(db.purchaseRequests||[]).filter(function(r){return r.status==='submitted';});
-  if(pendingPRs.length) alerts.push({icon:'📋',text:'คำขอซื้อรอ approve '+pendingPRs.length+' รายการ',page:'purchaserequests',color:'#8e44ad'});
+  if(pendingPRs.length) alerts.push({icon:'📋',text:'คำขอซื้อรอ approve '+pendingPRs.length+' รายการ',page:'purchaserequests',color:'var(--purple)'});
   var assetsDue=(db.assets||[]).filter(function(a){return a.status==='active'&&a.nextMaintenanceDate&&a.nextMaintenanceDate<=soon30Str;});
-  if(assetsDue.length) alerts.push({icon:'🔧',text:'ครุภัณฑ์ถึงรอบซ่อม '+assetsDue.length+' รายการ',page:'assets',color:'#e67e22'});
+  if(assetsDue.length) alerts.push({icon:'🔧',text:'ครุภัณฑ์ถึงรอบซ่อม '+assetsDue.length+' รายการ',page:'assets',color:'var(--warning)'});
   var overdueInv=(db.invoices||[]).filter(function(inv){if(inv.status==='paid'||inv.type!=='invoice')return false;return inv.dueDate&&inv.dueDate<todayStr;});
   if(overdueInv.length) alerts.push({icon:'💸',text:'บิลเกินกำหนดชำระ '+overdueInv.length+' ใบ',page:'billing',color:'var(--danger)'});
   if(badge){ if(alerts.length>0){badge.style.display='';badge.textContent=alerts.length>9?'9+':String(alerts.length);}else{badge.style.display='none';} }
