@@ -89,6 +89,10 @@ function canWritePatientTab(tab) {
 
 function updateSidebarForRole() {
   if (!currentUser) return;
+  // [R25 15พค69] Set body class for role-based CSS variants
+  document.body.className = document.body.className.replace(/\brole-\S+/g, '').trim();
+  document.body.classList.add('role-' + currentUser.role);
+
   const allowed = ROLE_PAGES[currentUser.role] || [];
   document.querySelectorAll('.nav-item').forEach(n => {
     const onclick = n.getAttribute('onclick') || '';

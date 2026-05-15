@@ -964,9 +964,15 @@
 
       <!-- STAFF PROFILE -->
       <div id="page-staffprofile" style="display:none;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-          <button class="btn btn-ghost" onclick="showPage('staff')" style="padding:6px 12px;">← กลับ</button>
-          <h2 id="staffprofile-breadcrumb" style="margin:0;font-size:15px;color:var(--text2);">พนักงาน</h2>
+        <!-- [R25-STAFFPROFILE 15พค69] Section header — R3 pattern -->
+        <div class="page-redesign-header section-header-row">
+          <button class="btn btn-ghost btn-sm" onclick="showPage('staff')" style="padding:6px 12px;flex-shrink:0;">← กลับ</button>
+          <div class="section-title-wrap" style="min-width:200px;">
+            <h2 class="section-title">
+              <span class="section-icon">👤</span> <span id="staffprofile-breadcrumb">โปรไฟล์พนักงาน</span>
+            </h2>
+            <div class="section-subtitle">ข้อมูลส่วนตัว · ตารางเวร · เอกสารและสัญญา</div>
+          </div>
         </div>
         <div id="staffprofile-content"></div>
       </div>
@@ -1495,17 +1501,20 @@
 
       <!-- ══ REQUISITION FORM PAGE (printable) ══ -->
       <div id="page-reqform" style="display:none;">
-        <!-- Toolbar (no-print) -->
-        <div class="no-print" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <button class="btn btn-ghost" onclick="showPage('history')">← กลับ</button>
-            <span style="font-size:15px;font-weight:700;" id="reqFormPageTitle">ใบเบิกสินค้า</span>
+        <!-- [R25-REQFORM 15พค69] Section header — R3 pattern (no-print) -->
+        <div class="page-redesign-header section-header-row no-print">
+          <button class="btn btn-ghost btn-sm" onclick="showPage('history')" style="padding:6px 12px;flex-shrink:0;">← กลับ</button>
+          <div class="section-title-wrap" style="min-width:200px;">
+            <h2 class="section-title">
+              <span class="section-icon">📋</span> <span id="reqFormPageTitle">ใบเบิกสินค้า</span>
+            </h2>
+            <div class="section-subtitle">รายละเอียดใบเบิก · พิมพ์เอกสาร · ส่งออก PDF/Excel</div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <div id="pdfSpinner" style="display:none;font-size:13px;color:var(--text2);">⏳ กำลังสร้าง PDF...</div>
-            <button class="btn btn-secondary" onclick="printReqForm()">🖨️ พิมพ์</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportRequisitionExcel()" title="ส่งออก Excel">📥 Excel</button>
-                <button class="btn btn-primary" onclick="exportReqPDF()" id="btnExportPDF">📄 Export PDF</button>
+          <div class="section-actions">
+            <div id="pdfSpinner" style="display:none;font-size:13px;color:var(--ink-3);">⏳ กำลังสร้าง PDF...</div>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="printReqForm()">🖨️ พิมพ์</button>
+            <button class="btn btn-ghost btn-sm nowrap" onclick="exportRequisitionExcel()" title="ส่งออก Excel">📥 Excel</button>
+            <button class="btn btn-primary btn-sm nowrap" onclick="exportReqPDF()" id="btnExportPDF">📄 Export PDF</button>
           </div>
         </div>
 
@@ -1985,10 +1994,13 @@
       </div>
 
 <div id="page-audit" style="display:none;">
-<div class="page-header">
-  <div>
-    <div class="page-title">🔍 Audit Trail</div>
-    <div class="page-subtitle">ประวัติการใช้งานระบบ</div>
+<!-- [R25-AUDIT 15พค69] Section header — R3 pattern -->
+<div class="page-redesign-header section-header-row">
+  <div class="section-title-wrap" style="min-width:200px;">
+    <h2 class="section-title">
+      <span class="section-icon">🔍</span> Audit Trail
+    </h2>
+    <div class="section-subtitle">ประวัติการใช้งานระบบ · ติดตามการเปลี่ยนแปลง · บันทึกการตรวจสอบ</div>
   </div>
 </div>
 <div class="card mb-12">
