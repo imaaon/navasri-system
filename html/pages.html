@@ -1,10 +1,10 @@
       <!-- DASHBOARD -->
       <div id="page-dashboard">
         <!-- [R5-C 14พค69] Executive Alert Banner — แสดงเร่งด่วนที่ต้องดำเนินการ -->
-        <div id="dashboard-exec-alert" class="dashboard-exec-alert" style="display:none;background:#fdf6e0;border:1px solid #d4a64a;border-left:4px solid #c0392b;border-radius:10px;padding:14px 18px;margin-bottom:16px;align-items:center;gap:14px;">
-          <span style="font-size:26px;color:#c0392b;flex-shrink:0;">🚨</span>
+        <div id="dashboard-exec-alert" class="dashboard-exec-alert" style="display:none;background:var(--tone-gold-bg);border:1px solid #d4a64a;border-left:4px solid var(--tone-red-accent);border-radius:10px;padding:14px 18px;margin-bottom:16px;align-items:center;gap:14px;">
+          <span style="font-size:26px;color:var(--tone-red-accent);flex-shrink:0;">🚨</span>
           <div style="flex:1;min-width:0;">
-            <div style="font-weight:700;font-size:14px;color:#7a4310;margin-bottom:4px;">มีรายการเร่งด่วนที่ต้องดำเนินการ</div>
+            <div style="font-weight:700;font-size:14px;color:var(--tone-orange-text);margin-bottom:4px;">มีรายการเร่งด่วนที่ต้องดำเนินการ</div>
             <div id="dashboard-exec-alert-detail" style="font-size:12.5px;color:#6b4a0e;"></div>
           </div>
           <button class="btn btn-ghost btn-sm" style="white-space:nowrap;" onclick="document.getElementById('dashboard-exec-alert').style.display='none';">✕ ปิด</button>
@@ -474,21 +474,21 @@
             <div id="stock-kpi-value-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">ราคาทุนรวม</div>
           </div>
           <!-- 3. ใกล้หมด ต้องสั่ง -->
-          <div class="stock-kpi-card" style="background:#fdf3e8;border:1px solid #f5c842;border-left:3px solid #e67e22;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('stockStatusFilter').value='low';renderStock()" title="กรองดูเฉพาะรายการที่ใกล้หมด">
+          <div class="stock-kpi-card" style="background:var(--tone-orange-bg);border:1px solid var(--tone-orange-border);border-left:3px solid var(--tone-orange-accent);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('stockStatusFilter').value='low';renderStock()" title="กรองดูเฉพาะรายการที่ใกล้หมด">
             <div class="kpi-card-r10__header">
-              <div style="font-size:12px;color:#7a4310;font-weight:500;">⚠️ ใกล้หมด · ต้องสั่ง</div>
+              <div style="font-size:12px;color:var(--tone-orange-text);font-weight:500;">⚠️ ใกล้หมด · ต้องสั่ง</div>
               <span class="kpi-card-r10__decor">⚠️</span>
             </div>
-            <div id="stock-kpi-low" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#d35400;">0</div>
-            <div id="stock-kpi-low-sub" style="font-size:11px;color:#7a4310;margin-top:3px;">รายการต่ำกว่าจุดสั่งซื้อ</div>
+            <div id="stock-kpi-low" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--tone-orange-text-2);">0</div>
+            <div id="stock-kpi-low-sub" style="font-size:11px;color:var(--tone-orange-text);margin-top:3px;">รายการต่ำกว่าจุดสั่งซื้อ</div>
           </div>
           <!-- 4. ใกล้หมดอายุ -->
-          <div class="stock-kpi-card" style="background:#fde8e8;border:1px solid #f5a3a3;border-left:3px solid #c0392b;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="showExpiringLots()" title="ดูรายการ Lot ที่ใกล้หมดอายุ">
+          <div class="stock-kpi-card" style="background:#fde8e8;border:1px solid #f5a3a3;border-left:3px solid var(--tone-red-accent);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="showExpiringLots()" title="ดูรายการ Lot ที่ใกล้หมดอายุ">
             <div class="kpi-card-r10__header">
               <div style="font-size:12px;color:#7a1a10;font-weight:500;">📅 ใกล้หมดอายุ</div>
               <span class="kpi-card-r10__decor">📅</span>
             </div>
-            <div id="stock-kpi-expiry" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#c0392b;">0</div>
+            <div id="stock-kpi-expiry" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--tone-red-accent);">0</div>
             <div id="stock-kpi-expiry-sub" style="font-size:11px;color:#7a1a10;margin-top:3px;">Lot ที่ต้องระวัง</div>
           </div>
         </div>
@@ -861,30 +861,30 @@
             <div id="pat-kpi-total-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">ราย</div>
           </div>
           <!-- 2. พักอยู่ -->
-          <div class="patient-kpi-card" style="background:#e0f7ec;border:1px solid #5ecba1;border-left:3px solid #1f8a52;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='active';renderPatients()" title="กรองเฉพาะที่พักอยู่">
+          <div class="patient-kpi-card" style="background:var(--tone-green-bg);border:1px solid var(--tone-green-border);border-left:3px solid var(--tone-green-accent);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='active';renderPatients()" title="กรองเฉพาะที่พักอยู่">
             <div class="kpi-card-r10__header">
-              <div style="font-size:12px;color:#0a3626;font-weight:500;">🏠 พักอยู่</div>
+              <div style="font-size:12px;color:var(--tone-green-text);font-weight:500;">🏠 พักอยู่</div>
               <span class="kpi-card-r10__decor">🏠</span>
             </div>
-            <div id="pat-kpi-active" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#1f5132;">0</div>
-            <div id="pat-kpi-active-sub" style="font-size:11px;color:#1f5132;margin-top:3px;">รายในศูนย์</div>
+            <div id="pat-kpi-active" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--tone-green-text-2);">0</div>
+            <div id="pat-kpi-active-sub" style="font-size:11px;color:var(--tone-green-text-2);margin-top:3px;">รายในศูนย์</div>
           </div>
           <!-- 3. อยู่โรงพยาบาล -->
-          <div class="patient-kpi-card" style="background:#eaf3fc;border:1px solid #8ec1ea;border-left:3px solid #2980b9;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='hospital';renderPatients()" title="กรองเฉพาะที่อยู่โรงพยาบาล">
+          <div class="patient-kpi-card" style="background:var(--tone-blue-bg);border:1px solid var(--tone-blue-border);border-left:3px solid var(--tone-blue-accent);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='hospital';renderPatients()" title="กรองเฉพาะที่อยู่โรงพยาบาล">
             <div class="kpi-card-r10__header">
-              <div style="font-size:12px;color:#1a3a5a;font-weight:500;">🏥 อยู่โรงพยาบาล</div>
+              <div style="font-size:12px;color:var(--tone-blue-text);font-weight:500;">🏥 อยู่โรงพยาบาล</div>
               <span class="kpi-card-r10__decor">🏥</span>
             </div>
-            <div id="pat-kpi-hospital" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#1f4e7a;">0</div>
-            <div id="pat-kpi-hospital-sub" style="font-size:11px;color:#1f4e7a;margin-top:3px;">รายเข้ารับการรักษา</div>
+            <div id="pat-kpi-hospital" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--tone-blue-text-2);">0</div>
+            <div id="pat-kpi-hospital-sub" style="font-size:11px;color:var(--tone-blue-text-2);margin-top:3px;">รายเข้ารับการรักษา</div>
           </div>
           <!-- 4. ออกแล้ว -->
-          <div class="patient-kpi-card" style="background:var(--surface2,#f8f7f3);border:1px solid var(--border);border-left:3px solid #95a5a6;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='inactive';renderPatients()" title="กรองเฉพาะที่ออกแล้ว">
+          <div class="patient-kpi-card" style="background:var(--surface2,#f8f7f3);border:1px solid var(--border);border-left:3px solid var(--tone-gray-border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('patStatusFilter').value='inactive';renderPatients()" title="กรองเฉพาะที่ออกแล้ว">
             <div class="kpi-card-r10__header">
               <div style="font-size:12px;color:var(--text2);font-weight:500;">📤 ออกแล้ว</div>
               <span class="kpi-card-r10__decor">📤</span>
             </div>
-            <div id="pat-kpi-inactive" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#5d6d7e;">0</div>
+            <div id="pat-kpi-inactive" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--tone-gray-text);">0</div>
             <div id="pat-kpi-inactive-sub" style="font-size:11px;color:var(--text3);margin-top:3px;">จำหน่ายแล้ว</div>
           </div>
         </div>
@@ -1133,20 +1133,20 @@
               </div>
               <div id="billing-total-amount" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--brand,#2e6b4f);">0 ฿</div>
             </div>
-            <div class="billing-kpi-card" style="background:#fdf3e8;border:1px solid #f5c842;border-left:3px solid #e67e22;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('billing-filter-status').value='sent';renderBilling()">
+            <div class="billing-kpi-card" style="background:var(--tone-orange-bg);border:1px solid var(--tone-orange-border);border-left:3px solid var(--tone-orange-accent);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all 0.15s;" onclick="document.getElementById('billing-filter-status').value='sent';renderBilling()">
               <div class="kpi-card-r10__header">
-                <div style="font-size:12px;color:#7a4310;font-weight:500;">⏳ รอชำระ / ค้าง</div>
+                <div style="font-size:12px;color:var(--tone-orange-text);font-weight:500;">⏳ รอชำระ / ค้าง</div>
                 <span class="kpi-card-r10__decor">⏳</span>
               </div>
-              <div id="billing-pending-amount" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#d35400;">0 ฿</div>
-              <div id="billing-overdue-count" style="font-size:11px;color:#c0392b;margin-top:3px;font-weight:600;"></div>
+              <div id="billing-pending-amount" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--tone-orange-text-2);">0 ฿</div>
+              <div id="billing-overdue-count" style="font-size:11px;color:var(--tone-red-accent);margin-top:3px;font-weight:600;"></div>
             </div>
-            <div class="billing-kpi-card" style="background:#e0f7ec;border:1px solid #5ecba1;border-left:3px solid #1f8a52;border-radius:12px;padding:14px 16px;">
+            <div class="billing-kpi-card" style="background:var(--tone-green-bg);border:1px solid var(--tone-green-border);border-left:3px solid var(--tone-green-accent);border-radius:12px;padding:14px 16px;">
               <div class="kpi-card-r10__header">
-                <div style="font-size:12px;color:#0a3626;font-weight:500;">✅ ชำระแล้ว</div>
+                <div style="font-size:12px;color:var(--tone-green-text);font-weight:500;">✅ ชำระแล้ว</div>
                 <span class="kpi-card-r10__decor">✓</span>
               </div>
-              <div id="billing-paid-amount" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:#1f5132;">0 ฿</div>
+              <div id="billing-paid-amount" style="font-size:22px;font-weight:700;font-family:var(--mono,monospace);letter-spacing:-0.5px;color:var(--tone-green-text-2);">0 ฿</div>
             </div>
             <div class="billing-kpi-card" style="background:var(--surface);border:1px solid var(--border);border-left:3px solid #5e60ce;border-radius:12px;padding:14px 16px;">
               <div class="kpi-card-r10__header">
@@ -1318,11 +1318,11 @@
             <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">สิทธิ์แต่ละ Role</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;font-size:12px;">
               <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
-                <div style="font-weight:700;color:#c0392b;margin-bottom:6px;">👑 admin</div>
+                <div style="font-weight:700;color:var(--tone-red-accent);margin-bottom:6px;">👑 admin</div>
                 <div style="color:var(--text2);">ทุกหน้า + จัดการ Account</div>
               </div>
               <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
-                <div style="font-weight:700;color:#c0392b;margin-bottom:6px;">🏆 ผู้บริหาร (Executive)</div>
+                <div style="font-weight:700;color:var(--tone-red-accent);margin-bottom:6px;">🏆 ผู้บริหาร (Executive)</div>
                 <div style="color:var(--text2);">เห็นทุกหน้า · ดูรายงาน · ไม่จัดการ account</div>
               </div>
               <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
@@ -1330,7 +1330,7 @@
                 <div style="color:var(--text2);">เบิก · ประวัติทั้งหมด · ผู้รับบริการ · พนักงาน</div>
               </div>
               <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
-                <div style="font-weight:700;color:#2980b9;margin-bottom:6px;">🏥 พยาบาล</div>
+                <div style="font-weight:700;color:var(--tone-blue-accent);margin-bottom:6px;">🏥 พยาบาล</div>
                 <div style="color:var(--text2);">เบิก · ประวัติทั้งหมด · ผู้รับบริการ</div>
               </div>
               <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;">
@@ -1389,7 +1389,7 @@
                 <div style="display:flex;gap:0;align-items:center;flex-wrap:wrap;gap:6px;font-size:12.5px;color:var(--text2);">
                   <div style="background:white;border-radius:6px;padding:6px 12px;border:1px solid #c0d8f0;font-weight:600;color:var(--blue);">Webapp นี้</div>
                   <div style="color:var(--text3);">──► POST ──►</div>
-                  <div style="background:white;border-radius:6px;padding:6px 12px;border:1px solid #c0d8f0;font-weight:600;color:#e67e22;">n8n / Make</div>
+                  <div style="background:white;border-radius:6px;padding:6px 12px;border:1px solid #c0d8f0;font-weight:600;color:var(--tone-orange-accent);">n8n / Make</div>
                   <div style="color:var(--text3);">──► ส่งต่อ ──►</div>
                   <div style="background:#06c755;border-radius:6px;padding:6px 12px;font-weight:600;color:white;">Line Group</div>
                 </div>
@@ -1874,13 +1874,13 @@
             <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">เดือนนี้ทั้งหมด</div>
             <div id="exp-stat-total" style="font-size:20px;font-weight:700;color:var(--primary);">0 ฿</div>
           </div>
-          <div class="card" style="padding:14px;text-align:center;background:#fff3e0;border-color:#f5c842;">
+          <div class="card" style="padding:14px;text-align:center;background:#fff3e0;border-color:var(--tone-orange-border);">
             <div style="font-size:11px;color:#f5a453;margin-bottom:4px;">⏳ ค้างชำระ</div>
             <div id="exp-stat-unpaid" style="font-size:20px;font-weight:700;color:#f5a453;">0 ฿</div>
           </div>
-          <div class="card" style="padding:14px;text-align:center;background:#e0f7ec;border-color:#5ecba1;">
-            <div style="font-size:11px;color:#0a3626;margin-bottom:4px;">✅ จ่ายแล้ว</div>
-            <div id="exp-stat-paid" style="font-size:20px;font-weight:700;color:#0a3626;">0 ฿</div>
+          <div class="card" style="padding:14px;text-align:center;background:var(--tone-green-bg);border-color:var(--tone-green-border);">
+            <div style="font-size:11px;color:var(--tone-green-text);margin-bottom:4px;">✅ จ่ายแล้ว</div>
+            <div id="exp-stat-paid" style="font-size:20px;font-weight:700;color:var(--tone-green-text);">0 ฿</div>
           </div>
         </div>
         <!-- [R11-EXP] Filter bar — card-style -->
@@ -1944,7 +1944,7 @@
           </div>
         </div>
         <!-- Alert: ใกล้ถึงรอบซ่อม -->
-        <div id="asset-alert-card" style="display:none;background:#fff3e0;border:1px solid #f5c842;border-radius:10px;padding:14px;margin-bottom:16px;">
+        <div id="asset-alert-card" style="display:none;background:#fff3e0;border:1px solid var(--tone-orange-border);border-radius:10px;padding:14px;margin-bottom:16px;">
           <div style="font-weight:600;color:#f5a453;margin-bottom:8px;">⚠️ อุปกรณ์ถึงรอบซ่อมบำรุง / ใกล้หมดประกัน</div>
           <div id="asset-alert-list" style="font-size:13px;"></div>
         </div>
