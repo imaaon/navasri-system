@@ -3305,6 +3305,81 @@ tr:hover td {
   margin: 0 auto;
 }
 
+/* [R25 15พค69] Loading state — สำหรับ async data fetch */
+.loading-state {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--ink-3);
+}
+.loading-state .ico {
+  font-size: 32px;
+  opacity: 0.6;
+  display: inline-block;
+  margin-bottom: 8px;
+  animation: spin 1.2s linear infinite;
+}
+.loading-state .h {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: 4px;
+}
+.loading-state .body {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  max-width: 320px;
+  margin: 0 auto;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* [R25 15พค69] Error state — สำหรับ failed data fetch */
+.error-state {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger);
+  border-radius: var(--r-md);
+}
+.error-state .ico {
+  font-size: 36px;
+  opacity: 0.7;
+  display: block;
+  margin-bottom: 8px;
+}
+.error-state .h {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--danger-text);
+  margin-bottom: 4px;
+}
+.error-state .body {
+  font-size: 12.5px;
+  color: var(--danger-text);
+  max-width: 320px;
+  margin: 0 auto 12px;
+  opacity: 0.85;
+}
+.error-state .btn-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  background: var(--surface);
+  color: var(--danger-text);
+  border: 1px solid var(--danger);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.error-state .btn-retry:hover {
+  background: var(--danger-bg);
+}
+
 .skeleton-row {
   background: var(--surface);
   border: 1px solid var(--border);
