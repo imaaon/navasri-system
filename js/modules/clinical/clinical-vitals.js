@@ -13,15 +13,15 @@ var _VITAL_CHIPS = [
   // normal: ค่าปกติ (อ้างอิงสำหรับผู้สูงอายุ)
   // warning: ค่าที่ผิดเกณฑ์เล็กน้อย (สีส้ม)
   // critical: ค่าวิกฤต (สีแดง)
-  { key: 'bp',     icon: '🩸', label: 'ความดัน',  color: '#e74c3c', unit: 'mmHg', double: true, locked: true,  fields: ['bp_sys','bp_dia'],
+  { key: 'bp',     icon: '🩸', label: 'ความดัน',  color: 'var(--danger)', unit: 'mmHg', double: true, locked: true,  fields: ['bp_sys','bp_dia'],
     ranges: { bp_sys: { normal: [90, 139], warning: [140, 159], critical: [160, 999], low_warning: [80, 89], low_critical: [0, 79] },
               bp_dia: { normal: [60, 89],  warning: [90, 99],   critical: [100, 999], low_warning: [55, 59], low_critical: [0, 54] },
               hint: 'ปกติ 90–139 / 60–89' } },
-  { key: 'hr',     icon: '💓', label: 'ชีพจร',    color: '#3498db', unit: 'bpm',  locked: true,  fields: ['hr'],
+  { key: 'hr',     icon: '💓', label: 'ชีพจร',    color: 'var(--info)', unit: 'bpm',  locked: true,  fields: ['hr'],
     ranges: { hr: { normal: [60, 100], warning: [101, 120], critical: [121, 999], low_warning: [50, 59], low_critical: [0, 49] }, hint: 'ปกติ 60–100 bpm' } },
   { key: 'temp',   icon: '🌡️', label: 'อุณหภูมิ', color: '#e67e22', unit: '°C',   locked: true,  fields: ['temp'], step: '0.1',
     ranges: { temp: { normal: [36.1, 37.2], warning: [37.3, 37.9], critical: [38, 999], low_warning: [35.5, 36.0], low_critical: [0, 35.4] }, hint: 'ปกติ 36.1–37.2°C' } },
-  { key: 'spo2',   icon: '🫁', label: 'SpO₂',     color: '#27ae60', unit: '%',    locked: true,  fields: ['spo2'],
+  { key: 'spo2',   icon: '🫁', label: 'SpO₂',     color: 'var(--success)', unit: '%',    locked: true,  fields: ['spo2'],
     ranges: { spo2: { normal: [95, 100], warning: [90, 94], critical: [0, 89] }, hint: 'ปกติ ≥ 95%' } },
   { key: 'rr',     icon: '🫀', label: 'RR',       color: '#16a085', unit: '/min', locked: true,  fields: ['rr'],
     ranges: { rr: { normal: [12, 20], warning: [21, 24], critical: [25, 999], low_warning: [10, 11], low_critical: [0, 9] }, hint: 'ปกติ 12–20 /min' } },
@@ -577,9 +577,9 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
   const spo2Points = chartData.map(v => v.spo2||'-');
   const labels  = chartData.map(v => v.recordedAt ? new Date(new Date(v.recordedAt).getTime() - new Date(v.recordedAt).getTimezoneOffset()*60000).toISOString().slice(5,10) : '');
 
-  const svgBP = vitalsSparkline(chartData.map(v=>v.bp_sys), '#e74c3c', 120, 180);
-  const svgHR = vitalsSparkline(chartData.map(v=>v.hr), '#3498db', 50, 100);
-  const svgSpo2 = vitalsSparkline(chartData.map(v=>v.spo2), '#27ae60', 90, 100);
+  const svgBP = vitalsSparkline(chartData.map(v=>v.bp_sys), 'var(--danger)', 120, 180);
+  const svgHR = vitalsSparkline(chartData.map(v=>v.hr), 'var(--info)', 50, 100);
+  const svgSpo2 = vitalsSparkline(chartData.map(v=>v.spo2), 'var(--success)', 90, 100);
 
   // Date range filter — default = today
   const today = new Date().toISOString().split('T')[0];
@@ -601,17 +601,17 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px;">
         <div style="background:var(--surface2);border-radius:8px;padding:12px;">
-          <div style="font-size:11px;font-weight:700;color:#e74c3c;margin-bottom:4px;">🩸 ความดันโลหิต (mmHg)</div>
+          <div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:4px;">🩸 ความดันโลหิต (mmHg)</div>
           ${svgBP}
           <div style="font-size:11px;color:var(--text3);margin-top:4px;">ค่าล่าสุด: ${allVitals[0]?.bp_sys ? allVitals[0].bp_sys+'/'+allVitals[0].bp_dia : '-'}</div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:12px;">
-          <div style="font-size:11px;font-weight:700;color:#3498db;margin-bottom:4px;">💓 ชีพจร (bpm)</div>
+          <div style="font-size:11px;font-weight:700;color:var(--info);margin-bottom:4px;">💓 ชีพจร (bpm)</div>
           ${svgHR}
           <div style="font-size:11px;color:var(--text3);margin-top:4px;">ค่าล่าสุด: ${allVitals[0]?.hr||'-'}</div>
         </div>
         <div style="background:var(--surface2);border-radius:8px;padding:12px;">
-          <div style="font-size:11px;font-weight:700;color:#27ae60;margin-bottom:4px;">🫁 SpO₂ (%)</div>
+          <div style="font-size:11px;font-weight:700;color:var(--success);margin-bottom:4px;">🫁 SpO₂ (%)</div>
           ${svgSpo2}
           <div style="font-size:11px;color:var(--text3);margin-top:4px;">ค่าล่าสุด: ${allVitals[0]?.spo2 ? allVitals[0].spo2+'%' : '-'}</div>
         </div>
@@ -640,10 +640,10 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
         <table class="responsive-card-table">
           <thead><tr>
             <th>วัน/เวลา</th>
-            <th style="text-align:center;color:#e74c3c;">🩸 BP</th>
-            <th style="text-align:center;color:#3498db;">💓 HR</th>
+            <th style="text-align:center;color:var(--danger);">🩸 BP</th>
+            <th style="text-align:center;color:var(--info);">💓 HR</th>
             <th style="text-align:center;color:#e67e22;">🌡️ Temp</th>
-            <th style="text-align:center;color:#27ae60;">🫁 SpO₂</th>
+            <th style="text-align:center;color:var(--success);">🫁 SpO₂</th>
             <th style="text-align:center;color:#8e44ad;">🍬 DTX</th>
             <th style="text-align:center;color:#16a085;">🫀 RR</th>
             <th style="text-align:center;">⚖️ น้ำหนัก</th>
@@ -681,12 +681,12 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
                   const anyAlert = bpAlert||spo2Alert||hrAlert||tempAlert||rrAlert||dtxAlert;
                   return `<tr ${anyAlert ? 'style="background:#fff8f8;"' : ''}>
                     <td data-label="วัน/เวลา" class="number" style="font-size:12px;white-space:nowrap;">${(v.recordedAt ? new Date(v.recordedAt).toLocaleString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).replace(',',' ') : '-')}</td>
-                    <td data-label="🩸 BP" style="text-align:center;font-weight:${bpAlert?'700':'400'};color:${bpAlert?'#e74c3c':'inherit'};">${v.bp_sys ? v.bp_sys+'/'+v.bp_dia : '-'}</td>
-                    <td data-label="💓 HR" style="text-align:center;font-weight:${hrAlert?'700':'400'};color:${hrAlert?'#e74c3c':'inherit'};">${v.hr||'-'}</td>
-                    <td data-label="🌡️ Temp" style="text-align:center;font-weight:${tempAlert?'700':'400'};color:${tempAlert?'#e74c3c':'inherit'};">${v.temp ? v.temp+'°C' : '-'}</td>
-                    <td data-label="🫁 SpO₂" style="text-align:center;font-weight:${spo2Alert?'700':'400'};color:${spo2Alert?'#e74c3c':'inherit'};">${v.spo2 ? v.spo2+'%' : '-'}</td>
-                    <td data-label="🍬 DTX" style="text-align:center;font-weight:${dtxAlert?'700':'400'};color:${dtxAlert?'#e74c3c':'inherit'};">${v.dtx ? v.dtx+' mg/dL' : '-'}</td>
-                    <td data-label="🫀 RR" style="text-align:center;font-weight:${rrAlert?'700':'400'};color:${rrAlert?'#e74c3c':'inherit'};">${v.rr ? v.rr+'/min' : '-'}</td>
+                    <td data-label="🩸 BP" style="text-align:center;font-weight:${bpAlert?'700':'400'};color:${bpAlert?'var(--danger)':'inherit'};">${v.bp_sys ? v.bp_sys+'/'+v.bp_dia : '-'}</td>
+                    <td data-label="💓 HR" style="text-align:center;font-weight:${hrAlert?'700':'400'};color:${hrAlert?'var(--danger)':'inherit'};">${v.hr||'-'}</td>
+                    <td data-label="🌡️ Temp" style="text-align:center;font-weight:${tempAlert?'700':'400'};color:${tempAlert?'var(--danger)':'inherit'};">${v.temp ? v.temp+'°C' : '-'}</td>
+                    <td data-label="🫁 SpO₂" style="text-align:center;font-weight:${spo2Alert?'700':'400'};color:${spo2Alert?'var(--danger)':'inherit'};">${v.spo2 ? v.spo2+'%' : '-'}</td>
+                    <td data-label="🍬 DTX" style="text-align:center;font-weight:${dtxAlert?'700':'400'};color:${dtxAlert?'var(--danger)':'inherit'};">${v.dtx ? v.dtx+' mg/dL' : '-'}</td>
+                    <td data-label="🫀 RR" style="text-align:center;font-weight:${rrAlert?'700':'400'};color:${rrAlert?'var(--danger)':'inherit'};">${v.rr ? v.rr+'/min' : '-'}</td>
                     <td data-label="⚖️ น้ำหนัก" style="text-align:center;font-size:12px;">${v.weight ? v.weight+' kg' : '-'}</td>
                     <td data-label="📏 ส่วนสูง" style="text-align:center;font-size:12px;">${v.height ? v.height+' cm' : '-'}</td>
                     <td data-label="อื่นๆ" style="font-size:12px;color:var(--text2);max-width:120px;">${v.otherFields||'-'}</td>
@@ -765,11 +765,11 @@ function vitalsSparkline(values, color, min, max) {
     return `${x},${y}`;
   }).join(' ');
   return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:44px;">
-    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+    <polyline points="${pts}" fill="none" style="stroke:${color};" stroke-width="2" stroke-linejoin="round"/>
     ${data.map((v,i)=>{
       const x = pad + (i/(data.length-1))*(w-pad*2);
       const y = h-pad - ((v-min)/range)*(h-pad*2);
-      return `<circle cx="${x}" cy="${y}" r="3" fill="${color}"/>`;
+      return `<circle cx="${x}" cy="${y}" r="3" style="fill:${color};"/>`;
     }).join('')}
   </svg>`;
 }

@@ -27,7 +27,7 @@ function renderMedLogTab(patId, type) {
        </div>`
     : `<div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
         ${logs.map((entry, i) => `
-          <div class="medlog-entry-card" style="border:1px solid var(--border,#e8e3d4);border-left:3px solid ${isM ? '#3498db' : 'var(--brand,#2e6b4f)'};border-radius:10px;padding:12px 16px;background:${isM ? '#f4f9fd' : 'var(--sage-50,#f4f8f5)'};transition:all 0.15s;">
+          <div class="medlog-entry-card" style="border:1px solid var(--border,#e8e3d4);border-left:3px solid ${isM ? 'var(--info)' : 'var(--brand,#2e6b4f)'};border-radius:10px;padding:12px 16px;background:${isM ? '#f4f9fd' : 'var(--sage-50,#f4f8f5)'};transition:all 0.15s;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
               <div style="flex:1;min-width:0;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
@@ -38,7 +38,7 @@ function renderMedLogTab(patId, type) {
               </div>
               <div style="display:flex;gap:4px;flex-shrink:0;">
                 <button class="btn btn-ghost btn-sm" onclick="editMedLog('${patId}','${type}','${entry._supaId}')" title="แก้ไข">✏️</button>
-                <button class="btn btn-ghost btn-sm" onclick="deleteMedLog('${patId}','${type}','${entry._supaId}')" title="ลบ" style="color:#c0392b;">🗑️</button>
+                <button class="btn btn-ghost btn-sm" onclick="deleteMedLog('${patId}','${type}','${entry._supaId}')" title="ลบ" style="color:var(--danger-text);">🗑️</button>
               </div>
             </div>
           </div>`).join('')}

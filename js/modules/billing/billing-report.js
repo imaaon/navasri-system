@@ -258,10 +258,10 @@ function checkDocNoDuplicate(val, pool) {
   const old = document.getElementById(warnId);
   if (old) old.remove();
   if (dup) {
-    inputEl.style.borderColor = '#e74c3c';
+    inputEl.style.borderColor = 'var(--danger)';
     const warn = document.createElement('div');
     warn.id = warnId;
-    warn.style.cssText = 'color:#e74c3c;font-size:11px;margin-top:3px;';
+    warn.style.cssText = 'color:var(--danger);font-size:11px;margin-top:3px;';
     warn.textContent = `⚠️ เลขที่ซ้ำกับ: ${dup.patientName||dup.vendorName||dup.job||'-'} (${dup.date||'-'})`;
     inputEl.parentNode.appendChild(warn);
   } else {
@@ -355,7 +355,7 @@ function bsRenderBanks() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
         <div style="flex:1;min-width:0;">
           <div style="font-weight:600;font-size:14px;">
-            ${b.primary ? '<span style="color:var(--green,#27ae60);font-size:12px;">★ บัญชีหลัก</span> ' : ''}
+            ${b.primary ? '<span style="color:var(--green,var(--success));font-size:12px;">★ บัญชีหลัก</span> ' : ''}
             ${_esc(b.bankName||'-')} • ${_esc(b.accountNo||'-')}
           </div>
           <div style="font-size:12px;color:var(--muted);margin-top:2px;">
@@ -363,7 +363,7 @@ function bsRenderBanks() {
             ${b.accountType ? ' • ' + _esc(b.accountType) : ''}
           </div>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="bsRemoveBank(${i})" title="ลบ" style="color:var(--red,#e74c3c);">✕</button>
+        <button class="btn btn-ghost btn-sm" onclick="bsRemoveBank(${i})" title="ลบ" style="color:var(--red,var(--danger));">✕</button>
       </div>
     </div>
   `).join('');
@@ -372,7 +372,7 @@ function bsRenderBanks() {
 
 function bsBankFormHtml() {
   return `
-    <div id="bs-bank-form" style="border:1px dashed var(--primary,#1abc9c);border-radius:8px;padding:12px;margin-top:8px;background:var(--bg-soft,#f7fafa);">
+    <div id="bs-bank-form" style="border:1px dashed var(--primary,var(--brand));border-radius:8px;padding:12px;margin-top:8px;background:var(--bg-soft,#f7fafa);">
       <div style="font-weight:600;font-size:13px;margin-bottom:10px;">เพิ่มบัญชีธนาคารใหม่</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <div class="form-group" style="margin:0;">
@@ -588,7 +588,7 @@ function printInvoice(id) {
       <div class="tot-row"><span>รวมเป็นเงิน</span><span>${formatThb(inv.subtotal||0)}</span></div>
       ${(inv.vatRate||0)>0?`<div class="tot-row"><span>ภาษีมูลค่าเพิ่ม ${inv.vatRate}%</span><span>${formatThb(inv.vatAmt||0)}</span></div>`:''}
       <div class="tot-row sep grand"><span>จำนวนเงินรวมทั้งสิ้น</span><span>${formatThb(inv.beforeWht||inv.grandTotal||0)}</span></div>
-      ${(inv.whtRate||0)>0?`<div class="tot-row"><span style="color:#c0392b;">หัก ณ ที่จ่าย ${inv.whtRate}%</span><span style="color:#c0392b;">${formatThb(inv.whtAmt||0)}</span></div>`:''}
+      ${(inv.whtRate||0)>0?`<div class="tot-row"><span style="color:var(--danger-text);">หัก ณ ที่จ่าย ${inv.whtRate}%</span><span style="color:var(--danger-text);">${formatThb(inv.whtAmt||0)}</span></div>`:''}
       <div class="tot-row net"><span>ยอดชำระ</span><span>${formatThb(inv.grandTotal||0)}</span></div>
     </div>
   </div>
@@ -702,7 +702,7 @@ function printExpense(id) {
       <div class="tot-row"><span>ราคาไม่รวม VAT</span><span>${formatThb(exp.subtotal||0)}</span></div>
       <div class="tot-row"><span>ภาษีมูลค่าเพิ่ม 7%</span><span>${formatThb(exp.vatAmt||0)}</span></div>
       <div class="tot-row sep" style="font-weight:600;"><span>จำนวนเงินรวมทั้งสิ้น</span><span>${formatThb(exp.totalVat||0)}</span></div>
-      ${(exp.whtRate||0)>0?`<div class="tot-row"><span style="color:#c0392b;">หัก ณ ที่จ่าย ${exp.whtRate}%</span><span style="color:#c0392b;">${formatThb(exp.whtAmt||0)}</span></div>`:''}
+      ${(exp.whtRate||0)>0?`<div class="tot-row"><span style="color:var(--danger-text);">หัก ณ ที่จ่าย ${exp.whtRate}%</span><span style="color:var(--danger-text);">${formatThb(exp.whtAmt||0)}</span></div>`:''}
       <div class="tot-row net"><span>ยอดชำระ</span><span>${formatThb(exp.net||0)}</span></div>
     </div>
   </div>

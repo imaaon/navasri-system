@@ -66,7 +66,7 @@ function renderBilling() {
   document.getElementById('billing-doc-count').textContent       = invList.length;
 
   const TYPE_LABELS   = { invoice:'ใบแจ้งหนี้', receipt:'ใบเสร็จ', quotation:'ใบเสนอราคา', tax_invoice:'ใบกำกับภาษี' };
-  const STATUS_COLORS = { draft:'#888', sent:'#e67e22', partial:'#3498db', paid:'#27ae60', cancelled:'#e74c3c' };
+  const STATUS_COLORS = { draft:'#888', sent:'#e67e22', partial:'var(--info)', paid:'var(--success)', cancelled:'var(--danger)' };
   const STATUS_LABELS = { draft:'ร่าง', sent:'รอชำระ', partial:'ชำระบางส่วน', paid:'ชำระครบ', cancelled:'ยกเลิก' };
 
   const TYPE_ORDER = {quotation:1, invoice:2, tax_invoice:3, receipt:4};
@@ -85,19 +85,19 @@ function renderBilling() {
       <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(90,158,122,.15);color:var(--accent);">${TYPE_LABELS[inv.type]||inv.type}</span></td>
       <td>${inv.patientName||'-'}</td>
       <td style="font-size:12px;">${inv.date||'-'}</td>
-      <td style="font-size:12px;color:${isOverdue?'#e74c3c':'var(--text2)'};">${inv.dueDate||'-'}${isOverdue?' ⚠️':''}</td>
+      <td style="font-size:12px;color:${isOverdue?'var(--danger)':'var(--text2)'};">${inv.dueDate||'-'}${isOverdue?' ⚠️':''}</td>
       <td style="text-align:right;font-weight:600;">${formatThb(inv.grandTotal||0)}</td>
-      <td style="text-align:right;color:#27ae60;">${paid>0?formatThb(paid):'-'}</td>
+      <td style="text-align:right;color:var(--success);">${paid>0?formatThb(paid):'-'}</td>
       <td style="text-align:right;font-weight:${balance>0?'700':'400'};color:${balance>0?'#e67e22':'var(--text3)'};">${balance>0?formatThb(balance):'-'}</td>
       <td><span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${STATUS_COLORS[dynStatus]||'#888'}22;color:${STATUS_COLORS[dynStatus]||'#888'};">${STATUS_LABELS[dynStatus]||dynStatus}</span></td>
       <td style="white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" onclick="previewDoc('${inv.id}','invoice')" title="ดู Preview">👁️</button>
         <button class="btn btn-ghost btn-sm" onclick="printInvoice('${inv.id}')" title="พิมพ์">🖨️</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportInvoicePDF('${inv.id}')" title="Export PDF" style="color:#e74c3c;">📄</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportInvoicePDF('${inv.id}')" title="Export PDF" style="color:var(--danger);">📄</button>
         <button class="btn btn-ghost btn-sm" onclick="editInvoice('${inv.id}')" title="แก้ไข">✏️</button>
         ${dynStatus!=='paid'?`<button class="btn btn-primary btn-sm" onclick="openRecordPaymentModal('${inv.id}')" title="รับชำระ" style="font-size:11px;">💳 รับชำระ</button>`:''}
         ${['admin','manager','officer'].includes(currentUser?.role) && (dynStatus==='paid'||dynStatus==='partial') ? `<button class="btn btn-ghost btn-sm" onclick="openInvoiceResetModal('${inv.id}')" title="Reset บิล" style="color:#8e44ad;font-size:11px;">🔄 Reset</button>` : ''}
-        <button class="btn btn-ghost btn-sm" onclick="deleteInvoice('${inv.id}')" style="color:#e74c3c;">🗑️</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteInvoice('${inv.id}')" style="color:var(--danger);">🗑️</button>
       </td>
     </tr>`;
   }).join('');
@@ -417,7 +417,7 @@ function renderInvoiceItems() {
         style="width:80px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:13px;">
     </td>
     <td style="padding:5px 6px;text-align:right;font-weight:600;" id="inv-item-row-${it._idx}">${formatThb((it.qty||0)*(it.price||0))}</td>
-    <td><button onclick="removeInvItem('${it._idx}')" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>
+    <td><button onclick="removeInvItem('${it._idx}')" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:13px;">✕</button></td>
   </tr>`;
   const allCats = [...CAT_ORDER, ...Object.keys(grouped).filter(c=>!CAT_ORDER.includes(c))];
   let html = '';
@@ -453,7 +453,7 @@ function renderInvoiceItems() {
     _incDiv.style.marginTop = '8px';
     if (_showInc) {
       let _ih = '<div style="font-size:11px;font-weight:700;color:#3a6a3a;padding:4px 6px;background:#f0fff4;border-radius:4px;display:flex;justify-content:space-between;margin-bottom:4px;"><span>📦 สินค้ารวมใน package — ไม่คิดเงิน ('+_incItems.length+' รายการ)</span><span style="color:#888;">฿0.00</span></div><table style="width:100%;border-collapse:collapse;font-size:12px;color:var(--text2);"><tbody>';
-      _incItems.forEach(function(it){ _ih += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:3px 6px;">'+it.name+'</td><td style="padding:3px 6px;text-align:right;">'+(it.qty||0)+' '+(it.unit||'')+'</td><td style="padding:3px 6px;text-align:right;color:#27ae60;">รวมใน package</td></tr>'; });
+      _incItems.forEach(function(it){ _ih += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:3px 6px;">'+it.name+'</td><td style="padding:3px 6px;text-align:right;">'+(it.qty||0)+' '+(it.unit||'')+'</td><td style="padding:3px 6px;text-align:right;color:var(--success);">รวมใน package</td></tr>'; });
       _ih += '</tbody></table>';
       _incDiv.innerHTML = _ih;
     } else {
@@ -511,7 +511,7 @@ function renderOtherItems() {
       <td style="padding:5px 6px;"><input type="number" value="${it.qty||1}" min="0" oninput="updateOtherItem(${idx},'qty',this.value)" style="width:65px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:13px;"></td>
       <td style="padding:5px 6px;"><input type="number" value="${it.price||0}" min="0" oninput="updateOtherItem(${idx},'price',this.value)" style="width:80px;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:2px 4px;font-size:13px;"></td>
       <td style="padding:5px 6px;text-align:right;font-weight:600;" id="inv-other-row-${idx}">${formatThb((it.qty||1)*(it.price||0))}</td>
-      <td><button onclick="removeOtherItem(${idx})" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:13px;">✕</button></td>
+      <td><button onclick="removeOtherItem(${idx})" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:13px;">✕</button></td>
     </tr>`).join('')}
     </tbody></table>`;
   document.getElementById('inv-other-total').textContent=formatThb(items.reduce((s,it)=>s+(it.qty||1)*(it.price||0),0));
@@ -965,7 +965,7 @@ function openRecordPaymentModal(invoiceId) {
     <div style="font-weight:700;margin-bottom:4px;">${inv.docNo} · ${inv.patientName}</div>
     <div style="display:flex;gap:16px;font-size:12px;">
       <span>ยอดรวม: <strong>${formatThb(inv.grandTotal||0)}</strong></span>
-      <span style="color:#27ae60;">ชำระแล้ว: <strong>${formatThb(paid)}</strong></span>
+      <span style="color:var(--success);">ชำระแล้ว: <strong>${formatThb(paid)}</strong></span>
       <span style="color:#e67e22;">คงค้าง: <strong>${formatThb(balance)}</strong></span>
     </div>`;
   document.getElementById('pay-amount').value = balance.toFixed(2);

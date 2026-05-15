@@ -248,7 +248,7 @@ function renderStock() {
 
     // Billable badge
     const billableBadge = item.isBillable !== false
-      ? '<span style="font-size:10px;color:#27ae60;font-weight:600;">💰 Billable</span>'
+      ? '<span style="font-size:10px;color:var(--success);font-weight:600;">💰 Billable</span>'
       : '<span style="font-size:10px;color:#95a5a6;">🏥 Non-Bill</span>';
 
     // Barcode SVG แบบขีดๆ (สร้างจาก JsBarcode)
@@ -308,7 +308,7 @@ function showLotDetail(itemId) {
         return `<tr style="${status==='expired'?'background:#fff5f5':status==='expiring'?'background:#fff8f0':''}">
           <td style="font-family:monospace;font-size:12px;">${l.lotNumber||'-'}</td>
           <td>${l.receivedDate||'-'}</td>
-          <td style="font-family:monospace;color:${status==='expired'?'#c0392b':status==='expiring'?'#e67e22':'inherit'};">${l.expiryDate||'-'}</td>
+          <td style="font-family:monospace;color:${status==='expired'?'var(--danger-text)':status==='expiring'?'#e67e22':'inherit'};">${l.expiryDate||'-'}</td>
           <td class="number">${l.qtyInLot}</td>
           <td class="number" style="font-weight:600;">${l.qtyRemaining} ${dispUnit}</td>
           <td>${badge}</td>

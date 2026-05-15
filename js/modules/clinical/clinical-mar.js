@@ -61,13 +61,13 @@ function renderMARTab(pid, patientId) {
                 <td style="font-weight:600;color:var(--text);">${med.name}</td>
                 <td style="font-size:12.5px;color:var(--text2);font-family:var(--mono,monospace);">${med.dose||''} ${med.unit||''}${med.route ? ' · '+med.route : ''}</td>
                 <td style="font-size:12px;"><span style="background:var(--surface2,#f5f1e3);color:var(--text2);border-radius:6px;padding:2px 8px;display:inline-block;">${(med.timings||[]).join(', ')||'-'}</span></td>
-                <td style="font-size:12.5px;">${lastGiven ? `<span style="color:#27ae60;font-weight:700;font-family:var(--mono,monospace);">${(lastGiven.givenAt ? new Date(lastGiven.givenAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '')}</span><span style="color:var(--text3);"> · ${lastGiven.givenBy||'-'}</span>` : '<span style="color:var(--text3);font-style:italic;">ยังไม่ได้ให้วันนี้</span>'}</td>
+                <td style="font-size:12.5px;">${lastGiven ? `<span style="color:var(--success);font-weight:700;font-family:var(--mono,monospace);">${(lastGiven.givenAt ? new Date(lastGiven.givenAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '')}</span><span style="color:var(--text3);"> · ${lastGiven.givenBy||'-'}</span>` : '<span style="color:var(--text3);font-style:italic;">ยังไม่ได้ให้วันนี้</span>'}</td>
                 <td style="text-align:center;"><span style="background:${countTone.bg};color:${countTone.color};border:1px solid ${countTone.border};border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;display:inline-block;min-width:50px;">${todayForMed.length} ครั้ง</span></td>
                 <td style="font-size:12px;color:var(--text3);">${med.note||'-'}</td>
                 <td style="display:flex;gap:4px;flex-wrap:nowrap;">
                   <button class="btn btn-primary btn-sm" onclick="openMAREntryModal('${patientId}','${pid}','${med.id}')" style="white-space:nowrap;">+ บันทึกให้</button>
                   <button class="btn btn-ghost btn-sm" onclick="openEditMedModal('${patientId}','${pid}','${med.id}')" title="แก้ไข">✏️</button>
-                  <button class="btn btn-ghost btn-sm" onclick="deleteMedication('${patientId}','${med.id}')" title="ลบ" style="color:#c0392b;">🗑️</button>
+                  <button class="btn btn-ghost btn-sm" onclick="deleteMedication('${patientId}','${med.id}')" title="ลบ" style="color:var(--danger-text);">🗑️</button>
                 </td>
               </tr>`;
             }).join('')}
@@ -124,11 +124,11 @@ function renderMARTab(pid, patientId) {
                 const med = (db.medications[pid]||[]).find(m=>m.id==r.medicationId);
                 return `<tr>
                   <td class="number" style="font-size:12px;">${r.date}</td>
-                  <td class="number" style="font-weight:600;color:#27ae60;">${r.givenAt ? new Date(r.givenAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '-'}</td>
+                  <td class="number" style="font-weight:600;color:var(--success);">${r.givenAt ? new Date(r.givenAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '-'}</td>
                   <td style="font-weight:500;">${med?.name||'-'}</td>
                   <td style="font-size:12px;color:var(--text2);">${med?.dose||''} ${med?.unit||''}</td>
                   <td><span style="background:var(--sage-light);border-radius:4px;padding:2px 8px;font-size:12px;">${r.timing||'-'}</span></td>
-                  <td>${r.status==='refused'?'<span style="background:#e74c3c22;color:#c0392b;border-radius:4px;padding:2px 8px;font-size:12px;">❌ ปฏิเสธ</span>':r.status==='withheld'?'<span style="background:#e67e2222;color:#d35400;border-radius:4px;padding:2px 8px;font-size:12px;">⏸️ งดยา</span>':'<span style="background:#27ae6022;color:#27ae60;border-radius:4px;padding:2px 8px;font-size:12px;">✅ ให้แล้ว</span>'}</td>
+                  <td>${r.status==='refused'?'<span style="background:var(--danger-bg);color:var(--danger-text);border-radius:4px;padding:2px 8px;font-size:12px;">❌ ปฏิเสธ</span>':r.status==='withheld'?'<span style="background:#e67e2222;color:#d35400;border-radius:4px;padding:2px 8px;font-size:12px;">⏸️ งดยา</span>':'<span style="background:var(--success-bg);color:var(--success);border-radius:4px;padding:2px 8px;font-size:12px;">✅ ให้แล้ว</span>'}</td>
                   <td style="font-size:12px;">${r.givenBy||'-'}</td>
                   <td style="font-size:12px;color:var(--text3);">${r.note||''}</td>
                   <td><button class="btn btn-ghost btn-sm" onclick="deleteMAREntry('${pid}','${patientId}','${r.id}')">🗑️</button></td>
@@ -234,7 +234,7 @@ function onMARStatusChange() {
   } else if (status === 'refused') {
     timeField.disabled = false;
     btn.textContent = '❌ บันทึกการปฏิเสธยา';
-    btn.style.background = '#c0392b';
+    btn.style.background = 'var(--danger-text)';
   } else {
     timeField.disabled = false;
     btn.textContent = '⏸️ บันทึกการงดยา';

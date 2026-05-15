@@ -11,9 +11,9 @@ function renderPaymentsTab() {
 
   container.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;">
-      <div style="background:#f0fff4;border:1px solid #27ae60;border-radius:10px;padding:14px;text-align:center;">
-        <div style="font-size:11px;color:#27ae60;margin-bottom:4px;">รับชำระรวมทั้งหมด</div>
-        <div style="font-size:18px;font-weight:700;color:#27ae60;">${formatThb(totalReceived)}</div>
+      <div style="background:#f0fff4;border:1px solid var(--success);border-radius:10px;padding:14px;text-align:center;">
+        <div style="font-size:11px;color:var(--success);margin-bottom:4px;">รับชำระรวมทั้งหมด</div>
+        <div style="font-size:18px;font-weight:700;color:var(--success);">${formatThb(totalReceived)}</div>
       </div>
       ${Object.entries(byMethod).map(([m,v])=>`
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
@@ -37,13 +37,13 @@ function renderPaymentsTab() {
                 <td style="font-size:12px;">${p.paymentDate||'-'}</td>
                 <td style="font-weight:500;">${p.patientName||'-'}</td>
                 <td style="font-size:12px;color:var(--text2);">${inv?.docNo||'-'}</td>
-                <td style="text-align:right;font-weight:700;color:#27ae60;">${formatThb(p.amount)}</td>
+                <td style="text-align:right;font-weight:700;color:var(--success);">${formatThb(p.amount)}</td>
                 <td><span style="background:var(--surface2);border-radius:4px;padding:2px 8px;font-size:12px;">${p.method}</span></td>
                 <td style="font-size:12px;color:var(--text3);">${p.reference||'-'}</td>
                 <td style="font-size:12px;">${p.receivedBy||'-'}</td>
                 <td>
                   <button class="btn btn-ghost btn-sm" onclick="printReceiptById('${p.id}')" title="พิมพ์ใบเสร็จ">🖨️</button>
-                  <button class="btn btn-ghost btn-sm" onclick="deletePayment('${p.id}')" style="color:#e74c3c;">🗑️</button>
+                  <button class="btn btn-ghost btn-sm" onclick="deletePayment('${p.id}')" style="color:var(--danger);">🗑️</button>
                 </td>
               </tr>`;
             }).join('')}
@@ -206,14 +206,14 @@ function renderContracts() {
               <td style="text-align:center;">วันที่ ${c.billingDay}</td>
               <td>
                 <span style="font-size:12px;">${nextBill}</span>
-                <span style="font-size:11px;color:${daysUntil<=3?'#e74c3c':daysUntil<=7?'#e67e22':'var(--text3)'};">
+                <span style="font-size:11px;color:${daysUntil<=3?'var(--danger)':daysUntil<=7?'#e67e22':'var(--text3)'};">
                   (${daysUntil<=0?'ถึงกำหนดแล้ว!':daysUntil+' วัน'})
                 </span>
               </td>
               <td style="white-space:nowrap;">
                 <button class="btn btn-primary btn-sm" onclick="generateContractInvoice('${c.id}')">🧾 ออกบิล</button>
                 <button class="btn btn-ghost btn-sm" onclick="openAddContractModal('${c.id}')">✏️</button>
-                <button class="btn btn-ghost btn-sm" onclick="deleteContract('${c.id}')" style="color:#e74c3c;">🗑️</button>
+                <button class="btn btn-ghost btn-sm" onclick="deleteContract('${c.id}')" style="color:var(--danger);">🗑️</button>
               </td>
             </tr>`;
           }).join('')}
@@ -524,8 +524,8 @@ function _buildPhysioPkgTable(pkgs, canWrite) {
   pkgs.map(function(p){
     var rem = Math.max(0,(p.sessions_included||0)-(p.sessions_used||0));
     var pct = p.sessions_included>0?Math.min(100,Math.round((p.sessions_used||0)/p.sessions_included*100)):0;
-    var col = pct>=100?'#e74c3c':pct>=80?'#f39c12':'#27ae60';
-    return '<tr><td style="font-weight:500;">'+(p.patients?.name||'-')+'</td><td>'+(p.name||'-')+'</td><td style="text-align:center;">'+(p.sessions_included||0)+'</td><td style="text-align:center;"><div>'+(p.sessions_used||0)+'</div><div style="width:60px;height:4px;background:var(--border);border-radius:2px;margin:3px auto 0;"><div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:2px;"></div></div></td><td style="text-align:center;font-weight:700;color:'+(rem===0?'#e74c3c':'var(--accent)')+';">'+rem+'</td><td style="text-align:right;">'+(p.rate_per_hour_extra>0?formatThb(p.rate_per_hour_extra):'-')+'</td><td style="font-size:12px;">'+(p.start_date||'-')+'</td><td style="font-size:12px;">'+(p.end_date||'-')+'</td>'+(canWrite?'<td><button class="btn btn-ghost btn-sm" onclick="openAddPhysioPackageModal(\''+p.id+'\')">✏️</button> <button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="deletePhysioPackage(\''+p.id+'\')">🗑️</button></td>':'')+'</tr>';
+    var col = pct>=100?'var(--danger)':pct>=80?'var(--warning)':'var(--success)';
+    return '<tr><td style="font-weight:500;">'+(p.patients?.name||'-')+'</td><td>'+(p.name||'-')+'</td><td style="text-align:center;">'+(p.sessions_included||0)+'</td><td style="text-align:center;"><div>'+(p.sessions_used||0)+'</div><div style="width:60px;height:4px;background:var(--border);border-radius:2px;margin:3px auto 0;"><div style="width:'+pct+'%;height:100%;background:'+col+';border-radius:2px;"></div></div></td><td style="text-align:center;font-weight:700;color:'+(rem===0?'var(--danger)':'var(--accent)')+';">'+rem+'</td><td style="text-align:right;">'+(p.rate_per_hour_extra>0?formatThb(p.rate_per_hour_extra):'-')+'</td><td style="font-size:12px;">'+(p.start_date||'-')+'</td><td style="font-size:12px;">'+(p.end_date||'-')+'</td>'+(canWrite?'<td><button class="btn btn-ghost btn-sm" onclick="openAddPhysioPackageModal(\''+p.id+'\')">✏️</button> <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="deletePhysioPackage(\''+p.id+'\')">🗑️</button></td>':'')+'</tr>';
   }).join('')+'</tbody></table></div>';
 }
 
@@ -694,7 +694,7 @@ function _pcRenderTable(contracts, isActive) {
     if (isActive) {
       const next = getNextBillingDate(c);
       const days = Math.ceil((new Date(next) - new Date()) / (1000*60*60*24));
-      const colDays = days <= 3 ? '#e74c3c' : days <= 7 ? '#e67e22' : 'var(--text3)';
+      const colDays = days <= 3 ? 'var(--danger)' : days <= 7 ? '#e67e22' : 'var(--text3)';
       html += '<td><div style="font-size:11px;">' + next + '</div>';
       html += '<div style="font-size:10px;color:' + colDays + ';">(' + (days <= 0 ? 'ถึงกำหนดแล้ว!' : days + ' วัน') + ')</div></td>';
     } else {
@@ -706,7 +706,7 @@ function _pcRenderTable(contracts, isActive) {
         html += '<button class="btn btn-primary btn-sm" onclick="_pcGenerateInvoice(\'' + cId + '\')">💎 ออกบิล</button> ';
       }
       html += '<button class="btn btn-ghost btn-sm" onclick="_pcEdit(\'' + cId + '\')">✏️</button> ';
-      html += '<button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="_pcDelete(\'' + cId + '\')">🗑️</button>';
+      html += '<button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="_pcDelete(\'' + cId + '\')">🗑️</button>';
       html += '</td>';
     }
     html += '</tr>';

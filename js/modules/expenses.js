@@ -71,7 +71,7 @@ function renderExpenses() {
     <td style="font-size:12px;">${r.paidBy||'-'}</td>
     <td>
       <button class="btn btn-ghost btn-sm" onclick="printExpense('${r.id}')" title="พิมพ์ใบสำคัญจ่าย">🖨️</button>
-      <button class="btn btn-ghost btn-sm" style="color:#e74c3c;" onclick="exportExpensePDF('${r.id}')" title="Export PDF">📄</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="exportExpensePDF('${r.id}')" title="Export PDF">📄</button>
       <button class="btn btn-ghost btn-sm" onclick="editExpense('${r.id}')" title="แก้ไข">✏️</button>
       <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteExpense('${r.id}')" title="ลบ">🗑️</button>
     </td>
@@ -224,7 +224,7 @@ function renderExpenseLineItems() {
         '<td style="padding:6px 8px;"><input type="number" value="' + (it.qty || 1) + '" min="0" oninput="_updateExpenseLineItem(' + idx + ', \'qty\', this.value)" style="width:100%;box-sizing:border-box;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:4px 6px;font-size:14px;"></td>' +
         '<td style="padding:6px 8px;"><input type="number" value="' + (it.price || 0) + '" min="0" step="0.01" oninput="_updateExpenseLineItem(' + idx + ', \'price\', this.value)" style="width:100%;box-sizing:border-box;text-align:right;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text1);padding:4px 6px;font-size:14px;"></td>' +
         '<td style="padding:6px 8px;text-align:right;font-weight:600;font-size:14px;" id="exp2-row-' + idx + '">' + ((it.qty||1) * (it.price||0)).toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2}) + '</td>' +
-        '<td style="text-align:center;"><button type="button" onclick="_removeExpenseLineItem(' + idx + ')" style="border:none;background:none;cursor:pointer;color:#e74c3c;font-size:16px;padding:2px 4px;" title="ลบรายการ">✕</button></td>' +
+        '<td style="text-align:center;"><button type="button" onclick="_removeExpenseLineItem(' + idx + ')" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:16px;padding:2px 4px;" title="ลบรายการ">✕</button></td>' +
       '</tr>'
     ).join('') +
     '</tbody></table>';

@@ -53,7 +53,7 @@ function renderBelongingList(patientId) {
   if(!items.length) return `<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีสิ่งของบันทึกไว้</div>`;
   const held = items.filter(i=>i.status==='held');
   const returned = items.filter(i=>i.status==='returned');
-  const COND_COLOR = { ดี:'#27ae60', ปานกลาง:'#e67e22', ชำรุด:'#e74c3c' };
+  const COND_COLOR = { ดี:'var(--success)', ปานกลาง:'#e67e22', ชำรุด:'var(--danger)' };
   const renderGroup = (list, label) => !list.length ? '' : `
     <div style="padding:10px 16px 0;font-size:12px;font-weight:700;color:var(--text3);">${label} (${list.length})</div>
     <table style="width:100%;">
@@ -67,9 +67,9 @@ function renderBelongingList(patientId) {
           <td style="font-size:12px;">${b.receivedBy}</td>
           <td style="font-size:12px;color:var(--text2);">${b.note||'-'}</td>
           <td style="white-space:nowrap;">
-            ${b.status==='held'?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;" onclick="returnBelonging('${b.id}','${patientId}')">↩️ คืน</button>`:`<span style="font-size:11px;color:var(--text3);">คืนแล้ว ${b.dateOut||''}${b.returnedBy?' โดย '+b.returnedBy:''}</span>`}
+            ${b.status==='held'?`<button class="btn btn-sm" style="background:var(--success);color:#fff;font-size:11px;" onclick="returnBelonging('${b.id}','${patientId}')">↩️ คืน</button>`:`<span style="font-size:11px;color:var(--text3);">คืนแล้ว ${b.dateOut||''}${b.returnedBy?' โดย '+b.returnedBy:''}</span>`}
             <button class="btn btn-ghost btn-sm" onclick="openEditBelongingModal('${b.id}','${patientId}')" title="แก้ไข">✏️</button>
-            <button class="btn btn-ghost btn-sm" onclick="deleteBelonging('${b.id}','${patientId}')" style="font-size:11px;color:#e74c3c;">🗑️</button>
+            <button class="btn btn-ghost btn-sm" onclick="deleteBelonging('${b.id}','${patientId}')" style="font-size:11px;color:var(--danger);">🗑️</button>
           </td>
         </tr>`).join('')}
       </tbody>
@@ -192,8 +192,8 @@ async function clearDnr(patientId, patientName) {
 function renderDnrPanel(p) {
   const consent = (db.patientConsents||[]).find(c=>String(c.patientId)===String(p.id));
   const DNR_STYLES = {
-    dnr:   { bg:'#fdf2f8', border:'#c0392b', badge:'#c0392b', icon:'🚫', label:'DNR — ไม่ต้องการการช่วยชีวิต' },
-    full:  { bg:'#f0fff4', border:'#27ae60', badge:'#27ae60', icon:'✅', label:'Full Code — ยินยอมให้ช่วยชีวิตเต็มที่' },
+    dnr:   { bg:'#fdf2f8', border:'var(--danger-text)', badge:'var(--danger-text)', icon:'🚫', label:'DNR — ไม่ต้องการการช่วยชีวิต' },
+    full:  { bg:'#f0fff4', border:'var(--success)', badge:'var(--success)', icon:'✅', label:'Full Code — ยินยอมให้ช่วยชีวิตเต็มที่' },
     limited:{ bg:'#fffdf0', border:'#e67e22', badge:'#e67e22', icon:'⚠️', label:'Limited — ยินยอมบางส่วน (ดูรายละเอียด)' },
     not_set:{ bg:'var(--surface2)', border:'var(--border)', badge:'#888', icon:'❓', label:'ยังไม่ได้กำหนด' },
   };
@@ -205,7 +205,7 @@ function renderDnrPanel(p) {
         <div style="font-size:22px;font-weight:800;color:${style.border};">${style.icon} ${style.label}</div>
         ${consent?.dnrSignedDate?`<div style="font-size:12px;color:var(--text3);margin-top:4px;">ลงนาม: ${consent.dnrSignedDate} โดย ${consent.dnrSignedBy}</div>`:''}
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="clearDnr('${p.id}','${p.name}')" style="color:#e74c3c;border-color:#e74c3c;">🗑️ ล้างข้อมูล</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearDnr('${p.id}','${p.name}')" style="color:var(--danger);border-color:var(--danger);">🗑️ ล้างข้อมูล</button>
           <button class="btn btn-primary btn-sm" onclick="openDnrModal('${p.id}','${p.name}')">✏️ แก้ไข DNR & Consent</button>
     </div>
     ${consent ? `

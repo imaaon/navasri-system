@@ -9,15 +9,15 @@ function renderApptList(patientId) {
     .sort((a,b)=>a.apptDate.localeCompare(b.apptDate));
   if (!appts.length) return `<div style="padding:24px;text-align:center;color:var(--text3);">ยังไม่มีนัดหมาย</div>`;
   const today = new Date().toISOString().split('T')[0];
-  const STATUS_COLOR = { upcoming:'#3498db', done:'#27ae60', cancelled:'#e74c3c', postponed:'#e67e22' };
+  const STATUS_COLOR = { upcoming:'var(--info)', done:'var(--success)', cancelled:'var(--danger)', postponed:'#e67e22' };
   const STATUS_LABEL = { upcoming:'🔵 กำลังจะถึง', done:'✅ เสร็จแล้ว', cancelled:'❌ ยกเลิก', postponed:'⏸ เลื่อน' };
   const TRANSPORT_ICON = { 'รถคลินิก':'🚐', 'ญาติมารับ':'👨‍👩‍👧', 'แท็กซี่/รถรับจ้าง':'🚕', 'รถพยาบาล':'🚑' };
   return `<div style="display:flex;flex-direction:column;gap:10px;padding:12px 16px;">
     ${appts.map(a => {
       const daysLeft = a.apptDate >= today ? Math.ceil((new Date(a.apptDate)-new Date(today))/(86400000)) : -1;
       const urgent   = daysLeft >= 0 && daysLeft <= 2 && a.status==='upcoming';
-      return `<div style="border:1.5px solid ${urgent?'#e74c3c':a.status==='done'?'#ddd':'var(--border)'};border-radius:10px;padding:14px;background:${urgent?'#fff5f5':a.status==='done'?'#f9f9f9':'var(--surface2)'};position:relative;">
-        ${urgent?`<div style="position:absolute;top:8px;right:8px;background:#e74c3c;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;">⚠️ อีก ${daysLeft} วัน</div>`:''}
+      return `<div style="border:1.5px solid ${urgent?'var(--danger)':a.status==='done'?'#ddd':'var(--border)'};border-radius:10px;padding:14px;background:${urgent?'#fff5f5':a.status==='done'?'#f9f9f9':'var(--surface2)'};position:relative;">
+        ${urgent?`<div style="position:absolute;top:8px;right:8px;background:var(--danger);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;">⚠️ อีก ${daysLeft} วัน</div>`:''}
         <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
           <div style="min-width:100px;">
             <div style="font-size:17px;font-weight:700;color:${a.status==='upcoming'?'var(--accent)':'var(--text2)'};">${a.apptDate} ${a.apptTime?'🕐'+a.apptTime:''}</div>
@@ -33,9 +33,9 @@ function renderApptList(patientId) {
             <div style="font-size:12px;margin-top:4px;">${TRANSPORT_ICON[a.transport]||'🚗'} ${a.transport} ${a.transportNote?'('+a.transportNote+')':''}</div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            ${a.status==='upcoming'?`<button class="btn btn-sm" style="background:#27ae60;color:#fff;font-size:11px;" onclick="markApptDone('${a.id}')">✅ เสร็จ</button>`:''}
+            ${a.status==='upcoming'?`<button class="btn btn-sm" style="background:var(--success);color:#fff;font-size:11px;" onclick="markApptDone('${a.id}')">✅ เสร็จ</button>`:''}
             <button class="btn btn-ghost btn-sm" onclick="openApptModal('${a.id}')" style="font-size:11px;">✏️</button>
-            <button class="btn btn-ghost btn-sm" onclick="deleteAppt('${a.id}','${patientId}')" style="font-size:11px;color:#e74c3c;">🗑️</button>
+            <button class="btn btn-ghost btn-sm" onclick="deleteAppt('${a.id}','${patientId}')" style="font-size:11px;color:var(--danger);">🗑️</button>
           </div>
         </div>
         ${a.note?`<div style="font-size:12px;color:var(--text3);margin-top:6px;border-top:1px solid var(--border);padding-top:6px;">💬 ${a.note}</div>`:''}
@@ -165,7 +165,7 @@ function renderUpcomingAppts() {
     const dateText = _uaFmtDate(a.apptDate) + (a.apptTime ? ' ' + _uaFmtTime(a.apptTime) : '');
     const isUrgent = daysLeft <= 2;
     const badgeBg = isUrgent ? '#fef0ee' : '#eef4ff';
-    const badgeColor = isUrgent ? '#e74c3c' : 'var(--accent)';
+    const badgeColor = isUrgent ? 'var(--danger)' : 'var(--accent)';
     return `<div onclick="navigateToAppt('${_uaEsc(a.patientId)}')" style="cursor:pointer;padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;white-space:nowrap;overflow:hidden;">
       <div style="background:${badgeBg};color:${badgeColor};border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;flex-shrink:0;white-space:nowrap;">${_uaDayLabel(daysLeft)}</div>
       <div style="font-weight:600;font-size:13px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;">${_uaEsc(displayName)}</div>

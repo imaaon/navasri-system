@@ -69,7 +69,7 @@ function renderNursingTab(pid, patientId, overrideFrom, overrideTo) {
             ${note.recordedBy||note.by||''}<br>
             <div style="display:flex;gap:4px;margin-top:2px;">
               <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;" onclick="editNursingNote('${patientId}','${pid}','${note.id}')">✏️แก้ไข</button>
-              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:#e74c3c;" onclick="deleteNursingNote('${patientId}','${pid}','${note.id}')">🗑️ลบ</button>
+              <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 6px;color:var(--danger);" onclick="deleteNursingNote('${patientId}','${pid}','${note.id}')">🗑️ลบ</button>
             </div>
           </div>
         </div>`).join('');

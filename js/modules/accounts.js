@@ -51,7 +51,7 @@ async function renderAccounts() {
       '<td class="number" style="font-size:12px;color:var(--text2);">' + (a.last_login?a.last_login.slice(0,10):'-') + '</td>' +
       '<td style="white-space:nowrap;">' +
         '<button class="btn btn-ghost btn-sm" data-eid="' + a.id + '" data-eun="' + (a.username||'') + '">✏️</button>' +
-        '<button class="btn btn-ghost btn-sm" data-did="' + a.id + '" data-dun="' + (a.username||'') + '" style="color:#e74c3c;">🗑️</button>' +
+        '<button class="btn btn-ghost btn-sm" data-did="' + a.id + '" data-dun="' + (a.username||'') + '" style="color:var(--danger);">🗑️</button>' +
       '</td>';
     tr.querySelector('[data-eid]').addEventListener('click', function() { editAccount(this.dataset.eid, this.dataset.eun); });
     tr.querySelector('[data-did]').addEventListener('click', function() { deleteAccount(this.dataset.did, this.dataset.dun); });
