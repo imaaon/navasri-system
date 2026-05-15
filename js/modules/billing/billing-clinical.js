@@ -444,6 +444,15 @@ function mapDiet(r) {
   return { id:r.id, patientId:r.patient_id, patientName:r.patient_name, dietType:r.diet_type, meals:r.meals||r.meal_count||'3 มื้อ', restrictions, note:r.note, updatedAt:r.updated_at, date:r.date, recorder:r.recorder, calories:r.calories, protein:r.protein };
 }
 
+// [R26 15พค69] safe parse for restrictions in template literals
+function safeParseRestrictions(v) {
+  if (Array.isArray(v)) return v;
+  if (typeof v === 'string') {
+    try { return JSON.parse(v || '[]'); } catch (e) { return []; }
+  }
+  return [];
+}
+
 async function deleteDiet(id) {
   await ensureSecondaryDB();
   if (!(await customConfirm('ลบแผนอาหารนี้?'))) return;
@@ -548,7 +557,7 @@ async function renderDietaryPage() {
   if (tb) tb.innerHTML = diets.length ? diets.map(d=>`<tr>
     <td style="font-weight:600;">${d.patientName||''}</td>
     <td>${DIET_LABELS[d.dietType]||''} ${d.dietType||''}</td>
-    <td style="font-size:12px;">${(Array.isArray(d.restrictions) ? d.restrictions : (typeof d.restrictions==='string' ? JSON.parse(d.restrictions||'[]') : [])).join(', ')||'—'}</td>
+    <td style="font-size:12px;">${safeParseRestrictions(d.restrictions).join(', ')||'—'}</td>
     <td>${d.meals||'3 มื้อ'}</td>
     <td style="font-size:12px;text-align:center;">${d.calories||'—'}</td>
     <td style="font-size:12px;text-align:center;">${d.protein!=null?d.protein+'g':'—'}</td>
@@ -599,7 +608,7 @@ function printDietaryReport() {
   <h1>🍽️ ใบจัดอาหารประจำวัน — นวศรี เนอร์สซิ่งโฮม</h1>
   <h2>วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})}</h2>
   <table><thead><tr><th>#</th><th>ผู้ป่วย</th><th>ประเภทอาหาร</th><th>มื้อ</th><th>ข้อจำกัด</th><th>หมายเหตุ</th></tr></thead><tbody>
-  ${diets.map((d,i)=>`<tr><td style="text-align:center;">${i+1}</td><td style="font-weight:600;">${d.patientName||''}</td><td>${d.dietType||''}</td><td>${d.meals||'3 มื้อ'}</td><td>${(Array.isArray(d.restrictions) ? d.restrictions : (typeof d.restrictions==='string' ? JSON.parse(d.restrictions||'[]') : [])).join(', ')||'—'}</td><td>${d.note||'—'}</td></tr>`).join('')}
+  ${diets.map((d,i)=>`<tr><td style="text-align:center;">${i+1}</td><td style="font-weight:600;">${d.patientName||''}</td><td>${d.dietType||''}</td><td>${d.meals||'3 มื้อ'}</td><td>${safeParseRestrictions(d.restrictions).join(', ')||'—'}</td><td>${d.note||'—'}</td></tr>`).join('')}
   </tbody></table></body></html>`);
   w.document.close();
 }

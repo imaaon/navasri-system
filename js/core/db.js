@@ -109,7 +109,13 @@ async function loadDB() {
     db.users = {};
     const ls = (settingsRes.data || []).find(s => s.key === 'lineSettings');
     if (ls) {
-      const parsed = typeof ls.value === 'string' ? JSON.parse(ls.value) : ls.value;
+      // [R26 15พค69] try/catch defensive — ถ้า value ใน DB เสีย ระบบยังโหลดต่อได้
+      let parsed = {};
+      try {
+        parsed = typeof ls.value === 'string' ? JSON.parse(ls.value) : (ls.value || {});
+      } catch (e) {
+        console.warn('lineSettings JSON.parse failed, using defaults:', e);
+      }
       db.lineSettings = { ...db.lineSettings, ...parsed };
     }
     if (typeof loadBillingFromSettings === 'function') {
