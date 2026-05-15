@@ -531,40 +531,62 @@ function _buildPhysioPkgTable(pkgs, canWrite) {
 
 function openAddPhysioPackageModal(editId) {
   document.getElementById('pp-edit-id').value = editId||'';
-  document.getElementById('pp-modal-title').textContent = editId ? '✏️ แก้ไข Physio Package' : '➕ เพิ่ม Physio Package';
+  document.getElementById('modal-physio-package-title').textContent = editId ? '✏️ แก้ไขแพ็กเกจกายภาพ' : '➕ เพิ่มแพ็กเกจกายภาพ';
+
+  // Populate patient <select> with active patients
+  var sel = document.getElementById('pp-patient');
+  sel.innerHTML = '<option value="">— เลือก —</option>' +
+    (db.patients||[]).filter(function(p){ return p.status==='active'; })
+      .map(function(p){ return '<option value="'+p.id+'">'+p.name+'</option>'; }).join('');
+
   if (editId) {
     supa.from('physio_packages').select('*').eq('id',editId).single().then(function(res){
       var data=res.data; if(!data) return;
-      var pat=(db.patients||[]).find(function(p){ return String(p.id)===String(data.patient_id); });
-      document.getElementById('pp-ta-id').value=data.patient_id||'';
-      document.getElementById('pp-ta-inp').value=pat?pat.name:'';
+      document.getElementById('pp-patient').value=data.patient_id||'';
       document.getElementById('pp-name').value=data.name||'';
-      document.getElementById('pp-sessions').value=data.sessions_included||0;
-      document.getElementById('pp-used').value=data.sessions_used||0;
-      document.getElementById('pp-rate').value=data.rate_per_hour_extra||0;
-      document.getElementById('pp-start').value=data.start_date||'';
-      document.getElementById('pp-end').value=data.end_date||'';
-      document.getElementById('pp-active').checked=data.is_active!==false;
+      document.getElementById('pp-sessions-included').value=data.sessions_included||0;
+      document.getElementById('pp-rate-extra').value=data.rate_per_hour_extra||0;
+      document.getElementById('pp-start-date').value=data.start_date||'';
+      document.getElementById('pp-end-date').value=data.end_date||'';
       document.getElementById('pp-note').value=data.note||'';
+      // Store sessions_used + is_active for edit save (not exposed in UI)
+      document.getElementById('pp-edit-id').dataset.sessionsUsed = data.sessions_used||0;
+      document.getElementById('pp-edit-id').dataset.isActive = (data.is_active!==false) ? '1' : '0';
     });
   } else {
-    ['pp-ta-id','pp-ta-inp','pp-name','pp-note'].forEach(function(id){ document.getElementById(id).value=''; });
-    document.getElementById('pp-sessions').value=8; document.getElementById('pp-used').value=0;
-    document.getElementById('pp-rate').value=0; document.getElementById('pp-active').checked=true;
-    document.getElementById('pp-start').value=new Date().toISOString().split('T')[0];
-    document.getElementById('pp-end').value='';
+    ['pp-patient','pp-name','pp-note','pp-start-date','pp-end-date'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('pp-sessions-included').value=10;
+    document.getElementById('pp-rate-extra').value=0;
+    document.getElementById('pp-start-date').value=new Date().toISOString().split('T')[0];
+    // Reset stashed fields
+    delete document.getElementById('pp-edit-id').dataset.sessionsUsed;
+    delete document.getElementById('pp-edit-id').dataset.isActive;
   }
-  makeTypeahead({inputId:'pp-ta-inp',listId:'pp-ta-list',hiddenId:'pp-ta-id',dataFn:function(){ return taPatients(true); }});
   openModal('modal-physio-package');
 }
 
 async function savePhysioPackage() {
-  var patId=document.getElementById('pp-ta-id').value;
+  var patId=document.getElementById('pp-patient').value;
   var name=document.getElementById('pp-name').value.trim();
   if (!patId) { toast('กรุณาเลือกผู้รับบริการ','warning'); return; }
   if (!name)  { toast('กรุณาระบุชื่อ Package','warning'); return; }
-  var editId=document.getElementById('pp-edit-id').value;
-  var row={patient_id:patId,name:name,sessions_included:parseInt(document.getElementById('pp-sessions').value)||0,sessions_used:parseInt(document.getElementById('pp-used').value)||0,rate_per_hour_extra:parseFloat(document.getElementById('pp-rate').value)||0,start_date:document.getElementById('pp-start').value||null,end_date:document.getElementById('pp-end').value||null,is_active:document.getElementById('pp-active').checked,note:document.getElementById('pp-note').value.trim()||null,updated_at:new Date().toISOString()};
+  var editIdEl = document.getElementById('pp-edit-id');
+  var editId = editIdEl.value;
+  // Preserve sessions_used + is_active that aren't in the form (use stashed values on edit, defaults on insert)
+  var sessionsUsed = editId ? (parseInt(editIdEl.dataset.sessionsUsed)||0) : 0;
+  var isActive = editId ? (editIdEl.dataset.isActive !== '0') : true;
+  var row={
+    patient_id:patId,
+    name:name,
+    sessions_included:parseInt(document.getElementById('pp-sessions-included').value)||0,
+    sessions_used:sessionsUsed,
+    rate_per_hour_extra:parseFloat(document.getElementById('pp-rate-extra').value)||0,
+    start_date:document.getElementById('pp-start-date').value||null,
+    end_date:document.getElementById('pp-end-date').value||null,
+    is_active:isActive,
+    note:document.getElementById('pp-note').value.trim()||null,
+    updated_at:new Date().toISOString()
+  };
   var result = editId ? await supa.from('physio_packages').update(row).eq('id',editId) : await supa.from('physio_packages').insert(Object.assign({},row,{created_by:currentUser?.name||''}));
   if (result.error) { toast('บันทึกไม่สำเร็จ: '+result.error.message,'error'); return; }
   toast('บันทึกสำเร็จค่ะ','success');
