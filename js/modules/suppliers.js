@@ -141,9 +141,8 @@ async function deleteSupplier(id) {
 let prItems = [];
 
 // ── PR Permission ──────────────────────────────────
-function canApproveReq() {
-  return true;
-}
+// [R27-P1 15พค69] ลบ duplicate canApproveReq() ที่ return true เสมอ
+// → ระบบใช้ตัวจาก js/core/permissions.js ที่ check role: admin/manager/officer
 
 function renderPurchaseRequests() {
   const statusF = document.getElementById('prStatusFilter')?.value || '';
