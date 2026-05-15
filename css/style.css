@@ -5105,3 +5105,24 @@ tr:hover td {
     min-width: 0;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   [R27-P5 15พค69] Small modal z-index fix — BUG-NEW-01 from UAT round 2
+   - Problem: confirm dialog z-index 200 = เท่ากับ parent modal 200
+     → confirm dialog อาจถูก overlap โดย parent modal
+   - Fix: ดัน customConfirm + customAlert ขึ้น z-index 9999
+     (เหนือ modal ปกติ 200 + stacked modal 190 + mobile modal 300/310)
+   - ครอบทุก viewport (desktop + mobile)
+   ════════════════════════════════════════════════════════════════ */
+.modal-overlay[data-modal-size="small"] {
+  z-index: 9999;
+}
+.modal-overlay[data-modal-size="small"].open {
+  z-index: 9999 !important;
+}
+@media (max-width: 768px) {
+  .modal-overlay[data-modal-size="small"],
+  .modal-overlay[data-modal-size="small"].open {
+    z-index: 9999 !important;
+  }
+}
