@@ -278,7 +278,7 @@ function renderHealthReport() {
           </div>` : ''}
           ${pat.meds.length > 0 && typeVal !== 'medical' ? `
           <div style="margin-top:12px;">
-            <div style="font-size:12px;font-weight:700;color:#2980b9;margin-bottom:8px;">💊 ยาประจำ</div>
+            <div style="font-size:12px;font-weight:700;color:var(--info-text);margin-bottom:8px;">💊 ยาประจำ</div>
             ${pat.meds.map(e => `<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;">
               <span style="color:var(--text3);white-space:nowrap;min-width:90px;">${thDateShort(e.date)}</span>
               <span style="flex:1;">${e.detail}</span>
@@ -397,11 +397,11 @@ function exportHealthPDF() {
       * { box-sizing:border-box; margin:0; padding:0; }
       body { font-family:'IBM Plex Sans Thai',sans-serif; padding:16mm 18mm; font-size:12px; color:#1a1a1a; }
       h1 { font-size:18px; font-weight:700; margin-bottom:4px; }
-      .meta { color:#666; font-size:12px; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid #2d6a48; }
+      .meta { color:#666; font-size:12px; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid var(--brand); }
       .patient-block { margin-bottom:24px; page-break-inside:avoid; }
-      h3 { font-size:14px; font-weight:700; color:#2d6a48; margin-bottom:8px; padding:6px 10px; background:#f2f8f4; border-radius:4px; }
+      h3 { font-size:14px; font-weight:700; color:var(--brand); margin-bottom:8px; padding:6px 10px; background:#f2f8f4; border-radius:4px; }
       .section-label { font-size:11px; font-weight:700; color:#5a9e7a; text-transform:uppercase; letter-spacing:.05em; margin:10px 0 4px; }
-      .section-label.meds { color:#2980b9; }
+      .section-label.meds { color:var(--info-text); }
       table { width:100%; border-collapse:collapse; margin-bottom:8px; }
       th { background:#f2f8f4; padding:6px 8px; text-align:left; font-size:11px; border-bottom:1px solid #cde4d4; }
       td { padding:6px 8px; border-bottom:1px solid #eee; vertical-align:top; line-height:1.5; }
@@ -445,7 +445,7 @@ function exportPatMedPDF(patId, type) {
   const key   = type === 'medical' ? 'medicalLog' : 'medsLog';
   const icon  = type === 'medical' ? '🏥' : '💊';
   const label = type === 'medical' ? 'ประวัติการรักษา' : 'ยาประจำ';
-  const color = type === 'medical' ? '#2d6a48' : '#2980b9';
+  const color = type === 'medical' ? 'var(--brand)' : 'var(--info-text)';
   const logs  = (p[key] || []).slice().sort((a,b) => b.date.localeCompare(a.date));
   if (logs.length === 0) { toast('ไม่มีข้อมูล','warning'); return; }
 

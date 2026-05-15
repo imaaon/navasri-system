@@ -98,7 +98,7 @@ function renderBIKPICards(month) {
     { label: 'อัตราการใช้เตียง', value: Math.round(occupancy) + '%', icon: '🛏️', color: occupancy >= 80 ? 'green' : occupancy >= 50 ? 'orange' : 'red', sub: `${occupiedBeds} จาก ${totalBeds} เตียง` },
   ];
 
-  const colorMap = { blue:'#2980b9', green:'var(--success)', orange:'#e67e22', red:'var(--danger)', purple:'#8e44ad' };
+  const colorMap = { blue:'var(--info-text)', green:'var(--success)', orange:'var(--warning)', red:'var(--danger)', purple:'var(--purple)' };
   el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;">` +
     cards.map(c => {
       const col = colorMap[c.color] || '#888';
@@ -130,10 +130,10 @@ function renderBIRevenueBreakdown(month) {
   const total    = roomRev + medRev + ptRev + otherRev;
 
   const categories = [
-    { label: '🛏️ ค่าห้องพัก', value: roomRev, color: '#2980b9' },
+    { label: '🛏️ ค่าห้องพัก', value: roomRev, color: 'var(--info-text)' },
     { label: '💊 ค่ายา/เวชภัณฑ์', value: medRev, color: 'var(--danger)' },
     { label: '🤸 กายภาพบำบัด', value: ptRev, color: 'var(--success)' },
-    { label: '📋 อื่นๆ', value: otherRev, color: '#8e44ad' },
+    { label: '📋 อื่นๆ', value: otherRev, color: 'var(--purple)' },
   ].filter(c => c.value > 0);
 
   el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">` +
@@ -431,10 +431,10 @@ function renderBITrend() {
       return `<div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center;">
         <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">เดือน ${label}</div>
         <div style="display:flex;align-items:flex-end;justify-content:center;gap:4px;height:80px;margin-bottom:8px;">
-          <div title="รายรับ" style="width:28px;background:#2980b9;border-radius:4px 4px 0 0;height:${barH}px;"></div>
-          <div title="ต้นทุน" style="width:28px;background:#e67e22;border-radius:4px 4px 0 0;height:${Math.round(r.cost/maxVal*80)}px;"></div>
+          <div title="รายรับ" style="width:28px;background:var(--info-text);border-radius:4px 4px 0 0;height:${barH}px;"></div>
+          <div title="ต้นทุน" style="width:28px;background:var(--warning);border-radius:4px 4px 0 0;height:${Math.round(r.cost/maxVal*80)}px;"></div>
         </div>
-        <div style="font-size:13px;font-weight:600;color:#2980b9;">${_thb(r.revenue)}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--info-text);">${_thb(r.revenue)}</div>
         <div style="font-size:11px;color:var(--orange);">ต้นทุน ${_thb(r.cost)}</div>
         <div style="font-size:12px;font-weight:700;color:${profitColor};margin-top:4px;">กำไร ${_thb(r.profit)}</div>
       </div>`;
@@ -765,7 +765,7 @@ function renderDecisionRecommendations() {
     return;
   }
 
-  const colorMap = { danger:'var(--danger)', warning:'#e67e22', info:'#2980b9' };
+  const colorMap = { danger:'var(--danger)', warning:'var(--warning)', info:'var(--info-text)' };
   const bgMap    = { danger:'#fff5f5', warning:'#fff8f0', info:'#f0f7ff' };
 
   el.innerHTML = recs.map(r => `
@@ -1036,7 +1036,7 @@ function runCaseAcceptance() {
     decisionColor = 'var(--success)'; decisionIcon = '✅';
   } else if (margin >= 5) {
     decision = 'รับได้ แต่ควรปรับราคา';
-    decisionColor = '#e67e22'; decisionIcon = '⚠️';
+    decisionColor = 'var(--warning)'; decisionIcon = '⚠️';
     actions.push(`เสนอราคา ฿${suggestedPrice.toLocaleString()}/เดือน`);
   } else if (margin >= 0) {
     decision = 'ความเสี่ยงสูง — กำไรน้อยมาก';
@@ -1166,7 +1166,7 @@ function runROICalc() {
   el.innerHTML = `
     <div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-        ${scenarioCard(sA, 'Scenario A', '#2980b9')}
+        ${scenarioCard(sA, 'Scenario A', 'var(--info-text)')}
         ${scenarioCard(sB, 'Scenario B', 'var(--success)')}
       </div>
       <div class="card">
@@ -1254,11 +1254,11 @@ function renderInvestorDashboard() {
       <!-- KPI Row -->
       <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;">
         ${[
-          {label:'ผู้รับบริการ',value:activePats.length+' คน',sub: atHospital > 0 ? `${activeOnly} อยู่บนเตียง · ${atHospital} ไปรพ.` : `Occupancy ${Math.round(occRate)}%`,color:'#2980b9'},
+          {label:'ผู้รับบริการ',value:activePats.length+' คน',sub: atHospital > 0 ? `${activeOnly} อยู่บนเตียง · ${atHospital} ไปรพ.` : `Occupancy ${Math.round(occRate)}%`,color:'var(--info-text)'},
           {label:'รายรับรวม',value:_thb(revenue),sub:`เก็บแล้ว ${_thb(collected)}`,color:'var(--success)'},
-          {label:'ต้นทุนสินค้า',value:_thb(cogs),sub:`${reqs.length} รายการ`,color:'#e67e22'},
+          {label:'ต้นทุนสินค้า',value:_thb(cogs),sub:`${reqs.length} รายการ`,color:'var(--warning)'},
           {label:'กำไรขั้นต้น',value:_thb(grossProfit),sub:`Margin ${Math.round(margin)}%`,color:grossProfit>=0?'var(--success)':'var(--danger)'},
-          {label:'Rev/Patient',value:_thb(revPerPat),sub:'เฉลี่ยต่อคน',color:'#8e44ad'},
+          {label:'Rev/Patient',value:_thb(revPerPat),sub:'เฉลี่ยต่อคน',color:'var(--purple)'},
           {label:'Cost/Patient',value:_thb(costPerPat),sub:'ต้นทุนต่อคน',color:'#16a085'},
         ].map(k=>`
           <div style="background:#fff;border-radius:10px;padding:12px;border-bottom:3px solid ${k.color};box-shadow:0 1px 4px rgba(0,0,0,0.06);text-align:center;">
@@ -1275,7 +1275,7 @@ function renderInvestorDashboard() {
           ${trend.map(t=>`
             <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
               <div style="width:100%;display:flex;align-items:flex-end;gap:2px;height:80px;">
-                <div title="รายรับ" style="flex:1;background:#2980b9;border-radius:3px 3px 0 0;height:${Math.round(t.rev/maxTrend*80)}px;"></div>
+                <div title="รายรับ" style="flex:1;background:var(--info-text);border-radius:3px 3px 0 0;height:${Math.round(t.rev/maxTrend*80)}px;"></div>
                 <div title="กำไร" style="flex:1;background:${t.profit>=0?'var(--success)':'var(--danger)'};border-radius:3px 3px 0 0;height:${Math.round(Math.abs(t.profit)/maxTrend*80)}px;"></div>
               </div>
               <div style="font-size:10px;color:var(--text3);">${t.label}</div>
@@ -1291,7 +1291,7 @@ function renderInvestorDashboard() {
         <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
           <div style="font-size:12px;font-weight:600;margin-bottom:8px;">🛏️ อัตราการใช้เตียง</div>
           <div style="background:var(--border);border-radius:6px;height:12px;overflow:hidden;">
-            <div style="background:${occRate>=80?'var(--success)':occRate>=60?'#e67e22':'var(--danger)'};height:100%;width:${Math.round(occRate)}%;border-radius:6px;transition:width .5s;"></div>
+            <div style="background:${occRate>=80?'var(--success)':occRate>=60?'var(--warning)':'var(--danger)'};height:100%;width:${Math.round(occRate)}%;border-radius:6px;transition:width .5s;"></div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px;">
             <span>${occBeds} เตียงที่ใช้อยู่</span><span style="font-weight:700;">${Math.round(occRate)}%</span>
@@ -1300,7 +1300,7 @@ function renderInvestorDashboard() {
         <div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
           <div style="font-size:12px;font-weight:600;margin-bottom:8px;">💹 Gross Margin</div>
           <div style="background:var(--border);border-radius:6px;height:12px;overflow:hidden;">
-            <div style="background:${margin>=25?'var(--success)':margin>=10?'#e67e22':'var(--danger)'};height:100%;width:${Math.max(0,Math.round(margin))}%;border-radius:6px;"></div>
+            <div style="background:${margin>=25?'var(--success)':margin>=10?'var(--warning)':'var(--danger)'};height:100%;width:${Math.max(0,Math.round(margin))}%;border-radius:6px;"></div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px;">
             <span>กำไร ${_thb(grossProfit)}</span><span style="font-weight:700;">${Math.round(margin)}%</span>

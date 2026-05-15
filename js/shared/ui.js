@@ -137,7 +137,7 @@ function renderLineLog() {
   logEl.innerHTML = lineLog.slice(0, 20).map(l =>
     `<div style="padding:4px 0;border-bottom:1px solid #f0ede6;display:flex;gap:12px;align-items:flex-start;">
       <span style="color:#a09890;flex-shrink:0;">${l.time}</span>
-      <span style="color:${l.status.includes('✅')||l.status.includes('⚠️ CORS')?'#2a7a4f':l.status.includes('❌')?'var(--danger-text)':'#d4760a'};flex-shrink:0;">${l.status}</span>
+      <span style="color:${l.status.includes('✅')||l.status.includes('⚠️ CORS')?'var(--brand)':l.status.includes('❌')?'var(--danger-text)':'var(--warning-text)'};flex-shrink:0;">${l.status}</span>
       <span style="color:#706860;font-size:11.5px;">${l.msg}</span>
     </div>`
   ).join('');

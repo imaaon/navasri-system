@@ -33,7 +33,7 @@ function renderRooms() {
       <div style="font-size:11px;font-weight:700;color:${c};text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">${t}</div>
       <div style="font-size:22px;font-weight:800;color:${c};">${tRooms.length} <span style="font-size:12px;font-weight:400;color:var(--text3);">ห้อง</span></div>
       <div style="font-size:12px;margin-top:4px;color:var(--text2);">
-        <span style="color:var(--success);">● ว่าง ${available}</span> · <span style="color:var(--danger-text);">● มีผู้พัก ${occupied}</span>${maintenance?' · <span style="color:#e67e22;">● ซ่อม '+maintenance+'</span>':''}
+        <span style="color:var(--success);">● ว่าง ${available}</span> · <span style="color:var(--danger-text);">● มีผู้พัก ${occupied}</span>${maintenance?' · <span style="color:var(--warning);">● ซ่อม '+maintenance+'</span>':''}
       </div>
     </div>`;
   }).join('');
@@ -55,7 +55,7 @@ function renderRooms() {
       : roomBeds.map(b => {
           const occupant = db.patients.find(p => p.currentBedId == b.id);
           if (b.status === 'inactive') return ''; // ซ่อนเตียงที่ปิดใช้งาน
-          const statusColor = b.status==='available'?'var(--success)':b.status==='occupied'?'var(--danger-text)':b.status==='maintenance'?'#e67e22':'#95a5a6';
+          const statusColor = b.status==='available'?'var(--success)':b.status==='occupied'?'var(--danger-text)':b.status==='maintenance'?'var(--warning)':'var(--ink-3)';
           const statusLabel = b.status==='available'?'ว่าง':b.status==='occupied'?'มีผู้พัก':b.status==='maintenance'?'ซ่อมบำรุง':b.status==='other'?(b.otherNote||'อื่นๆ'):'ปิดใช้งาน';
           return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:${b.status==='available'?'#f9fff9':b.status==='occupied'?'#fff5f5':b.status==='maintenance'?'#fffbf0':'#f5f5f5'};">
             <span style="font-size:16px;">🛏️</span>
@@ -64,7 +64,7 @@ function renderRooms() {
               ${occupant ? `<div style="font-size:11px;color:var(--danger-text);font-weight:600;">👤 ${occupant.name}</div>` : ''}
             </div>
             <span style="font-size:11px;font-weight:700;color:${statusColor};">● ${statusLabel}</span>
-            ${occupant ? `<button class="btn btn-ghost btn-sm" onclick="openTransferRoomModal('${occupant.id}')" style="padding:3px 7px;font-size:11px;color:#2980b9;">🔄 ย้าย</button>` : ''}
+            ${occupant ? `<button class="btn btn-ghost btn-sm" onclick="openTransferRoomModal('${occupant.id}')" style="padding:3px 7px;font-size:11px;color:var(--info-text);">🔄 ย้าย</button>` : ''}
             <button class="btn btn-ghost btn-sm" onclick="editBed('${b.id}')" style="padding:3px 7px;font-size:11px;">✏️</button>
             <button class="btn btn-ghost btn-sm" onclick="deleteBed('${b.id}')" style="padding:3px 7px;font-size:11px;">🗑️</button>
           </div>`;
