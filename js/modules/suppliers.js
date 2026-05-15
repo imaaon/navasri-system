@@ -784,7 +784,7 @@ function renderSupplierInvoices() {
       '<td>'+
         '<button class="btn btn-ghost btn-sm" title="ดูรายละเอียด" onclick="viewSupInv('+r.id+')">&var(--success-text);</button>'+'<button class="btn btn-ghost btn-sm" onclick="editSupplierInvoice('+r.id+')">&#9998;</button>'+
         (r.status==='draft'?'<button class="btn btn-ghost btn-sm" style="color:var(--primary)" onclick="confirmInvoiceStock('+r.id+')">&#128230; ยืนยัน</button>':'')+
-        (r.status==='pending'||r.status==='confirmed'?'<button class="btn btn-ghost btn-sm" onclick="markInvoicePaid('+r.id+')">&#9989; จ่าย</button>':'')+
+        (r.status==='pending'||r.status==='confirmed'?'<button class="btn btn-ghost btn-sm" onclick="markSupplierInvoicePaid('+r.id+')">&#9989; จ่าย</button>':'')+
         (r.status==='draft'&&(currentUser?.role==='admin'||currentUser?.role==='manager')?'<button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="deleteSupplierInvoice('+r.id+',\''+r.invoiceNo+'\')">&#128465;</button>':'')+
       '</td>'+
       '</tr>'+
@@ -1491,7 +1491,8 @@ async function editSupplierInvoice(id) {
   }
 }
 
-async function markInvoicePaid(id) {
+// [R27-P2A 15พค69] rename จาก markInvoicePaid เพื่อไม่ override version ใน billing-core.js (customer invoice)
+async function markSupplierInvoicePaid(id) {
   const inv = db.supplierInvoices.find(x => x.id == id);
   if (!inv) return;
   const paidDate = new Date().toISOString().slice(0,10);
