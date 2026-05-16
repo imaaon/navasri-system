@@ -69,6 +69,7 @@ async function openPatientProfile(id, activeTab) {
     <!-- Action buttons -->
     <div class="patprofile-header-actions" style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;">
       <button id="patprofile-pin-btn" class="btn btn-ghost btn-sm pin-toggle-btn-inline ${isPinned ? 'pinned' : ''}" onclick="_togglePinForCurrentPatient('${p.id}')" title="${isPinned ? 'ยกเลิกการปักหมุด' : 'ปักหมุดผู้พักนี้'}" style="white-space:nowrap;">${isPinned ? '⭐ ปักหมุดแล้ว' : '☆ ปักหมุด'}</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportPatientSummaryPDF('${p.id}')" title="พิมพ์สรุป 1 หน้า A4 (พาไป รพ. / ฉุกเฉิน)" style="white-space:nowrap;">🖨 สรุป</button>
       <button class="btn btn-ghost btn-sm" onclick="openHealthReportModal('${p.id}')" style="white-space:nowrap;">🖨️ พิมพ์</button>
       <button class="btn btn-ghost btn-sm" onclick="openPatientContractsModal('${p.id}','${(p.name||'').replace(/'/g, "\\'")}')" style="white-space:nowrap;">📋 แพ็กเกจ</button>
       <button class="btn btn-primary btn-sm" onclick="editPatient('${p.id}')" style="white-space:nowrap;">✏️ แก้ไข</button>
@@ -89,6 +90,7 @@ async function openPatientProfile(id, activeTab) {
       </div>
     </div>
     <button id="patprofile-mobile-pin-btn" class="btn btn-ghost btn-sm pin-toggle-btn-inline ${isPinned ? 'pinned' : ''}" onclick="_togglePinForCurrentPatient('${p.id}')" title="ปักหมุด" style="padding:6px 10px;font-size:14px;">${isPinned ? '⭐' : '☆'}</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportPatientSummaryPDF('${p.id}')" title="พิมพ์สรุป 1 หน้า" style="padding:6px 10px;font-size:14px;">📄</button>
     <button class="btn btn-ghost btn-sm pmh-info-btn" onclick="_openPatientInfoModal('${p.id}')">ℹ️ ข้อมูล</button>
   </div>
 
