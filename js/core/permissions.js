@@ -6,13 +6,13 @@ const ROLE_PAGES = {
           'healthreport','purchasehistory','billing',
           'suppliers','supplierinvoices','purchaserequests','stockreport',
           'incident','dietary','deposits','bi','expenses','assets','audit',
-          'accounts','billing-settings','settings'],
+          'accounts','billing-settings','settings','handover'],
 
   manager: ['dashboard','stock','requisition','history','report','patients','rooms','staff',
              'healthreport','purchasehistory','billing',
              'suppliers','supplierinvoices','purchaserequests','stockreport',
              'incident','dietary','deposits','bi','expenses','assets','audit',
-             'accounts','billing-settings','settings'],
+             'accounts','billing-settings','settings','handover'],
 
   // ธุรการ: เห็นหมด ยกเว้น accounts/audit/settings + อนุมัติใบเบิก
   officer: ['dashboard','stock','requisition','history','report','patients','rooms','staff',
@@ -23,11 +23,11 @@ const ROLE_PAGES = {
 
   // พยาบาลวิชาชีพ: ดูแลคนไข้ครบ + deposits + เบิกของ + PR + สต็อค(ดูอย่างเดียว)
   nurse: ['dashboard','requisition','history','report','patients','rooms',
-           'healthreport','incident','dietary','deposits','stock','purchaserequests','assets'],
+           'healthreport','incident','dietary','deposits','stock','purchaserequests','assets','handover'],
 
   // พยาบาลพาร์ทไทม์: เหมือน nurse ยกเว้น deposits + staff
   parttime_nurse: ['dashboard','requisition','history','report','patients','rooms',
-                    'healthreport','incident','dietary','stock','purchaserequests','deposits','assets'],
+                    'healthreport','incident','dietary','stock','purchaserequests','deposits','assets','handover'],
 
   // หมอ (จากภายนอก): เฉพาะข้อมูลคนไข้ tab คลินิก
   doctor: ['dashboard','patients'],
@@ -39,7 +39,7 @@ const ROLE_PAGES = {
   dietitian: ['dashboard','patients','dietary','requisition','history'],
 
   // ผู้ช่วยพยาบาล / พนักงานผู้ช่วยเหลือคนไข้: vital + เบิกของ + ประวัติ
-  caregiver: ['dashboard','patients','requisition','history','incident','dietary','assets'],
+  caregiver: ['dashboard','patients','requisition','history','incident','dietary','assets','handover'],
 
   // พนักงานผู้ช่วยฯ (ตรวจสต็อค): สต็อค + เบิกของ + ประวัติ
   warehouse: ['dashboard','stock','requisition','history','report',
