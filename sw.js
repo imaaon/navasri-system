@@ -1,8 +1,8 @@
 // Navasri Service Worker
-// [R27-CB 15พค69] bump v3→v4 เพื่อ force purge cache เก่า
-//   activate handler จะลบ navasri-v4 + navasri-static-v4 อัตโนมัติเมื่อ SW ใหม่ activate
-const CACHE_VERSION = 'navasri-v5';
-const STATIC_CACHE = 'navasri-static-v4';
+// [PHASE2-CB 16พค69] bump v5→v6 เพื่อ force purge cache เก่า + STATIC_CACHE v4→v6
+//   activate handler จะลบ navasri-v5 + navasri-static-v4 อัตโนมัติเมื่อ SW ใหม่ activate
+const CACHE_VERSION = 'navasri-v6';
+const STATIC_CACHE = 'navasri-static-v6';
 
 const STATIC_ASSETS = [
   '/manifest.json',

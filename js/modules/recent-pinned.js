@@ -81,8 +81,18 @@
   // PINNED (Supabase user_pins)
   // ─────────────────────────────────────────────────────────────────
 
+  // Helper: เข้าถึง currentUser แบบปลอดภัย (เพราะเป็น let ใน auth.js)
+  function _getCurrentUser() {
+    try {
+      return (typeof currentUser !== 'undefined') ? currentUser : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   async function loadPins() {
-    if (typeof supa === 'undefined' || !currentUser?.authId) {
+    const u = _getCurrentUser();
+    if (typeof supa === 'undefined' || !u?.authId) {
       window._pinnedPatients = [];
       return [];
     }
@@ -90,7 +100,7 @@
       const { data, error } = await supa
         .from('user_pins')
         .select('patient_id, pinned_at')
-        .eq('user_auth_id', currentUser.authId)
+        .eq('user_auth_id', u.authId)
         .order('pinned_at', { ascending: false });
       if (error) {
         console.warn('[pins] load error:', error.message);
@@ -107,7 +117,8 @@
   }
 
   async function togglePin(patientId) {
-    if (!patientId || !currentUser?.authId) return false;
+    const u = _getCurrentUser();
+    if (!patientId || !u?.authId) return false;
     const isPinned = window._pinnedPatients.includes(patientId);
     try {
       if (isPinned) {
@@ -115,7 +126,7 @@
         const { error } = await supa
           .from('user_pins')
           .delete()
-          .eq('user_auth_id', currentUser.authId)
+          .eq('user_auth_id', u.authId)
           .eq('patient_id', patientId);
         if (error) throw error;
         window._pinnedPatients = window._pinnedPatients.filter(id => id !== patientId);
@@ -124,7 +135,7 @@
         // pin
         const { error } = await supa
           .from('user_pins')
-          .insert({ user_auth_id: currentUser.authId, patient_id: patientId });
+          .insert({ user_auth_id: u.authId, patient_id: patientId });
         if (error) throw error;
         window._pinnedPatients.unshift(patientId);
         if (typeof toast === 'function') toast('ปักหมุดแล้ว ⭐', 'success');
@@ -212,7 +223,8 @@
 
   async function init() {
     // load pins from server (background)
-    if (typeof currentUser !== 'undefined' && currentUser?.authId) {
+    const u = _getCurrentUser();
+    if (u?.authId) {
       await loadPins();
     }
     renderRecentPinned();
@@ -281,10 +293,17 @@
   };
 
   // ── Auto-init when db ready ───────────────────────────────────────
+  // Note: currentUser เป็น module-scope ใน auth.js ไม่ visible จาก global
+  // จึงเช็คแค่ db.patients ที่เป็น global พอ
   function _autoInit(attempt) {
     attempt = attempt || 0;
-    if (attempt > 30) return;
-    if (typeof db === 'undefined' || !db.patients || typeof currentUser === 'undefined') {
+    if (attempt > 40) {
+      // Timeout fallback — แสดงข้อความว่ายังไม่มีข้อมูล
+      const target = document.getElementById('sidebar-recent-pinned');
+      if (target) target.innerHTML = '<div class="rp-empty">ยังไม่มีผู้พักที่ดูล่าสุดหรือปักหมุด</div>';
+      return;
+    }
+    if (typeof db === 'undefined' || !db.patients || db.patients.length === 0) {
       setTimeout(function() { _autoInit(attempt + 1); }, 500);
       return;
     }
