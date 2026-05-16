@@ -5236,3 +5236,31 @@ tr:hover td {
   border-color: var(--warning, #b88240);
   color: var(--warning, #b88240);
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   PHASE 2 · #6-F · Inline pin button (in patient profile header)
+   ───────────────────────────────────────────────────────────────── */
+.pin-toggle-btn-inline {
+  background: transparent;
+  border: 1px solid var(--border, #e5e0d1);
+  color: var(--ink-3, #6f7770);
+  transition: all 0.15s ease;
+}
+.pin-toggle-btn-inline:hover {
+  background: var(--surface-2, #f4f1ea);
+  border-color: var(--warning, #b88240);
+  color: var(--warning, #b88240);
+}
+.pin-toggle-btn-inline.pinned {
+  background: var(--warning-bg, #f5e9d4);
+  border-color: var(--warning, #b88240);
+  color: var(--warning, #b88240);
+  font-weight: 600;
+}
+.pin-toggle-btn-inline.pinned:hover {
+  background: #ecd9b8;
+}
+.pin-toggle-btn-inline:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

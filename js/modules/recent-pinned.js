@@ -216,6 +216,31 @@
       await loadPins();
     }
     renderRecentPinned();
+    // [#6-F] Sync pin buttons if patient profile is currently open
+    _syncPinButtonsToCurrentProfile();
+  }
+
+  // [#6-F] After pins reload, re-sync visible pin buttons (handles race condition
+  //        where profile opens before pins finish loading from Supabase)
+  function _syncPinButtonsToCurrentProfile() {
+    const btnDesktop = document.getElementById('patprofile-pin-btn');
+    const btnMobile = document.getElementById('patprofile-mobile-pin-btn');
+    if (!btnDesktop && !btnMobile) return;
+    // หา patient id จาก onclick ของปุ่ม
+    const onclick = (btnDesktop || btnMobile).getAttribute('onclick') || '';
+    const m = onclick.match(/_togglePinForCurrentPatient\('([^']+)'\)/);
+    if (!m) return;
+    const patId = m[1];
+    const nowPinned = isPinned(String(patId));
+    if (btnDesktop) {
+      btnDesktop.classList.toggle('pinned', nowPinned);
+      btnDesktop.innerHTML = nowPinned ? '⭐ ปักหมุดแล้ว' : '☆ ปักหมุด';
+      btnDesktop.title = nowPinned ? 'ยกเลิกการปักหมุด' : 'ปักหมุดผู้พักนี้';
+    }
+    if (btnMobile) {
+      btnMobile.classList.toggle('pinned', nowPinned);
+      btnMobile.innerHTML = nowPinned ? '⭐' : '☆';
+    }
   }
 
   // ── Expose globals ────────────────────────────────────────────────
@@ -225,6 +250,35 @@
   window.renderRecentPinned = renderRecentPinned;
   window.initRecentPinned = init;
   window.clearRecentPatients = clearRecent;
+
+  // [#6-F] Toggle pin จากปุ่มในหน้า patient profile + sync UI ของปุ่มทั้ง desktop + mobile
+  window._togglePinForCurrentPatient = async function(patId) {
+    if (!patId) return;
+    const btnDesktop = document.getElementById('patprofile-pin-btn');
+    const btnMobile = document.getElementById('patprofile-mobile-pin-btn');
+    // ป้องกัน double-click
+    if (btnDesktop && btnDesktop.disabled) return;
+    if (btnDesktop) btnDesktop.disabled = true;
+    if (btnMobile) btnMobile.disabled = true;
+    try {
+      await togglePin(String(patId));
+      const nowPinned = isPinned(String(patId));
+      if (btnDesktop) {
+        btnDesktop.classList.toggle('pinned', nowPinned);
+        btnDesktop.innerHTML = nowPinned ? '⭐ ปักหมุดแล้ว' : '☆ ปักหมุด';
+        btnDesktop.title = nowPinned ? 'ยกเลิกการปักหมุด' : 'ปักหมุดผู้พักนี้';
+      }
+      if (btnMobile) {
+        btnMobile.classList.toggle('pinned', nowPinned);
+        btnMobile.innerHTML = nowPinned ? '⭐' : '☆';
+      }
+    } catch (e) {
+      console.error('[togglePinCurrent] error:', e);
+    } finally {
+      if (btnDesktop) btnDesktop.disabled = false;
+      if (btnMobile) btnMobile.disabled = false;
+    }
+  };
 
   // ── Auto-init when db ready ───────────────────────────────────────
   function _autoInit(attempt) {

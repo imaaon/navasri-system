@@ -27,6 +27,11 @@ async function openPatientProfile(id, activeTab) {
   await loadPatientClinical(id);
   const pid = String(id);
 
+  // [PHASE 2 #6-F] เช็ค pin state ปัจจุบัน (จาก window._pinnedPatients ที่โหลดไว้แล้ว)
+  const isPinned = (typeof window.isPatientPinned === 'function')
+    ? window.isPatientPinned(String(p.id))
+    : false;
+
   document.getElementById('patprofile-content').innerHTML = `
   <!-- [R4 P1 14พค69] Breadcrumb -->
   <div class="patprofile-breadcrumb" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:13px;color:var(--text2);">
@@ -63,6 +68,7 @@ async function openPatientProfile(id, activeTab) {
 
     <!-- Action buttons -->
     <div class="patprofile-header-actions" style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;">
+      <button id="patprofile-pin-btn" class="btn btn-ghost btn-sm pin-toggle-btn-inline ${isPinned ? 'pinned' : ''}" onclick="_togglePinForCurrentPatient('${p.id}')" title="${isPinned ? 'ยกเลิกการปักหมุด' : 'ปักหมุดผู้พักนี้'}" style="white-space:nowrap;">${isPinned ? '⭐ ปักหมุดแล้ว' : '☆ ปักหมุด'}</button>
       <button class="btn btn-ghost btn-sm" onclick="openHealthReportModal('${p.id}')" style="white-space:nowrap;">🖨️ พิมพ์</button>
       <button class="btn btn-ghost btn-sm" onclick="openPatientContractsModal('${p.id}','${(p.name||'').replace(/'/g, "\\'")}')" style="white-space:nowrap;">📋 แพ็กเกจ</button>
       <button class="btn btn-primary btn-sm" onclick="editPatient('${p.id}')" style="white-space:nowrap;">✏️ แก้ไข</button>
@@ -82,6 +88,7 @@ async function openPatientProfile(id, activeTab) {
         <span class="badge ${isActive ? 'badge-green' : p.status==='hospital' ? 'badge-blue' : 'badge-gray'}" style="font-size:10px;padding:1px 8px;margin-left:4px;">${isActive ? 'พักอยู่' : p.status==='hospital' ? '🏥 อยู่ รพ.' : 'ออกแล้ว'}</span>
       </div>
     </div>
+    <button id="patprofile-mobile-pin-btn" class="btn btn-ghost btn-sm pin-toggle-btn-inline ${isPinned ? 'pinned' : ''}" onclick="_togglePinForCurrentPatient('${p.id}')" title="ปักหมุด" style="padding:6px 10px;font-size:14px;">${isPinned ? '⭐' : '☆'}</button>
     <button class="btn btn-ghost btn-sm pmh-info-btn" onclick="_openPatientInfoModal('${p.id}')">ℹ️ ข้อมูล</button>
   </div>
 
