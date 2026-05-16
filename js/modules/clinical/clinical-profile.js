@@ -4,6 +4,10 @@ async function openPatientProfile(id, activeTab) {
   try {
   const p = db.patients.find(x => x.id == id);
   if (!p) { toast('ไม่พบข้อมูลผู้รับบริการ','error'); return; }
+  // [PHASE 2 #6] Track recent patients
+  if (typeof window.pushRecentPatient === 'function') {
+    window.pushRecentPatient(String(p.id));
+  }
   document.getElementById('patprofile-breadcrumb').textContent = p.name;
   // Query all reqs for this patient directly (no time limit — full history per patient)
   // Phase 0: ใช้ requisition_headers + requisition_lines (ใหม่)
