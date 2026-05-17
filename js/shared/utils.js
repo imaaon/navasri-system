@@ -269,3 +269,40 @@ function validatePositiveAmount(amount, label) {
   if (n < 0) return `${label||'จำนวนเงิน'} ต้องไม่ติดลบ`;
   return null;
 }
+
+// ─────────────────────────────────────────────────────────────────
+// attachEscClose — เพิ่ม ESC key handler ให้ dynamic modal
+// ─────────────────────────────────────────────────────────────────
+// ใช้กับ modal ที่สร้างผ่าน document.createElement (ไม่ใช่ static HTML)
+// เช่น vital modal, I/O modal ใน clinical-profile.js
+//
+// คุณสมบัติ:
+//   1. Self-cleanup — listener หายเองเมื่อ modal ถูกลบจาก DOM
+//   2. Topmost-only — ถ้ามี modal ซ้อน จะปิดเฉพาะตัวบนสุด ไม่ลามไปข้างหลัง
+//   3. ไม่กระทบ close handler เดิม (ปุ่ม "ยกเลิก" / click backdrop ยังทำงาน)
+//
+// Usage:
+//   document.body.appendChild(overlay);
+//   function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+//   btnCancel.addEventListener('click', close);
+//   overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+//   attachEscClose(overlay, close);   // ← เพิ่มบรรทัดนี้
+//
+function attachEscClose(overlay, closeFn) {
+  if (!overlay || typeof closeFn !== 'function') return;
+  var _escHandler = function(e) {
+    if (e.key !== 'Escape' && e.keyCode !== 27) return;
+    // ถ้า overlay หายไปแล้ว (ถูกปิดด้วยวิธีอื่น) → cleanup ตัวเอง
+    if (!document.body.contains(overlay)) {
+      document.removeEventListener('keydown', _escHandler);
+      return;
+    }
+    // เช็คว่าเป็น topmost modal — ถ้ามี modal ซ้อนอยู่ข้างบน ไม่ทำอะไร
+    var allOverlays = document.querySelectorAll('.modal-overlay');
+    if (allOverlays.length > 0 && allOverlays[allOverlays.length - 1] !== overlay) return;
+    e.stopPropagation();
+    document.removeEventListener('keydown', _escHandler);
+    closeFn();
+  };
+  document.addEventListener('keydown', _escHandler);
+}

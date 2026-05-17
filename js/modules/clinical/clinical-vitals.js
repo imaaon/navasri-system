@@ -477,6 +477,7 @@ function _openVitalModal(rec, patientId, pid) {
   function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
   btnCancel.addEventListener('click', close);
   overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+  if (typeof attachEscClose === 'function') attachEscClose(overlay, close);
 
   // Save logic
   btnSave.addEventListener('click', async function() {

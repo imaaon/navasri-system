@@ -2077,6 +2077,7 @@ function _openOutputModal(row, patId, today) {
   function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
   btnCancel.addEventListener('click', close);
   overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+  if (typeof attachEscClose === 'function') attachEscClose(overlay, close);
 
   // ── Save logic: validate + insert/update ทุก row ──
   btnSave.addEventListener('click', function() {
@@ -2746,8 +2747,10 @@ function _openExcretionModal(rec, patId, today) {
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
 
-  btnCancel.addEventListener('click', function() { document.body.removeChild(overlay); });
-  overlay.addEventListener('click', function(e) { if (e.target === overlay) document.body.removeChild(overlay); });
+  function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+  btnCancel.addEventListener('click', close);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+  if (typeof attachEscClose === 'function') attachEscClose(overlay, close);
 
   btnSave.addEventListener('click', function() {
     var dateValSel = inpDate.value || dateVal;
@@ -2893,8 +2896,10 @@ function _openFluidModal(rec, patId, direction, today) {
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
 
-  btnCancel.addEventListener('click', function() { document.body.removeChild(overlay); });
-  overlay.addEventListener('click', function(e) { if (e.target === overlay) document.body.removeChild(overlay); });
+  function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+  btnCancel.addEventListener('click', close);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+  if (typeof attachEscClose === 'function') attachEscClose(overlay, close);
 
   btnSave.addEventListener('click', function() {
     var dateValSel = inpDate.value || dateVal;
@@ -3254,6 +3259,7 @@ function _openIntakeModal(rec, patId, today) {
   function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
   btnCancel.addEventListener('click', close);
   overlay.addEventListener('click', function(e) { if (e.target === overlay) close(); });
+  if (typeof attachEscClose === 'function') attachEscClose(overlay, close);
 
   // Save
   btnSave.addEventListener('click', function() {
