@@ -394,6 +394,10 @@ async function savePatient() {
     editId || 'new', { name: data.name || data.first_name });
   closeModal('modal-addPatient');
   renderPatients();
+  // [Bug fix] re-render หน้า profile ถ้ากำลังเปิดอยู่ — เพื่อให้ badge สถานะ + ข้อมูลอื่น update ทันที (ไม่ต้อง F5)
+  if (editId && typeof openPatientProfile === 'function') {
+    await openPatientProfile(editId);
+  }
 }
 
 // ===== ALLERGY CRUD =====
