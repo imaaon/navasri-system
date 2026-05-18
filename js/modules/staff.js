@@ -30,6 +30,10 @@ function renderStaff() {
     (s.position||'').toLowerCase().includes(search)
   );
   if (posF) staffList = staffList.filter(s => s.position === posF);
+  // Filter ตามสถานะ — default = active (ทำงานอยู่)
+  const statusFilterEl = document.getElementById('staffStatusFilter');
+  const statusF = statusFilterEl ? statusFilterEl.value : 'active';
+  if (statusF) staffList = staffList.filter(s => (s.status || 'active') === statusF);
 
   const positions = {};
   db.staff.forEach(s => { positions[s.position||'อื่นๆ'] = (positions[s.position||'อื่นๆ']||0)+1; });
@@ -64,15 +68,23 @@ function renderStaff() {
 
   const tb = document.getElementById('staffTable');
   if (staffList.length === 0) {
-    tb.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบข้อมูล</td></tr>';
+    tb.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบข้อมูล</td></tr>';
     return;
   }
+  // Mapping สถานะ → label + badge color
+  const statusMap = {
+    'active':     { label: 'ทำงานอยู่', badge: 'badge-green' },
+    'on_leave':   { label: 'พักงาน',    badge: 'badge-orange' },
+    'resigned':   { label: 'ลาออก',     badge: 'badge-gray' },
+    'terminated': { label: 'เลิกจ้าง',  badge: 'badge-red' },
+  };
   tb.innerHTML = staffList.map((s, i) => {
     const age     = s.dob ? calcAge(s.dob) : '-';
     const tenure  = s.startDate ? calcDuration(s.startDate) : (s.start ? calcDuration(s.start) : '-');
     const startD  = s.startDate || s.start || '-';
     const endD    = s.endDate || '-';
     const idcard  = s.idcard || s.idCard || '-';
+    const st      = statusMap[s.status] || statusMap['active'];
     return `<tr>
       <td class="number" style="color:var(--text3);">${i+1}</td>
       <td>
@@ -89,6 +101,7 @@ function renderStaff() {
       <td class="number" style="font-size:12px;">${startD}</td>
       <td style="font-size:12px;color:var(--text2);">${tenure}</td>
       <td class="number" style="font-size:12px;">${endD}</td>
+      <td><span class="badge ${st.badge}">${st.label}</span></td>
       <td style="white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" onclick=\"openStaffProfile('${s.id}')\" title="ดูโปรไฟล์">🔍</button>
         <button class="btn btn-ghost btn-sm" onclick=\"editStaff('${s.id}')\" title="แก้ไข">✏️</button>
@@ -110,6 +123,7 @@ function editStaff(id) {
   document.getElementById('staff-age-display').value= s.dob ? calcAge(s.dob) : '';
   document.getElementById('staff-start').value      = s.startDate || s.start || '';
   document.getElementById('staff-enddate').value    = s.endDate || '';
+  document.getElementById('staff-status').value     = s.status || 'active';
   document.getElementById('staff-phone').value      = s.phone || '';
   document.getElementById('staff-address').value    = s.address || '';
   document.getElementById('staff-note').value       = s.note || '';
@@ -225,6 +239,7 @@ function openAddStaffModal() {
   document.getElementById('staff-dob').value = '';
   document.getElementById('staff-start').value = '';
   document.getElementById('staff-enddate').value = '';
+  document.getElementById('staff-status').value = 'active';
   document.getElementById('staff-note').value = '';
   // R5-002 fix: reset additional fields that previously leaked from other staff
   document.getElementById('staff-phone').value = '';
@@ -263,6 +278,7 @@ function saveStaff() {
     dob:       document.getElementById('staff-dob').value,
     startDate: document.getElementById('staff-start').value,
     endDate:   document.getElementById('staff-enddate').value,
+    status:    document.getElementById('staff-status').value || 'active',
     phone:     document.getElementById('staff-phone').value,
     address:   document.getElementById('staff-address').value,
     note:      document.getElementById('staff-note').value,
@@ -283,6 +299,7 @@ function saveStaff() {
   const row = { name: data.name, nickname: data.nickname||null, position: data.position||null,
       id_type: data.idType||'thai', idcard: data.idcard||null,
       dob: data.dob||null, start_date: data.startDate||null, end_date: data.endDate||null,
+      status: data.status||'active',
       phone: data.phone||null, address: data.address||null, note: data.note||null,
       photo: data.photo||null, contract_data: data.contractData||null, contract_name: data.contractName||null };
     if (editId) {

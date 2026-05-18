@@ -866,7 +866,7 @@ function calcSupInvNet() {
 function updatePRRequesterList() {
   const dl = document.getElementById('pr-requester-list');
   if (!dl) return;
-  const staff = (db.staff || []).filter(s => s.status === 'active' || !s.status);
+  const staff = (db.staff || []).filter(s => (s.status || 'active') === 'active');
   dl.innerHTML = staff.map(s => `<option value="${escapeHtml(s.name)}">`).join('');
 }
 

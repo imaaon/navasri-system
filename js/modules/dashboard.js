@@ -210,7 +210,7 @@ function renderAdminDashboard() {
   const el_recv     = document.getElementById('stat-recv-month');
   const el_prPend   = document.getElementById('stat-pr-pending');
 
-  if (el_staff)  el_staff.textContent  = (db.staff||[]).filter(s=>!s.endDate||s.endDate>new Date().toISOString().slice(0,10)).length;
+  if (el_staff)  el_staff.textContent  = (db.staff||[]).filter(s=>(s.status||'active')==='active').length;
   if (el_expiry) el_expiry.textContent = (db.itemLots||[]).filter(l=>l.expiryDate&&l.qtyRemaining>0&&typeof getLotStatus==='function'&&getLotStatus(l.expiryDate)!=='ok').length;
   if (el_recv)   el_recv.textContent   = (db.stockMovements||[]).filter(m=>m.movementType==='receive' && (m.createdAt||'').startsWith(monthStr)).length;
   if (el_prPend) el_prPend.textContent = (db.purchaseRequests||[]).filter(r=>['draft','submitted'].includes(r.status)).length;

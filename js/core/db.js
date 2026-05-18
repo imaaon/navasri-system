@@ -560,6 +560,7 @@ function mapStaff(r) {
   return { id: r.id, name: r.name, nickname: r.nickname, position: r.position,
     idType: r.id_type, idcard: r.idcard, dob: r.dob,
     startDate: r.start_date, endDate: r.end_date,
+    status: r.status || 'active',
     phone: r.phone, address: r.address, note: r.note,
     photo: r.photo, contractData: r.contract_data, contractName: r.contract_name };
 }

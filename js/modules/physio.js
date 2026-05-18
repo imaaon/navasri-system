@@ -60,7 +60,7 @@ function openPhysioSessionModal(patientId, patientName, editId) {
   var sel2 = document.getElementById("ta-pt-id");
   if (sel2) {
     sel2.innerHTML = "<option value=\"\">เลือกพนักงาน</option>" +
-      (db.staff || []).filter(function(s) { return !s.endDate || s.endDate >= today; })
+      (db.staff || []).filter(function(s) { return (s.status || 'active') === 'active' && (!s.endDate || s.endDate >= today); })
       .map(function(s) { return "<option value=\"" + s.id + "\">" + s.name + "</option>"; }).join("");
   }
   var titleEl = document.getElementById("modal-physio-title");

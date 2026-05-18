@@ -274,7 +274,8 @@ function taPatients(activeOnly) {
     .map(x=>({ id:x.id, label:x.name||'', sub: x.hn ? 'HN '+x.hn : '' }));
 }
 function taStaff() {
-  return (db.staff||[]).sort((a,b)=>(a.name||'').localeCompare(b.name||''))
+  return (db.staff||[]).filter(x => (x.status || 'active') === 'active')
+    .sort((a,b)=>(a.name||'').localeCompare(b.name||''))
     .map(x=>({ id:x.id, label:x.name||'', sub: x.position||'' }));
 }
 function taSuppliers() {
