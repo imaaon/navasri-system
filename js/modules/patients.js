@@ -342,6 +342,10 @@ async function savePatient() {
     note: data.note||null, photo: data.photo||null,
     current_bed_id: data.currentBedId,
   };
+  // [BUG FIX 18 พ.ค. 2569] Snapshot oldBedId ก่อน update — เพราะ db.patients[] จะถูก update ก่อนเรียก admit_patient RPC
+  // ถ้าอ่าน oldBedId หลัง update จะได้ bedId ใหม่ (เท่ากับ bedId) → RPC ไม่ปล่อยเตียงเก่า
+  const _oldBedIdSnapshot = editId ? (db.patients.find(p=>p.id==editId)?.currentBedId||null) : null;
+
   if (editId) {
 
 
@@ -374,7 +378,7 @@ async function savePatient() {
   }
   // Mark bed as occupied — atomic via admit_patient RPC
   if (bedId) {
-    const _oldBedId = editId ? (db.patients.find(p=>p.id==editId)?.currentBedId||null) : null;
+    const _oldBedId = _oldBedIdSnapshot;  // ใช้ snapshot ที่บันทึกไว้ก่อน update (Bug fix)
     const _patId = editId || db.patients[db.patients.length-1]?.id;
     const { data: _rpcBed, error: _rpcBedErr } = await supa.rpc('admit_patient', {
       p_patient_id: _patId,
@@ -387,6 +391,34 @@ async function savePatient() {
     } else {
       const _nb = db.beds.find(b=>b.id==bedId); if(_nb) _nb.status='occupied';
       const _ob = db.beds.find(b=>b.id==_oldBedId); if(_ob&&_oldBedId!=bedId) _ob.status='available';
+      // [BUG FIX 18 พ.ค. 2569] บันทึก patient_room_history เมื่อย้ายเตียง (case: เตียงเก่า ≠ เตียงใหม่ + มีเตียงเก่า)
+      if (_oldBedId && _oldBedId != bedId) {
+        try {
+          const _oldBed = db.beds.find(b=>b.id==_oldBedId);
+          const _newBed = db.beds.find(b=>b.id==bedId);
+          const _oldRoom = _oldBed ? db.rooms.find(r=>r.id==_oldBed.roomId) : null;
+          const _newRoom = _newBed ? db.rooms.find(r=>r.id==_newBed.roomId) : null;
+          if (_newBed && _newRoom) {
+            const _today = new Date().toISOString().slice(0,10);
+            const { error: _hisErr } = await supa.from('patient_room_history').insert({
+              patient_id: _patId,
+              patient_name: data.name || '',
+              from_room_id: _oldRoom?.id || null,
+              from_room:    _oldRoom?.name || '',
+              from_bed_id:  _oldBed?.id || null,
+              from_bed:     _oldBed?.bedCode || '',
+              to_room_id:   _newRoom.id,
+              to_room:      _newRoom.name,
+              to_bed_id:    _newBed.id,
+              to_bed:       _newBed.bedCode,
+              transfer_date: _today,
+              created_by:   currentUser?.displayName || currentUser?.username || '',
+              note:         'ย้ายห้องผ่านการแก้ไขข้อมูลผู้รับบริการ',
+            });
+            if (_hisErr) console.error('[navasri] room_history insert fail:', _hisErr.message);
+          }
+        } catch(e) { console.error('[navasri] room_history exception:', e); }
+      }
     }
   }
   logAudit(AUDIT_MODULES.PATIENT,
