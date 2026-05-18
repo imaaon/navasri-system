@@ -193,6 +193,9 @@ function renderPurchaseRequests() {
 function openAddPRModal() {
   prItems = [];
   document.getElementById('editPRId').value = '';
+  // [BUG FIX 18 พ.ค. 2569] reset title เป็น 'สร้างคำขอซื้อ' (เพราะ editPR เปลี่ยนเป็น 'แก้ไข')
+  const _ttl = document.getElementById('modal-addPR-title');
+  if (_ttl) _ttl.textContent = '📋 สร้างคำขอซื้อ';
   document.getElementById('pr-requester').value = currentUser?.displayName || currentUser?.username || '';
   document.getElementById('pr-urgency').value = 'normal';
   document.getElementById('pr-note').value = '';
@@ -429,6 +432,9 @@ function viewPurchaseRequest(id) {
 async function editPR(id) {
   const pr = db.purchaseRequests.find(r => r.id == id);
   if (!pr) return;
+  // [BUG FIX 18 พ.ค. 2569] เปลี่ยน title modal เป็น 'แก้ไขคำขอซื้อ [refNo]'
+  const _ttl = document.getElementById('modal-addPR-title');
+  if (_ttl) _ttl.textContent = '✏️ แก้ไขคำขอซื้อ ' + (pr.refNo || '');
   const { data: linesData } = await supa.from('purchase_request_lines').select('*').eq('request_id', id);
   // [BUG FIX 18 พ.ค. 2569] เพิ่ม customName — ถ้า item_id ว่าง = สินค้านอกคลัง (custom name)
   // ให้แสดงชื่อในช่อง "หรือพิมพ์ชื่อรายการเอง..." แทน dropdown
