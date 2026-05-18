@@ -469,7 +469,6 @@ function mapNursingNote(r) {
     consciousness: r.consciousness||'',
     pain: r.pain||'',
     eating: r.eating||'',
-    elimination: r.elimination||'',
     sleep: r.sleep||'',
     activity: r.activity||'',
     wound: r.wound||'',

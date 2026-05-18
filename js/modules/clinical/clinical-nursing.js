@@ -55,9 +55,8 @@ function renderNursingTab(pid, patientId, overrideFrom, overrideTo) {
           <div style="flex:1;font-size:13px;line-height:1.6;white-space:pre-wrap;">${[
             note.generalCondition ? '🔹 อาการทั่วไป: '+note.generalCondition : '',
             note.consciousness ? '🔹 ความรู้สึกตัว: '+note.consciousness : '',
-            note.pain ? '🔹 ความเจ็บปวด: '+note.pain : '',
+            note.pain ? '🔹 อาการปวด: '+note.pain : '',
             note.eating ? '🔹 การรับประทานอาหาร: '+note.eating : '',
-            note.elimination ? '🔹 การขับถ่าย: '+note.elimination : '',
             note.sleep ? '🔹 การนอน: '+note.sleep : '',
             note.activity ? '🔹 กิจกรรม/ออกกำลัง: '+note.activity : '',
             note.wound ? '🔹 แผล: '+note.wound : '',
@@ -166,7 +165,7 @@ function openAddNursingModal(patientId, date, shift, noteId=null) {
   const nowTime = new Date().toTimeString().slice(0,5);
   {const _e=document.getElementById('nursing-time');if(_e)_e.value=nowTime;}
   {const _e=document.getElementById('nursing-by');if(_e)_e.value=currentUser?.displayName || currentUser?.username || '';}
-  ['nursing-condition','nursing-consciousness','nursing-eating',
+  ['nursing-condition','nursing-consciousness','nursing-pain','nursing-eating',
    'nursing-sleep','nursing-activity','nursing-wound',
    'nursing-iv','nursing-o2','nursing-handover'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
@@ -222,7 +221,7 @@ async function saveNursingNote() {
   // R4-002 fix: ป้องกันบันทึก row ว่าง — ต้องมีอย่างน้อย 1 text field
   const textFields = ['general_condition','consciousness','pain','eating','sleep','activity','wound','iv','o2','handover_note'];
   if (!textFields.some(f => data[f])) {
-    toast('กรุณาบันทึกอย่างน้อย 1 ช่อง (อาการ, ความรู้สึกตัว, การทาน, การขับถ่าย ฯลฯ)','warning');
+    toast('กรุณาบันทึกอย่างน้อย 1 ช่อง (อาการ, ความรู้สึกตัว, อาการปวด, การทาน ฯลฯ)','warning');
     return;
   }
   const pid = String(patientId);
