@@ -30,9 +30,9 @@ function renderStaff() {
     (s.position||'').toLowerCase().includes(search)
   );
   if (posF) staffList = staffList.filter(s => s.position === posF);
-  // Filter ตามสถานะ — default = active (ทำงานอยู่)
+  // Filter ตามสถานะ — default = '' (ทั้งหมด)
   const statusFilterEl = document.getElementById('staffStatusFilter');
-  const statusF = statusFilterEl ? statusFilterEl.value : 'active';
+  const statusF = statusFilterEl ? statusFilterEl.value : '';
   if (statusF) staffList = staffList.filter(s => (s.status || 'active') === statusF);
 
   const positions = {};
