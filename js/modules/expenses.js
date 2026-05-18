@@ -335,6 +335,7 @@ function editExpense(id) {
   q('exp-paid-by').value      = r.paidBy||'';
   q('exp-is-recurring').checked = r.isRecurring||false;
   q('exp-recurring-block').style.display = r.isRecurring?'':'none';
+  q('exp-recur-interval').value = r.recurInterval||'';
   q('exp-note').value         = r.note||'';
   
   // Phase 4 Step E: load fields ใหม่ (collapsible sections)
