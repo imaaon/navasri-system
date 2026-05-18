@@ -965,6 +965,15 @@ async function saveSupplierInvoice(andConfirm = false) {
 
   let invoiceId = editId;
 
+  // ── BUG FIX 18 พ.ค. 69: เช็คสถานะ stock ก่อน update เพื่อกัน duplicate ──
+  // ถ้าเป็น edit + invoice นั้นรับสินค้าเข้าสต็อกไปแล้ว → ส่ง flag ไปบอก saveSupInvLines
+  // ห้าม insert stock_movements ซ้ำ (user ตั้งใจแก้แค่ metadata เช่น หมายเหตุ)
+  let wasAlreadyConfirmed = false;
+  if (editId) {
+    const existingInv = db.supplierInvoices.find(x => x.id == editId);
+    wasAlreadyConfirmed = !!(existingInv && existingInv.isStockUpdated);
+  }
+
   if (editId) {
     const { error } = await supa.from('supplier_invoices').update(data).eq('id', editId);
     if (error) { toast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
@@ -984,7 +993,7 @@ async function saveSupplierInvoice(andConfirm = false) {
   // บันทึก invoice lines (ถ้ามี) และ stock movements (ถ้า confirm)
   let linesResult = { ok: true };
   if (invoiceId) {
-    linesResult = await saveSupInvLines(invoiceId, andConfirm) || { ok: true };
+    linesResult = await saveSupInvLines(invoiceId, andConfirm, wasAlreadyConfirmed) || { ok: true };
     // ── Issue 5 Fix: ถ้า insert lines ไม่สำเร็จและเป็นการสร้างใหม่ → rollback header (ลบทิ้ง) ──
     if (linesResult && linesResult.ok === false && !editId) {
       await supa.from('supplier_invoices').delete().eq('id', invoiceId);
@@ -1004,12 +1013,19 @@ async function saveSupplierInvoice(andConfirm = false) {
   if (silErr) { toast('เชื่อมโยง PO ไม่สำเร็จ: ' + silErr.message, 'warning'); }
     }
   }
-  toast(editId ? 'แก้ไขใบแจ้งหนี้เรียบร้อย' : (andConfirm ? 'บันทึกและเพิ่มสต็อกเรียบร้อย' : 'บันทึกร่างเรียบร้อย'), 'success');
+  toast(
+    editId
+      ? (wasAlreadyConfirmed
+          ? 'แก้ไขใบแจ้งหนี้เรียบร้อย (สต็อกไม่เปลี่ยน — รับสินค้าไปแล้วก่อนหน้านี้)'
+          : 'แก้ไขใบแจ้งหนี้เรียบร้อย')
+      : (andConfirm ? 'บันทึกและเพิ่มสต็อกเรียบร้อย' : 'บันทึกร่างเรียบร้อย'),
+    'success'
+  );
   closeModal('modal-addSupInv');
   renderSupplierInvoices();
 }
 
-async function saveSupInvLines(invoiceId, updateStock) {
+async function saveSupInvLines(invoiceId, updateStock, wasAlreadyConfirmed = false) {
   const container = document.getElementById('supinv-lines-container');
   if (!container) return { ok: false, reason: 'no-container' };
   const rows = container.querySelectorAll('.supinv-line-row');
@@ -1073,7 +1089,10 @@ async function saveSupInvLines(invoiceId, updateStock) {
   if (error) { toast('เกิดข้อผิดพลาดบันทึกรายการ: ' + error.message, 'error'); return { ok: false, reason: 'insert-failed', error: error.message }; }
 
   // ถ้า updateStock ให้สร้าง stock_movements และ item_lots
-  if (updateStock && insertedLines) {
+  // ── BUG FIX 18 พ.ค. 69: ป้องกัน stock duplication ตอนกดแก้ไข invoice ที่รับสินค้าแล้ว ──
+  // ถ้า invoice นี้รับสินค้าเข้าสต็อกไปแล้ว (is_stock_updated=true ก่อนหน้านี้)
+  // และ user แค่กดแก้ไขข้อมูลทั่วไป → ห้าม insert stock_movements ซ้ำ
+  if (updateStock && insertedLines && !wasAlreadyConfirmed) {
     for (const line of insertedLines) {
       if (!line.update_stock || !line.item_id) continue;
       const item = db.items.find(x => x.id === line.item_id);
@@ -1122,7 +1141,8 @@ async function saveSupInvLines(invoiceId, updateStock) {
   }
 
   // ── Cost Allocation (ระดับ 2): กระจายค่าจัดส่ง/บริการลงสินค้าตามสัดส่วน ──
-  if (updateStock && insertedLines) {
+  // เช่นเดียวกับ stock movement: skip ถ้า invoice ถูก confirm ไปแล้วก่อนหน้า
+  if (updateStock && insertedLines && !wasAlreadyConfirmed) {
     const shippingLines = insertedLines.filter(l => l.line_type === 'shipping' || l.line_type === 'service');
     const productLines  = insertedLines.filter(l => l.line_type === 'product' && l.update_stock && l.item_id);
     const totalShipping = shippingLines.reduce((s, l) => s + parseFloat(l.total || 0), 0);
