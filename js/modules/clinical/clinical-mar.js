@@ -15,7 +15,7 @@ function openEditMedModal(patientId, pid, medId) {
   document.getElementById('med-end').value = med.endDate || '';
   MAR_TIMINGS.forEach(t => {
     const cb = document.getElementById('med-timing-'+t.replace(/[^a-zA-Zก-๙]/g,'_'));
-    if (cb) cb.checked = (med.timing||[]).includes(t);
+    if (cb) cb.checked = (med.timings||[]).includes(t);
   });
   document.querySelector('#modal-add-medication .modal-title').textContent = '✏️ แก้ไขยาประจำ';
   openModal('modal-add-medication');
