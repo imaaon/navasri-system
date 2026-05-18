@@ -483,7 +483,9 @@
       return _section('🚨 เร่งด่วน · ต้องเฝ้าระวัง', '<div class="ho-empty">ไม่พบเหตุการณ์ผิดเกณฑ์ในกะนี้</div>');
     }
 
-    const html = items.slice(0, 20).map(function(it) {
+    // [BUG FIX 18 พ.ค. 2569] ลบ slice(0, 20) — เดิมตัด urgent items ทิ้งโดยที่ user ไม่รู้
+    // 43 คน × ค่าวิกฤต อาจมี events เกิน 20 — ต้องแสดงครบทุกค่าวิกฤต
+    const html = items.map(function(it) {
       const sevClass = it.severity === 'high' ? 'ho-sev-high' : 'ho-sev-med';
       const iconStr = it.icon ? it.icon + ' ' : '';  // [ปรับ 18 พ.ค. 2569] รองรับ icon ว่าง (กรณี excretion ที่ icon รวมใน type label แล้ว)
       return '<div class="ho-urgent-item ' + sevClass + '">' +
@@ -543,7 +545,9 @@
       return _section('🩹 ต้องติดตาม · 24 ชม.ขึ้นไป', '<div class="ho-empty">ไม่พบเคสที่ต้องติดตามต่อเนื่อง</div>');
     }
 
-    const html = items.slice(0, 15).map(function(it) {
+    // [BUG FIX 18 พ.ค. 2569] ลบ slice(0, 15) — เดิมตัด follow-up items ทิ้ง
+    // ผู้ป่วยที่ต้องเฝ้าระวังต่อเนื่อง ต้องแสดงครบทุกคน ไม่ตัดทิ้ง
+    const html = items.map(function(it) {
       const icon = it.type === 'wound' ? '🩹' : '🟠';
       return '<div class="ho-followup-item">' +
         '<div class="ho-followup-icon">' + icon + '</div>' +
@@ -606,7 +610,9 @@
       return _section('📅 นัดหมาย 24 ชม.ข้างหน้า', '<div class="ho-empty">ไม่มีนัดหมายในช่วงนี้</div>');
     }
 
-    const html = data.appointments.slice(0, 20).map(function(a) {
+    // [BUG FIX 18 พ.ค. 2569] ลบ slice(0, 20) — เดิมตัด appointment ทิ้ง
+    // นัดหมายต้องแสดงครบทุกอัน
+    const html = data.appointments.map(function(a) {
       const p = _patientLookup(a.patient_id);
       const patName = a.patient_name || (p ? p.name : '-');
       const apptDate = _thDate(a.appt_date);
