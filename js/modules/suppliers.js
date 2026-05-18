@@ -430,9 +430,14 @@ async function editPR(id) {
   const pr = db.purchaseRequests.find(r => r.id == id);
   if (!pr) return;
   const { data: linesData } = await supa.from('purchase_request_lines').select('*').eq('request_id', id);
+  // [BUG FIX 18 พ.ค. 2569] เพิ่ม customName — ถ้า item_id ว่าง = สินค้านอกคลัง (custom name)
+  // ให้แสดงชื่อในช่อง "หรือพิมพ์ชื่อรายการเอง..." แทน dropdown
   prItems = (linesData || []).map(l => ({
-    itemId: l.item_id, itemName: l.item_name,
-    qty: l.qty_requested, unit: l.unit || '',
+    itemId: l.item_id || '',
+    itemName: l.item_name,
+    qty: l.qty_requested,
+    unit: l.unit || '',
+    customName: l.item_id ? '' : (l.item_name || ''),
   }));
   const sel = document.getElementById("ta-prs-id");
   if (sel) {
@@ -444,6 +449,9 @@ async function editPR(id) {
   document.getElementById('editPRId').value = id;
   document.getElementById('pr-requester').value = pr.requesterName || '';
   if (sel) sel.value = pr.supplierId || '';
+  // [BUG FIX 18 พ.ค. 2569] set ta-prs-inp (input text ที่ user เห็น) ให้แสดงชื่อผู้จำหน่าย
+  const _prsInp = document.getElementById('ta-prs-inp');
+  if (_prsInp) _prsInp.value = pr.supplierName || '';
   document.getElementById('pr-urgency').value = pr.urgency || 'normal';
   document.getElementById('pr-note').value = pr.note || '';
   const rdEl = document.getElementById('pr-required-date'); if (rdEl) rdEl.value = pr.requiredDate || '';
