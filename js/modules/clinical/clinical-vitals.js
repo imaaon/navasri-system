@@ -128,7 +128,7 @@ function _openVitalModal(rec, patientId, pid) {
         '<div style="font-weight:700;font-size:14px;letter-spacing:-0.2px;">' + _patName + '</div>' +
         '<div style="font-size:11.5px;color:var(--text2,#5e5e5e);margin-top:2px;">HN <span style="font-family:var(--mono,monospace);">' + _patHN + '</span>' +
           (_patBed ? ' · ห้อง ' + _patBed : '') +
-          (_patGender || _patAge ? ' · ' + _patGender + (_patAge ? ' ' + _patAge + ' ปี' : '') : '') +
+          (_patGender || _patAge ? ' · ' + _patGender + (_patAge ? ' ' + _patAge : '') : '') +
         '</div>' +
       '</div>' +
       '<span style="background:var(--brand,#2e6b4f);color:white;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;flex-shrink:0;">' + _patStatus + '</span>';
