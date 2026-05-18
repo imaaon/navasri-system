@@ -321,17 +321,61 @@ function openMaintenanceHistoryModal(assetId) {
         const typeColor = TYPE_COLOR[l.maintenance_type] || 'secondary';
         const cost = l.cost ? Number(l.cost).toLocaleString('th-TH') + ' บาท' : '-';
         const tech = l.technician_name || 'ช่างภายใน';
+        // HTML escape helper (prevent XSS from user-entered text)
+        const esc = function(s){ return s==null?'':String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); };
         const delBtn = canDelete ? '<button class="btn btn-ghost btn-sm" style="color:var(--danger);flex-shrink:0;" onclick="deleteMaintenanceLog('+l.id+','+assetId+')" title="ลบ">🗑️</button>' : '';
+
+        // Build extra detail rows (only show fields that have values)
+        const extras = [];
+        // ที่อยู่ช่าง
+        if (l.technician_address) {
+          extras.push('<div style="font-size:12px;color:var(--text2);margin-top:2px;">ที่อยู่ช่าง: '+esc(l.technician_address)+'</div>');
+        }
+        // เบอร์โทรช่าง — รวมกับบรรทัดช่าง+ค่าใช้จ่ายด้านล่าง (ไม่แยกบรรทัด)
+        // อะไหล่ที่เปลี่ยน
+        if (l.parts_replaced) {
+          extras.push('<div style="font-size:12px;color:var(--text2);margin-top:2px;">🔩 อะไหล่: '+esc(l.parts_replaced)+'</div>');
+        }
+        // ระยะเวลา (รวม duration + downtime ถ้ามี)
+        const durParts = [];
+        if (l.duration_hours != null && String(l.duration_hours).trim() !== '') durParts.push('ใช้เวลา '+esc(l.duration_hours)+' ชม.');
+        if (l.downtime_hours != null && String(l.downtime_hours).trim() !== '') durParts.push('Downtime '+esc(l.downtime_hours)+' ชม.');
+        if (durParts.length) {
+          extras.push('<div style="font-size:12px;color:var(--text2);margin-top:2px;">⏱️ '+durParts.join(' &nbsp;&middot;&nbsp; ')+'</div>');
+        }
+        // นัดซ่อมครั้งถัดไป
+        if (l.next_maintenance_date) {
+          extras.push('<div style="font-size:12px;color:var(--text2);margin-top:2px;">📅 นัดครั้งถัดไป: '+esc(l.next_maintenance_date)+'</div>');
+        }
+        // สถานะ (แก้ไขแล้ว / ต้องติดตาม)
+        const statusBadges = [];
+        if (l.is_resolved === true)  statusBadges.push('<span class="badge badge-success" style="font-size:10px;">✓ แก้ไขแล้ว</span>');
+        else if (l.is_resolved === false) statusBadges.push('<span class="badge badge-warning" style="font-size:10px;">⏳ ยังไม่เสร็จ</span>');
+        if (l.follow_up_required) statusBadges.push('<span class="badge badge-info" style="font-size:10px;">🔔 ต้องติดตาม</span>');
+        if (statusBadges.length) {
+          extras.push('<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap;">'+statusBadges.join('')+'</div>');
+        }
+        // หมายเหตุ
+        if (l.note) {
+          extras.push('<div style="font-size:12px;color:var(--text2);margin-top:4px;padding:6px 8px;background:var(--bg-soft,#f8f7f3);border-left:2px solid var(--border-color);border-radius:4px;">📝 '+esc(l.note)+'</div>');
+        }
+
+        // ช่าง+เบอร์โทร+ค่าใช้จ่าย รวมในบรรทัดเดียว
+        let techLine = 'ช่าง: '+esc(tech);
+        if (l.technician_phone) techLine += ' &nbsp;&middot;&nbsp; ☎ '+esc(l.technician_phone);
+        techLine += ' &nbsp;&middot;&nbsp; ค่าใช้จ่าย: '+cost;
+
         return '<div style="padding:12px 0;border-bottom:0.5px solid var(--border-color);">' +
           '<div style="display:flex;align-items:flex-start;gap:8px;">' +
-            '<div style="flex:1;">' +
+            '<div style="flex:1;min-width:0;">' +
               '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;">' +
-                '<span class="badge badge-'+typeColor+'" style="font-size:11px;">'+typeLabel+'</span>' +
-                '<span style="font-size:12px;color:var(--text2);">'+(l.maintenance_date||'-')+'</span>' +
+                '<span class="badge badge-'+typeColor+'" style="font-size:11px;">'+esc(typeLabel)+'</span>' +
+                '<span style="font-size:12px;color:var(--text2);">'+esc(l.maintenance_date||'-')+'</span>' +
               '</div>' +
-              '<div style="font-size:13px;font-weight:500;margin-bottom:2px;">'+(l.description||'-')+'</div>' +
-              '<div style="font-size:12px;color:var(--text2);">ช่าง: '+tech+' &nbsp;&middot;&nbsp; ค่าใช้จ่าย: '+cost+'</div>' +
-              (l.created_by ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">บันทึกโดย: '+l.created_by+'</div>' : '') +
+              '<div style="font-size:13px;font-weight:500;margin-bottom:2px;">'+esc(l.description||'-')+'</div>' +
+              '<div style="font-size:12px;color:var(--text2);">'+techLine+'</div>' +
+              extras.join('') +
+              (l.created_by ? '<div style="font-size:11px;color:var(--text3);margin-top:4px;">บันทึกโดย: '+esc(l.created_by)+'</div>' : '') +
             '</div>' + delBtn +
           '</div>' +
         '</div>';
