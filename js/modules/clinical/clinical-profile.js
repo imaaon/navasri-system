@@ -58,7 +58,7 @@ async function openPatientProfile(id, activeTab) {
       </div>
       <div class="patprofile-header-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 24px;font-size:13px;color:var(--text2);">
         ${p.gender ? `<div><span style="opacity:0.75;">เพศ </span><strong style="color:var(--text);">${p.gender}</strong></div>` : ''}
-        ${p.dob ? `<div><span style="opacity:0.75;">อายุ </span><strong style="color:var(--text);">${age} ปี</strong></div>` : ''}
+        ${p.dob ? `<div><span style="opacity:0.75;">อายุ </span><strong style="color:var(--text);">${age}</strong></div>` : ''}
         ${idcard !== '-' ? `<div><span style="opacity:0.75;">เลขบัตร </span><strong style="color:var(--text);font-family:var(--mono,monospace);font-size:12px;">${idcard}</strong></div>` : ''}
         ${p.admitDate ? `<div><span style="opacity:0.75;">เข้าเมื่อ </span><strong style="color:var(--text);">${p.admitDate}</strong></div>` : ''}
         ${p.endDate ? `<div><span style="opacity:0.75;">สัญญา </span><strong style="color:var(--text);">${p.endDate}</strong></div>` : ''}
@@ -172,7 +172,7 @@ async function openPatientProfile(id, activeTab) {
             ${p.nickname ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">ชื่อเล่น</span><strong style="text-align:right;">${p.nickname}</strong></div>` : ''}
             ${p.gender ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">เพศ</span><strong style="text-align:right;">${p.gender}</strong></div>` : ''}
             ${p.dob ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">วันเกิด</span><strong style="text-align:right;">${p.dob}</strong></div>` : ''}
-            ${age !== '-' ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">อายุ</span><strong style="text-align:right;">${age} ปี</strong></div>` : ''}
+            ${age !== '-' ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">อายุ</span><strong style="text-align:right;">${age}</strong></div>` : ''}
             ${idcard !== '-' ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">เลขบัตรประชาชน</span><strong style="text-align:right;font-family:var(--mono,monospace);">${idcard}</strong></div>` : ''}
             ${p.bloodType ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">หมู่เลือด</span><strong style="text-align:right;color:var(--danger-text);">${p.bloodType}</strong></div>` : ''}
             ${p.insurance ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--border,#e8e3d4);"><span style="color:var(--text2);">สิทธิ์การรักษา</span><strong style="text-align:right;">${p.insurance}</strong></div>` : ''}

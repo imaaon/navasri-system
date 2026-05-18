@@ -93,7 +93,7 @@
           subtitle: [
             p.hn ? 'HN ' + p.hn : '',
             p.currentBedCode || '',
-            p.dob ? (typeof calcAge === 'function' ? calcAge(p.dob) + ' ปี' : '') : '',
+            p.dob ? (typeof calcAge === 'function' ? calcAge(p.dob) : '') : '',
             status === 'discharged' ? '(ออกแล้ว)' : status === 'hospital' ? '(อยู่ รพ.)' : ''
           ].filter(Boolean).join(' · '),
           initials: _initials(p.name),
