@@ -279,6 +279,8 @@ async function deleteMAREntry(pid, patientId, id) {
 function openAddMedModal(patientId) {
   document.getElementById('med-pat-id').value = patientId;
   document.getElementById('med-pat-id').dataset.editId = '';
+  // [BUG FIX 18 พ.ค. 2569] reset title เป็น 'เพิ่มยา' กันค้างจาก edit (ถ้า user เปิด edit แล้วปิดโดยไม่บันทึก)
+  document.querySelector('#modal-add-medication .modal-title').textContent = '💊 เพิ่มยาประจำ';
   document.getElementById('med-name').value = '';
   document.getElementById('med-dose').value = '';
   document.getElementById('med-unit').value = 'mg';
