@@ -884,16 +884,18 @@ function viewSupInv(id) {
   const linesHtml = lines.length ? lines.map(l=>`<div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:12px;"><span>${l.item_name||'-'}</span><span style="color:var(--text3);">${l.qty||0} ${l.unit||''}</span><span style="font-weight:500;text-align:right;">&#3647;${(l.total||0).toLocaleString()}</span></div>`).join('') : '<p style="font-size:12px;color:var(--text3);">ไม่มีรายการ</p>';
   document.getElementById('view-supinv-content').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-      ${field('เลขที่ใบแจ้งหนี้',r.invoiceNo)}${field('วันที่',r.date)}${field('ผู้จำหน่าย',r.supplierName)}${field('ชื่องาน',r.jobName)}${field('วันครบกำหนด',r.dueDate)}${field('ผู้รับสินค้า',r.receivedBy)}${field('สถานะ',smap[r.status]||r.status)}
+      ${field('เลขที่ใบแจ้งหนี้',r.invoiceNo)}${field('วันที่',r.date)}${field('ผู้จำหน่าย',r.supplierName)}${field('ชื่องาน',r.jobName)}${field('วันครบกำหนด',r.dueDate)}${field('วันที่รับสินค้า',r.receivedDate)}${field('ผู้รับสินค้า',r.receivedBy)}${field('VAT %',r.vatRate?r.vatRate+'%':'')}${field('ภาษีหัก ณ ที่จ่าย %',r.whtRate?r.whtRate+'%':'')}${field('PR อ้างอิง',(function(){var p=(db.purchaseRequests||[]).find(x=>String(x.id)===String(r.prId));return p?p.refNo:'';})())}${field('สต็อก',r.isStockUpdated?'✅ อัปเดตแล้ว':'⏳ ยังไม่อัปเดต')}${field('สถานะ',smap[r.status]||r.status)}
     </div>
     <hr style="margin:12px 0;border-color:var(--border);">
     <div style="font-size:12px;font-weight:500;margin-bottom:8px;">📦 รายการสินค้า</div>
     ${linesHtml}
-    <div style="display:flex;justify-content:flex-end;gap:20px;margin-top:10px;font-size:13px;">
+    <div style="display:flex;justify-content:flex-end;gap:20px;margin-top:10px;font-size:13px;flex-wrap:wrap;">
       <span style="color:var(--text3);">ก่อน VAT <b>&#3647;${(r.subtotal||0).toLocaleString()}</b></span>
       <span style="color:var(--text3);">VAT <b>&#3647;${(r.vatAmt||0).toLocaleString()}</b></span>
+      ${r.whtAmt?`<span style="color:var(--text3);">หัก ณ ที่จ่าย <b>&#3647;${r.whtAmt.toLocaleString()}</b></span>`:''}
       <span style="font-size:14px;font-weight:600;">ยอดชำระ &#3647;${(r.netPayable||r.total||0).toLocaleString()}</span>
-    </div>`;
+    </div>
+    ${r.note?`<div style="margin-top:12px;padding:10px 12px;background:var(--surface-2);border-radius:6px;font-size:12px;"><span style="color:var(--text3);">หมายเหตุ: </span>${r.note}</div>`:''}`;
   openModal('modal-view-supinv');
 }
 
