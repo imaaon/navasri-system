@@ -35,6 +35,9 @@ function openPhysioSessionModal(patientId, patientName, editId) {
   document.getElementById("physio-session-id").value = editId || "";
   document.getElementById("physio-note").value = "";
   document.getElementById("physio-amount").value = "0.00";
+  // [Bug fix 18พค69] Reset typeahead ของนักกายภาพ — กันค่าค้างจาก session ก่อนหน้า
+  { var _hid = document.getElementById("ta-pt-id"); if (_hid) _hid.value = ""; }
+  { var _inp = document.getElementById("ta-pt-inp"); if (_inp) _inp.value = ""; }
   var today = new Date().toISOString().split("T")[0];
   document.getElementById("physio-date").value = today;
   
