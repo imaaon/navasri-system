@@ -273,7 +273,9 @@ async function savePR(status = 'draft') {
   await ensureSecondaryDB();
   const requester = document.getElementById('pr-requester').value.trim();
   if (!requester) { toast('กรุณาระบุผู้ขอ', 'warning'); return; }
-  const validItems = prItems.filter(it => it.itemId && it.qty > 0);
+  // [BUG FIX 18 พ.ค. 2569] รองรับสินค้าที่ไม่อยู่ในคลัง — ใช้ itemName จาก customName ก็ได้
+  // เดิม: ต้องมี itemId เท่านั้น → ถ้า user พิมพ์ชื่อสินค้าเองที่ไม่มีในคลัง จะ filter ทิ้งหมด
+  const validItems = prItems.filter(it => (it.itemId || (it.itemName||'').trim()) && it.qty > 0);
   if (validItems.length === 0) { toast('กรุณาเพิ่มรายการสินค้าอย่างน้อย 1 รายการ', 'warning'); return; }
   const supplierId = document.getElementById("ta-prs-id")?.value || null;
   const supplier = supplierId ? db.suppliers.find(s => s.id == supplierId) : null;
@@ -317,7 +319,7 @@ async function savePR(status = 'draft') {
   }
   const linesData = validItems.map(it => ({
     request_id: prId,
-    item_id: it.itemId,
+    item_id: it.itemId || null,  // [BUG FIX 18 พ.ค. 2569] '' → null สำหรับ custom item ที่ไม่อยู่ในคลัง
     item_name: it.itemName,
     qty_requested: it.qty,
     unit: it.unit || '',
