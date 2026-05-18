@@ -232,11 +232,14 @@
           .lte('recorded_at', range.end)
           .order('recorded_at', { ascending: false })
           .limit(200),
-        // [2] Incident reports ในกะนี้ (date filter)
+        // [2] Incident reports ในกะนี้ — [BUG FIX 18 พ.ค. 2569] เปลี่ยนจาก date filter เป็น time range
+        //     เพื่อให้ consistent กับ vital_signs/patient_excretions/patient_fluid_records
+        //     เดิม: filter ด้วย date 18 พ.ค. → 19 พ.ค. → incident กะเช้าเด้งไปกะดึก
+        //     ใหม่: filter ด้วย created_at อยู่ในช่วงเวลาของกะ → incident หายเมื่อเปลี่ยนกะ
         supa.from('incident_reports')
           .select('*')
-          .gte('date', date)
-          .lte('date', _tomorrowYMD())
+          .gte('created_at', range.start)
+          .lte('created_at', range.end)
           .order('created_at', { ascending: false })
           .limit(50),
         // [3] Incident ที่ต้องติดตาม > 24 ชม. (last 7 days)
