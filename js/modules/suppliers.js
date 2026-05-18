@@ -902,7 +902,7 @@ function viewSupplier(id) {
   const field = (lb,val) => val ? `<div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:11px;color:var(--text3);">${lb}</span><span style="font-size:13px;font-weight:500;">${val}</span></div>` : '';
   document.getElementById('view-supplier-content').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-      ${field('รหัส',s.supplierCode)}${field('ประเภท',s.entityType)}${field('ชื่อ / ผู้ติดต่อ',s.name)}${field('เลขภาษี',s.taxId)}${field('โทร',s.phone)}${field('มือถือ',s.mobile)}${field('อีเมล',s.email)}${field('เครดิต',s.creditDays!=null?s.creditDays+' วัน':'')}${field('ธนาคาร',s.bankName)}${field('สถานะ',s.status==='active'?'ใช้งาน':'ปิด')}
+      ${field('รหัส',s.supplierCode)}${field('ประเภท',s.entityType)}${field('ชื่อ / ผู้ติดต่อ',s.name)}${field('เลขภาษี',s.taxId)}${field('โทร',s.phone)}${field('มือถือ',s.mobile)}${field('อีเมล',s.email)}${field('เว็บไซต์',s.website)}${field('เครดิต',s.creditDays!=null?s.creditDays+' วัน':'')}${field('ธนาคาร',s.bankName)}${field('ชื่อบัญชี',s.bankAccountName)}${field('เลขบัญชี',s.bankAccountNo)}${field('สถานะ',s.status==='active'?'ใช้งาน':'ปิด')}
     </div>
     <hr style="margin:12px 0;border-color:var(--border);">
     <div style="display:flex;flex-direction:column;gap:10px;">
