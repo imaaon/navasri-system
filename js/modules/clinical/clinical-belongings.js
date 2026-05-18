@@ -15,6 +15,9 @@ function previewBelongingPhoto(input) {
 function openEditBelongingModal(belongingId, patientId) {
   const b = (db.belongings||[]).find(x=>x.id==belongingId);
   if (!b) return;
+  // [BUG FIX 18 พ.ค. 2569] เปลี่ยน title modal เป็น 'แก้ไขทรัพย์สิน'
+  const _ttl = document.getElementById('modal-belonging-title');
+  if (_ttl) _ttl.textContent = '✏️ แก้ไขทรัพย์สิน / ของมีค่า';
   _belongingEditPatId   = patientId;
   _belongingEditPatName = b.patientName || '';
   _belongingEditId      = belongingId;
@@ -83,6 +86,9 @@ function openBelongingModal(id, patientId) {
   _belongingEditPatName = (db.patients||[]).find(p=>String(p.id)===String(patientId))?.name || '';
   const actor = currentUser?.displayName || currentUser?.username || '';
   _belongingEditId = '';  // เคลียร์ edit id (กันใช้ของเก่าค้าง)
+  // [BUG FIX 18 พ.ค. 2569] reset title เป็น 'บันทึกทรัพย์สิน' (เพราะ openEditBelongingModal เปลี่ยนเป็น 'แก้ไข')
+  const _ttl = document.getElementById('modal-belonging-title');
+  if (_ttl) _ttl.textContent = '🧳 บันทึกทรัพย์สิน / ของมีค่า';
   document.getElementById('belonging-item-name').value = '';
   document.getElementById('belonging-qty').value = 1;
   document.getElementById('belonging-condition').value = 'ดี';

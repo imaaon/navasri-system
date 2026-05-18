@@ -812,6 +812,9 @@ function renderSupplierInvoices() {
 }
 function openAddSupplierInvoiceModal() {
   document.getElementById('editSupInvId').value = '';
+  // [BUG FIX 18 พ.ค. 2569] reset title เป็น 'สร้างใบแจ้งหนี้'
+  const _ttl = document.getElementById('modal-addSupInv-title');
+  if (_ttl) _ttl.textContent = '🧾 สร้างใบแจ้งหนี้ผู้จำหน่าย';
   document.getElementById('supinv-no').value    = 'INV-' + Date.now().toString().slice(-6);
   document.getElementById('supinv-date').value  = new Date().toISOString().slice(0,10);
   document.getElementById('supinv-due').value   = '';
@@ -1492,6 +1495,9 @@ async function deleteSupplierInvoice(id, invoiceNo) {
 async function editSupplierInvoice(id) {
   const inv = db.supplierInvoices.find(x => x.id == id);
   if (!inv) return;
+  // [BUG FIX 18 พ.ค. 2569] เปลี่ยน title modal เป็น 'แก้ไขใบแจ้งหนี้ [invoiceNo]'
+  const _ttl = document.getElementById('modal-addSupInv-title');
+  if (_ttl) _ttl.textContent = '✏️ แก้ไขใบแจ้งหนี้ผู้จำหน่าย ' + (inv.invoiceNo || '');
   // populate header fields
   document.getElementById('editSupInvId').value          = inv.id;
   document.getElementById('supinv-no').value             = inv.invoiceNo;

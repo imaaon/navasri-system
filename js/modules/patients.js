@@ -501,6 +501,9 @@ async function openEditContactModal(patId, contactId) {
   if (!patient) { toast('ไม่พบข้อมูลผู้รับบริการ — กรุณา refresh แล้วลองใหม่', 'error'); return; }
   const c = (patient.contacts||[]).find(c => c.id == contactId);
   if (!c) { toast('ไม่พบผู้ติดต่อที่ต้องการแก้ไข — กรุณา refresh แล้วลองใหม่', 'error'); return; }
+  // [BUG FIX 18 พ.ค. 2569] เปลี่ยน title modal เป็น 'แก้ไขผู้ติดต่อ'
+  const _ttl = document.getElementById('modal-add-contact-title');
+  if (_ttl) _ttl.textContent = '✏️ แก้ไขผู้ติดต่อ / ผู้รับผิดชอบ';
   document.getElementById('contact-pat-id').value = patId;
   document.getElementById('contact-pat-id').dataset.editId = contactId;
   document.getElementById('contact-name').value = c.name || '';
@@ -516,6 +519,10 @@ async function openEditContactModal(patId, contactId) {
 
 function openAddContactModal(patId) {
   document.getElementById('contact-pat-id').value = patId;
+  document.getElementById('contact-pat-id').dataset.editId = '';  // [BUG FIX 18 พ.ค. 2569] clear edit id กันค้าง
+  // [BUG FIX 18 พ.ค. 2569] reset title เป็น 'เพิ่มผู้ติดต่อ' (เพราะ openEditContactModal เปลี่ยนเป็น 'แก้ไข')
+  const _ttl = document.getElementById('modal-add-contact-title');
+  if (_ttl) _ttl.textContent = '👥 เพิ่มผู้ติดต่อ / ผู้รับผิดชอบ';
   document.getElementById('contact-name').value = '';
   document.getElementById('contact-relation').value = '';
   document.getElementById('contact-role').value = 'ญาติ';
