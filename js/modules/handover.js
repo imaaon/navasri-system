@@ -186,6 +186,35 @@
   }
 
   // ─────────────────────────────────────────────────────────────────
+  // EXCRETION / FLUID ABNORMAL CHECK (เพิ่ม 18 พ.ค. 2569)
+  // ─────────────────────────────────────────────────────────────────
+  // type: 'urine' | 'stool' | 'vomit'
+  // characteristics: string (อาจมีหลายค่าคั่นด้วย comma เช่น "ใส, มีเลือดปน")
+  // คืน null ถ้าไม่ผิดปกติ หรือ object { type, value, severity }
+  function _checkExcretionUrgent(type, characteristics) {
+    if (!characteristics) return null;
+    var chars = String(characteristics);
+    // เลือดปน — ทุกประเภท = high
+    if (chars.indexOf('เลือด') >= 0) {
+      var bloodLabel = type === 'urine' ? '🩸 ปัสสาวะมีเลือด'
+                     : type === 'stool' ? '🩸 อุจจาระมีเลือด'
+                     : '🩸 อาเจียนมีเลือด';
+      return { type: bloodLabel, value: chars, severity: 'high' };
+    }
+    if (type === 'urine') {
+      if (chars.indexOf('เหลืองเข้ม') >= 0) return { type: '💛 ปัสสาวะเหลืองเข้ม', value: chars, severity: 'medium' };
+      if (chars.indexOf('น้ำตาล') >= 0)     return { type: '💛 ปัสสาวะสีน้ำตาล', value: chars, severity: 'medium' };
+      if (chars.indexOf('ขุ่น') >= 0)        return { type: '💛 ปัสสาวะขุ่น/มีตะกอน', value: chars, severity: 'medium' };
+    } else if (type === 'stool') {
+      if (chars.indexOf('เหลวเป็นน้ำ') >= 0) return { type: '💩 ท้องเสียรุนแรง (เหลวเป็นน้ำ)', value: chars, severity: 'high' };
+      if (chars.indexOf('เหลว') >= 0)        return { type: '💩 อุจจาระเหลว', value: chars, severity: 'medium' };
+    } else if (type === 'vomit') {
+      if (chars.indexOf('น้ำดี') >= 0) return { type: '🤢 อาเจียนมีน้ำดี', value: chars, severity: 'medium' };
+    }
+    return null;
+  }
+
+  // ─────────────────────────────────────────────────────────────────
   // FETCH DATA
   // ─────────────────────────────────────────────────────────────────
   async function _fetchAllData(date, shift) {
@@ -246,6 +275,20 @@
           .eq('shift_date', date)
           .eq('shift', shift)
           .order('acked_at', { ascending: true }),
+        // [9] Patient excretions (อุจจาระ/ปัสสาวะ) — ในช่วงเวลาของกะ (เพิ่ม 18 พ.ค. 2569)
+        supa.from('patient_excretions')
+          .select('*')
+          .gte('recorded_at', range.start)
+          .lte('recorded_at', range.end)
+          .order('recorded_at', { ascending: false })
+          .limit(200),
+        // [10] Patient fluid records (อาเจียน/อื่นๆ) — ในช่วงเวลาของกะ (เพิ่ม 18 พ.ค. 2569)
+        supa.from('patient_fluid_records')
+          .select('*')
+          .gte('recorded_at', range.start)
+          .lte('recorded_at', range.end)
+          .order('recorded_at', { ascending: false })
+          .limit(200),
       ]);
 
       return {
@@ -257,6 +300,8 @@
         appointments: results[5]?.data || [],
         nursingNotes: results[6]?.data || [],
         acks: results[7]?.data || [],
+        excretions: results[8]?.data || [],
+        fluidRecords: results[9]?.data || [],
       };
     } catch (e) {
       console.error('[handover] fetch error:', e);
@@ -388,6 +433,46 @@
       });
     });
 
+    // [เพิ่ม 18 พ.ค. 2569] Abnormal excretions (urine + stool)
+    (data.excretions || []).forEach(function(ex) {
+      var issue = _checkExcretionUrgent(ex.type, ex.characteristics);
+      if (!issue) return;
+      var p = _patientLookup(ex.patient_id);
+      items.push({
+        time: ex.recorded_at,
+        patient: p ? p.name : ('ID ' + ex.patient_id),
+        patId: ex.patient_id,
+        type: issue.type,
+        detail: issue.value + (ex.note ? ' · ' + ex.note : ''),
+        severity: issue.severity,
+        icon: ''  // icon รวมอยู่ใน type label แล้ว
+      });
+    });
+
+    // [เพิ่ม 18 พ.ค. 2569] Abnormal fluid records (vomit) — characteristics เก็บใน note ในรูปแบบ '[ลักษณะ: xxx]'
+    (data.fluidRecords || []).forEach(function(fr) {
+      if (fr.fluid_type !== 'vomit') return;  // เอาแค่ vomit เพื่อตรวจเลือด/น้ำดี
+      // Extract characteristics จาก note: '[ลักษณะ: มีเลือดปน] ...'
+      var noteStr = String(fr.note || '');
+      var charMatch = noteStr.match(/\[ลักษณะ:\s*([^\]]+)\]/);
+      var chars = charMatch ? charMatch[1].trim() : '';
+      if (!chars) return;
+      var issue = _checkExcretionUrgent('vomit', chars);
+      if (!issue) return;
+      var p = _patientLookup(fr.patient_id);
+      // ลบส่วน [ลักษณะ: ...] ออกจาก note ที่จะแสดง
+      var displayNote = noteStr.replace(/\[ลักษณะ:[^\]]+\]\s*/, '').trim();
+      items.push({
+        time: fr.recorded_at,
+        patient: p ? p.name : ('ID ' + fr.patient_id),
+        patId: fr.patient_id,
+        type: issue.type,
+        detail: issue.value + (displayNote ? ' · ' + displayNote : ''),
+        severity: issue.severity,
+        icon: ''
+      });
+    });
+
     // Sort by time desc
     items.sort(function(a, b) { return (b.time || '').localeCompare(a.time || ''); });
 
@@ -397,10 +482,11 @@
 
     const html = items.slice(0, 20).map(function(it) {
       const sevClass = it.severity === 'high' ? 'ho-sev-high' : 'ho-sev-med';
+      const iconStr = it.icon ? it.icon + ' ' : '';  // [ปรับ 18 พ.ค. 2569] รองรับ icon ว่าง (กรณี excretion ที่ icon รวมใน type label แล้ว)
       return '<div class="ho-urgent-item ' + sevClass + '">' +
         '<div class="ho-urgent-time">' + _thDateTime(it.time).split(' ').pop() + '</div>' +
         '<div class="ho-urgent-body">' +
-          '<div class="ho-urgent-patient" onclick="openPatientProfile(\'' + it.patId + '\')">' + it.icon + ' ' + _escape(it.patient) + '</div>' +
+          '<div class="ho-urgent-patient" onclick="openPatientProfile(\'' + it.patId + '\')">' + iconStr + _escape(it.patient) + '</div>' +
           '<div class="ho-urgent-detail"><strong>' + _escape(it.type) + '</strong>: ' + _escape(it.detail) + '</div>' +
         '</div>' +
       '</div>';
