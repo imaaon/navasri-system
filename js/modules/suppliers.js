@@ -196,6 +196,9 @@ function openAddPRModal() {
   document.getElementById('pr-requester').value = currentUser?.displayName || currentUser?.username || '';
   document.getElementById('pr-urgency').value = 'normal';
   document.getElementById('pr-note').value = '';
+  // [BUG FIX 18 พ.ค. 2569] Clear ta-prs-inp (input text ที่ user เห็น) — ก่อนหน้านี้ค้างค่าจากครั้งก่อน
+  const _prsInp = document.getElementById('ta-prs-inp');
+  if (_prsInp) _prsInp.value = '';
   // populate suppliers
   const sel = document.getElementById("ta-prs-id");
   if (sel) {
