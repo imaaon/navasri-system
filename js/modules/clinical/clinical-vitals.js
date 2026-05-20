@@ -716,19 +716,6 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
       </div>
     </div>
 
-    <!-- [Step B-6 · 20 พ.ค. 69] Bulk send section ย้ายไปที่หน้า "ผู้รับบริการ" แล้ว
-         เก็บ banner redirect ไว้ 30 วันเพื่อ guide ผู้ใช้เก่า — เอาออกหลัง 20 มิ.ย. 69
-    -->
-    <div class="card" id="ss-bulk-redirect-banner" style="margin-top:14px;display:none;background:var(--info-bg, #e8f4f8);border:1px solid var(--accent2);border-radius:8px;">
-      <div style="padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <div style="font-size:22px;">💡</div>
-        <div style="flex:1;min-width:200px;font-size:13px;color:var(--text);line-height:1.5;">
-          <strong>การส่ง/รับเวรย้ายไปที่หน้า "ผู้รับบริการ" แล้ว</strong><br>
-          <span style="font-size:11px;color:var(--text2);">ที่นั่นเลือกผู้รับบริการของคุณได้ทีเดียวจากรายชื่อทั้งหมด</span>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="showPage('patients')" style="font-size:12px;padding:6px 14px;">→ ไปหน้าผู้รับบริการ</button>
-      </div>
-    </div>
   `;
   // Render shift summary section async (หลัง innerHTML ถูก mount)
   setTimeout(function() {
@@ -737,12 +724,6 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
       var f = document.getElementById('vital-filter-from');
       var t = document.getElementById('vital-filter-to');
       _ssRenderSection(container, patientId, pid, f ? f.value : null, t ? t.value : null);
-    }
-    // [Step B-6 · 20 พ.ค. 69] แสดง banner redirect แทน bulk section
-    // (เฉพาะ role ที่เคยใช้ bulk — caregiver+)
-    var banner = document.getElementById('ss-bulk-redirect-banner');
-    if (banner && _ssCanOperateHandover()) {
-      banner.style.display = '';
     }
   }, 50);
 
