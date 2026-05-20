@@ -1313,6 +1313,26 @@ async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
 
   // Group by shift — pass all 6 data sources
   var buckets = _ssGroupByShift(vitals, excretions, fluids, appointments, incidents, nursingNotes, fromDate, toDate);
+
+  // [Fix · 20 พ.ค. 69] ถ้ามี manual summary อยู่ใน range แต่กะนั้นไม่มี event ใดๆ
+  // → สร้าง empty bucket ให้ summary นั้นด้วย (ไม่งั้น UI จะไม่ render summary ที่ปิดแล้ว
+  //   ถ้ากะนั้นไม่มี vital/excretion/fluid/etc บันทึก)
+  Object.keys(manual || {}).forEach(function(k) {
+    if (buckets[k]) return; // มี bucket อยู่แล้ว
+    var m = manual[k];
+    if (!m || !m.shift_date) return;
+    var d = m.shift_date;
+    // เช็คว่าอยู่ใน range
+    if (fromDate && d < fromDate) return;
+    if (toDate && d > toDate) return;
+    buckets[k] = {
+      date: m.shift_date,
+      shift: m.shift,
+      vitals: [], excretions: [], fluids: [],
+      appointments: [], incidents: [], nursingNotes: []
+    };
+  });
+
   var keys = Object.keys(buckets).sort(function(a,b){ return b.localeCompare(a); });  // ล่าสุดบน
 
   if (keys.length === 0) {
