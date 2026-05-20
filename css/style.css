@@ -6133,6 +6133,34 @@ tr:hover td {
     grid-template-columns: 1fr;
   }
   .ho-section-body { max-height: none; }
+
+  /* [Step B-2a · 20 พ.ค. 69] Handover bar mobile — stack vertically */
+  .patient-handover-bar {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .patient-handover-bar > div {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .patient-handover-bar > div:last-child {
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+  .patient-handover-bar button {
+    flex: 0 0 auto;
+  }
+  /* Mobile — admin menu fullwidth from right edge */
+  #patHandoverAdminMenu {
+    right: 0 !important;
+    min-width: 220px !important;
+  }
+}
+
+/* [Step B-2a] Admin menu item hover */
+.patient-handover-menu-item:hover {
+  background: var(--surface2, #f5f3ee) !important;
 }
 
 /* Print */

@@ -889,6 +889,30 @@
           </div>
         </div>
 
+        <!-- [Step B-2a · 20 พ.ค. 69] Handover Action Bar — รับ-ส่งเวร -->
+        <div id="patHandoverBar" class="patient-handover-bar" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);">
+              <span id="patHandoverCount">เลือกแล้ว 0 คน</span>
+              <span id="patHandoverShift" style="font-size:11px;color:var(--text2);font-weight:400;margin-left:6px;">· กะ —</span>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="patHandoverSelectPin" onclick="patHandoverSelectPinned()" style="font-size:12px;" title="ติ๊กผู้ที่ปักหมุดทั้งหมด">☑ พิน</button>
+            <button class="btn btn-ghost btn-sm" id="patHandoverClear" onclick="patHandoverClearSelection()" style="font-size:12px;" title="ล้างการเลือก">🗑 ล้าง</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" id="patHandoverCloseBtn" onclick="patHandoverCloseSelected()" disabled style="font-size:12px;font-weight:600;background:#1f4d38;border-color:#1f4d38;">📤 ปิดเวรที่เลือก</button>
+            <button class="btn btn-primary btn-sm" id="patHandoverReceiveBtn" onclick="patHandoverReceiveSelected()" disabled style="font-size:12px;font-weight:600;background:#185fa5;border-color:#185fa5;">✓ รับเวรที่เลือก</button>
+            <div class="patient-handover-admin-wrap" id="patHandoverAdminWrap" style="display:none;position:relative;">
+              <button class="btn btn-ghost btn-sm" id="patHandoverAdminBtn" onclick="patHandoverToggleAdminMenu()" style="font-size:12px;font-weight:600;" title="จัดการ (admin/พยาบาล)">⋮</button>
+              <div id="patHandoverAdminMenu" style="display:none;position:absolute;top:calc(100% + 4px);right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);min-width:200px;z-index:50;padding:4px 0;">
+                <div style="padding:6px 12px;font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">🔧 admin/พยาบาล</div>
+                <button class="patient-handover-menu-item" onclick="patHandoverCloseInstead()" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:12px;background:none;border:none;cursor:pointer;color:var(--text);">🔓 ปิดเวรแทน</button>
+                <button class="patient-handover-menu-item" onclick="patHandoverReopen()" style="display:block;width:100%;text-align:left;padding:8px 12px;font-size:12px;background:none;border:none;cursor:pointer;color:var(--text);">🔓 เปิดเวรใหม่</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- [R9-A] Filter bar — refreshed (card-style with prefix label) -->
         <div class="patient-filter-bar filter-chip-row">
           <span class="label-sm">🔍 กรอง:</span>
@@ -911,7 +935,7 @@
           </div>
           <div class="table-wrap">
             <table class="patient-table-r9">
-              <thead><tr><th style="text-align:center;width:48px;">#</th><th>ชื่อ-นามสกุล</th><th>เลขบัตรประชาชน</th><th>วันเกิด</th><th>อายุ</th><th>วันเข้ารับบริการ</th><th>วันสิ้นสุดสัญญา</th><th>ระยะเวลา</th><th>สถานะ</th><th></th></tr></thead>
+              <thead><tr><th class="ph-col-check" style="text-align:center;width:40px;display:none;"><input type="checkbox" id="patHandoverSelectAll" onclick="patHandoverToggleAll(this)" style="cursor:pointer;" title="เลือก/ล้างทั้งหมดในมุมมอง"></th><th style="text-align:center;width:48px;">#</th><th>ชื่อ-นามสกุล</th><th>เลขบัตรประชาชน</th><th>วันเกิด</th><th>อายุ</th><th>วันเข้ารับบริการ</th><th>วันสิ้นสุดสัญญา</th><th>ระยะเวลา</th><th>สถานะ</th><th class="ph-col-shift" style="display:none;">สถานะเวร</th><th></th></tr></thead>
               <tbody id="patTable"></tbody>
             </table>
           </div>
