@@ -6163,6 +6163,18 @@ tr:hover td {
   background: var(--surface2, #f5f3ee) !important;
 }
 
+/* [Fix · 20 พ.ค. 69] Disabled state สำหรับปุ่ม handover (override inline background) */
+#patHandoverCloseBtn:disabled,
+#patHandoverReceiveBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+}
+#patHandoverCloseBtn:disabled:hover,
+#patHandoverReceiveBtn:disabled:hover {
+  opacity: 0.45;
+}
+
 /* Print */
 @media print {
   .ho-actions, .ho-note-edit-btn,
