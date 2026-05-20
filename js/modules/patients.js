@@ -696,19 +696,236 @@ function patHandoverInitUI() {
       const adminWrap = document.getElementById('patHandoverAdminWrap');
       if (adminWrap) adminWrap.style.display = 'block';
     }
-    // Update shift display (B-2b จะ implement)
     _patHandoverUpdateShiftLabel();
+    // [Step B-2b] Render badges จาก cached map ก่อน (ถ้ามี) แล้วโหลดใหม่ background
+    if (Object.keys(window._patHandoverStatusMap || {}).length > 0) {
+      _patHandoverRenderStatusBadges();
+      _patHandoverUpdateCheckboxes();
+      _patHandoverUpdateCounter();
+    }
+    // Load fresh status async (ไม่ block UI)
+    _patHandoverLoadAllStatus();
   }
 }
 
-// Update label "กะ xxx" — ใช้ logic เดียวกับ clinical-vitals._ssDetectCurrentShift
-function _patHandoverUpdateShiftLabel() {
-  const el = document.getElementById('patHandoverShift');
-  if (!el) return;
+// [Step B-2b · 20 พ.ค. 69] Detect current shift (date + shift name)
+function _patHandoverDetectShift() {
   const now = new Date();
   const hour = now.getHours();
   const shift = (hour >= 7 && hour < 19) ? 'เช้า' : 'ดึก';
-  el.textContent = '· กะ' + shift + ' ' + now.getDate() + '/' + (now.getMonth()+1);
+  // shift_date: ถ้าเป็นกะดึกหลังเที่ยงคืน (00:00-06:59) → ยังนับเป็นวันก่อนหน้า
+  const d = new Date(now);
+  if (shift === 'ดึก' && hour < 7) d.setDate(d.getDate() - 1);
+  const sd = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  return { date: sd, shift: shift, displayDate: d.getDate() + '/' + (d.getMonth()+1) };
+}
+
+// Update label "กะ xxx"
+function _patHandoverUpdateShiftLabel() {
+  const el = document.getElementById('patHandoverShift');
+  if (!el) return;
+  const cur = _patHandoverDetectShift();
+  el.textContent = '· กะ' + cur.shift + ' ' + cur.displayDate;
+}
+
+// [Step B-2b · 20 พ.ค. 69] Status state per session — { patient_id: { status, record } }
+window._patHandoverStatusMap = window._patHandoverStatusMap || {};
+window._patHandoverHasVitalMap = window._patHandoverHasVitalMap || {};
+
+// ── Load สถานะเวรของทุก patient ใน 1 query ──
+async function _patHandoverLoadAllStatus() {
+  if (!_patHandoverCanOperate()) return;
+  if (typeof supa === 'undefined') return;
+
+  const cur = _patHandoverDetectShift();
+  const patientIds = (db.patients || [])
+    .filter(p => p.status === 'active' || p.status === 'hospital')
+    .map(p => p.id);
+  if (patientIds.length === 0) return;
+
+  try {
+    // Single batch query — fetch summaries for current (shift_date, shift)
+    const res = await supa
+      .from('patient_shift_summaries')
+      .select('id, patient_id, summary_text, is_closed, closed_by, closed_at, received_by, received_at, reopen_requested, was_reopened')
+      .in('patient_id', patientIds)
+      .eq('shift_date', cur.date)
+      .eq('shift', cur.shift);
+
+    const map = {};
+    (res.data || []).forEach(r => {
+      let status = 'draft';
+      if (r.received_by) status = 'received';
+      else if (r.is_closed) status = 'sent';
+      else if (r.reopen_requested) status = 'reopen_pending';
+      map[String(r.patient_id)] = { status: status, record: r };
+    });
+
+    // Patients ที่ไม่มี record = no_data
+    patientIds.forEach(pid => {
+      if (!map[String(pid)]) map[String(pid)] = { status: 'no_data', record: null };
+    });
+
+    window._patHandoverStatusMap = map;
+  } catch (e) {
+    console.warn('[handover] load all status error', e);
+  }
+
+  // Load vital sign existence (parallel ไป เพราะไม่ค่อย critical)
+  await _patHandoverLoadVitalExistence(cur, patientIds);
+
+  // Update UI
+  _patHandoverRenderStatusBadges();
+  _patHandoverUpdateCheckboxes();
+  _patHandoverUpdateCounter();
+}
+
+// ── Check ว่า patients ไหนมี vital ในกะนี้ (เพื่อแสดง ⚠️ ไม่มี vital) ──
+async function _patHandoverLoadVitalExistence(cur, patientIds) {
+  if (!cur || !patientIds || patientIds.length === 0) return;
+  if (typeof supa === 'undefined') return;
+  try {
+    // Build time range สำหรับกะ
+    const startHour = (cur.shift === 'เช้า') ? '07:00:00' : '19:00:00';
+    let endShiftDate = cur.date;
+    const endHour = (cur.shift === 'เช้า') ? '19:00:00' : '07:00:00';
+    if (cur.shift === 'ดึก') {
+      const d = new Date(cur.date);
+      d.setDate(d.getDate() + 1);
+      endShiftDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+    const startTs = new Date(cur.date + 'T' + startHour).toISOString();
+    const endTs = new Date(endShiftDate + 'T' + endHour).toISOString();
+
+    // Fetch distinct patient_id ที่มี vital ในกะนี้
+    const res = await supa
+      .from('vital_signs')
+      .select('patient_id')
+      .in('patient_id', patientIds)
+      .gte('recorded_at', startTs)
+      .lte('recorded_at', endTs)
+      .limit(1000);
+    const hasMap = {};
+    (res.data || []).forEach(r => { hasMap[String(r.patient_id)] = true; });
+    window._patHandoverHasVitalMap = hasMap;
+  } catch (e) {
+    console.warn('[handover] load vital existence error', e);
+  }
+}
+
+// ── Render status badge ในแต่ละแถว ──
+function _patHandoverRenderStatusBadges() {
+  const statusMap = window._patHandoverStatusMap || {};
+  const hasVitalMap = window._patHandoverHasVitalMap || {};
+
+  document.querySelectorAll('.ph-col-shift').forEach(td => {
+    // Skip th (no patient_id)
+    if (td.tagName !== 'TD') return;
+    const pid = td.dataset.patientId;
+    if (!pid) return;
+    const info = statusMap[String(pid)];
+    if (!info) {
+      td.innerHTML = '<span style="font-size:11px;color:var(--text3);">—</span>';
+      return;
+    }
+    td.innerHTML = _patHandoverStatusBadgeHTML(info, hasVitalMap[String(pid)]);
+  });
+}
+
+// ── Generate HTML สำหรับ badge สถานะ ──
+function _patHandoverStatusBadgeHTML(info, hasVital) {
+  const st = info.status;
+  const rec = info.record;
+  let txt = '', style = '';
+
+  if (st === 'received') {
+    const by = (rec && rec.received_by) ? rec.received_by : '—';
+    const at = (rec && rec.received_at) ? new Date(rec.received_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
+    txt = '🤝 รับแล้ว · ' + by + (at ? ' · ' + at : '');
+    style = 'background:#1f4d38;color:#fff;';
+  } else if (st === 'reopen_pending') {
+    txt = '⏳ รออนุมัติ';
+    style = 'background:#fff;color:#854F0B;border:1px solid #854F0B;';
+  } else if (st === 'sent') {
+    const by = (rec && rec.closed_by) ? rec.closed_by : '—';
+    const at = (rec && rec.closed_at) ? new Date(rec.closed_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
+    txt = '🔒 ส่งแล้ว · ' + by + (at ? ' · ' + at : '');
+    style = 'background:#0F6E56;color:#fff;';
+  } else if (st === 'draft') {
+    txt = '📝 มี summary';
+    style = 'background:#E1F5EE;color:#0F6E56;';
+  } else if (hasVital === true) {
+    txt = '⚪ ยังไม่ส่ง';
+    style = 'background:#E6F1FB;color:#185FA5;';
+  } else {
+    txt = '⚠️ ไม่มี vital';
+    style = 'background:#FAEEDA;color:#854F0B;';
+  }
+  return '<span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:500;white-space:nowrap;display:inline-block;' + style + '">' + txt + '</span>';
+}
+
+// ── Update checkbox state — disable คนที่ติ๊กไม่ได้ ──
+function _patHandoverUpdateCheckboxes() {
+  const statusMap = window._patHandoverStatusMap || {};
+  document.querySelectorAll('.patient-handover-cb').forEach(cb => {
+    const pid = cb.dataset.patientId;
+    const info = statusMap[String(pid)];
+    if (!info) {
+      cb.disabled = false;
+      cb.title = '';
+      return;
+    }
+    const st = info.status;
+    // Received = disable (เสร็จแล้ว), reopen_pending = disable (รออนุมัติ)
+    if (st === 'received' || st === 'reopen_pending') {
+      cb.disabled = true;
+      cb.title = (st === 'received') ? 'รับเวรแล้ว' : 'รออนุมัติเปิดเวร';
+      if (cb.checked) { cb.checked = false; delete window._patHandoverSelected[pid]; }
+      return;
+    }
+    cb.disabled = false;
+    cb.title = '';
+  });
+}
+
+// ── Smart enable/disable buttons ตาม mix ของ status ที่เลือก ──
+function _patHandoverUpdateCounter() {
+  const counter = document.getElementById('patHandoverCount');
+  if (!counter) return;
+  const sel = window._patHandoverSelected || {};
+  const ids = Object.keys(sel);
+  counter.textContent = 'เลือกแล้ว ' + ids.length + ' คน';
+
+  const closeBtn = document.getElementById('patHandoverCloseBtn');
+  const receiveBtn = document.getElementById('patHandoverReceiveBtn');
+  if (!closeBtn || !receiveBtn) return;
+
+  if (ids.length === 0) {
+    closeBtn.disabled = true;
+    receiveBtn.disabled = true;
+    closeBtn.textContent = '📤 ปิดเวรที่เลือก';
+    receiveBtn.textContent = '✓ รับเวรที่เลือก';
+    return;
+  }
+
+  // Categorize ที่เลือกแล้ว
+  const statusMap = window._patHandoverStatusMap || {};
+  let canClose = 0;   // no_data / draft
+  let canReceive = 0; // sent
+  let other = 0;       // received / pending
+  ids.forEach(pid => {
+    const info = statusMap[String(pid)];
+    if (!info) { canClose++; return; }
+    const st = info.status;
+    if (st === 'no_data' || st === 'draft') canClose++;
+    else if (st === 'sent') canReceive++;
+    else other++;
+  });
+
+  closeBtn.disabled = (canClose === 0);
+  receiveBtn.disabled = (canReceive === 0);
+  closeBtn.textContent = canClose > 0 ? ('📤 ปิดเวรที่เลือก (' + canClose + ')') : '📤 ปิดเวรที่เลือก';
+  receiveBtn.textContent = canReceive > 0 ? ('✓ รับเวรที่เลือก (' + canReceive + ')') : '✓ รับเวรที่เลือก';
 }
 
 // ── Checkbox handlers ──
@@ -762,20 +979,6 @@ function patHandoverClearSelection() {
   const selectAll = document.getElementById('patHandoverSelectAll');
   if (selectAll) selectAll.checked = false;
   _patHandoverUpdateCounter();
-}
-
-function _patHandoverUpdateCounter() {
-  const counter = document.getElementById('patHandoverCount');
-  if (!counter) return;
-  const sel = window._patHandoverSelected || {};
-  const count = Object.keys(sel).length;
-  counter.textContent = 'เลือกแล้ว ' + count + ' คน';
-  // ใน B-2b จะ smart enable/disable ตาม status ของคนที่เลือก
-  // ใน B-2a — enable ทุกปุ่มถ้ามีการเลือก (skeleton)
-  const closeBtn = document.getElementById('patHandoverCloseBtn');
-  const receiveBtn = document.getElementById('patHandoverReceiveBtn');
-  if (closeBtn) closeBtn.disabled = (count === 0);
-  if (receiveBtn) receiveBtn.disabled = (count === 0);
 }
 
 // ── Action handlers (B-2a stubs — show alert, real logic ใน B-3/B-4) ──
@@ -833,4 +1036,6 @@ window.patHandoverReceiveSelected = patHandoverReceiveSelected;
 window.patHandoverToggleAdminMenu = patHandoverToggleAdminMenu;
 window.patHandoverCloseInstead = patHandoverCloseInstead;
 window.patHandoverReopen = patHandoverReopen;
+// [Step B-2b] expose load function สำหรับ refresh แบบ programmatic ก่อนทำ action ใหญ่
+window._patHandoverLoadAllStatus = _patHandoverLoadAllStatus;
 
