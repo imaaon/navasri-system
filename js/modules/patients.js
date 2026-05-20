@@ -855,10 +855,16 @@ function _patHandoverStatusBadgeHTML(info, hasVital) {
     }
     return html;
   } else if (st === 'sent') {
+    // [Step B-7 · 20 พ.ค. 69] Badge "ส่งแล้ว" + ปุ่ม "📨 ขอเปิดเวร" สำหรับ caregiver
     const by = (rec && rec.closed_by) ? rec.closed_by : '—';
     const at = (rec && rec.closed_at) ? new Date(rec.closed_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
-    txt = '🔒 ส่งแล้ว · ' + by + (at ? ' · ' + at : '');
-    style = 'background:#0F6E56;color:#fff;';
+    let html = '<span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:500;white-space:nowrap;display:inline-block;background:#0F6E56;color:#fff;">🔒 ส่งแล้ว · ' + _patHandoverEscape(by) + (at ? ' · ' + at : '') + '</span>';
+    // ถ้าเป็น caregiver ที่ไม่ใช่ admin/nurse → เพิ่มปุ่ม "📨 ขอเปิดเวร"
+    // (admin/nurse กดเปิดเวรแทนได้เลยผ่าน ⋮ menu ใน action bar)
+    if (rec && rec.id && _patHandoverCanOperate() && !_patHandoverCanAdmin()) {
+      html += ' <button class="btn btn-sm" onclick="patHandoverRequestReopen(' + rec.id + ')" style="font-size:10px;padding:2px 6px;margin-left:4px;background:#fff;color:#BA7517;border:1px solid #BA7517;border-radius:4px;cursor:pointer;" title="ขอเปิดเวรเพื่อแก้ไข summary">📨 ขอเปิดเวร</button>';
+    }
+    return html;
   } else if (st === 'draft') {
     txt = '📝 มี summary';
     style = 'background:#E1F5EE;color:#0F6E56;';
@@ -1601,16 +1607,114 @@ function patHandoverToggleAdminMenu() {
   menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
 }
 
-function patHandoverCloseInstead() {
-  if (typeof toast === 'function') toast('🔓 ปิดเวรแทน — ฟีเจอร์นี้กำลังจะมา', 'info');
+// [Step B-7 · 20 พ.ค. 69] ── Admin: ปิดเวรแทน (กรณี caregiver ลืมปิด + กลับบ้านแล้ว) ──
+async function patHandoverCloseInstead() {
   const menu = document.getElementById('patHandoverAdminMenu');
   if (menu) menu.style.display = 'none';
+  if (!_patHandoverCanAdmin()) {
+    if (typeof toast === 'function') toast('คุณไม่มีสิทธิ์ปิดเวรแทน', 'error');
+    return;
+  }
+  const statusMap = window._patHandoverStatusMap || {};
+  const sel = window._patHandoverSelected || {};
+  const allSelected = Object.keys(sel);
+  if (allSelected.length === 0) {
+    if (typeof toast === 'function') toast('กรุณาเลือกผู้รับบริการก่อน', 'warning');
+    return;
+  }
+  // Filter เฉพาะคนที่ปิดได้ (no_data/draft) — ใช้ flow เดียวกับ patHandoverCloseSelected
+  const closable = allSelected.filter(pid => {
+    const info = statusMap[String(pid)];
+    if (!info) return true;
+    return (info.status === 'no_data' || info.status === 'draft');
+  });
+  if (closable.length === 0) {
+    if (typeof toast === 'function') toast('ไม่มีผู้รับบริการที่ปิดเวรได้ใน list', 'warning');
+    return;
+  }
+  // ใช้ modal เดียวกับ B-3 — admin จะเห็น message ปกติ + ปิดให้แทน caregiver
+  await _patHandoverOpenCloseModal(closable);
 }
 
-function patHandoverReopen() {
-  if (typeof toast === 'function') toast('🔓 เปิดเวรใหม่ — ฟีเจอร์นี้กำลังจะมา', 'info');
+// [Step B-7 · 20 พ.ค. 69] ── Admin: เปิดเวรใหม่ (force reopen — ไม่ต้องรอ caregiver ขอ) ──
+async function patHandoverReopen() {
   const menu = document.getElementById('patHandoverAdminMenu');
   if (menu) menu.style.display = 'none';
+  if (!_patHandoverCanAdmin()) {
+    if (typeof toast === 'function') toast('คุณไม่มีสิทธิ์เปิดเวรใหม่', 'error');
+    return;
+  }
+  const statusMap = window._patHandoverStatusMap || {};
+  const sel = window._patHandoverSelected || {};
+  const allSelected = Object.keys(sel);
+  if (allSelected.length === 0) {
+    if (typeof toast === 'function') toast('กรุณาเลือกผู้รับบริการก่อน', 'warning');
+    return;
+  }
+  // Filter เฉพาะคนที่ปิดแล้ว (sent / received / reopen_pending)
+  const reopenable = allSelected.filter(pid => {
+    const info = statusMap[String(pid)];
+    if (!info || !info.record || !info.record.id) return false;
+    return (info.status === 'sent' || info.status === 'received' || info.status === 'reopen_pending');
+  });
+  if (reopenable.length === 0) {
+    if (typeof toast === 'function') toast('ไม่มีผู้รับบริการที่เปิดเวรใหม่ได้ใน list (ต้องเป็นเวรที่ปิดแล้ว)', 'warning');
+    return;
+  }
+  // Confirm
+  const names = reopenable.slice(0, 5).map(pid => {
+    const p = (db.patients || []).find(p => String(p.id) === String(pid));
+    return p ? p.name : '#' + pid;
+  });
+  const more = reopenable.length > 5 ? ' และอีก ' + (reopenable.length - 5) + ' คน' : '';
+  let proceed = false;
+  if (typeof customConfirm === 'function') {
+    proceed = await customConfirm('เปิดเวรใหม่ของ ' + reopenable.length + ' คน?\n' + names.join(', ') + more + '\n\nระบบจะ unlock summary ให้แก้ไขได้');
+  } else {
+    proceed = confirm('เปิดเวรใหม่ของ ' + reopenable.length + ' คน?');
+  }
+  if (!proceed) return;
+  // Sequential reopen
+  let success = 0, fail = 0;
+  const failList = [];
+  for (let i = 0; i < reopenable.length; i++) {
+    const pid = reopenable[i];
+    const info = statusMap[String(pid)];
+    const p = (db.patients || []).find(p => String(p.id) === String(pid));
+    try {
+      const res = await supa.from('patient_shift_summaries').update({
+        is_closed: false,
+        closed_at: null,
+        closed_by: null,
+        was_reopened: true,
+        received_at: null,
+        received_by: null,
+        received_by_role: null,
+        reopen_requested: false,
+        reopen_requested_at: null,
+        reopen_requested_by: null,
+        reopen_reason: null
+      }).eq('id', info.record.id).select().single();
+      if (res.error) { fail++; failList.push((p ? p.name : '#'+pid) + ': ' + res.error.message); }
+      else success++;
+    } catch (e) {
+      fail++;
+      failList.push((p ? p.name : '#'+pid) + ': ' + (e.message || e));
+    }
+  }
+  // Toast result
+  if (typeof toast === 'function') {
+    if (fail === 0) {
+      toast('🔓 เปิดเวรใหม่สำเร็จ ' + success + ' คน', 'success');
+    } else {
+      toast('✓ สำเร็จ ' + success + ' / ✗ ไม่สำเร็จ ' + fail + ' คน', 'warning');
+      console.warn('[handover] reopen failures:', failList);
+    }
+  }
+  // Clear selected + refresh
+  window._patHandoverSelected = {};
+  if (typeof _patHandoverLoadAllStatus === 'function') await _patHandoverLoadAllStatus();
+  if (typeof renderPatients === 'function') renderPatients();
 }
 
 // [Step B-2c · 20 พ.ค. 69] ── Approve / Deny reopen request (inline ในแถว) ──
@@ -1676,6 +1780,44 @@ async function patHandoverDenyReopen(summaryId) {
   }
 }
 
+// [Step B-7 · 20 พ.ค. 69] ── caregiver ขอเปิดเวรเพื่อแก้ไข summary ──
+async function patHandoverRequestReopen(summaryId) {
+  if (!summaryId) return;
+  if (typeof supa === 'undefined') return;
+  if (!_patHandoverCanOperate()) {
+    if (typeof toast === 'function') toast('คุณไม่มีสิทธิ์ขอเปิดเวร', 'error');
+    return;
+  }
+  // Prompt เหตุผล
+  let reason = '';
+  if (typeof customPrompt === 'function') {
+    reason = await customPrompt('กรุณาระบุเหตุผลที่ต้องการเปิดเวรนี้:');
+  } else {
+    reason = prompt('กรุณาระบุเหตุผลที่ต้องการเปิดเวรนี้:');
+  }
+  if (reason === null) return; // ยกเลิก
+  reason = (reason || '').trim();
+  if (!reason) {
+    if (typeof toast === 'function') toast('กรุณาระบุเหตุผล', 'warning');
+    return;
+  }
+  try {
+    const user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+    const res = await supa.from('patient_shift_summaries').update({
+      reopen_requested: true,
+      reopen_requested_at: new Date().toISOString(),
+      reopen_requested_by: user,
+      reopen_reason: reason
+    }).eq('id', summaryId).select().single();
+    if (res.error) throw res.error;
+    if (typeof toast === 'function') toast('📨 ส่งคำขอเปิดเวรแล้ว — รอ admin/พยาบาลอนุมัติ', 'success');
+    await _patHandoverLoadAllStatus();
+  } catch (e) {
+    if (typeof toast === 'function') toast('ขอเปิดเวรไม่สำเร็จ: ' + (e.message || e), 'error');
+    console.error('[handover] request reopen error:', e);
+  }
+}
+
 // ── Close admin menu when clicking outside ──
 document.addEventListener('click', function(e) {
   const menu = document.getElementById('patHandoverAdminMenu');
@@ -1700,6 +1842,8 @@ window.patHandoverReopen = patHandoverReopen;
 // [Step B-2c · 20 พ.ค. 69] inline admin actions ใน badge แถว
 window.patHandoverApproveReopen = patHandoverApproveReopen;
 window.patHandoverDenyReopen = patHandoverDenyReopen;
+// [Step B-7 · 20 พ.ค. 69] caregiver ขอเปิดเวร (inline ในแถว status=sent)
+window.patHandoverRequestReopen = patHandoverRequestReopen;
 // [Step B-2b] expose load function สำหรับ refresh แบบ programmatic ก่อนทำ action ใหญ่
 window._patHandoverLoadAllStatus = _patHandoverLoadAllStatus;
 
