@@ -1306,12 +1306,292 @@ async function _patHandoverSubmitCloseAll(modal, items, cur, closeFn) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// [Step B-4 · 20 พ.ค. 69] Modal "รับเวรที่เลือก"
+// ═══════════════════════════════════════════════════════════════════
 
-function patHandoverReceiveSelected() {
-  const count = Object.keys(window._patHandoverSelected || {}).length;
-  if (typeof toast === 'function') {
-    toast('✓ รับเวร ' + count + ' คน — ฟีเจอร์นี้กำลังจะมา (B-4)', 'info');
+// Open modal — สร้าง DOM แบบ dynamic + แสดง summary ของกะก่อน
+async function _patHandoverOpenReceiveModal(receivableIds, skippedIds) {
+  const cur = _patHandoverDetectShift();
+  const statusMap = window._patHandoverStatusMap || {};
+
+  // สำหรับ modal "รับเวร" — ต้องแสดง summary ของ "เวรก่อนหน้า"
+  // แต่ status ที่เก็บใน statusMap เป็นของ "เวรปัจจุบัน" ที่ปิดแล้ว (🔒)
+  // → ใช้ record ของ status sent นั้นเลย (มี closed_by + summary_text + closed_at)
+
+  const items = receivableIds.map(pid => {
+    const p = (db.patients || []).find(p => String(p.id) === String(pid));
+    const info = statusMap[String(pid)];
+    const rec = info ? info.record : null;
+    return {
+      patient: p,
+      patientId: pid,
+      record: rec,
+      summaryText: (rec && rec.summary_text) ? rec.summary_text : '(ไม่มีสรุป)',
+      closedBy: (rec && rec.closed_by) ? rec.closed_by : '—',
+      closedAt: (rec && rec.closed_at) ? new Date(rec.closed_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) : ''
+    };
+  }).filter(it => it.patient);
+
+  if (items.length === 0) return;
+
+  // คำนวณกะก่อนหน้า (display)
+  const prevShift = (cur.shift === 'เช้า') ? 'ดึก' : 'เช้า';
+
+  // ── Build overlay + modal ──
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'display:flex;align-items:flex-start;justify-content:center;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;overflow-y:auto;padding:30px 16px;';
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'background:#fff;border-radius:12px;padding:0;width:720px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;';
+
+  // Header
+  let headerHTML =
+    '<div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
+    '  <div>' +
+    '    <div style="font-size:17px;font-weight:700;color:#185fa5;">✓ รับเวรของผู้รับบริการ ' + items.length + ' คน</div>' +
+    '    <div style="font-size:12px;color:var(--text2);margin-top:2px;">รับจากกะก่อน → เวร' + cur.shift + ' ' + _patHandoverFormatDate(cur.date) + '</div>' +
+    '  </div>' +
+    '  <button id="pat-recv-modal-x" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3);padding:0 6px;line-height:1;">✕</button>' +
+    '</div>' +
+    '<div style="background:#E6F1FB;border-left:4px solid #185fa5;padding:10px 14px;margin:0;font-size:12px;color:#0C447C;line-height:1.5;">' +
+    'ℹ️ กรุณาอ่าน summary ของกะก่อนหน้า ก่อนกดยืนยัน<br>' +
+    'หลังกดรับ — คุณจะเป็นผู้รับผิดชอบในกะ' + cur.shift + 'นี้แทน' +
+    '</div>';
+
+  // ถ้ามี skipped → แสดง warning
+  if (skippedIds && skippedIds.length > 0) {
+    const skippedNames = skippedIds.map(pid => {
+      const p = (db.patients || []).find(p => String(p.id) === String(pid));
+      const info = statusMap[String(pid)];
+      let reason = '';
+      if (info) {
+        if (info.status === 'no_data') reason = ' (ยังไม่ปิดเวร)';
+        else if (info.status === 'draft') reason = ' (มี summary แต่ยังไม่ปิด)';
+        else if (info.status === 'received') reason = ' (รับแล้ว)';
+        else if (info.status === 'reopen_pending') reason = ' (รออนุมัติ)';
+      }
+      return (p ? p.name : '#' + pid) + reason;
+    });
+    headerHTML +=
+      '<div style="background:#FAEEDA;border-left:4px solid #854F0B;padding:10px 14px;margin:0;font-size:11px;color:#854F0B;line-height:1.5;">' +
+      '⚠️ ผู้รับบริการ ' + skippedIds.length + ' คนถูกข้าม: ' + _patHandoverEscape(skippedNames.join(', ')) +
+      '</div>';
   }
+
+  // Body — list ของแต่ละคน (อ่านอย่างเดียว)
+  let bodyHTML = '<div id="pat-recv-modal-body" style="padding:14px 22px;overflow-y:auto;flex:1;">';
+  items.forEach((item, idx) => {
+    const p = item.patient;
+    const room = p.roomNumber || p.room || '—';
+
+    bodyHTML +=
+      '<div style="border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:10px;background:#fff;">' +
+      '  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px;">' +
+      '    <div style="font-size:14px;font-weight:600;color:var(--text);">' +
+      '      ' + (idx+1) + '. ' + _patHandoverEscape(p.name || '-') +
+      '      <span style="font-size:11px;color:var(--text3);font-weight:400;">· ห้อง ' + _patHandoverEscape(room) + '</span>' +
+      '    </div>' +
+      '  </div>' +
+      '  <div style="font-size:11px;color:var(--text2);margin-bottom:6px;">' +
+      '    🔒 ปิดเวรโดย: <strong>' + _patHandoverEscape(item.closedBy) + '</strong>' +
+      (item.closedAt ? ' · เวลา ' + _patHandoverEscape(item.closedAt) : '') +
+      '  </div>' +
+      '  <div style="background:#f5f3ee;border-radius:6px;padding:10px 12px;font-size:12px;line-height:1.6;color:var(--text);white-space:pre-wrap;">' +
+      _patHandoverEscape(item.summaryText) +
+      '  </div>' +
+      '</div>';
+  });
+  bodyHTML += '</div>';
+
+  // Acknowledge checkbox + Footer
+  const ackHTML =
+    '<div style="padding:12px 22px;border-top:1px solid var(--border);background:#fafaf7;">' +
+    '  <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;line-height:1.5;color:var(--text);">' +
+    '    <input type="checkbox" id="pat-recv-ack" style="margin-top:2px;cursor:pointer;width:18px;height:18px;flex-shrink:0;">' +
+    '    <span>ฉันได้อ่านและรับทราบข้อมูลของผู้รับบริการทั้ง ' + items.length + ' คนข้างต้นแล้ว</span>' +
+    '  </label>' +
+    '</div>';
+
+  const footerHTML =
+    '<div id="pat-recv-modal-progress" style="display:none;padding:10px 22px;background:#f5f3ee;border-top:1px solid var(--border);font-size:12px;color:var(--text2);"></div>' +
+    '<div style="padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;">' +
+    '  <button id="pat-recv-cancel" class="btn btn-ghost" style="font-size:13px;padding:10px 20px;">❌ ยกเลิก</button>' +
+    '  <button id="pat-recv-confirm" class="btn btn-primary" disabled style="font-size:13px;padding:10px 22px;background:#185fa5;border-color:#185fa5;color:#fff;font-weight:600;">⏳ กรุณาอ่านและติ๊ก checkbox</button>' +
+    '</div>';
+
+  modal.innerHTML = headerHTML + bodyHTML + ackHTML + footerHTML;
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Close handlers
+  function close() {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }
+  modal.querySelector('#pat-recv-modal-x').addEventListener('click', close);
+  modal.querySelector('#pat-recv-cancel').addEventListener('click', close);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) close();
+  });
+
+  // Acknowledge checkbox — เริ่ม 2-วินาที delay หลังติ๊ก
+  const ackCb = modal.querySelector('#pat-recv-ack');
+  const confirmBtn = modal.querySelector('#pat-recv-confirm');
+  let delayTimer = null;
+  ackCb.addEventListener('change', function() {
+    if (ackCb.checked) {
+      confirmBtn.textContent = '⏳ กรุณารอ 2 วินาที';
+      if (delayTimer) clearTimeout(delayTimer);
+      delayTimer = setTimeout(function() {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '✅ ยืนยันรับเวร ' + items.length + ' คน';
+      }, 2000);
+    } else {
+      if (delayTimer) { clearTimeout(delayTimer); delayTimer = null; }
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = '⏳ กรุณาอ่านและติ๊ก checkbox';
+    }
+  });
+
+  // Confirm handler
+  confirmBtn.addEventListener('click', async function() {
+    await _patHandoverSubmitReceiveAll(modal, items, cur, close);
+  });
+}
+
+// Submit รับเวรทีละคน (sequential + race protection)
+async function _patHandoverSubmitReceiveAll(modal, items, cur, closeFn) {
+  const confirmBtn = modal.querySelector('#pat-recv-confirm');
+  const cancelBtn = modal.querySelector('#pat-recv-cancel');
+  const progressEl = modal.querySelector('#pat-recv-modal-progress');
+  if (!confirmBtn || !progressEl) return;
+
+  confirmBtn.disabled = true;
+  cancelBtn.disabled = true;
+  progressEl.style.display = 'block';
+
+  let success = 0, fail = 0;
+  const failList = [];
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const p = item.patient;
+    progressEl.textContent = '⏳ กำลังรับเวร ' + (i+1) + '/' + items.length + ' — ' + (p.name || '-') + '...';
+
+    try {
+      // Re-check status ก่อน update — กัน race
+      const checkRes = await supa
+        .from('patient_shift_summaries')
+        .select('id, is_closed, received_by, received_at')
+        .eq('patient_id', item.patientId)
+        .eq('shift_date', cur.date)
+        .eq('shift', cur.shift)
+        .maybeSingle();
+
+      if (!checkRes || !checkRes.data) {
+        fail++;
+        failList.push((p.name || '-') + ' (ไม่พบสรุปเวร)');
+        continue;
+      }
+      if (!checkRes.data.is_closed) {
+        fail++;
+        failList.push((p.name || '-') + ' (กะก่อนยังไม่ปิดเวร)');
+        continue;
+      }
+      if (checkRes.data.received_by) {
+        fail++;
+        failList.push((p.name || '-') + ' (รับไปแล้วโดย ' + checkRes.data.received_by + ')');
+        continue;
+      }
+
+      // Pre-load _shiftSummaryCache สำหรับ _ssReceiveShift (ใช้ existing.id)
+      if (typeof window._ssLoadManualSummaries === 'function') {
+        await window._ssLoadManualSummaries(item.patientId);
+      }
+
+      // เรียก _ssReceiveShift จริง (helper handles race + permission)
+      let res;
+      if (typeof window._ssReceiveShift === 'function') {
+        res = await window._ssReceiveShift(item.patientId, cur.date, cur.shift);
+      } else {
+        // Fallback — direct DB call
+        const user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+        const role = (typeof currentUser !== 'undefined') ? (currentUser.role || '') : '';
+        res = await supa.from('patient_shift_summaries').update({
+          received_at: new Date().toISOString(),
+          received_by: user,
+          received_by_role: role
+        }).eq('id', checkRes.data.id).select().single();
+      }
+
+      if (res && res.error) {
+        fail++;
+        failList.push((p.name || '-') + ' (' + res.error.message + ')');
+      } else {
+        success++;
+      }
+    } catch (e) {
+      fail++;
+      failList.push((p.name || '-') + ' (' + (e.message || e) + ')');
+    }
+  }
+
+  // Show result
+  progressEl.innerHTML =
+    '<div style="color:#0F6E56;font-weight:600;">✓ รับเวรสำเร็จ ' + success + ' คน</div>' +
+    (fail > 0 ? '<div style="color:#A32D2D;margin-top:4px;">✗ ไม่สำเร็จ ' + fail + ' คน: ' + _patHandoverEscape(failList.join(', ')) + '</div>' : '');
+
+  confirmBtn.textContent = '✓ ปิด';
+  confirmBtn.disabled = false;
+  cancelBtn.disabled = false;
+
+  // Clear selected ที่ success
+  if (success > 0) {
+    items.forEach(item => { delete window._patHandoverSelected[item.patientId]; });
+  }
+
+  // Refresh status + re-render
+  if (typeof _patHandoverLoadAllStatus === 'function') {
+    await _patHandoverLoadAllStatus();
+  }
+  if (typeof renderPatients === 'function') {
+    renderPatients();
+  }
+
+  // Auto-close หลัง 2 วินาทีถ้าทุกคนสำเร็จ
+  if (fail === 0) {
+    setTimeout(closeFn, 2000);
+  } else {
+    confirmBtn.addEventListener('click', closeFn, { once: true });
+  }
+}
+
+
+async function patHandoverReceiveSelected() {
+  const statusMap = window._patHandoverStatusMap || {};
+  const sel = window._patHandoverSelected || {};
+  const allSelected = Object.keys(sel);
+  if (allSelected.length === 0) return;
+
+  // Filter เฉพาะคนที่ "รับได้" (status = sent)
+  const receivable = allSelected.filter(pid => {
+    const info = statusMap[String(pid)];
+    if (!info) return false;
+    return info.status === 'sent';
+  });
+
+  // Filter "รับไม่ได้" — มีเหตุผล (กะก่อนยังไม่ปิด หรือ รับแล้ว)
+  const skipped = allSelected.filter(pid => !receivable.includes(pid));
+
+  if (receivable.length === 0) {
+    if (typeof toast === 'function') {
+      toast('ไม่มีผู้รับบริการที่รับเวรได้ — ขอให้กะก่อนปิดเวรก่อน', 'warning');
+    }
+    return;
+  }
+
+  await _patHandoverOpenReceiveModal(receivable, skipped);
 }
 
 // ── Admin dropdown ──
