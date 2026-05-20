@@ -827,14 +827,19 @@ function _ssKey(date, shift) {
 }
 
 // ── Group ข้อมูลทั้งหมดเป็น bucket per (date, shift) ──
-function _ssGroupByShift(vitals, excretions, fluids, fromDate, toDate) {
+// [Phase 1 · 20 พ.ค. 69] เพิ่ม 3 data sources: appointments, incidents, nursing handover notes
+function _ssGroupByShift(vitals, excretions, fluids, appointments, incidents, nursingNotes, fromDate, toDate) {
   var buckets = {};
 
   function _add(date, shift, kind, item) {
     if (!date || !shift) return;
     var k = _ssKey(date, shift);
     if (!buckets[k]) {
-      buckets[k] = { date: date, shift: shift, vitals: [], excretions: [], fluids: [] };
+      buckets[k] = {
+        date: date, shift: shift,
+        vitals: [], excretions: [], fluids: [],
+        appointments: [], incidents: [], nursingNotes: []
+      };
     }
     buckets[k][kind].push(item);
   }
@@ -857,6 +862,34 @@ function _ssGroupByShift(vitals, excretions, fluids, fromDate, toDate) {
     if (!r.recorded_at || !r.shift) return;
     var sd = _ssShiftDateOf(r.recorded_at);
     _add(sd, r.shift, 'fluids', r);
+  });
+
+  // ── Appointments: group by appt_date + derive shift from appt_time ──
+  (appointments || []).forEach(function(a) {
+    if (!a.appt_date) return;
+    var shift = 'เช้า'; // default morning if no time
+    if (a.appt_time) {
+      var hour = parseInt(String(a.appt_time).slice(0,2), 10);
+      if (!isNaN(hour)) shift = _ssShiftOf(hour);
+    }
+    _add(a.appt_date, shift, 'appointments', a);
+  });
+
+  // ── Incidents: group by created_at (timestamp) ──
+  (incidents || []).forEach(function(inc) {
+    var ts = inc.created_at;
+    if (!ts) return;
+    var sd = _ssShiftDateOf(ts);
+    var hour = new Date(ts).getHours();
+    _add(sd, _ssShiftOf(hour), 'incidents', inc);
+  });
+
+  // ── Nursing notes: use date + shift fields directly (already in correct format) ──
+  (nursingNotes || []).forEach(function(n) {
+    if (!n.date || !n.shift) return;
+    // เก็บเฉพาะ note ที่มี handover_note (ไม่ noise ด้วย empty)
+    if (!n.handover_note || !String(n.handover_note).trim()) return;
+    _add(n.date, n.shift, 'nursingNotes', n);
   });
 
   // กรองให้อยู่ใน range filter (ใช้ shift_date)
@@ -983,6 +1016,42 @@ function _ssGenerateText(bucket) {
   if (totalInMl > 0 || totalOutMl > 0) {
     var bal = totalInMl - totalOutMl;
     parts.push('Balance ' + (bal >= 0 ? '+' : '') + bal + 'ml');
+  }
+
+  // [Phase 1 · 20 พ.ค. 69] ── Appointments / นัดหมายแพทย์ ──
+  var appointments = bucket.appointments || [];
+  if (appointments.length > 0) {
+    var apptStrs = appointments.map(function(a) {
+      var t = a.appt_time ? String(a.appt_time).slice(0,5) : '';
+      var loc = a.location || a.hospital || '';
+      var purpose = a.purpose || a.title || a.appt_type || 'นัดหมาย';
+      return '📅 ' + (t ? t + ' ' : '') + purpose + (loc ? ' ' + loc : '');
+    });
+    parts.push(apptStrs.join(' | '));
+  }
+
+  // [Phase 1 · 20 พ.ค. 69] ── Incidents / อุบัติเหตุ ──
+  var incidents = bucket.incidents || [];
+  if (incidents.length > 0) {
+    var incStrs = incidents.map(function(inc) {
+      var t = inc.created_at ? new Date(inc.created_at).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', hour12:false}) : '';
+      var type = inc.type || 'อุบัติเหตุ';
+      var detail = (inc.detail || '').slice(0, 60);
+      var sev = inc.severity ? ' [' + inc.severity + ']' : '';
+      return '🚨 ' + (t ? t + ' ' : '') + type + sev + (detail ? ': ' + detail : '');
+    });
+    parts.push(incStrs.join(' | '));
+  }
+
+  // [Phase 1 · 20 พ.ค. 69] ── Nursing handover notes (from บันทึกพยาบาล) ──
+  var nNotes = bucket.nursingNotes || [];
+  if (nNotes.length > 0) {
+    var noteStrs = nNotes.map(function(n) {
+      var by = n.recorded_by || n.created_by || '';
+      var txt = String(n.handover_note || '').trim();
+      return '📝 บันทึกพยาบาล' + (by ? ' (' + by + ')' : '') + ': ' + txt;
+    });
+    parts.push(noteStrs.join(' | '));
   }
 
   // Join เป็น paragraph เดียว
@@ -1132,9 +1201,13 @@ async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
   var fromTs = fromDate ? new Date(fromDate + 'T00:00:00').toISOString() : null;
   var toTs = toDate ? new Date(toDate + 'T23:59:59').toISOString() : null;
 
-  // Load excretions + fluids จาก Supabase (เฉพาะ patient นี้ + range)
+  // Load excretions + fluids + appointments + incidents + nursing notes จาก Supabase
+  // [Phase 1 · 20 พ.ค. 69] เพิ่ม 3 sources: appointments, incidents, nursing_notes
   var excretions = [];
   var fluids = [];
+  var appointments = [];
+  var incidents = [];
+  var nursingNotes = [];
   try {
     var q1 = supa.from('patient_excretions').select('*').eq('patient_id', patientId);
     if (fromTs) q1 = q1.gte('recorded_at', fromTs);
@@ -1147,6 +1220,27 @@ async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
     if (toTs) q2 = q2.lte('recorded_at', toTs);
     var res2 = await q2.order('recorded_at', { ascending: false });
     if (!res2.error) fluids = res2.data || [];
+
+    // ── Appointments — filter by appt_date in range ──
+    var q3 = supa.from('patient_appointments').select('*').eq('patient_id', patientId);
+    if (fromDate) q3 = q3.gte('appt_date', fromDate);
+    if (toDate) q3 = q3.lte('appt_date', toDate);
+    var res3 = await q3.order('appt_date', { ascending: false });
+    if (!res3.error) appointments = res3.data || [];
+
+    // ── Incidents — filter by created_at timestamp ──
+    var q4 = supa.from('incident_reports').select('*').eq('patient_id', patientId);
+    if (fromTs) q4 = q4.gte('created_at', fromTs);
+    if (toTs) q4 = q4.lte('created_at', toTs);
+    var res4 = await q4.order('created_at', { ascending: false });
+    if (!res4.error) incidents = res4.data || [];
+
+    // ── Nursing notes — filter by date (date + shift fields already shifted) ──
+    var q5 = supa.from('nursing_notes').select('*').eq('patient_id', patientId);
+    if (fromDate) q5 = q5.gte('date', fromDate);
+    if (toDate) q5 = q5.lte('date', toDate);
+    var res5 = await q5.order('date', { ascending: false });
+    if (!res5.error) nursingNotes = res5.data || [];
   } catch (e) {
     console.error('[shift-summary] data load error', e);
   }
@@ -1161,8 +1255,8 @@ async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
     return true;
   });
 
-  // Group by shift
-  var buckets = _ssGroupByShift(vitals, excretions, fluids, fromDate, toDate);
+  // Group by shift — pass all 6 data sources
+  var buckets = _ssGroupByShift(vitals, excretions, fluids, appointments, incidents, nursingNotes, fromDate, toDate);
   var keys = Object.keys(buckets).sort(function(a,b){ return b.localeCompare(a); });  // ล่าสุดบน
 
   if (keys.length === 0) {
