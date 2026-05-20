@@ -97,7 +97,7 @@ function renderPatients() {
 
   const tb = document.getElementById('patTable');
   if (pats.length === 0) {
-    tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบข้อมูล</td></tr>';
+    tb.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบข้อมูล</td></tr>';
     return;
   }
   // [Step B-1 · 20 พ.ค. 69] Helper: เช็ค pinned + แสดง separator
@@ -113,7 +113,7 @@ function renderPatients() {
     let separatorRow = '';
     if (pinnedCount > 0 && i === 0) {
       separatorRow = `<tr class="pat-list-separator" aria-hidden="true">
-        <td colspan="10" style="padding:6px 12px;background:#FAEEDA;font-size:11px;font-weight:600;color:#854F0B;border-top:0;">
+        <td colspan="12" style="padding:6px 12px;background:#FAEEDA;font-size:11px;font-weight:600;color:#854F0B;border-top:0;">
           ⭐ ปักหมุด (${pinnedCount} ราย)
         </td>
       </tr>`;
@@ -121,7 +121,7 @@ function renderPatients() {
     if (pinnedCount > 0 && !isPinned && !separatorInserted) {
       separatorInserted = true;
       separatorRow += `<tr class="pat-list-separator" aria-hidden="true">
-        <td colspan="10" style="padding:6px 12px;background:var(--bg-elevated,#f5f3ee);font-size:11px;font-weight:600;color:var(--text2);border-top:0;">
+        <td colspan="12" style="padding:6px 12px;background:var(--bg-elevated,#f5f3ee);font-size:11px;font-weight:600;color:var(--text2);border-top:0;">
           ผู้รับบริการอื่น (${othersCount} ราย)
         </td>
       </tr>`;
@@ -155,7 +155,8 @@ function renderPatients() {
     const hn = p.hn || '';
     const subLine = hn ? `HN ${hn}` : (p.position || '');
 
-    return `${separatorRow}<tr class="${rowClass}">
+    return `${separatorRow}<tr class="${rowClass}" data-patient-id="${p.id}">
+      <td class="ph-col-check" style="text-align:center;display:none;"><input type="checkbox" class="patient-handover-cb" data-patient-id="${p.id}" onclick="patHandoverToggleRow(this)" style="cursor:pointer;width:18px;height:18px;"></td>
       <td data-label="#">${i+1}</td>
       <td data-label="ชื่อ-นามสกุล">
         <div style="display:flex;align-items:center;gap:10px;">
@@ -175,12 +176,22 @@ function renderPatients() {
       <td data-label="วันสิ้นสุดสัญญา">${p.endDate||p.end_date||'—'}</td>
       <td data-label="ระยะเวลา">${dur}</td>
       <td data-label="สถานะ"><span class="badge ${p.status==='active' ? 'badge-green' : p.status==='hospital' ? 'badge-blue' : 'badge-gray'}">${p.status==='active' ? 'พักอยู่' : p.status==='hospital' ? '🏥 อยู่ รพ.' : 'ออกแล้ว'}</span></td>
+      <td class="ph-col-shift" data-label="สถานะเวร" data-patient-id="${p.id}" style="display:none;"><span style="font-size:11px;color:var(--text3);">—</span></td>
       <td data-label="" style="white-space:nowrap;">
         <button class="btn btn-ghost btn-sm" onclick=\"openPatientProfile('${p.id}')\" title="ดูโปรไฟล์">🔍</button>
         <button class="btn btn-ghost btn-sm" onclick=\"editPatient('${p.id}')\" title="แก้ไข">✏️</button>
       </td>
     </tr>`;
   }).join('');
+
+  // [Step B-2a · 20 พ.ค. 69] Initialize handover UI + restore checkbox state
+  if (typeof patHandoverInitUI === 'function') patHandoverInitUI();
+  // Restore checkbox state จาก session
+  const sel = window._patHandoverSelected || {};
+  document.querySelectorAll('.patient-handover-cb').forEach(cb => {
+    if (sel[cb.dataset.patientId]) cb.checked = true;
+  });
+  if (typeof _patHandoverUpdateCounter === 'function') _patHandoverUpdateCounter();
 }
 
 function calcDuration(startDate, endDate) {
@@ -644,3 +655,182 @@ function exportPatientsExcel() {
   });
   _xlsxDownload(rows, 'ผู้รับบริการ', 'navasri_patients_' + new Date().toISOString().slice(0,10));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// [Step B-2a · 20 พ.ค. 69] Handover UI — patient list bulk action bar
+// ─────────────────────────────────────────────────────────────────
+// B-2a = UI skeleton only (action bar + checkbox column + handlers)
+// B-2b = load status + state management + smart button enable/disable
+// B-2c = badge "รออนุมัติ" + ปุ่ม inline สำหรับ admin
+// B-3 = modal "ปิดเวร"
+// B-4 = modal "รับเวร" (พร้อม preview summary)
+// ═══════════════════════════════════════════════════════════════════
+
+// State (per-session)
+window._patHandoverSelected = window._patHandoverSelected || {};  // { patient_id: true }
+
+// Check permission — caregiver/officer/admin/manager/nurse/PT เห็น bulk bar
+function _patHandoverCanOperate() {
+  return typeof hasRole === 'function' && hasRole(
+    'admin', 'manager', 'officer', 'nurse', 'parttime_nurse', 'physical_therapist', 'caregiver'
+  );
+}
+
+// Check permission — admin/manager/nurse/PT-nurse เห็น ⋮ menu
+function _patHandoverCanAdmin() {
+  return typeof hasRole === 'function' && hasRole('admin', 'manager', 'nurse', 'parttime_nurse');
+}
+
+// Show/hide bulk bar + checkbox columns ตาม permission
+// เรียกครั้งเดียวหลัง role พร้อม (เช่น login เสร็จ + page เปิด)
+function patHandoverInitUI() {
+  const bar = document.getElementById('patHandoverBar');
+  if (!bar) return;
+  if (_patHandoverCanOperate()) {
+    bar.style.display = 'flex';
+    // Show checkbox column header + cells
+    document.querySelectorAll('.ph-col-check').forEach(el => { el.style.display = ''; });
+    document.querySelectorAll('.ph-col-shift').forEach(el => { el.style.display = ''; });
+    // Show admin menu wrap ถ้าเป็น admin
+    if (_patHandoverCanAdmin()) {
+      const adminWrap = document.getElementById('patHandoverAdminWrap');
+      if (adminWrap) adminWrap.style.display = 'block';
+    }
+    // Update shift display (B-2b จะ implement)
+    _patHandoverUpdateShiftLabel();
+  }
+}
+
+// Update label "กะ xxx" — ใช้ logic เดียวกับ clinical-vitals._ssDetectCurrentShift
+function _patHandoverUpdateShiftLabel() {
+  const el = document.getElementById('patHandoverShift');
+  if (!el) return;
+  const now = new Date();
+  const hour = now.getHours();
+  const shift = (hour >= 7 && hour < 19) ? 'เช้า' : 'ดึก';
+  el.textContent = '· กะ' + shift + ' ' + now.getDate() + '/' + (now.getMonth()+1);
+}
+
+// ── Checkbox handlers ──
+function patHandoverToggleRow(checkbox) {
+  const pid = checkbox.dataset.patientId;
+  if (!pid) return;
+  if (checkbox.checked) {
+    window._patHandoverSelected[pid] = true;
+  } else {
+    delete window._patHandoverSelected[pid];
+  }
+  _patHandoverUpdateCounter();
+}
+
+function patHandoverToggleAll(checkbox) {
+  const checked = checkbox.checked;
+  document.querySelectorAll('.patient-handover-cb').forEach(cb => {
+    if (cb.disabled) return;
+    if (cb.checked !== checked) {
+      cb.checked = checked;
+      patHandoverToggleRow(cb);
+    }
+  });
+}
+
+function patHandoverSelectPinned() {
+  const pinnedSet = new Set((window._pinnedPatients || []).map(String));
+  if (pinnedSet.size === 0) {
+    if (typeof toast === 'function') toast('ยังไม่ได้ปักหมุดผู้รับบริการ', 'info');
+    return;
+  }
+  let changed = 0;
+  document.querySelectorAll('.patient-handover-cb').forEach(cb => {
+    const pid = cb.dataset.patientId;
+    if (!pinnedSet.has(String(pid))) return;
+    if (cb.disabled) return;
+    if (!cb.checked) {
+      cb.checked = true;
+      patHandoverToggleRow(cb);
+      changed++;
+    }
+  });
+  if (changed === 0 && typeof toast === 'function') toast('ผู้ที่ปักหมุดถูกเลือกครบแล้ว', 'info');
+}
+
+function patHandoverClearSelection() {
+  window._patHandoverSelected = {};
+  document.querySelectorAll('.patient-handover-cb').forEach(cb => {
+    if (cb.checked) cb.checked = false;
+  });
+  const selectAll = document.getElementById('patHandoverSelectAll');
+  if (selectAll) selectAll.checked = false;
+  _patHandoverUpdateCounter();
+}
+
+function _patHandoverUpdateCounter() {
+  const counter = document.getElementById('patHandoverCount');
+  if (!counter) return;
+  const sel = window._patHandoverSelected || {};
+  const count = Object.keys(sel).length;
+  counter.textContent = 'เลือกแล้ว ' + count + ' คน';
+  // ใน B-2b จะ smart enable/disable ตาม status ของคนที่เลือก
+  // ใน B-2a — enable ทุกปุ่มถ้ามีการเลือก (skeleton)
+  const closeBtn = document.getElementById('patHandoverCloseBtn');
+  const receiveBtn = document.getElementById('patHandoverReceiveBtn');
+  if (closeBtn) closeBtn.disabled = (count === 0);
+  if (receiveBtn) receiveBtn.disabled = (count === 0);
+}
+
+// ── Action handlers (B-2a stubs — show alert, real logic ใน B-3/B-4) ──
+function patHandoverCloseSelected() {
+  const count = Object.keys(window._patHandoverSelected || {}).length;
+  if (typeof toast === 'function') {
+    toast('📤 ปิดเวร ' + count + ' คน — ฟีเจอร์นี้กำลังจะมา (B-3)', 'info');
+  }
+}
+
+function patHandoverReceiveSelected() {
+  const count = Object.keys(window._patHandoverSelected || {}).length;
+  if (typeof toast === 'function') {
+    toast('✓ รับเวร ' + count + ' คน — ฟีเจอร์นี้กำลังจะมา (B-4)', 'info');
+  }
+}
+
+// ── Admin dropdown ──
+function patHandoverToggleAdminMenu() {
+  const menu = document.getElementById('patHandoverAdminMenu');
+  if (!menu) return;
+  menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+}
+
+function patHandoverCloseInstead() {
+  if (typeof toast === 'function') toast('🔓 ปิดเวรแทน — ฟีเจอร์นี้กำลังจะมา', 'info');
+  const menu = document.getElementById('patHandoverAdminMenu');
+  if (menu) menu.style.display = 'none';
+}
+
+function patHandoverReopen() {
+  if (typeof toast === 'function') toast('🔓 เปิดเวรใหม่ — ฟีเจอร์นี้กำลังจะมา', 'info');
+  const menu = document.getElementById('patHandoverAdminMenu');
+  if (menu) menu.style.display = 'none';
+}
+
+// ── Close admin menu when clicking outside ──
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('patHandoverAdminMenu');
+  const btn = document.getElementById('patHandoverAdminBtn');
+  if (!menu || !btn) return;
+  if (menu.style.display !== 'block') return;
+  if (btn.contains(e.target) || menu.contains(e.target)) return;
+  menu.style.display = 'none';
+});
+
+// Expose functions to window
+window.patHandoverInitUI = patHandoverInitUI;
+window.patHandoverToggleRow = patHandoverToggleRow;
+window.patHandoverToggleAll = patHandoverToggleAll;
+window.patHandoverSelectPinned = patHandoverSelectPinned;
+window.patHandoverClearSelection = patHandoverClearSelection;
+window.patHandoverCloseSelected = patHandoverCloseSelected;
+window.patHandoverReceiveSelected = patHandoverReceiveSelected;
+window.patHandoverToggleAdminMenu = patHandoverToggleAdminMenu;
+window.patHandoverCloseInstead = patHandoverCloseInstead;
+window.patHandoverReopen = patHandoverReopen;
+
