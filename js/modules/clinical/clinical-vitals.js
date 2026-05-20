@@ -2126,3 +2126,5 @@ window._ssGroupByShift = _ssGroupByShift;
 window._ssGenerateText = _ssGenerateText;
 window._ssLoadManualSummaries = _ssLoadManualSummaries;
 window._ssCloseShift = _ssCloseShift;
+// [Step B-4 · 20 พ.ค. 69] ── Expose สำหรับ B-4 modal "รับเวรที่เลือก" ──
+window._ssReceiveShift = _ssReceiveShift;
