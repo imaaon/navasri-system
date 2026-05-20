@@ -94,6 +94,11 @@ async function doLogin() {
     if (typeof updateLineStatusDot === 'function') updateLineStatusDot();
     if (typeof updateSidebarForRole === 'function') updateSidebarForRole();
     if (typeof recordLastLogin === 'function') recordLastLogin(u);
+    // [Hotfix · 20 พ.ค. 69] Reload pins ของ user ใหม่ (กัน stale state ของ user เก่า)
+    window._pinnedPatients = [];  // clear ก่อนเสมอ
+    if (typeof window.initRecentPinned === 'function') {
+      await window.initRecentPinned();
+    }
     if (typeof showPage === 'function') showPage('dashboard');
     if (typeof renderBottomTabBar === 'function') renderBottomTabBar();
 
@@ -109,6 +114,12 @@ async function doLogout() {
   if (typeof db !== 'undefined') {
     Object.keys(db).forEach(k => { db[k] = Array.isArray(db[k]) ? [] : (typeof db[k] === 'object' ? {} : null); });
   }
+  // [Hotfix · 20 พ.ค. 69] Clear in-memory pin state (กัน stale ตอน switch user)
+  window._pinnedPatients = [];
+  // Also clear handover-related per-session state เผื่อ user เก่าค้าง
+  window._patHandoverSelected = {};
+  window._patHandoverStatusMap = {};
+  window._patHandoverHasVitalMap = {};
   try { sessionStorage.removeItem('navasri_user'); } catch(e) {}
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginUser').value = '';
