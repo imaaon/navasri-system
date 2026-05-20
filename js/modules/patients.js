@@ -45,6 +45,25 @@ function renderPatients() {
   );
   if (statusF) pats = pats.filter(p => p.status === statusF);
 
+  // [Step B-1 · 20 พ.ค. 69] Sort pinned ขึ้นบน — keep order ตาม pin order (newest pin บนสุด)
+  const pinnedIds = window._pinnedPatients || [];
+  if (pinnedIds.length > 0) {
+    const pinnedSet = new Set(pinnedIds.map(String));
+    const pinned = [];
+    const others = [];
+    pats.forEach(p => {
+      if (pinnedSet.has(String(p.id))) pinned.push(p);
+      else others.push(p);
+    });
+    // Sort pinned ตามลำดับใน window._pinnedPatients (recent pin first)
+    pinned.sort((a, b) => {
+      const ia = pinnedIds.findIndex(id => String(id) === String(a.id));
+      const ib = pinnedIds.findIndex(id => String(id) === String(b.id));
+      return ia - ib;
+    });
+    pats = pinned.concat(others);
+  }
+
   // ── KPI counts (based on UNFILTERED full set — like dashboard) ──
   const all = db.patients || [];
   const totalAll    = all.length;
@@ -81,7 +100,33 @@ function renderPatients() {
     tb.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text3);">ไม่พบข้อมูล</td></tr>';
     return;
   }
+  // [Step B-1 · 20 พ.ค. 69] Helper: เช็ค pinned + แสดง separator
+  const pinnedSet = new Set((window._pinnedPatients || []).map(String));
+  const pinnedCount = pats.filter(p => pinnedSet.has(String(p.id))).length;
+  const othersCount = pats.length - pinnedCount;
+  let separatorInserted = false;
+
   tb.innerHTML = pats.map((p, i) => {
+    const isPinned = pinnedSet.has(String(p.id));
+
+    // [Step B-1] Insert separator row ก่อนคนแรกที่ไม่ใช่ pin (เฉพาะถ้ามี pin อย่างน้อย 1)
+    let separatorRow = '';
+    if (pinnedCount > 0 && i === 0) {
+      separatorRow = `<tr class="pat-list-separator" aria-hidden="true">
+        <td colspan="10" style="padding:6px 12px;background:#FAEEDA;font-size:11px;font-weight:600;color:#854F0B;border-top:0;">
+          ⭐ ปักหมุด (${pinnedCount} ราย)
+        </td>
+      </tr>`;
+    }
+    if (pinnedCount > 0 && !isPinned && !separatorInserted) {
+      separatorInserted = true;
+      separatorRow += `<tr class="pat-list-separator" aria-hidden="true">
+        <td colspan="10" style="padding:6px 12px;background:var(--bg-elevated,#f5f3ee);font-size:11px;font-weight:600;color:var(--text2);border-top:0;">
+          ผู้รับบริการอื่น (${othersCount} ราย)
+        </td>
+      </tr>`;
+    }
+
     const idcard = p.idcard || p.idCard || '-';
     // [R9-B] Format เลขบัตรประชาชน: 1234567890123 → 1-2345-67890-12-3
     const idcardFmt = (idcard && idcard !== '-' && idcard.replace(/\D/g, '').length === 13)
@@ -110,7 +155,7 @@ function renderPatients() {
     const hn = p.hn || '';
     const subLine = hn ? `HN ${hn}` : (p.position || '');
 
-    return `<tr class="${rowClass}">
+    return `${separatorRow}<tr class="${rowClass}">
       <td data-label="#">${i+1}</td>
       <td data-label="ชื่อ-นามสกุล">
         <div style="display:flex;align-items:center;gap:10px;">
@@ -118,7 +163,7 @@ function renderPatients() {
             ? `<img src="${p.photo}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--sage);cursor:zoom-in;flex-shrink:0;" onclick=\"showPatientPhoto('${p.id}')\" title="คลิกเพื่อขยาย">`
             : `<div class="pat-avatar-initials ${avatarToneClass}" onclick=\"editPatient('${p.id}')\" title="เพิ่มรูปภาพ">${initials}</div>`}
           <div>
-            <div style="font-weight:600;cursor:pointer;color:var(--accent);line-height:1.3;" onclick=\"openPatientProfile('${p.id}')\">${p.name}</div>
+            <div style="font-weight:600;cursor:pointer;color:var(--accent);line-height:1.3;" onclick=\"openPatientProfile('${p.id}')\">${isPinned ? '<span style="color:#EF9F27;font-size:13px;margin-right:3px;" title="ปักหมุด" aria-label="ปักหมุด">★</span>' : ''}${p.name}</div>
             <div style="font-size:11px;color:var(--text3);">${subLine}</div>
           </div>
         </div>
