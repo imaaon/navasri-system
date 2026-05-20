@@ -1,20 +1,22 @@
 // ═══════════════════════════════════════════════════════════════════
-// PHASE 2 · #4 Shift Handover
+// PHASE 2 · #4 Critical Vitals Overview (เดิม: Shift Handover)
 // ─────────────────────────────────────────────────────────────────
-//   หน้ารายงาน "ส่งเวร" — รวมข้อมูลสำคัญของกะที่จบลงเพื่อส่งต่อกะใหม่
+//   หน้ารายงาน "ภาพรวมค่าวิกฤต" — ดูภาพรวมค่าวิกฤต+เหตุการณ์สำคัญของกะ
+//   (อ่านอย่างเดียว — ไม่มี action รับเวร, การรับ-ส่งเวรย้ายไปที่
+//    Profile → tab Vital Sign ของผู้รับบริการแต่ละคน)
 //
 //   2 กะ:  เช้า 7:00-19:00, ดึก 19:00-7:00
 //
-//   8 Sections:
+//   7 Sections:
 //     1. Shift selector (auto + override)
-//     2. Recorder/ACK info
-//     3. Stats strip
-//     4. 🚨 เร่งด่วน (vital out-of-range + new incident)
-//     5. 🩹 ต้องติดตาม > 24 ชม. (incident infection/bleeding/wound)
-//     6. 💊 ยาสำคัญ (ใหม่/ฉีด/PRN/ปรับเปลี่ยน)
-//     7. 📅 นัดหมาย 24 ชม.ข้างหน้า + preparation
-//     8. 📝 หมายเหตุพิเศษ (handover_note from nursing_notes — editable)
-//   + ปุ่ม ✓ รับเวร (ลง audit trail ใน shift_handover_acks)
+//     2. Stats strip
+//     3. 🚨 เร่งด่วน (vital out-of-range + new incident)
+//     4. 🩹 ต้องติดตาม > 24 ชม. (incident infection/bleeding/wound)
+//     5. 💊 ยาสำคัญ (ใหม่/ฉีด/PRN/ปรับเปลี่ยน)
+//     6. 📅 นัดหมาย 24 ชม.ข้างหน้า + preparation
+//     7. 📝 หมายเหตุพิเศษ (handover_note from nursing_notes — editable)
+//
+//   [Phase 0 Cleanup 20 พ.ค. 69] ลบปุ่ม "✓ รับเวร" + shift_handover_acks
 // ═══════════════════════════════════════════════════════════════════
 
 (function() {
@@ -272,20 +274,14 @@
           .eq('date', date)
           .eq('shift', shift)
           .order('created_at', { ascending: false }),
-        // [8] Existing ACKs สำหรับกะนี้
-        supa.from('shift_handover_acks')
-          .select('*')
-          .eq('shift_date', date)
-          .eq('shift', shift)
-          .order('acked_at', { ascending: true }),
-        // [9] Patient excretions (อุจจาระ/ปัสสาวะ) — ในช่วงเวลาของกะ (เพิ่ม 18 พ.ค. 2569)
+        // [8] Patient excretions (อุจจาระ/ปัสสาวะ) — ในช่วงเวลาของกะ (เพิ่ม 18 พ.ค. 2569)
         supa.from('patient_excretions')
           .select('*')
           .gte('recorded_at', range.start)
           .lte('recorded_at', range.end)
           .order('recorded_at', { ascending: false })
           .limit(200),
-        // [10] Patient fluid records (อาเจียน/อื่นๆ) — ในช่วงเวลาของกะ (เพิ่ม 18 พ.ค. 2569)
+        // [9] Patient fluid records (อาเจียน/อื่นๆ) — ในช่วงเวลาของกะ (เพิ่ม 18 พ.ค. 2569)
         supa.from('patient_fluid_records')
           .select('*')
           .gte('recorded_at', range.start)
@@ -302,9 +298,8 @@
         meds: results[4]?.data || [],
         appointments: results[5]?.data || [],
         nursingNotes: results[6]?.data || [],
-        acks: results[7]?.data || [],
-        excretions: results[8]?.data || [],
-        fluidRecords: results[9]?.data || [],
+        excretions: results[7]?.data || [],
+        fluidRecords: results[8]?.data || [],
       };
     } catch (e) {
       console.error('[handover] fetch error:', e);
@@ -329,7 +324,7 @@
     return '' +
       '<div class="ho-header">' +
         '<div class="ho-title-block">' +
-          '<h1 class="ho-title">📋 ส่งเวร</h1>' +
+          '<h1 class="ho-title">📋 ภาพรวมค่าวิกฤต</h1>' +
           '<div class="ho-subtitle">' + shiftLabel + ' · ' + dateLabel + ' ' + autoLabel + '</div>' +
         '</div>' +
         '<div class="ho-actions">' +
@@ -341,38 +336,6 @@
           '<button class="btn btn-ghost btn-sm" onclick="_handoverPrint()">🖨 พิมพ์</button>' +
           '<button class="btn btn-ghost btn-sm" onclick="_handoverReload()">🔄</button>' +
         '</div>' +
-      '</div>';
-  }
-
-  function _renderACKBar(data) {
-    const acks = data.acks || [];
-    if (acks.length === 0) {
-      return '<div class="ho-ack-bar ho-ack-bar-empty">' +
-        '<span>⏳ ยังไม่มีผู้รับเวรนี้</span>' +
-        '<button class="btn btn-primary btn-sm" onclick="_handoverAck()">✓ รับเวร</button>' +
-        '</div>';
-    }
-    const u = _getCurrentUser();
-    const currentUserName = u?.username || u?.displayName || '';
-    const alreadyAcked = acks.some(function(a) { return a.acked_by === currentUserName; });
-
-    const ackList = acks.map(function(a) {
-      return '<div class="ho-ack-item">' +
-        '<span class="ho-ack-check">✓</span> ' +
-        '<strong>' + _escape(a.acked_by) + '</strong>' +
-        (a.acked_by_role ? ' (' + _escape(a.acked_by_role) + ')' : '') +
-        ' · <span style="color:#888;">' + _thDateTime(a.acked_at) + '</span>' +
-        '</div>';
-    }).join('');
-
-    return '<div class="ho-ack-bar ho-ack-bar-filled">' +
-      '<div class="ho-ack-list">' +
-        '<div class="ho-ack-title">📝 รับเวรแล้ว · ' + acks.length + ' คน</div>' +
-        ackList +
-      '</div>' +
-      (alreadyAcked
-        ? '<span class="ho-ack-you">✓ คุณรับเวรแล้ว</span>'
-        : '<button class="btn btn-primary btn-sm" onclick="_handoverAck()">✓ รับเวร</button>') +
       '</div>';
   }
 
@@ -725,7 +688,6 @@
 
     container.innerHTML =
       _renderShiftHeader() +
-      _renderACKBar(_aggregatedData) +
       _renderStats(_aggregatedData) +
       '<div class="ho-grid">' +
         '<div class="ho-col">' +
@@ -746,35 +708,6 @@
   // ─────────────────────────────────────────────────────────────────
   // ACTIONS
   // ─────────────────────────────────────────────────────────────────
-  async function _ack() {
-    const u = _getCurrentUser();
-    if (!u || !u.username) {
-      if (typeof toast === 'function') toast('กรุณา login ใหม่', 'error');
-      return;
-    }
-    try {
-      const { error } = await supa.from('shift_handover_acks').insert({
-        shift_date: _currentDate,
-        shift: _currentShift,
-        acked_by: u.username,
-        acked_by_role: u.role || u.position || null,
-      });
-      if (error) {
-        if (String(error.message || '').includes('duplicate')) {
-          if (typeof toast === 'function') toast('คุณรับเวรนี้แล้ว', 'info');
-        } else {
-          throw error;
-        }
-      } else {
-        if (typeof toast === 'function') toast('✓ รับเวรเรียบร้อย', 'success');
-      }
-      await render();
-    } catch (e) {
-      console.error('[handover] ack error:', e);
-      if (typeof toast === 'function') toast('บันทึกไม่สำเร็จ: ' + (e.message || e), 'error');
-    }
-  }
-
   function _changeShift() {
     const sel = document.getElementById('ho-shift-select');
     if (sel) _currentShift = sel.value;
@@ -821,7 +754,6 @@
   // EXPORT
   // ─────────────────────────────────────────────────────────────────
   window.renderHandover = render;
-  window._handoverAck = _ack;
   window._handoverChangeShift = _changeShift;
   window._handoverChangeDate = _changeDate;
   window._handoverReload = _reload;
