@@ -747,7 +747,7 @@ async function _patHandoverLoadAllStatus() {
     // Single batch query — fetch summaries for current (shift_date, shift)
     const res = await supa
       .from('patient_shift_summaries')
-      .select('id, patient_id, summary_text, is_closed, closed_by, closed_at, received_by, received_at, reopen_requested, was_reopened')
+      .select('id, patient_id, summary_text, is_closed, closed_by, closed_at, received_by, received_at, reopen_requested, reopen_requested_by, reopen_requested_at, reopen_reason, was_reopened')
       .in('patient_id', patientIds)
       .eq('shift_date', cur.date)
       .eq('shift', cur.shift);
@@ -844,8 +844,16 @@ function _patHandoverStatusBadgeHTML(info, hasVital) {
     txt = '🤝 รับแล้ว · ' + by + (at ? ' · ' + at : '');
     style = 'background:#1f4d38;color:#fff;';
   } else if (st === 'reopen_pending') {
-    txt = '⏳ รออนุมัติ';
-    style = 'background:#fff;color:#854F0B;border:1px solid #854F0B;';
+    // [Step B-2c · 20 พ.ค. 69] Badge + ปุ่ม inline สำหรับ admin
+    const by = (rec && rec.reopen_requested_by) ? rec.reopen_requested_by : '—';
+    let html = '<span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:500;white-space:nowrap;display:inline-block;background:#fff;color:#854F0B;border:1px solid #854F0B;">⏳ รออนุมัติ · ' + _patHandoverEscape(by) + '</span>';
+    // ถ้าเป็น admin/พยาบาล → เพิ่มปุ่ม inline ทันที
+    if (_patHandoverCanAdmin() && rec && rec.id) {
+      const sumId = rec.id;
+      html += ' <button class="btn btn-sm" onclick="patHandoverApproveReopen(' + sumId + ')" style="font-size:10px;padding:2px 6px;margin-left:4px;background:#0F6E56;color:#fff;border:none;border-radius:4px;cursor:pointer;" title="อนุมัติคำขอ">✅</button>';
+      html += '<button class="btn btn-sm" onclick="patHandoverDenyReopen(' + sumId + ')" style="font-size:10px;padding:2px 6px;margin-left:2px;background:#A32D2D;color:#fff;border:none;border-radius:4px;cursor:pointer;" title="ปฏิเสธคำขอ">❌</button>';
+    }
+    return html;
   } else if (st === 'sent') {
     const by = (rec && rec.closed_by) ? rec.closed_by : '—';
     const at = (rec && rec.closed_at) ? new Date(rec.closed_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
@@ -862,6 +870,17 @@ function _patHandoverStatusBadgeHTML(info, hasVital) {
     style = 'background:#FAEEDA;color:#854F0B;';
   }
   return '<span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:500;white-space:nowrap;display:inline-block;' + style + '">' + txt + '</span>';
+}
+
+// ── Helper: escape HTML for safe display ──
+function _patHandoverEscape(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // ── Update checkbox state — disable คนที่ติ๊กไม่ได้ ──
@@ -1015,6 +1034,69 @@ function patHandoverReopen() {
   if (menu) menu.style.display = 'none';
 }
 
+// [Step B-2c · 20 พ.ค. 69] ── Approve / Deny reopen request (inline ในแถว) ──
+async function patHandoverApproveReopen(summaryId) {
+  if (!summaryId) return;
+  if (typeof supa === 'undefined') return;
+  if (!_patHandoverCanAdmin()) {
+    if (typeof toast === 'function') toast('คุณไม่มีสิทธิ์อนุมัติคำขอ', 'error');
+    return;
+  }
+  if (typeof customConfirm === 'function') {
+    if (!(await customConfirm('อนุมัติคำขอเปิดเวรนี้? — caregiver จะแก้ summary ได้อีกครั้ง'))) return;
+  } else {
+    if (!confirm('อนุมัติคำขอเปิดเวรนี้?')) return;
+  }
+  try {
+    // อนุมัติ = reopen ตามคำขอ (clear request flags + set is_closed=false + was_reopened=true)
+    const res = await supa.from('patient_shift_summaries').update({
+      is_closed: false,
+      closed_at: null,
+      closed_by: null,
+      was_reopened: true,
+      reopen_requested: false,
+      reopen_requested_at: null,
+      reopen_requested_by: null,
+      reopen_reason: null
+    }).eq('id', summaryId).select().single();
+    if (res.error) throw res.error;
+    if (typeof toast === 'function') toast('✅ อนุมัติแล้ว — caregiver แก้ summary ได้', 'success');
+    // Refresh status + re-render
+    await _patHandoverLoadAllStatus();
+  } catch (e) {
+    if (typeof toast === 'function') toast('อนุมัติไม่สำเร็จ: ' + (e.message || e), 'error');
+    console.error('[handover] approve reopen error:', e);
+  }
+}
+
+async function patHandoverDenyReopen(summaryId) {
+  if (!summaryId) return;
+  if (typeof supa === 'undefined') return;
+  if (!_patHandoverCanAdmin()) {
+    if (typeof toast === 'function') toast('คุณไม่มีสิทธิ์ปฏิเสธคำขอ', 'error');
+    return;
+  }
+  if (typeof customConfirm === 'function') {
+    if (!(await customConfirm('ปฏิเสธคำขอเปิดเวรนี้? — caregiver จะแก้ summary ไม่ได้'))) return;
+  } else {
+    if (!confirm('ปฏิเสธคำขอเปิดเวรนี้?')) return;
+  }
+  try {
+    const res = await supa.from('patient_shift_summaries').update({
+      reopen_requested: false,
+      reopen_requested_at: null,
+      reopen_requested_by: null,
+      reopen_reason: null
+    }).eq('id', summaryId).select().single();
+    if (res.error) throw res.error;
+    if (typeof toast === 'function') toast('❌ ปฏิเสธคำขอแล้ว', 'success');
+    await _patHandoverLoadAllStatus();
+  } catch (e) {
+    if (typeof toast === 'function') toast('ปฏิเสธไม่สำเร็จ: ' + (e.message || e), 'error');
+    console.error('[handover] deny reopen error:', e);
+  }
+}
+
 // ── Close admin menu when clicking outside ──
 document.addEventListener('click', function(e) {
   const menu = document.getElementById('patHandoverAdminMenu');
@@ -1036,6 +1118,9 @@ window.patHandoverReceiveSelected = patHandoverReceiveSelected;
 window.patHandoverToggleAdminMenu = patHandoverToggleAdminMenu;
 window.patHandoverCloseInstead = patHandoverCloseInstead;
 window.patHandoverReopen = patHandoverReopen;
+// [Step B-2c · 20 พ.ค. 69] inline admin actions ใน badge แถว
+window.patHandoverApproveReopen = patHandoverApproveReopen;
+window.patHandoverDenyReopen = patHandoverDenyReopen;
 // [Step B-2b] expose load function สำหรับ refresh แบบ programmatic ก่อนทำ action ใหญ่
 window._patHandoverLoadAllStatus = _patHandoverLoadAllStatus;
 
