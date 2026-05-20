@@ -15,6 +15,8 @@
   // ── Constants ─────────────────────────────────────────────────────
   const LS_KEY_RECENT = 'navasri_recent_patients';
   const RECENT_LIMIT = 5;
+  // [Phase 3 · 20 พ.ค. 69] จำกัดจำนวน pin ต่อ user เพื่อรองรับ bulk handover workflow
+  const PIN_LIMIT = 7;
 
   // ── State (memory cache) ──────────────────────────────────────────
   window._pinnedPatients = window._pinnedPatients || [];  // array of patient IDs
@@ -133,6 +135,13 @@
         if (typeof toast === 'function') toast('ยกเลิกการปักหมุดแล้ว', 'info');
       } else {
         // pin
+        // [Phase 3 · 20 พ.ค. 69] เช็ค limit ก่อน insert
+        if (window._pinnedPatients.length >= PIN_LIMIT) {
+          if (typeof toast === 'function') {
+            toast('ปักหมุดได้สูงสุด ' + PIN_LIMIT + ' คน — กรุณายกเลิกการปักหมุดคนที่ไม่ต้องการก่อน', 'warning');
+          }
+          return false;
+        }
         const { error } = await supa
           .from('user_pins')
           .insert({ user_auth_id: u.authId, patient_id: patientId });
