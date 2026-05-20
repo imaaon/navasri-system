@@ -2118,3 +2118,11 @@ window._ssDenyReopenAction = async function(patientId, pid, date, shift) {
   toast('ปฏิเสธคำขอแล้ว', 'success');
   await _ssRerender(patientId, pid);
 };
+
+// [Step B-3 · 20 พ.ค. 69] ── Expose helpers สำหรับ patient-list bulk close ──
+// ใช้โดย patients.js (B-3 modal "ปิดเวรที่เลือก")
+window._ssKey = _ssKey;
+window._ssGroupByShift = _ssGroupByShift;
+window._ssGenerateText = _ssGenerateText;
+window._ssLoadManualSummaries = _ssLoadManualSummaries;
+window._ssCloseShift = _ssCloseShift;

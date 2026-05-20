@@ -1000,13 +1000,312 @@ function patHandoverClearSelection() {
   _patHandoverUpdateCounter();
 }
 
-// ── Action handlers (B-2a stubs — show alert, real logic ใน B-3/B-4) ──
-function patHandoverCloseSelected() {
-  const count = Object.keys(window._patHandoverSelected || {}).length;
-  if (typeof toast === 'function') {
-    toast('📤 ปิดเวร ' + count + ' คน — ฟีเจอร์นี้กำลังจะมา (B-3)', 'info');
+// ═══════════════════════════════════════════════════════════════════
+// [Step B-3 · 20 พ.ค. 69] Modal "ปิดเวรที่เลือก"
+// ═══════════════════════════════════════════════════════════════════
+
+// Generate auto-summary text สำหรับ patient 1 คน — เรียก clinical-vitals helpers
+async function _patHandoverGenerateAutoText(patientId, cur) {
+  // ถ้า clinical-vitals helpers ไม่พร้อม → fallback text
+  if (typeof window._ssGroupByShift !== 'function' || typeof window._ssGenerateText !== 'function') {
+    return '[Auto-generated] สรุปเวร' + cur.shift + ' ' + _patHandoverFormatDate(cur.date);
+  }
+  if (typeof supa === 'undefined') {
+    return '[Auto-generated] สรุปเวร' + cur.shift + ' ' + _patHandoverFormatDate(cur.date);
+  }
+
+  try {
+    // Build time range ของกะ
+    const startHour = (cur.shift === 'เช้า') ? '07:00:00' : '19:00:00';
+    let endShiftDate = cur.date;
+    const endHour = (cur.shift === 'เช้า') ? '19:00:00' : '07:00:00';
+    if (cur.shift === 'ดึก') {
+      const d = new Date(cur.date);
+      d.setDate(d.getDate() + 1);
+      endShiftDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+    const startTs = new Date(cur.date + 'T' + startHour).toISOString();
+    const endTs = new Date(endShiftDate + 'T' + endHour).toISOString();
+
+    // Load 6 data sources (เหมือนใน clinical-vitals._ssRenderSection)
+    const [vRes, exRes, flRes, apRes, inRes, nnRes] = await Promise.all([
+      supa.from('vital_signs').select('*').eq('patient_id', patientId).gte('recorded_at', startTs).lte('recorded_at', endTs).order('recorded_at', { ascending: false }),
+      supa.from('patient_excretions').select('*').eq('patient_id', patientId).gte('recorded_at', startTs).lte('recorded_at', endTs).order('recorded_at', { ascending: false }),
+      supa.from('patient_fluid_records').select('*').eq('patient_id', patientId).gte('recorded_at', startTs).lte('recorded_at', endTs).order('recorded_at', { ascending: false }),
+      supa.from('patient_appointments').select('*').eq('patient_id', patientId).eq('appt_date', cur.date).order('appt_time', { ascending: true }),
+      supa.from('incident_reports').select('*').eq('patient_id', patientId).gte('created_at', startTs).lte('created_at', endTs).order('created_at', { ascending: false }),
+      supa.from('nursing_notes').select('*').eq('patient_id', patientId).eq('date', cur.date).eq('shift', cur.shift)
+    ]);
+
+    const vitals = (vRes && !vRes.error) ? (vRes.data || []) : [];
+    const excretions = (exRes && !exRes.error) ? (exRes.data || []) : [];
+    const fluids = (flRes && !flRes.error) ? (flRes.data || []) : [];
+    const appointments = (apRes && !apRes.error) ? (apRes.data || []) : [];
+    const incidents = (inRes && !inRes.error) ? (inRes.data || []) : [];
+    const nursingNotes = (nnRes && !nnRes.error) ? (nnRes.data || []) : [];
+
+    // Group → ดึง bucket ของกะปัจจุบัน → generate text
+    const buckets = window._ssGroupByShift(vitals, excretions, fluids, appointments, incidents, nursingNotes, cur.date, cur.date);
+    const key = (typeof window._ssKey === 'function') ? window._ssKey(cur.date, cur.shift) : (cur.date + '|' + cur.shift);
+    const bucket = buckets[key];
+    if (!bucket) return '⚠️ ไม่มีข้อมูลในกะ' + cur.shift + ' ' + _patHandoverFormatDate(cur.date) + ' — กรุณาเพิ่ม note ก่อนปิดเวร หรือยืนยันว่าผู้รับบริการอาการปกติ';
+    return window._ssGenerateText(bucket);
+  } catch (e) {
+    console.warn('[handover] auto-gen text error', e);
+    return '[Auto-generated] สรุปเวร' + cur.shift + ' ' + _patHandoverFormatDate(cur.date);
   }
 }
+
+// Format date YYYY-MM-DD → DD/MM/YY (Buddhist year short)
+function _patHandoverFormatDate(ymd) {
+  if (!ymd) return '';
+  const p = ymd.split('-');
+  if (p.length !== 3) return ymd;
+  const buddhistYear = (parseInt(p[0], 10) + 543).toString().slice(-2);
+  return p[2] + '/' + p[1] + '/' + buddhistYear;
+}
+
+// Open modal — สร้าง DOM แบบ dynamic
+async function _patHandoverOpenCloseModal(patientIds) {
+  const cur = _patHandoverDetectShift();
+  const statusMap = window._patHandoverStatusMap || {};
+
+  // Build patient info + initial summary text
+  const items = patientIds.map(pid => {
+    const p = (db.patients || []).find(p => String(p.id) === String(pid));
+    const info = statusMap[String(pid)];
+    return {
+      patient: p,
+      patientId: pid,
+      status: info ? info.status : 'no_data',
+      existingText: (info && info.record && info.record.summary_text) ? info.record.summary_text : '',
+      summaryText: '' // จะ fill หลังโหลด auto-gen
+    };
+  }).filter(it => it.patient);
+
+  if (items.length === 0) return;
+
+  // ── Build overlay + modal ──
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'display:flex;align-items:flex-start;justify-content:center;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;overflow-y:auto;padding:30px 16px;';
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'background:#fff;border-radius:12px;padding:0;width:720px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;';
+
+  // Header
+  let headerHTML =
+    '<div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
+    '  <div>' +
+    '    <div style="font-size:17px;font-weight:700;color:var(--accent2);">📤 ปิดเวรของผู้รับบริการ ' + items.length + ' คน</div>' +
+    '    <div style="font-size:12px;color:var(--text2);margin-top:2px;">เวร' + cur.shift + ' ' + _patHandoverFormatDate(cur.date) + '</div>' +
+    '  </div>' +
+    '  <button id="pat-close-modal-x" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3);padding:0 6px;line-height:1;">✕</button>' +
+    '</div>' +
+    '<div style="background:var(--warning-bg, #fff3d4);border-left:4px solid var(--warning-text, #b88240);padding:10px 14px;margin:0;font-size:12px;color:#8a4d00;line-height:1.5;">' +
+    '⚠️ หลังกดยืนยัน — summary จะถูก lock <br>caregiver ต้องขออนุมัติเพื่อแก้ไขภายหลัง' +
+    '</div>';
+
+  // Body — list ของแต่ละคน
+  let bodyHTML = '<div id="pat-close-modal-body" style="padding:14px 22px;overflow-y:auto;flex:1;">';
+  items.forEach((item, idx) => {
+    const p = item.patient;
+    const room = p.roomNumber || p.room || '—';
+    const sumId = 'pat-close-sum-' + item.patientId;
+    let statusBadge = '';
+    if (item.status === 'draft') statusBadge = '<span style="font-size:10px;background:#E1F5EE;color:#0F6E56;padding:2px 6px;border-radius:8px;">📝 มี summary เดิม</span>';
+    else statusBadge = '<span style="font-size:10px;background:#E6F1FB;color:#185FA5;padding:2px 6px;border-radius:8px;">⚪ เริ่มใหม่</span>';
+
+    bodyHTML +=
+      '<div style="border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:10px;background:#fff;">' +
+      '  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px;">' +
+      '    <div style="font-size:14px;font-weight:600;color:var(--text);">' +
+      '      ' + (idx+1) + '. ' + _patHandoverEscape(p.name || '-') +
+      '      <span style="font-size:11px;color:var(--text3);font-weight:400;">· ห้อง ' + _patHandoverEscape(room) + '</span>' +
+      '    </div>' +
+      '    ' + statusBadge +
+      '  </div>' +
+      '  <textarea id="' + sumId + '" style="width:100%;min-height:100px;padding:8px 10px;font-size:12px;line-height:1.55;border:1px solid var(--border);border-radius:6px;font-family:inherit;resize:vertical;background:#fff;color:var(--text);" placeholder="กำลังโหลดสรุปอัตโนมัติ..."></textarea>' +
+      '</div>';
+  });
+  bodyHTML += '</div>';
+
+  // Footer
+  const footerHTML =
+    '<div id="pat-close-modal-progress" style="display:none;padding:10px 22px;background:#f5f3ee;border-top:1px solid var(--border);font-size:12px;color:var(--text2);"></div>' +
+    '<div style="padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;">' +
+    '  <button id="pat-close-cancel" class="btn btn-ghost" style="font-size:13px;padding:10px 20px;">❌ ยกเลิก</button>' +
+    '  <button id="pat-close-confirm" class="btn btn-primary" disabled style="font-size:13px;padding:10px 22px;background:#1f4d38;border-color:#1f4d38;color:#fff;font-weight:600;">⏳ กรุณารอ 2 วินาที</button>' +
+    '</div>';
+
+  modal.innerHTML = headerHTML + bodyHTML + footerHTML;
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Close handlers
+  function close() {
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }
+  modal.querySelector('#pat-close-modal-x').addEventListener('click', close);
+  modal.querySelector('#pat-close-cancel').addEventListener('click', close);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) close();
+  });
+
+  // ── Load auto-gen text (parallel) ──
+  await Promise.all(items.map(async (item) => {
+    let text = item.existingText;
+    if (!text) text = await _patHandoverGenerateAutoText(item.patientId, cur);
+    item.summaryText = text;
+    const ta = modal.querySelector('#pat-close-sum-' + item.patientId);
+    if (ta) {
+      ta.value = text;
+      ta.placeholder = '';
+    }
+  }));
+
+  // Enable confirm button หลัง 2 วินาที (ป้องกัน accidental click)
+  setTimeout(function() {
+    const btn = modal.querySelector('#pat-close-confirm');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '✅ ยืนยันปิดเวร ' + items.length + ' คน';
+    }
+  }, 2000);
+
+  // Confirm handler
+  modal.querySelector('#pat-close-confirm').addEventListener('click', async function() {
+    await _patHandoverSubmitCloseAll(modal, items, cur, close);
+  });
+}
+
+// Submit ปิดเวรทีละคน (sequential)
+async function _patHandoverSubmitCloseAll(modal, items, cur, closeFn) {
+  const confirmBtn = modal.querySelector('#pat-close-confirm');
+  const cancelBtn = modal.querySelector('#pat-close-cancel');
+  const progressEl = modal.querySelector('#pat-close-modal-progress');
+  if (!confirmBtn || !progressEl) return;
+
+  confirmBtn.disabled = true;
+  cancelBtn.disabled = true;
+  progressEl.style.display = 'block';
+
+  let success = 0, fail = 0;
+  const failList = [];
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const p = item.patient;
+    progressEl.textContent = '⏳ กำลังปิด ' + (i+1) + '/' + items.length + ' — ' + (p.name || '-') + '...';
+
+    // อ่าน text ปัจจุบันจาก textarea (เผื่อ user แก้)
+    const ta = modal.querySelector('#pat-close-sum-' + item.patientId);
+    const finalText = ta ? (ta.value || '').trim() : item.summaryText;
+    if (!finalText) {
+      fail++;
+      failList.push((p.name || '-') + ' (summary ว่าง)');
+      continue;
+    }
+
+    try {
+      // Re-check status — ป้องกัน race
+      const checkRes = await supa
+        .from('patient_shift_summaries')
+        .select('id, is_closed, received_by')
+        .eq('patient_id', item.patientId)
+        .eq('shift_date', cur.date)
+        .eq('shift', cur.shift)
+        .maybeSingle();
+
+      if (checkRes && checkRes.data) {
+        if (checkRes.data.received_by) {
+          fail++;
+          failList.push((p.name || '-') + ' (มีคนรับเวรไปแล้ว)');
+          continue;
+        }
+        if (checkRes.data.is_closed) {
+          fail++;
+          failList.push((p.name || '-') + ' (ปิดเวรไปแล้วโดยคนอื่น)');
+          continue;
+        }
+      }
+
+      // Pre-load _shiftSummaryCache สำหรับ _ssCloseShift (ใช้ existing.id)
+      if (typeof window._ssLoadManualSummaries === 'function') {
+        await window._ssLoadManualSummaries(item.patientId);
+      }
+
+      // เรียก _ssCloseShift (ตัวจริง — handles edit log + upsert logic)
+      let res;
+      if (typeof window._ssCloseShift === 'function') {
+        res = await window._ssCloseShift(item.patientId, cur.date, cur.shift, finalText);
+      } else {
+        // Fallback — direct DB call ถ้า clinical-vitals helper ไม่พร้อม
+        const user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+        const payload = {
+          patient_id: item.patientId,
+          shift_date: cur.date,
+          shift: cur.shift,
+          summary_text: finalText,
+          recorded_by: user,
+          is_closed: true,
+          closed_at: new Date().toISOString(),
+          closed_by: user,
+          reopen_requested: false,
+          reopen_requested_at: null,
+          reopen_requested_by: null,
+          reopen_reason: null
+        };
+        if (checkRes && checkRes.data && checkRes.data.id) {
+          res = await supa.from('patient_shift_summaries').update(payload).eq('id', checkRes.data.id).select().single();
+        } else {
+          res = await supa.from('patient_shift_summaries').insert(payload).select().single();
+        }
+      }
+
+      if (res && res.error) {
+        fail++;
+        failList.push((p.name || '-') + ' (' + res.error.message + ')');
+      } else {
+        success++;
+      }
+    } catch (e) {
+      fail++;
+      failList.push((p.name || '-') + ' (' + (e.message || e) + ')');
+    }
+  }
+
+  // Show result
+  progressEl.innerHTML =
+    '<div style="color:#0F6E56;font-weight:600;">✓ ปิดเวรสำเร็จ ' + success + ' คน</div>' +
+    (fail > 0 ? '<div style="color:#A32D2D;margin-top:4px;">✗ ไม่สำเร็จ ' + fail + ' คน: ' + _patHandoverEscape(failList.join(', ')) + '</div>' : '');
+
+  confirmBtn.textContent = '✓ ปิด';
+  confirmBtn.disabled = false;
+  cancelBtn.disabled = false;
+
+  // Clear selected ที่ success
+  if (success > 0) {
+    items.forEach(item => { delete window._patHandoverSelected[item.patientId]; });
+  }
+
+  // Refresh status map → re-paint badges
+  if (typeof _patHandoverLoadAllStatus === 'function') {
+    await _patHandoverLoadAllStatus();
+  }
+  // Refresh patient list rendering (clear checkbox + update count)
+  if (typeof renderPatients === 'function') {
+    renderPatients();
+  }
+
+  // Auto-close หลัง 2 วินาทีถ้าทุกคนสำเร็จ
+  if (fail === 0) {
+    setTimeout(closeFn, 2000);
+  } else {
+    confirmBtn.addEventListener('click', closeFn, { once: true });
+  }
+}
+
 
 function patHandoverReceiveSelected() {
   const count = Object.keys(window._patHandoverSelected || {}).length;
