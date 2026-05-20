@@ -1091,9 +1091,18 @@ function _ssCanApproveReopen() {
 function _ssIsCaregiver() {
   return typeof hasRole === 'function' && hasRole('caregiver');
 }
+// [Phase 2 · 20 พ.ค. 69] roles ที่ทำ handover operations ได้ (ส่ง/รับเวร)
+// admin/manager/officer/nurse/parttime_nurse/physical_therapist/caregiver
+// doctor = view only (ไม่เห็นปุ่ม), dietitian/warehouse = ไม่เห็นทั้ง section
+function _ssCanOperateHandover() {
+  return typeof hasRole === 'function' && hasRole(
+    'admin','manager','officer','nurse','parttime_nurse','physical_therapist','caregiver'
+  );
+}
 
 // ── Save summary (insert หรือ update) ──
 // guard: ถ้าเวรปิดแล้ว และผู้ใช้ไม่ใช่ admin/manager/nurse → ห้ามแก้
+// [Phase 2 · 20 พ.ค. 69] log edit ถ้า existing.was_reopened === true
 async function _ssSaveSummary(patientId, shiftDate, shift, text) {
   var user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
   var existing = (window._shiftSummaryCache[patientId] || {})[_ssKey(shiftDate, shift)];
@@ -1109,6 +1118,10 @@ async function _ssSaveSummary(patientId, shiftDate, shift, text) {
     recorded_by: user
   };
   if (existing && existing.id) {
+    // [Phase 2] ถ้าเวรเคยถูก reopen → log edit history ก่อน update
+    if (existing.was_reopened === true && existing.summary_text !== text) {
+      await _ssLogEdit(existing.id, existing.summary_text || '', text, 'after_reopen');
+    }
     return supa.from('patient_shift_summaries').update(payload).eq('id', existing.id).select().single();
   } else {
     return supa.from('patient_shift_summaries').insert(payload).select().single();
@@ -1131,6 +1144,10 @@ async function _ssDeleteSummary(patientId, shiftDate, shift) {
 async function _ssCloseShift(patientId, shiftDate, shift, finalText) {
   var user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
   var existing = (window._shiftSummaryCache[patientId] || {})[_ssKey(shiftDate, shift)];
+  // [Phase 2] ถ้าเวรเคย reopen + กำลังจะปิดอีก → log edit ตอนปิด (final edit)
+  if (existing && existing.id && existing.was_reopened === true && existing.summary_text !== finalText) {
+    await _ssLogEdit(existing.id, existing.summary_text || '', finalText, 'close_after_reopen');
+  }
   var payload = {
     patient_id: patientId,
     shift_date: shiftDate,
@@ -1152,6 +1169,27 @@ async function _ssCloseShift(patientId, shiftDate, shift, finalText) {
   }
 }
 
+// [Phase 2 · 20 พ.ค. 69] ── Log edit ใน patient_shift_summary_edits ──
+// เรียกจาก _ssSaveSummary เมื่อพบว่า existing.was_reopened === true (แก้หลังปิดเวรไป)
+async function _ssLogEdit(summaryId, oldText, newText, context) {
+  if (!summaryId) return; // ไม่มี id = insert ใหม่ ไม่ต้อง log
+  var user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+  var role = (typeof currentUser !== 'undefined') ? (currentUser.role || '') : '';
+  try {
+    await supa.from('patient_shift_summary_edits').insert({
+      summary_id: summaryId,
+      edited_by: user,
+      edited_by_role: role,
+      old_text: oldText || '',
+      new_text: newText || '',
+      edit_context: context || 'after_reopen'
+    });
+  } catch (e) {
+    // ไม่ throw — edit history ล้มเหลวไม่ควรบล็อกการ save
+    console.warn('[shift-summary] log edit failed:', e);
+  }
+}
+
 // ── เปิดเวรใหม่ (reopen) — ใช้ได้กับ admin/manager/nurse/pt-nurse/doctor ──
 async function _ssReopenShift(patientId, shiftDate, shift) {
   var existing = (window._shiftSummaryCache[patientId] || {})[_ssKey(shiftDate, shift)];
@@ -1160,10 +1198,26 @@ async function _ssReopenShift(patientId, shiftDate, shift) {
     is_closed: false,
     closed_at: null,
     closed_by: null,
+    was_reopened: true,  // [Phase 2] flag เพื่อ trigger edit history
     reopen_requested: false,
     reopen_requested_at: null,
     reopen_requested_by: null,
     reopen_reason: null
+  }).eq('id', existing.id).select().single();
+}
+
+// [Phase 2 · 20 พ.ค. 69] ── รับเวร (caregiver กะถัดมา) ──
+async function _ssReceiveShift(patientId, shiftDate, shift) {
+  var user = (typeof currentUser !== 'undefined') ? (currentUser.displayName || currentUser.username || '') : '';
+  var role = (typeof currentUser !== 'undefined') ? (currentUser.role || '') : '';
+  var existing = (window._shiftSummaryCache[patientId] || {})[_ssKey(shiftDate, shift)];
+  if (!existing || !existing.id) return { error: { message: 'ไม่พบสรุปเวรนี้' } };
+  if (!existing.is_closed) return { error: { message: 'ต้องปิดเวรก่อนถึงจะรับเวรได้' } };
+  if (existing.received_by) return { error: { message: 'เวรนี้ถูกรับไปแล้วโดย ' + existing.received_by } };
+  return supa.from('patient_shift_summaries').update({
+    received_at: new Date().toISOString(),
+    received_by: user,
+    received_by_role: role
   }).eq('id', existing.id).select().single();
 }
 
@@ -1297,11 +1351,16 @@ async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
     html += '    <div style="font-weight:700;color:var(--accent2);font-size:14px;flex:1;">📋 สรุปเวร' + b.shift + ' <span style="color:var(--text2);font-weight:500;">' + dateThai + '</span></div>';
 
     // ── Badge ──
+    // [Phase 2 · 20 พ.ค. 69] เพิ่ม badge "🤝 รับแล้ว" สำหรับเวรที่ปิดแล้ว+มีคนรับแล้ว
+    var isReceived = !!(override && override.received_by);
     if (isReopenPending) {
       html += '    <span style="font-size:10px;background:#fff;color:var(--warning-text);border:1.5px solid var(--warning-text);padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">⏳ รออนุมัติเปิดเวร</span>';
+    } else if (isClosed && isReceived) {
+      var receivedAt = override.received_at ? new Date(override.received_at).toLocaleString('th-TH',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '';
+      html += '    <span style="font-size:10px;background:#1f4d38;color:#fff;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">🤝 รับแล้ว · ' + _escapeHtml(override.received_by || '—') + ' · ' + receivedAt + '</span>';
     } else if (isClosed) {
       var closedAt = override.closed_at ? new Date(override.closed_at).toLocaleString('th-TH',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}) : '';
-      html += '    <span style="font-size:10px;background:var(--success-text);color:#fff;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">🔒 ปิดเวรแล้ว · ' + (override.closed_by || '—') + ' · ' + closedAt + '</span>';
+      html += '    <span style="font-size:10px;background:var(--success-text);color:#fff;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">🔒 ปิดเวรแล้ว · ' + _escapeHtml(override.closed_by || '—') + ' · ' + closedAt + '</span>';
     } else if (isManual) {
       html += '    <span style="font-size:10px;background:var(--warning-bg);color:var(--warning-text);padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;">✏️ แก้ไขแล้ว</span>';
     } else {
@@ -1338,6 +1397,10 @@ async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
       html += '    <button class="btn btn-primary btn-sm" onclick="_ssOpenCloseModal(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\',\'' + summaryId + '\')" style="font-size:11px;font-weight:600;">🔒 ปิดเวร / สรุปส่งเวร</button>';
     } else {
       // ปิดแล้ว — โชว์ปุ่มเปิดเวร / ขออนุมัติ
+      // [Phase 2 · 20 พ.ค. 69] เพิ่มปุ่ม "✓ รับเวร" ถ้าปิดแล้วและยังไม่มีคนรับ
+      if (isClosed && !isReceived && _ssCanOperateHandover()) {
+        html += '    <button class="btn btn-primary btn-sm" onclick="_ssDoReceive(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\')" style="font-size:11px;font-weight:600;background:#1f4d38;border-color:#1f4d38;">✓ รับเวร</button>';
+      }
       if (_ssCanReopenDirectly()) {
         html += '    <button class="btn btn-ghost btn-sm" onclick="_ssDoReopen(\'' + patientId + '\',\'' + pid + '\',\'' + b.date + '\',\'' + b.shift + '\')" style="font-size:11px;color:var(--orange);">🔓 เปิดเวรใหม่</button>';
       } else if (_ssIsCaregiver() && !isReopenPending) {
@@ -1582,6 +1645,17 @@ window._ssDoReopen = async function(patientId, pid, date, shift) {
   if (!window._shiftSummaryCache[patientId]) window._shiftSummaryCache[patientId] = {};
   window._shiftSummaryCache[patientId][_ssKey(date, shift)] = res.data;
   toast('เปิดเวรใหม่แล้ว', 'success');
+  await _ssRerender(patientId, pid);
+};
+
+// [Phase 2 · 20 พ.ค. 69] รับเวร — caregiver กะถัดมาบันทึกว่ารับช่วงต่อแล้ว
+window._ssDoReceive = async function(patientId, pid, date, shift) {
+  if (!(await customConfirm('รับเวรนี้? — ระบบจะบันทึกชื่อคุณเป็นผู้รับเวร'))) return;
+  var res = await _ssReceiveShift(patientId, date, shift);
+  if (res.error) { toast('รับเวรไม่สำเร็จ: ' + res.error.message, 'error'); return; }
+  if (!window._shiftSummaryCache[patientId]) window._shiftSummaryCache[patientId] = {};
+  window._shiftSummaryCache[patientId][_ssKey(date, shift)] = res.data;
+  toast('✓ รับเวรเรียบร้อย', 'success');
   await _ssRerender(patientId, pid);
 };
 
