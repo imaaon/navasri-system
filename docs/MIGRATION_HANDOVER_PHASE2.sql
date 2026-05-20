@@ -43,8 +43,8 @@ COMMENT ON COLUMN patient_shift_summaries.was_reopened IS '[Phase 2] flag — �
 -- ───────────────────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS patient_shift_summary_edits (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  summary_id UUID NOT NULL REFERENCES patient_shift_summaries(id) ON DELETE CASCADE,
+  id BIGSERIAL PRIMARY KEY,
+  summary_id BIGINT NOT NULL REFERENCES patient_shift_summaries(id) ON DELETE CASCADE,
   edited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   edited_by TEXT NOT NULL,
   edited_by_role TEXT,
