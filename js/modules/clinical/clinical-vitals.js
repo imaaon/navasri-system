@@ -715,6 +715,16 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
         <div style="text-align:center;color:var(--text3);font-size:13px;">กำลังโหลด...</div>
       </div>
     </div>
+
+    <!-- [Phase 3 · 20 พ.ค. 69] ── 📤 ส่งเวรหลายคนพร้อมกัน ── -->
+    <div class="card" id="ss-bulk-card" style="margin-top:14px;display:none;">
+      <div class="card-header" style="border-bottom:1px solid var(--border);padding:12px 16px;">
+        <div class="card-title" style="font-size:14px;color:var(--accent2);">📤 ส่งเวรหลายคนพร้อมกัน <span style="font-size:11px;color:var(--text3);font-weight:400;">— ใช้ปักหมุดเพื่อจัดลำดับผู้รับบริการของคุณ</span></div>
+      </div>
+      <div id="ss-bulk-container" style="padding:14px;">
+        <div style="text-align:center;color:var(--text3);font-size:13px;">กำลังโหลด...</div>
+      </div>
+    </div>
   `;
   // Render shift summary section async (หลัง innerHTML ถูก mount)
   setTimeout(function() {
@@ -723,6 +733,13 @@ function renderVitalsTab(pid, patientId, overrideFrom, overrideTo) {
       var f = document.getElementById('vital-filter-from');
       var t = document.getElementById('vital-filter-to');
       _ssRenderSection(container, patientId, pid, f ? f.value : null, t ? t.value : null);
+    }
+    // [Phase 3] Render bulk section (เฉพาะ role ที่ทำ handover ได้)
+    var bulkCard = document.getElementById('ss-bulk-card');
+    var bulkContainer = document.getElementById('ss-bulk-container');
+    if (bulkCard && bulkContainer && _ssCanOperateHandover()) {
+      bulkCard.style.display = '';
+      _ssRenderBulkSection(bulkContainer);
     }
   }, 50);
 
@@ -1246,7 +1263,388 @@ async function _ssDenyReopen(patientId, shiftDate, shift) {
   }).eq('id', existing.id).select().single();
 }
 
-// ── Render summary section (เรียกจาก renderVitalsTab ใต้สุด) ──
+// [Phase 3 · 20 พ.ค. 69] ─────────────────────────────────────────────────
+// BULK SEND HANDOVER — section ใน Vital Sign tab
+// แสดงรายชื่อผู้รับบริการ (pin ขึ้นบน) + checkbox + ปุ่ม "ส่งเวรที่เลือก"
+// ใช้ระบบ pin (window._pinnedPatients) ที่มีอยู่ — ไม่ต้องสร้าง assignment ใหม่
+// ─────────────────────────────────────────────────────────────────────
+// State ชั่วคราว (per session): set ของ patient_id ที่ติ๊กในเซสชั่นนี้
+window._ssBulkSelected = window._ssBulkSelected || {};
+
+// ── Derive current shift จากเวลาปัจจุบัน (อิงตาม logic ของ handover) ──
+function _ssDetectCurrentShift() {
+  var now = new Date();
+  var hour = now.getHours();
+  // เช้า 7:00-19:00, ดึก 19:00-7:00 (consistent กับ _ssShiftOf)
+  var shift = (hour >= 7 && hour < 19) ? 'เช้า' : 'ดึก';
+  // shift_date: ถ้าเป็นกะดึกหลังเที่ยงคืน → ยังนับเป็นวันก่อนหน้า
+  var d = new Date(now);
+  if (shift === 'ดึก' && hour < 7) d.setDate(d.getDate() - 1);
+  var sd = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  return { date: sd, shift: shift };
+}
+
+// ── Load summary state ของ patient คนเดียว ใน (date, shift) ──
+async function _ssBulkLoadStatus(patientId, date, shift) {
+  try {
+    var res = await supa.from('patient_shift_summaries')
+      .select('id, summary_text, is_closed, closed_by, received_by, reopen_requested')
+      .eq('patient_id', patientId)
+      .eq('shift_date', date)
+      .eq('shift', shift)
+      .maybeSingle();
+    if (res.error || !res.data) return { status: 'no_data', record: null };
+    var r = res.data;
+    if (r.received_by) return { status: 'received', record: r };
+    if (r.is_closed) return { status: 'sent', record: r };
+    return { status: 'draft', record: r };
+  } catch (e) {
+    console.warn('[ss-bulk] load status error:', e);
+    return { status: 'no_data', record: null };
+  }
+}
+
+// ── Load vital records count ของ patient ใน (date, shift) ──
+// ใช้เช็คว่า "มี vital พร้อมส่ง" ไหม
+async function _ssBulkHasVital(patientId, date, shift) {
+  try {
+    // ดูจาก vital_signs ก่อน — query แบบเบาๆ
+    var startHour = (shift === 'เช้า') ? '07:00:00' : '19:00:00';
+    var endShiftDate = date;
+    var endHour = (shift === 'เช้า') ? '19:00:00' : '07:00:00';
+    if (shift === 'ดึก') {
+      // กะดึกจบที่วันถัดไป 7:00
+      var d = new Date(date);
+      d.setDate(d.getDate() + 1);
+      endShiftDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+    var startTs = new Date(date + 'T' + startHour).toISOString();
+    var endTs = new Date(endShiftDate + 'T' + endHour).toISOString();
+    var res = await supa.from('vital_signs')
+      .select('id', { count: 'exact', head: true })
+      .eq('patient_id', patientId)
+      .gte('recorded_at', startTs)
+      .lte('recorded_at', endTs);
+    return (res.count || 0) > 0;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ── Render bulk section ──
+async function _ssRenderBulkSection(container) {
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:13px;padding:10px;">กำลังโหลดรายชื่อผู้รับบริการ...</div>';
+
+  // ── 1. Detect current shift ──
+  var cur = _ssDetectCurrentShift();
+  var dateThai = _formatDateTHFromYMD(cur.date);
+
+  // ── 2. Load patients (active เท่านั้น) ──
+  var allPatients = (db.patients || []).filter(function(p) {
+    return !p.status || p.status === 'active' || p.status === 'present';
+  });
+
+  // ── 3. แยก pinned vs other ──
+  var pinnedIds = window._pinnedPatients || [];
+  var pinned = pinnedIds
+    .map(function(id) { return allPatients.find(function(p) { return String(p.id) === String(id); }); })
+    .filter(Boolean);
+  var others = allPatients.filter(function(p) { return !pinnedIds.includes(p.id); });
+
+  // ── 4. Load status ของแต่ละ patient (parallel) ──
+  // (จำกัด pin = 7 + show others on-demand เพื่อ perf)
+  var pinnedStatus = await Promise.all(
+    pinned.map(function(p) { return _ssBulkLoadStatus(p.id, cur.date, cur.shift); })
+  );
+  var pinnedHasVital = await Promise.all(
+    pinned.map(function(p) { return _ssBulkHasVital(p.id, cur.date, cur.shift); })
+  );
+
+  // ── 5. Render UI ──
+  var bulkKey = cur.date + '|' + cur.shift;
+  if (!window._ssBulkSelected[bulkKey]) window._ssBulkSelected[bulkKey] = {};
+
+  var html = '';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);">';
+  html += '  <div style="font-size:12px;color:var(--text2);">📅 กะ<strong>' + cur.shift + '</strong> · ' + dateThai + ' <span style="color:var(--text3);">(ตรวจอัตโนมัติจากเวลาปัจจุบัน)</span></div>';
+  html += '  <div style="display:flex;gap:6px;flex-wrap:wrap;">';
+  html += '    <button class="btn btn-ghost btn-sm" onclick="_ssBulkSelectPinned()" style="font-size:11px;">☑ เลือกที่ปักหมุด</button>';
+  html += '    <button class="btn btn-ghost btn-sm" onclick="_ssBulkClearAll()" style="font-size:11px;">🗑 ล้างการเลือก</button>';
+  html += '  </div>';
+  html += '</div>';
+
+  // ── Pinned section ──
+  if (pinned.length > 0) {
+    html += '<div style="font-size:11px;font-weight:600;color:var(--accent2);margin-bottom:6px;">⭐ ปักหมุด (' + pinned.length + ' คน)</div>';
+    pinned.forEach(function(p, idx) {
+      html += _ssRenderBulkRow(p, pinnedStatus[idx], pinnedHasVital[idx], bulkKey, true);
+    });
+  } else {
+    html += '<div style="background:var(--info-bg, #e8f4f8);border-left:3px solid var(--accent2);padding:10px 12px;font-size:12px;color:var(--text);margin-bottom:10px;border-radius:4px;line-height:1.5;">💡 ยังไม่ได้ปักหมุดผู้รับบริการ — กดดาว ⭐ ในหน้า Profile ของผู้รับบริการเพื่อปักหมุด (สูงสุด 7 คน)</div>';
+  }
+
+  // ── Others section (collapse) ──
+  if (others.length > 0) {
+    html += '<details style="margin-top:10px;">';
+    html += '  <summary style="cursor:pointer;font-size:11px;font-weight:600;color:var(--text2);padding:6px 0;">▶ ผู้รับบริการอื่น (' + others.length + ' คน) — กดเพื่อขยาย</summary>';
+    html += '  <div id="ss-bulk-others-loading" style="font-size:11px;color:var(--text3);padding:8px;">⏳ จะโหลดสถานะเมื่อขยาย</div>';
+    html += '  <div id="ss-bulk-others-list" data-others-ids="' + others.map(function(p) { return p.id; }).join(',') + '" data-shift-date="' + cur.date + '" data-shift="' + cur.shift + '" data-bulkkey="' + bulkKey + '"></div>';
+    html += '</details>';
+  }
+
+  // ── Submit button ──
+  html += '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">';
+  html += '  <div id="ss-bulk-counter" style="font-size:12px;color:var(--text2);">เลือกแล้ว 0 คน</div>';
+  html += '  <button class="btn btn-primary btn-sm" id="ss-bulk-submit-btn" onclick="_ssBulkSubmit()" style="font-size:12px;font-weight:600;" disabled>📤 ส่งเวรที่เลือก</button>';
+  html += '</div>';
+
+  container.innerHTML = html;
+  _ssBulkUpdateCounter(bulkKey);
+
+  // ── Lazy-load others เมื่อ user เปิด details ──
+  var details = container.querySelector('details');
+  if (details) {
+    details.addEventListener('toggle', function() {
+      if (details.open) _ssBulkLoadOthers();
+    });
+  }
+}
+
+// ── Render row 1 คน ──
+function _ssRenderBulkRow(p, statusInfo, hasVital, bulkKey, isPinned) {
+  var st = statusInfo.status; // 'no_data' | 'draft' | 'sent' | 'received'
+  var rec = statusInfo.record;
+  var roomInfo = p.roomNumber || p.room || '—';
+
+  // ── เลือก badge + disable state ──
+  var badge = '', disabled = false, disableReason = '';
+  if (st === 'received') {
+    badge = '<span style="font-size:10px;background:#1f4d38;color:#fff;padding:2px 6px;border-radius:8px;">🤝 รับแล้ว</span>';
+    disabled = true; disableReason = 'received';
+  } else if (st === 'sent') {
+    var closedAt = rec && rec.closed_at ? new Date(rec.closed_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',hour12:false}) : '';
+    badge = '<span style="font-size:10px;background:var(--success-text,#2e6b4f);color:#fff;padding:2px 6px;border-radius:8px;">🔒 ส่งแล้ว ' + closedAt + '</span>';
+    disabled = true; disableReason = 'already_sent';
+  } else if (!hasVital) {
+    badge = '<span style="font-size:10px;background:var(--warning-bg);color:var(--warning-text);padding:2px 6px;border-radius:8px;">⚠️ ไม่มี vital</span>';
+    disabled = true; disableReason = 'no_vital';
+  } else if (st === 'draft') {
+    badge = '<span style="font-size:10px;background:var(--success-bg);color:var(--success-text);padding:2px 6px;border-radius:8px;">📝 มี summary</span>';
+  } else {
+    badge = '<span style="font-size:10px;background:var(--info-bg, #e8f4f8);color:var(--text2);padding:2px 6px;border-radius:8px;">⚪ ยังไม่ส่ง</span>';
+  }
+
+  var checked = !!(window._ssBulkSelected[bulkKey] && window._ssBulkSelected[bulkKey][p.id]);
+  var rowStyle = 'display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;border:1px solid var(--border);margin-bottom:5px;background:#fff;';
+  if (disabled) rowStyle += 'opacity:0.55;';
+  if (checked) rowStyle += 'border-color:var(--accent2);background:#f4f8f5;';
+
+  var html = '<div class="ss-bulk-row" data-pinned="' + (isPinned ? '1' : '0') + '" style="' + rowStyle + '">';
+  html += '  <input type="checkbox" data-patient-id="' + p.id + '" data-bulkkey="' + bulkKey + '"' +
+          (checked ? ' checked' : '') +
+          (disabled ? ' disabled' : '') +
+          ' onchange="_ssBulkToggleRow(this)" style="width:18px;height:18px;cursor:' + (disabled ? 'not-allowed' : 'pointer') + ';">';
+  html += '  <div style="flex:1;min-width:0;">';
+  html += '    <div style="font-size:13px;font-weight:600;color:var(--text);">' + _escapeHtml(p.name || '-') +
+          (isPinned ? ' <span style="color:var(--accent);font-size:10px;">★</span>' : '') +
+          ' <span style="font-size:11px;color:var(--text3);font-weight:400;">· ห้อง ' + _escapeHtml(roomInfo) + '</span></div>';
+  html += '    <div style="margin-top:2px;">' + badge + '</div>';
+  html += '  </div>';
+  html += '</div>';
+  return html;
+}
+
+// ── Lazy load others rows ──
+async function _ssBulkLoadOthers() {
+  var listEl = document.getElementById('ss-bulk-others-list');
+  var loadingEl = document.getElementById('ss-bulk-others-loading');
+  if (!listEl || listEl.dataset.loaded === '1') return;
+  listEl.dataset.loaded = '1';
+
+  var ids = (listEl.dataset.othersIds || '').split(',').filter(Boolean);
+  var date = listEl.dataset.shiftDate;
+  var shift = listEl.dataset.shift;
+  var bulkKey = listEl.dataset.bulkkey;
+  if (!ids.length || !date || !shift) { if (loadingEl) loadingEl.remove(); return; }
+
+  var patients = ids
+    .map(function(id) { return (db.patients || []).find(function(p) { return String(p.id) === String(id); }); })
+    .filter(Boolean);
+
+  var statuses = await Promise.all(patients.map(function(p) { return _ssBulkLoadStatus(p.id, date, shift); }));
+  var hasVitals = await Promise.all(patients.map(function(p) { return _ssBulkHasVital(p.id, date, shift); }));
+
+  var rowsHtml = '';
+  patients.forEach(function(p, idx) {
+    rowsHtml += _ssRenderBulkRow(p, statuses[idx], hasVitals[idx], bulkKey, false);
+  });
+  listEl.innerHTML = rowsHtml;
+  if (loadingEl) loadingEl.remove();
+}
+
+// ── Update counter + submit button enabled state ──
+function _ssBulkUpdateCounter(bulkKey) {
+  var counter = document.getElementById('ss-bulk-counter');
+  var btn = document.getElementById('ss-bulk-submit-btn');
+  if (!counter || !btn) return;
+  var sel = window._ssBulkSelected[bulkKey] || {};
+  var count = Object.keys(sel).filter(function(k) { return sel[k]; }).length;
+  counter.textContent = 'เลือกแล้ว ' + count + ' คน';
+  btn.disabled = (count === 0);
+  btn.textContent = count > 0 ? ('📤 ส่งเวรที่เลือก (' + count + ' คน)') : '📤 ส่งเวรที่เลือก';
+}
+
+// ── Window wrappers ──
+window._ssBulkToggleRow = function(checkbox) {
+  var pid = checkbox.dataset.patientId;
+  var bulkKey = checkbox.dataset.bulkkey;
+  if (!window._ssBulkSelected[bulkKey]) window._ssBulkSelected[bulkKey] = {};
+  if (checkbox.checked) {
+    window._ssBulkSelected[bulkKey][pid] = true;
+  } else {
+    delete window._ssBulkSelected[bulkKey][pid];
+  }
+  _ssBulkUpdateCounter(bulkKey);
+};
+
+window._ssBulkSelectPinned = function() {
+  // ติ๊กเฉพาะ pin ที่ status = ยังไม่ส่ง + มี vital
+  // (skip คนที่ disable แล้ว)
+  var rows = document.querySelectorAll('.ss-bulk-row[data-pinned="1"]');
+  if (!rows.length) {
+    if (typeof toast === 'function') toast('ยังไม่ได้ปักหมุดผู้รับบริการ', 'info');
+    return;
+  }
+  var changed = 0;
+  rows.forEach(function(row) {
+    var cb = row.querySelector('input[type="checkbox"]');
+    if (!cb || cb.disabled) return;
+    if (!cb.checked) {
+      cb.checked = true;
+      cb.dispatchEvent(new Event('change'));
+      changed++;
+    }
+  });
+  if (changed === 0 && typeof toast === 'function') toast('ไม่มีคนที่ปักหมุดและพร้อมส่ง', 'info');
+};
+
+window._ssBulkClearAll = function() {
+  var cur = _ssDetectCurrentShift();
+  var bulkKey = cur.date + '|' + cur.shift;
+  window._ssBulkSelected[bulkKey] = {};
+  document.querySelectorAll('.ss-bulk-row input[type="checkbox"]').forEach(function(cb) {
+    if (cb.checked) cb.checked = false;
+  });
+  _ssBulkUpdateCounter(bulkKey);
+};
+
+window._ssBulkSubmit = async function() {
+  var cur = _ssDetectCurrentShift();
+  var bulkKey = cur.date + '|' + cur.shift;
+  var sel = window._ssBulkSelected[bulkKey] || {};
+  var ids = Object.keys(sel).filter(function(k) { return sel[k]; });
+  if (!ids.length) return;
+
+  // ── Build confirm modal ──
+  var patients = ids
+    .map(function(id) { return (db.patients || []).find(function(p) { return String(p.id) === String(id); }); })
+    .filter(Boolean);
+  if (!patients.length) { toast('ไม่พบข้อมูลผู้รับบริการ', 'error'); return; }
+
+  var listHtml = patients.map(function(p) {
+    return '<li style="padding:4px 0;font-size:13px;">✓ ' + _escapeHtml(p.name || '-') + ' <span style="color:var(--text3);font-size:11px;">(ห้อง ' + _escapeHtml(p.roomNumber || p.room || '—') + ')</span></li>';
+  }).join('');
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;';
+  var modal = document.createElement('div');
+  modal.style.cssText = 'background:#fff;border-radius:12px;padding:20px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;';
+  modal.innerHTML =
+    '<div style="font-size:16px;font-weight:700;color:var(--accent2);margin-bottom:6px;">📤 ยืนยันส่งเวร ' + patients.length + ' คน</div>' +
+    '<div style="font-size:13px;color:var(--text2);margin-bottom:14px;">เวร' + cur.shift + ' · ' + _formatDateTHFromYMD(cur.date) + '</div>' +
+    '<ul style="list-style:none;padding:0;margin:0 0 14px 0;max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px 14px;">' + listHtml + '</ul>' +
+    '<div style="background:var(--warning-bg);border-left:4px solid var(--warning-text);padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a4d00;line-height:1.5;border-radius:4px;">⚠️ หลังส่งแล้ว summary จะถูก lock — caregiver ต้องขออนุมัติเพื่อแก้</div>' +
+    '<div id="ss-bulk-progress" style="display:none;font-size:12px;color:var(--text2);margin-bottom:10px;"></div>' +
+    '<div style="display:flex;gap:8px;">' +
+    '  <button class="btn btn-ghost" id="ss-bulk-cancel" style="flex:1;height:44px;font-size:14px;">❌ ยกเลิก</button>' +
+    '  <button class="btn btn-primary" id="ss-bulk-confirm" style="flex:1;height:44px;font-size:14px;font-weight:600;" disabled>⏳ กรุณารอ 2 วินาที</button>' +
+    '</div>';
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+  modal.querySelector('#ss-bulk-cancel').addEventListener('click', close);
+
+  // Delay 2 วินาที ป้องกัน accidental click
+  setTimeout(function() {
+    var btn = modal.querySelector('#ss-bulk-confirm');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '✅ ยืนยันส่งเวร ' + patients.length + ' คน';
+    }
+  }, 2000);
+
+  modal.querySelector('#ss-bulk-confirm').addEventListener('click', async function() {
+    var confirmBtn = modal.querySelector('#ss-bulk-confirm');
+    var progress = modal.querySelector('#ss-bulk-progress');
+    confirmBtn.disabled = true;
+    progress.style.display = '';
+
+    var success = 0, fail = 0, failList = [];
+    for (var i = 0; i < patients.length; i++) {
+      var p = patients[i];
+      progress.textContent = 'กำลังส่ง ' + (i+1) + '/' + patients.length + ' — ' + (p.name || '-') + '...';
+      try {
+        // Load fresh status — ตรวจ race condition
+        var statusInfo = await _ssBulkLoadStatus(p.id, cur.date, cur.shift);
+        if (statusInfo.status === 'sent' || statusInfo.status === 'received') {
+          fail++; failList.push(p.name + ' (ถูกส่งโดยคนอื่นแล้ว)');
+          continue;
+        }
+        // Pre-load cache สำหรับ patient นี้ — เพื่อให้ _ssCloseShift รู้ว่า existing.id คืออะไร
+        // (ป้องกัน race กับ UNIQUE constraint (patient_id, shift_date, shift))
+        await _ssLoadManualSummaries(p.id);
+        // Generate text — ถ้ามี draft ใช้ของเดิม ถ้าไม่มี ให้ build auto
+        var summaryText = '';
+        if (statusInfo.record && statusInfo.record.summary_text) {
+          summaryText = statusInfo.record.summary_text;
+        } else {
+          // Build auto-gen text จาก bucket — เรียก helper ภายนอกถ้ามี
+          // (fallback: ใช้ placeholder)
+          summaryText = '[Auto-generated] สรุปเวร' + cur.shift + ' ' + _formatDateTHFromYMD(cur.date);
+        }
+        var res = await _ssCloseShift(p.id, cur.date, cur.shift, summaryText);
+        if (res.error) { fail++; failList.push(p.name + ' (' + res.error.message + ')'); }
+        else success++;
+      } catch (e) {
+        fail++; failList.push((p.name || '-') + ' (' + (e.message || e) + ')');
+      }
+    }
+
+    progress.innerHTML =
+      '<div style="color:var(--success-text);font-weight:600;">✓ ส่งสำเร็จ ' + success + ' คน</div>' +
+      (fail > 0 ? '<div style="color:var(--red);margin-top:4px;">✗ ไม่สำเร็จ ' + fail + ' คน: ' + _escapeHtml(failList.join(', ')) + '</div>' : '');
+
+    // Clear selected after success
+    if (success > 0) {
+      window._ssBulkSelected[bulkKey] = {};
+    }
+
+    confirmBtn.textContent = '✓ ปิด';
+    confirmBtn.disabled = false;
+    confirmBtn.addEventListener('click', function() {
+      close();
+      // Re-render bulk section
+      var bulkContainer = document.getElementById('ss-bulk-container');
+      if (bulkContainer) _ssRenderBulkSection(bulkContainer);
+    }, { once: true });
+  });
+};
+
+
 async function _ssRenderSection(container, patientId, pid, fromDate, toDate) {
   // Load manual summaries
   var manual = await _ssLoadManualSummaries(patientId);
