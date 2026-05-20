@@ -1010,6 +1010,30 @@ function patHandoverClearSelection() {
 // [Step B-3 · 20 พ.ค. 69] Modal "ปิดเวรที่เลือก"
 // ═══════════════════════════════════════════════════════════════════
 
+// [Hotfix · 20 พ.ค. 69] Entry point — ถูกเรียกจากปุ่ม "📤 ปิดเวรที่เลือก"
+// (function นี้หายไประหว่าง refactor — บัดนี้กลับมาแล้ว)
+async function patHandoverCloseSelected() {
+  const statusMap = window._patHandoverStatusMap || {};
+  const sel = window._patHandoverSelected || {};
+  const allSelected = Object.keys(sel);
+  if (allSelected.length === 0) {
+    if (typeof toast === 'function') toast('กรุณาเลือกผู้รับบริการก่อน', 'warning');
+    return;
+  }
+  // Filter เฉพาะคนที่ "ปิดได้" (no_data / draft) — skip ที่ส่งแล้ว/รับแล้ว
+  const closable = allSelected.filter(pid => {
+    const info = statusMap[String(pid)];
+    if (!info) return true; // no info → assume no_data
+    return (info.status === 'no_data' || info.status === 'draft');
+  });
+  if (closable.length === 0) {
+    if (typeof toast === 'function') toast('ไม่มีผู้รับบริการที่ปิดเวรได้ใน list', 'warning');
+    return;
+  }
+  // เปิด modal — async เพราะต้อง load auto-gen text
+  await _patHandoverOpenCloseModal(closable);
+}
+
 // Generate auto-summary text สำหรับ patient 1 คน — เรียก clinical-vitals helpers
 async function _patHandoverGenerateAutoText(patientId, cur) {
   // ถ้า clinical-vitals helpers ไม่พร้อม → fallback text
