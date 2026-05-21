@@ -7,6 +7,34 @@
 ---
 
 
+## [R28-SEC-B: RLS Policy Hardening] — 21 พ.ค. 2569
+
+แก้ Supabase Security Advisor warning: "RLS Policy Always True" บน table `patient_shift_summary_edits`
+
+### Background
+Policy เก่า `Allow insert for authenticated` ใช้ `WITH CHECK (true)` → ทุกคนที่ login (รวม role `warehouse` ที่ไม่เกี่ยวกับ clinical) สามารถ insert log การแก้ summary ได้
+
+### Fix
+- **ลบ** policy `Allow insert for authenticated` (WITH CHECK = true)
+- **สร้าง** policy `Allow insert for clinical roles` (WITH CHECK = has_role(...))
+- Whitelist: `admin`, `manager`, `nurse`, `caregiver`, `officer`
+- Excluded: `warehouse` (ไม่เกี่ยวกับ clinical workflow)
+
+### Verification
+- ✅ admin INSERT test: pass (id=1 returned)
+- ✅ Supabase advisor: 21 → 20 warnings (RLS warning หาย)
+- ✅ Table มี 0 records ตอน apply → ไม่กระทบ existing data
+
+### Files
+- `docs/MIGRATION_R28-SEC-B_RLS_HARDENING.sql` — Migration script + rollback procedure
+
+### Risk
+🟢 Low — `has_role()` function ใช้อยู่แล้ว, table ว่าง, rollback ง่าย
+
+---
+
+
+
 ## [Phase B: Handover Redesign — ย้ายไป Patient List] — 20 พ.ค. 2569
 
 ปฏิรูปครั้งใหญ่ของระบบรับ-ส่งเวร (handover workflow) — ย้ายจาก Vital Sign tab ของ patient profile ไปที่หน้ารวมผู้รับบริการ ใช้ pin sort + checkbox + action bar + modal
