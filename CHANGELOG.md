@@ -7,6 +7,123 @@
 ---
 
 
+## [Phase B: Handover Redesign — ย้ายไป Patient List] — 20 พ.ค. 2569
+
+ปฏิรูปครั้งใหญ่ของระบบรับ-ส่งเวร (handover workflow) — ย้ายจาก Vital Sign tab ของ patient profile ไปที่หน้ารวมผู้รับบริการ ใช้ pin sort + checkbox + action bar + modal
+
+**Context:** หลัง R27 พบว่า workflow รับ-ส่งเวรเดิม (อยู่ใน profile tab) มี adoption ต่ำมาก เพราะพยาบาลต้องเข้าทีละคน ผู้ใช้จริงไม่สะดวก → ตัดสินใจ redesign ให้เลือกผู้รับบริการของกะตัวเองทีเดียวที่หน้ารวม
+
+### Phase B Implementation (Tags v36-v42)
+
+**v36 (B-1):** Sort pin บนสุด + ★ marker ใน patient list
+- Section "⭐ ปักหมุด (N ราย)" ที่บนสุดของตาราง
+- คน pin มี ★ หน้าชื่อ
+- Section "ผู้รับบริการอื่น (M ราย)" ต่อจาก pin
+
+**v37 (B-2a):** Action bar UI พื้นฐาน — Checkbox + counter
+- Action bar ใต้ KPI cards: ฝั่งซ้ายมี counter "เลือกแล้ว N คน · กะ[เช้า/ดึก] [วันที่]"
+- ปุ่ม [☑ พิน] [🗑 ล้าง] (helpers)
+- ปุ่ม [📤 ปิดเวรที่เลือก] [✓ รับเวรที่เลือก] (main actions) — disabled ตอนแรก
+- ปุ่ม [⋮] admin dropdown
+
+**v38 (B-2b):** Load status + Smart enable/disable buttons
+- โหลดสถานะ patient_shift_summaries ของกะปัจจุบันทุกคน
+- Filter logic: `no_data` / `draft` → close ได้, `sent` → receive ได้
+- ปุ่มเปลี่ยน label ตามจำนวน: "📤 ปิดเวรที่เลือก (N)"
+
+**v39 (B-2c):** Inline admin actions ✅/❌
+- Badge "🔒 ส่งแล้ว" สำหรับ status sent
+- Badge "⏳ รออนุมัติ" + ปุ่ม [✅] [❌] inline สำหรับ admin/พยาบาล approve/deny reopen request
+
+**v40 (B-3):** Modal "ปิดเวรที่เลือก"
+- All patients expanded simultaneously
+- Auto-gen text จาก vital/excretion/fluid/incident/note events
+- Textarea editable always
+- 2-second delay before confirm enabled (anti-misclick)
+- Sequential submit with race protection (re-check before each close)
+- ใช้ `_ssCloseShift` helper จาก clinical-vitals (preserves edit history log)
+
+**v41 (B-4):** Modal "รับเวรที่เลือก"
+- Read-only summary preview ของกะก่อนหน้า
+- Mandatory checkbox "ฉันได้อ่านและรับทราบข้อมูล..."
+- 2-second delay after checkbox
+- Sequential submit with race protection
+- แสดง "ปิดเวรโดย: [name] · เวลา X" prominently
+- Warning banner สำหรับ skipped patients
+
+**v42 (B-6 + B-7):** Cleanup Vital Sign tab + Admin actions
+- B-6: ลบ Phase 3 bulk send section ใน Vital tab (380 lines)
+- B-7: ลบ 6 ปุ่ม action รายคนใน Vital tab summary cards
+  - ลบ: 🔒 ปิดเวร / ✓ รับเวร / 🔓 เปิดเวรใหม่ / 📨 ขอเปิดเวร / ✅ อนุมัติ / ❌ ปฏิเสธ
+  - เก็บ: 📋 คัดลอก / 🖨️ พิมพ์ / 📤 PDF / ✏️ แก้ไข / 🔄 สร้างใหม่
+- Implement admin dropdown actions (เดิมเป็น stub):
+  - "🔓 ปิดเวรแทน" — reuse B-3 modal
+  - "🔓 เปิดเวรใหม่" — bulk reopen + reset received/reopen flags
+- เพิ่ม "📨 ขอเปิดเวร" inline button ในแถวสำหรับ caregiver
+
+### Phase B Hotfixes (Tags v43-v47)
+
+**v43:** ลบ banner "การส่ง/รับเวรย้ายไป..." ใน Vital Sign tab — ไม่จำเป็น
+
+**v44:** Fix CSS — ปุ่ม disabled ของ handover ดูเหมือน enabled
+- เพิ่ม `opacity: 0.45 + grayscale(0.3)` ใน `:disabled` state
+
+**v45 (CRITICAL):** Hotfix ปุ่ม "📤 ปิดเวรที่เลือก" กดไม่ทำงาน
+- Root cause: ตอน B-3 refactor ลบ stub function `patHandoverCloseSelected()` แต่ลืม define ใหม่ → `window.patHandoverCloseSelected = undefined`
+- Fix: เพิ่ม function กลับมา (filter closable + เรียก `_patHandoverOpenCloseModal`)
+
+**v46 (CRITICAL):** Hotfix pin stale state ข้าม user
+- Root cause: `initRecentPinned()` เรียกแค่ครั้งเดียวตอน DOMContentLoaded → ไม่มี hook ตอน login change → `window._pinnedPatients` ค้างจาก user เก่า
+- Fix in `auth.js`:
+  - `doLogin()`: clear `_pinnedPatients = []` + await `initRecentPinned()` หลัง loadDB
+  - `doLogout()`: clear `_pinnedPatients`, `_patHandoverSelected`, `_patHandoverStatusMap`, `_patHandoverHasVitalMap`
+
+**v47:** Fix summary ที่ปิดเวรแล้วไม่แสดง ถ้ากะนั้นไม่มี event
+- Root cause: `_ssRenderSection()` สร้าง buckets จาก events เท่านั้น → ถ้ากะไม่มี vital/excretion/etc → ไม่สร้าง bucket → summary หาย แม้มีใน DB
+- Fix: หลัง `_ssGroupByShift()` iterate manual summaries — ถ้า key ไม่อยู่ใน buckets และอยู่ใน fromDate/toDate range → สร้าง empty bucket ให้
+
+### Smoke Test Sign-off (Tag v48-smoke-tested)
+
+ทดสอบครบทั้งระบบผ่าน Chrome MCP:
+- ✅ 25/25 sidebar menus เปิดได้ปกติ, 0 app errors
+- ✅ 19/19 patient profile tabs โหลดได้
+- ✅ End-to-end flow: admin ปิดเวร → caregiver รับเวร (สลับ user) สำเร็จ
+- ✅ Pin per-user (admin = 2 ราย, caregiver = 0 — ตรงกับ DB)
+- ✅ Modal ปิด/รับเวร + ⋮ admin actions ทำงาน
+- ✅ Vital Sign tab summary + 5 ปุ่มที่เหลือ ทำงาน
+
+### Dead Code Cleanup (Tag v49) — 21 พ.ค. 2569
+
+ลบ 6 dead functions ใน `clinical-vitals.js` ที่ไม่มี caller เหลือหลัง B-7:
+- `window._ssOpenCloseModal`
+- `window._ssDoReopen`
+- `window._ssDoReceive`
+- `window._ssOpenReopenRequest`
+- `window._ssApproveReopen`
+- `window._ssDenyReopenAction`
+
+**Verified:** 0 external callers (grep all .js/.html), 0 internal callers ในไฟล์เดียวกัน
+**Code reduction:** -159 บรรทัด (1738 → 1579)
+
+### Cache Versions Final
+- `patients.js?v=28`
+- `clinical-vitals.js?v=26`
+- `style.css?v=106`
+- `auth.js?v=8`
+
+### Files Affected (Phase B รวมทั้งหมด)
+- `js/modules/patients.js`: +1,278 lines (action bar + state + 2 modals + admin actions)
+- `js/modules/clinical/clinical-vitals.js`: -428 lines net (cleanup Phase 3 + 6 buttons + 6 dead functions)
+- `html/pages.html`: +26 lines (action bar HTML)
+- `css/style.css`: +52 lines (handover styles, all scoped to `#patHandover*` / `.patient-handover-*`)
+- `js/core/auth.js`: +11 lines (pin/handover state cleanup)
+
+### Database Schema (no changes)
+ใช้ table `patient_shift_summaries` เดิมไม่แก้ — เพิ่มแต่ workflow layer ในฝั่ง client
+
+---
+
+
 ## [R27: Post-UAT Bug Fixes] — 15 พ.ค. 2569
 
 ชุดแก้ bug ที่พบจาก deep code audit (Claude) + UAT testing (Claude in Chrome) หลัง R3-R26 redesign
