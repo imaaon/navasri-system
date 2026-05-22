@@ -1,0 +1,92 @@
+name: Daily Backup
+
+# รัน auto ทุกวันตี 2 (Bangkok time = 19:00 UTC)
+on:
+  schedule:
+    - cron: '0 19 * * *'  # 19:00 UTC = 02:00 Bangkok
+  workflow_dispatch:  # ให้กดรัน manual ได้ด้วย
+
+# Permissions ที่จำเป็น
+permissions:
+  contents: write  # สำหรับสร้าง Release
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30  # backup ใหญ่ใช้เวลานานสุด 30 นาที
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+      
+      - name: Run backup script
+        id: backup
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python scripts/daily_backup.py
+      
+      - name: Get backup date
+        id: date
+        run: echo "today=$(TZ=Asia/Bangkok date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: backup-${{ steps.date.outputs.today }}
+          name: 🗄️ Backup ${{ steps.date.outputs.today }}
+          body: |
+            **Daily backup สำหรับวันที่ ${{ steps.date.outputs.today }}**
+            
+            📊 **ข้อมูลที่ backup:**
+            - Excel database (65 sheets)
+            - Storage files: ${{ steps.backup.outputs.storage_files }} ไฟล์
+            - ขนาด zip: ${{ steps.backup.outputs.zip_size_mb }} MB
+            - Errors: ${{ steps.backup.outputs.errors_count }}
+            
+            🤖 สร้างอัตโนมัติโดย GitHub Actions เวลา 02:00 น. (Bangkok)
+            
+            **วิธีกู้คืน:**
+            1. Download zip นี้
+            2. แตก zip
+            3. Excel อยู่ใน `/database/` 
+            4. Storage files อยู่ใน `/storage/documents/` และ `/storage/images/`
+          files: ${{ steps.backup.outputs.zip_path }}
+          make_latest: true
+      
+      # เก็บแค่ 30 release ล่าสุด ลบเก่ากว่านั้น
+      - name: Cleanup old backups (keep 30 days)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # List releases ที่ขึ้นต้นด้วย backup- เรียงตามวันที่ ลบเก่ากว่า 30 อัน
+          releases=$(gh release list --limit 100 --json tagName --jq '.[].tagName' | grep '^backup-' | sort -r)
+          count=0
+          while IFS= read -r tag; do
+            count=$((count + 1))
+            if [ $count -gt 30 ]; then
+              echo "🗑️  Deleting old backup: $tag"
+              gh release delete "$tag" --yes --cleanup-tag || echo "   (failed, skipping)"
+            fi
+          done <<< "$releases"
+          echo "✅ Cleanup done. Kept latest 30 backups."
+      
+      # ส่ง LINE alert เฉพาะตอน FAIL
+      - name: Notify LINE on failure
+        if: failure()
+        run: |
+          MESSAGE="🚨 [นวศรี Backup FAILED]%0A%0ABackup รายวันล้มเหลว วันที่ ${{ steps.date.outputs.today }}%0A%0AWorkflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}%0A%0Aกรุณาตรวจสอบด่วน"
+          
+          curl -X POST "https://umueucsxowjaurlaubwa.supabase.co/functions/v1/line-notify" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"event\":\"backup_failed\",\"message\":\"🚨 Navasri Backup FAILED วันที่ ${{ steps.date.outputs.today }} - กรุณาตรวจสอบ GitHub Actions ด่วน\"}"
