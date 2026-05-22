@@ -11,6 +11,8 @@ function resetIdleTimer() {
     await supa.auth.signOut();
     currentUser = null;
     try { sessionStorage.removeItem('navasri_user'); } catch(e) {}
+    // [Privacy · 22 พ.ค. 69] Clear "ดูล่าสุด" ตอน auto-logout ด้วย
+    try { localStorage.removeItem('navasri_recent_patients'); } catch(e) {}
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('loginUser').value = '';
     document.getElementById('loginPass').value = '';
@@ -96,6 +98,8 @@ async function doLogin() {
     if (typeof recordLastLogin === 'function') recordLastLogin(u);
     // [Hotfix · 20 พ.ค. 69] Reload pins ของ user ใหม่ (กัน stale state ของ user เก่า)
     window._pinnedPatients = [];  // clear ก่อนเสมอ
+    // [Privacy · 22 พ.ค. 69] Clear "ดูล่าสุด" ของ user เก่า (กรณีปิด browser โดยไม่ logout)
+    try { localStorage.removeItem('navasri_recent_patients'); } catch(e) {}
     if (typeof window.initRecentPinned === 'function') {
       await window.initRecentPinned();
     }
@@ -120,6 +124,8 @@ async function doLogout() {
   window._patHandoverSelected = {};
   window._patHandoverStatusMap = {};
   window._patHandoverHasVitalMap = {};
+  // [Privacy · 22 พ.ค. 69] Clear "ดูล่าสุด" (localStorage) ตอน logout เพื่อกันข้อมูล leak ข้าม user
+  try { localStorage.removeItem('navasri_recent_patients'); } catch(e) {}
   try { sessionStorage.removeItem('navasri_user'); } catch(e) {}
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginUser').value = '';
